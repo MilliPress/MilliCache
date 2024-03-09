@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Fired during plugin activation
  *
@@ -10,6 +9,8 @@
  * @subpackage Millicache/includes
  */
 
+! defined( 'ABSPATH' ) && exit;
+
 /**
  * Fired during plugin activation.
  *
@@ -18,19 +19,87 @@
  * @since      1.0.0
  * @package    Millicache
  * @subpackage Millicache/includes
- * @author     Philipp Wellmer & MilliPress Team <hello@milli.press>
+ * @author     Philipp Wellmer <hello@milli.press>
  */
 class Millicache_Activator {
 
 	/**
-	 * Short Description. (use period)
-	 *
-	 * Long Description.
+	 * Activate the plugin.
 	 *
 	 * @since    1.0.0
+	 *
+	 * @return   void
 	 */
 	public static function activate() {
-
+		self::create_advanced_cache_file();
 	}
 
+	/**
+	 * Create a symlink for advanced-cache.php.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @return   bool
+	 */
+	private static function create_advanced_cache_file() {
+
+		if ( ! is_writable( WP_CONTENT_DIR ) ) {
+			return false;
+		}
+
+		$source_path = dirname( plugin_dir_path( __FILE__ ) );
+		$source_file = $source_path . '/advanced-cache.php';
+		$destination = WP_CONTENT_DIR . '/advanced-cache.php';
+
+		if ( is_readable( $source_file ) && ! file_exists( $destination ) ) {
+			// File does not exist, create symlink.
+			if ( symlink( $source_file, $destination ) ) {
+				Millicache_Admin::add_notice(
+					'success',
+					__( 'Symlink for advanced-cache.php created.', 'millicache' )
+				);
+
+				return true;
+			}
+
+			// Could not create symlink, try to copy the file.
+			$source_content = file_get_contents( $source_file );
+			if ( false !== $source_content ) {
+				// Replace the path to the engine file.
+				$source_content = str_replace( 'dirname( is_link( __FILE__ ) ? readlink( __FILE__ ) : __FILE__ )', "'" . dirname( __DIR__ ) . "'", $source_content );
+
+				if ( file_put_contents( $destination, $source_content, LOCK_EX ) ) {
+					Millicache_Admin::add_notice( 'success', __( 'advanced-cache.php copied to wp-content directory.', 'millicache' ) );
+					return true;
+				}
+			}
+
+			// Could not create symlink or copy the file.
+			Millicache_Admin::add_notice(
+				'error',
+				__( 'Could not create symlink for advanced-cache.php. Please copy the file manually from the plugin directory to your wp-content directory.', 'millicache' )
+			);
+
+		} elseif ( ! is_link( $destination ) ) {
+			$source_version = Millicache_Admin::get_file_version( $source_file );
+			$destination_version = Millicache_Admin::get_file_version( $destination );
+
+			if ( $source_version && $destination_version ) {
+				if ( version_compare( $source_version, $destination_version > 0 ) ) {
+					Millicache_Admin::add_notice(
+						'error',
+						__( 'Your version of advanced-cache.php is outdated. Please copy the file manually from the plugin directory to your wp-content directory.', 'millicache' )
+					);
+				}
+			}
+		} else {
+			Millicache_Admin::add_notice(
+				'error',
+				__( 'advanced-cache.php already exists in your wp-content directory. Please remove it and try again.', 'millicache' )
+			);
+
+		}
+		return false;
+	}
 }

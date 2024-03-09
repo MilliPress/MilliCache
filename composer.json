@@ -1,0 +1,39 @@
+{
+    "name": "millipress/cache",
+    "description": "Redis Full Page Cache for WordPress",
+    "type": "wordpress-plugin",
+    "license": "GPL3",
+    "authors": [
+        {
+            "name": "Philipp Wellmer",
+            "email": "hello@milli.press"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "wp-coding-standards/wpcs": "^3.0",
+        "phpcompatibility/phpcompatibility-wp": "*",
+        "phpstan/phpstan": "@stable",
+        "szepeviktor/phpstan-wordpress": "^1.3",
+        "phpstan/extension-installer": "^1.3",
+        "swissspidy/phpstan-no-private": "^0.2.0",
+        "phpstan/phpstan-deprecation-rules": "^1.1"
+    },
+    "suggest": {
+        "ext-redis": "Allows connecting to Redis with the fast phpredis extension.",
+        "ext-zlib": "Allows compressing the cache with zlib."
+    },
+    "scripts": {
+        "phpstan": "phpstan analyse -c phpstan.neon",
+        "lint": "phpcs --standard=phpcs.xml -s",
+        "fix": "phpcbf --standard=phpcs.xml"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
+        }
+    }
+}

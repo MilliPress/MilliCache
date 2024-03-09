@@ -1,12 +1,6 @@
 <?php
-
 /**
  * The plugin bootstrap file
- *
- * This file is read by WordPress to generate the plugin information in the plugin
- * admin area. This file also includes all of the dependencies used by the plugin,
- * registers the activation and deactivation functions, and defines a function
- * that starts the plugin.
  *
  * @link              https://www.milli.press
  * @since             1.0.0
@@ -16,8 +10,8 @@
  * Plugin Name:       MilliCache
  * Plugin URI:        https://www.milli.press/cache
  * Description:       Redis Full Page Cache for WordPress
- * Version:           1.0.0
- * Author:            Philipp Wellmer & MilliPress Team
+ * Version:           1.0.0-beta.1
+ * Author:            MilliPress Team
  * Author URI:        https://www.milli.press/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
@@ -33,9 +27,8 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Currently plugin version.
  * Start at version 1.0.0 and use SemVer - https://semver.org
- * Rename this for your plugin and update it as you release new versions.
  */
-define( 'MILLICACHE_VERSION', '1.0.0' );
+define( 'MILLICACHE_VERSION', '1.0.0-beta.1' );
 
 /**
  * The code that runs during plugin activation.
@@ -67,16 +60,11 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-millicache.php';
 /**
  * Begins execution of the plugin.
  *
- * Since everything within the plugin is registered via hooks,
- * then kicking off the plugin from this point in the file does
- * not affect the page life cycle.
- *
  * @since    1.0.0
  */
 function run_millicache() {
 
 	$plugin = new Millicache();
 	$plugin->run();
-
 }
 run_millicache();
