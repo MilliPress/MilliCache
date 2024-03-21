@@ -74,9 +74,6 @@ class Millicache_Adminbar {
 			return;
 		}
 
-		// todo: Extract this to CSS file.
-		echo '<style>#wp-admin-bar-millicache{display:list-item !important} #wp-admin-bar-millicache .ab-icon{margin:0 !important} #wp-admin-bar-millicache .ab-icon:before{content:"\f17d";top:2px;margin:0;} #wp-admin-bar-millicache:hover .ab-icon:before{content:"\f17c"} #wp-admin-bar-millicache .ab-label{margin:0 5px}</style>';
-
 		$wp_admin_bar->add_menu(
 			array(
 				'id'     => 'millicache',

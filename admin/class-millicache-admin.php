@@ -191,8 +191,7 @@ class Millicache_Admin {
 	 * @return   void
 	 */
 	public function enqueue_styles() {
-		// phpcs:ignore -- While in beta, we don't want to enqueue any styles.
-		// wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/millicache-admin.css', array(), $this->version, 'all' );
+		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/millicache-admin.css', array(), $this->version, 'all' );
 	}
 
 	/**
@@ -237,9 +236,6 @@ class Millicache_Admin {
 		$size = self::get_cache_size( 'site:' . get_current_network_id() . ':' . get_current_blog_id() );
 
 		if ( $size ) {
-			// todo: Extract to CSS file.
-			echo '<style>#dashboard_right_now .cache-count a::before, #dashboard_right_now .cache-count span::before { content: "\f17e"; }</style>';
-
 			printf(
 				'<li class="cache-count"><a title="%s" href="%s">%s</a></li>',
 				esc_attr__( 'Flush the site cache', 'millicache' ),
