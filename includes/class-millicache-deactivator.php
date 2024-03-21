@@ -34,11 +34,26 @@ class Millicache_Deactivator {
 	 * @return   void
 	 */
 	public static function deactivate() {
+		// Remove the cron events.
+		self::unschedule_events();
+
 		// Flush the cache.
 		Millicache_Engine::clear_cache();
 
 		// Remove advanced-cache.php.
 		self::remove_advanced_cache_file();
+	}
+
+	/**
+	 * Remove the cron events.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @return   void
+	 */
+	private static function unschedule_events() {
+		wp_clear_scheduled_hook( 'millipress_nightly' );
 	}
 
 	/**

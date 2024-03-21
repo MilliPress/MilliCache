@@ -31,7 +31,25 @@ class Millicache_Activator {
 	 * @return   void
 	 */
 	public static function activate() {
+		// Create advanced-cache.php.
 		self::create_advanced_cache_file();
+
+		// Schedule the cron events.
+		self::schedule_events();
+	}
+
+	/**
+	 * Schedule the cron events.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @return   void
+	 */
+	private static function schedule_events() {
+		if ( ! wp_next_scheduled( 'millipress_nightly' ) ) {
+			wp_schedule_event( strtotime( 'tomorrow 3AM' ), 'daily', 'millipress_nightly' );
+		}
 	}
 
 	/**

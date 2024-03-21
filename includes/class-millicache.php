@@ -165,6 +165,9 @@ final class Millicache {
 		foreach ( $this->get_clear_site_cache_hooks() as $hook => $priority ) {
 			$this->loader->add_action( $hook, $this->engine, 'clear_cache_by_site_ids', $priority, 0 );
 		}
+
+		// Cron events.
+		$this->loader->add_action( 'millipress_nightly', $this, 'cleanup_expired_flags' );
 	}
 
 	/**
@@ -318,6 +321,19 @@ final class Millicache {
 		if ( 'publish' === $new_status || 'publish' === $old_status ) {
 			$this->engine->clear_cache_by_post_ids( $post->ID );
 		}
+	}
+
+	/**
+	 * Cleanup expired flags.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return void
+	 */
+	function cleanup_expired_flags() {
+		$millicache_redis = new Millicache_Redis();
+		$millicache_redis->cleanup_expired_flags();
 	}
 
 	/**
