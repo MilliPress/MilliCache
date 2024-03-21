@@ -545,6 +545,43 @@ final class Millicache_Redis {
 	}
 
 	/**
+	 * Cleanup expired flags.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return bool Whether the cleanup was successful.
+	 */
+	public function cleanup_expired_flags() {
+		try {
+			// Get all flags.
+			$flags = $this->redis->keys( $this->prefix . ':f:*' );
+
+			foreach ( $flags as $flag ) {
+				// Get all keys in the set associated with the flag.
+				$keys = $this->redis->sMembers( $flag );
+
+				foreach ( $keys as $key ) {
+					// If the key does not exist in Redis, remove it from the set.
+					if ( ! $this->redis->exists( $key ) ) {
+						$this->redis->sRem( $flag, $key );
+					}
+				}
+
+				// If the set of the flag is empty, delete the flag.
+				if ( 0 === $this->redis->sCard( $flag ) ) {
+					$this->redis->del( $flag );
+				}
+			}
+
+			return true;
+		} catch ( RedisException $e ) {
+			error_log( 'Unable to cleanup expired cache keys in Redis: ' . $e->getMessage() );
+			return false;
+		}
+	}
+
+	/**
 	 * Get and convert the cache key.
 	 *
 	 * @since 1.0.0
