@@ -20,6 +20,7 @@
  * @author     Philipp Wellmer <hello@milli.press>
  */
 final class Millicache_Redis {
+
 	/**
 	 * The Redis object.
 	 *
@@ -236,7 +237,6 @@ final class Millicache_Redis {
 
 			return true;
 		} catch ( RedisException $e ) {
-
 			error_log( 'Unable to perform cache in Redis: ' . $e->getMessage() );
 			return false;
 		}
@@ -272,7 +272,7 @@ final class Millicache_Redis {
 
 			// Sort out the flags.
 			$flags = array();
-			foreach ( array_keys( $cache )  as $key ) {
+			foreach ( array_keys( $cache ) as $key ) {
 				if ( strpos( $key, $this->prefix . ':f:' ) === 0 ) {
 					$flags[] = $this->get_flag_key( $key );
 				}
@@ -327,12 +327,11 @@ final class Millicache_Redis {
 			// Store the flags and add the key to the sets associated with the flags.
 			foreach ( $flags as $flag ) {
 				$flag = $this->get_flag_key( $flag );
-				if ( $this->redis->hExists( $key, $flag ) ) {
-					$this->redis->hIncrBy( $key, $flag, 1 );
-				} else {
-					$this->redis->hSet( $key, $flag, 1 );
-				}
 
+				// Add the key to the set of the flag.
+				$this->redis->hSet( $key, $flag, 1 );
+
+				// Add the flag to the set of the key.
 				$this->redis->sAdd( $flag, $key );
 			}
 
@@ -386,33 +385,28 @@ final class Millicache_Redis {
 			 */
 			do_action( 'millicache_before_page_cache_deleted', $hash, $key, $flags );
 
+			// Start a transaction.
+			$this->redis->multi();
+
 			// Delete flags and remove the key from the sets associated with the flags.
 			foreach ( $flags as $flag ) {
 				if ( strpos( $flag, $this->prefix . ':f:' ) === 0 ) {
-					// Get the number of members in the set of the flag.
-					$members_count = $this->redis->sCard( $flag );
-
-					// Start a transaction.
-					$this->redis->multi();
-
-					// Decrease the count of the flag.
-					$this->redis->hIncrBy( $key, $flag, -1 );
-
 					// Remove the key from the set of the flag.
 					$this->redis->sRem( $flag, $key );
 
 					// If the set of the flag is empty, delete the flag.
-					if ( 0 == $members_count - 1 ) {
+					$n = $this->redis->sCard( $flag );
+					if ( is_int( $n ) && 0 == $n ) {
 						$this->redis->del( $flag );
 					}
-
-					// Execute the transaction.
-					$this->redis->exec();
 				}
 			}
 
 			// Delete the key.
 			$this->redis->del( $key );
+
+			// Execute the transaction.
+			$this->redis->exec();
 
 			/**
 			 * Fires after a page cache is deleted in Redis.
