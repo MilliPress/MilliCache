@@ -25,6 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Millicache_Admin {
 
+
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
 	 * the plugin.
@@ -305,12 +306,7 @@ class Millicache_Admin {
 
 		if ( ! $size || $reload ) {
 			$redis = new Millicache_Redis();
-			$size = $redis->get_cache_size( $flag );
-			if ( null === $size ) {
-				$size = 0;
-			}
-
-			set_transient( 'millicache_size_' . $flag, $size, DAY_IN_SECONDS );
+			set_transient( 'millicache_size_' . $flag, $redis->get_cache_size( $flag ), DAY_IN_SECONDS );
 		}
 
 		return $size;

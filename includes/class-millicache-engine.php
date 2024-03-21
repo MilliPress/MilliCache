@@ -159,7 +159,7 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array Debug data.
+	 * @var array|false Debug data.
 	 */
 	private static $debug_data = false;
 
@@ -279,7 +279,7 @@ final class Millicache_Engine {
 		}
 
 		// Always set test cookie for wp-login.php POST requests.
-		if ( strpos( self::get_server_var( 'REQUEST_URI' ), '/wp-login.php' ) === 0 && strtoupper( self::get_server_var( 'REQUEST_METHOD' ) == 'POST' ) ) {
+		if ( strpos( self::get_server_var( 'REQUEST_URI' ), '/wp-login.php' ) === 0 && strtoupper( self::get_server_var( 'REQUEST_METHOD' ) ) == 'POST' ) {
 			$_COOKIE[ $test_cookie ] = 'WP Cookie check';
 		}
 	}
@@ -293,7 +293,7 @@ final class Millicache_Engine {
 	 * @return   Millicache_Redis The MilliCache Storage instance.
 	 */
 	private static function get_storage() {
-		if ( ! self::$storage ) {
+		if ( ! ( self::$storage instanceof Millicache_Redis ) ) {
 
 			/**
 			 * The MilliPress Redis class.
@@ -448,7 +448,7 @@ final class Millicache_Engine {
 				self::set_header( 'Status', self::$fcgi_regenerate ? 'expired' : 'hit' );
 
 				if ( self::$debug ) {
-					self::set_header( 'Expires', self::$ttl - ( time() - $cache['updated'] ) );
+					self::set_header( 'Expires', (string) round( self::$ttl - ( time() - $cache['updated'] ) ) );
 				}
 
 				// Output cached status code.
@@ -702,7 +702,7 @@ final class Millicache_Engine {
 
 		// Remove ignored request keys from the query string.
 		if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
-			$_SERVER['QUERY_STRING'] = self::remove_query_args( esc_url_raw( wp_unslash( $_SERVER['QUERY_STRING'] ) ), self::$ignore_request_keys );
+			$_SERVER['QUERY_STRING'] = self::remove_query_args( filter_var( self::get_server_var( 'QUERY_STRING' ), FILTER_SANITIZE_URL ), self::$ignore_request_keys );
 		}
 
 		// Remove ignored request keys from the request uri.

@@ -546,7 +546,7 @@ final class Millicache_Redis {
 			);
 		} catch ( RedisException $e ) {
 			error_log( 'Unable to get entries with flag from Redis: ' . $e->getMessage() );
-			return false;
+			return array();
 		}
 	}
 

@@ -1,0 +1,26 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Constant WP_CONTENT_DIR not found\\.$#"
+			count: 2
+			path: includes/class-millicache-activator.php
+
+		-
+			message: "#^Call to static method add_command\\(\\) on an unknown class WP_CLI\\.$#"
+			count: 1
+			path: includes/class-millicache-cli.php
+
+		-
+			message: "#^Call to static method line\\(\\) on an unknown class WP_CLI\\.$#"
+			count: 1
+			path: includes/class-millicache-cli.php
+
+		-
+			message: "#^Call to static method success\\(\\) on an unknown class WP_CLI\\.$#"
+			count: 6
+			path: includes/class-millicache-cli.php
+
+		-
+			message: "#^Constant WP_CONTENT_DIR not found\\.$#"
+			count: 1
+			path: includes/class-millicache-deactivator.php

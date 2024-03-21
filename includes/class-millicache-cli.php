@@ -147,7 +147,7 @@ class Millicache_CLI {
 		if ( '' !== $assoc_args['networks'] ) {
 			$network_ids = explode( ',', $assoc_args['networks'] );
 			foreach ( $network_ids as $network_id ) {
-				$engine::clear_cache_by_network_id( $network_id, $expire );
+				$engine::clear_cache_by_network_id( (int) $network_id, $expire );
 			}
 			WP_CLI::success( esc_html__( 'Network cache cleared.', 'millicache' ) );
 		}
@@ -156,7 +156,7 @@ class Millicache_CLI {
 		if ( '' !== $assoc_args['sites'] ) {
 			$site_ids = explode( ',', $assoc_args['sites'] );
 			foreach ( $site_ids as $site_id ) {
-				$engine::clear_cache_by_site_ids( $site_id, null, $expire );
+				$engine::clear_cache_by_site_ids( (int) $site_id, null, $expire );
 			}
 			WP_CLI::success( esc_html__( 'Site cache cleared.', 'millicache' ) );
 		}
@@ -165,7 +165,7 @@ class Millicache_CLI {
 		if ( '' !== $assoc_args['ids'] ) {
 			$post_ids = explode( ',', $assoc_args['ids'] );
 			foreach ( $post_ids as $post_id ) {
-				$engine::clear_cache_by_post_ids( $post_id, $expire );
+				$engine::clear_cache_by_post_ids( (int) $post_id, $expire );
 			}
 			WP_CLI::success( esc_html__( 'Post cache cleared.', 'millicache' ) );
 		}
@@ -213,7 +213,14 @@ class Millicache_CLI {
 	public function stats( $args, $assoc_args ) {
 		$flag = $assoc_args['flag'] ?? '*';
 		$size = Millicache_Admin::get_cache_size( $flag, true );
-		// translators: %1$s is the cache size summary string, %2$s is the flag.
-		WP_CLI::line( sprintf( __( 'Cache stats: %1$s for flag %2$s.', 'millicache' ), Millicache_Admin::get_cache_size_summary_string( $size ), $flag ) );
+		WP_CLI::line(
+			sprintf(
+				// translators: %1$s is the MilliCache version, %2$s is the cache size summary, %3$s is the flag.
+				__( 'MilliCache (v%1$s): %2$s for flag "%3$s".', 'millicache' ),
+				$this->version,
+				Millicache_Admin::get_cache_size_summary_string( $size ),
+				$flag
+			)
+		);
 	}
 }

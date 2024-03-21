@@ -86,7 +86,7 @@ class Millicache_Activator {
 			$destination_version = Millicache_Admin::get_file_version( $destination );
 
 			if ( $source_version && $destination_version ) {
-				if ( version_compare( $source_version, $destination_version > 0 ) ) {
+				if ( version_compare( $source_version, $destination_version ) > 0 ) {
 					Millicache_Admin::add_notice(
 						'error',
 						__( 'Your version of advanced-cache.php is outdated. Please copy the file manually from the plugin directory to your wp-content directory.', 'millicache' )
