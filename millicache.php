@@ -25,14 +25,12 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Currently plugin version.
- * Start at version 1.0.0 and use SemVer - https://semver.org
+ * Current plugin version.
  */
 define( 'MILLICACHE_VERSION', '1.0.0-beta.1' );
 
 /**
  * The code that runs during plugin activation.
- * This action is documented in includes/class-millicache-activator.php
  */
 function activate_millicache() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-millicache-activator.php';
@@ -41,7 +39,6 @@ function activate_millicache() {
 
 /**
  * The code that runs during plugin deactivation.
- * This action is documented in includes/class-millicache-deactivator.php
  */
 function deactivate_millicache() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-millicache-deactivator.php';
