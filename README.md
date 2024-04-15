@@ -1,25 +1,29 @@
 # MilliCache: Redis Full Page Cache for WordPress
 
-As a full page caching solution, MilliCache uses Redis as a backend to store the cached pages. It is designed to be fast, reliable and scalable. MilliCache is developed for WordPress Multisite and Multi-Network installations, but can also be used in single site installations.
+
+As a full page caching solution, MilliCache uses Redis as a backend to store the cached pages.
+It is designed to be fast, reliable and scalable.
+MilliCache is designed for WordPress multisite and multi-network installations,
+but can also be used in single site installations.
 
 > [!IMPORTANT]
 > 
 > This plugin is currently under active development and not officially ready for production use.
-> There is no Settings UI so far, configuration is done via `wp-config.php`. 
-> It lacks proper documentation and tests. Furthermore, things might change without any prior notice.
-> Please report any issues you encounter.
+> There is no settings UI yet, configuration is done via `wp-config.php`.
+> It lacks proper documentation and testing. Also, things may change without notice.
+> Please report any problems you encounter.
 
 ## Current Features
 
-- Rapid In-Memory Full Page Caching
-- [Cache Flagging](#cache-flags) for complex cache handling & [clearing](#clear-cache)
-- [Expired Cache Handling](#clear--expire-cache) regenerates the cache in the background
-- Developed for WordPress Multisite & Multi-Network
-- Extensible by [Hooks & Filters](#hooks--filters)
-- [WP CLI Commands](#wp-cli) for Cache Clearing & Stats
-- [Debugging](#debugging) Headers for Cache Information
-- Gzip Compression for Cache Entries
-- Scalable: Even works with Redis Cluster
+- Fast in-memory full page caching
+- [Cache Flagging](#cache-flags) for complex cache handling & [Clearing](#clear-cache)
+- [Expired cache handling](#clear--expire-cache) to regenerate the cache in the background
+- Designed for WordPress Multisite & Multi-Network
+- Extensible with [Hooks & Filters](#hooks--filters)
+- [WP CLI commands](#wp-cli) for cache clearing & stats
+- [Debugging](#debugging) headers for cache information
+- Gzip compression for cache entries
+- Scalable: Even works with Redis cluster
 
 ---
 
@@ -29,9 +33,9 @@ As a full page caching solution, MilliCache uses Redis as a backend to store the
 - PHP Redis or Predis extension
 - Redis Server
 
-Please go sure that you have a Redis Server and the PECL PHP Redis extension installed and running. If you are using Ubuntu, you can install Redis with the following commands:
+Please make sure you have a Redis server and the PECL PHP Redis extension installed and running. If you are using Ubuntu, you can install Redis using the following commands
 
-### Install Redis on Ubuntu
+### Installing Redis on Ubuntu
 
 ```bash
 $ sudo apt update
@@ -79,7 +83,7 @@ define('MC_REDIS_PORT', 6379); # Redis Port
 ...
 ```
 
-Go sure that you have caching enabled in your WordPress installation by setting the `WP_CACHE` constant to `true` in your `wp-config.php`:
+Make sure you have caching enabled in your WordPress installation by setting the `WP_CACHE' constant to `true' in your `wp-config.php' file:
 
 ```php
 define('WP_CACHE', true); # Enable WordPress Cache
@@ -90,7 +94,7 @@ Activate the plugin in your WordPress installation. That's it!
 ---
 ## Configuration
 
-MilliCache can be configured by setting constants in your `wp-config.php`. The following constants are available:
+MilliCache can be configured by setting constants in your `wp-config.php` file. The following constants are available:
 
 ### General Configuration
 
@@ -120,11 +124,11 @@ MilliCache can be configured by setting constants in your `wp-config.php`. The f
 ---
 ## Cache Flags
 
-MilliCache supports cache flags to group and clear caches based on flags. This is beneficial for complex cache handling and clearing logics.
+MilliCache supports cache flags to group and clear caches based on flags. This is useful for complex cache handling and clearing logics.
 
-### What are Cache Flags?
+### What are cache flags?
 
-A single post or page can have multiple cache entries as the cache keys vary based on the request. Different cache entries are stored for different requests, for example, a request with different cookies or query string.
+A single post or page can have multiple cache entries because the cache keys vary depending on the request. Different cache entries are stored for different requests, such as a request with a different cookie or query string.
 
 ```
 https://example.org/?p=123
@@ -133,14 +137,26 @@ https://example.org/post-slug/page/2/
 https://example.org/post-slug/?show_comments=1
 ```
 
-The cache entries for the above URLs are different as the cache keys are unique based on the request. But still they are related to the same post or page and MilliCache groups these cache entries with a common flag `post:1:123`.
-Entries can have multiple flags and therefore can be grouped in different ways. That makes it possible to clear all cache entries of a specific group by using the flag. For the example above, you could use [WP-CLI](#wp-cli) or one of the [clearing functions](#clear-cache) to clear the group `post:1:123`.
+The cache entries for the above URLs are different because the cache keys are unique based on the request.
+However, they are related to the same post or page and MilliCache groups these cached entries with a common flag `post:1:123`.
+Entries can have multiple flags and can therefore be grouped in different ways.
+This makes it possible to delete all cache entries of a specific group by using the flag.
+For the example above,
+you could use [WP-CLI](#wp-cli) or one of the [clearing functions](#clear-cache) to clear the `post:1:123` group.
 
-Another built-in example is the flag `home:?` which groups all cache entries of the home & blog pages. The `?` is a wildcard placeholder for the site ID in Multisite installations, for single site installations it is always `1`.
-As in a Multisite Network every front- & blog-page cache is stored with the flag `home:?`, you could clear all caches of home pages by clearing the cache with the flag `home:?` or of a specific site by using `home:1`.
+Another built-in example is the flag `home:?`, which groups all cached entries of the home & blog pages.
+The `?` is a wildcard placeholder for the site ID in multisite installations,
+in single site installations it is always `1`.
+Since in a multisite network each front & blog page cache is stored with the flag `home:?`,
+you could clear all home page caches by clearing the cache with the flag `home:?` or a specific site by using `home:1`.
 
-Now take this example to a more complex level. Build your own cache flags to group cache entries by specific conditions: 
-Imagine you [add a custom flag](#add-cache-flags) to all posts that contain a specific Gutenberg block in the content. Instead of clearing global caches, you can only clear all caches of posts that contain this block by [clearing the cache by this flag](#clear-cache-by-flag).
+Now take this example to a more complex level.
+Create your own cache flags to group cache entries by specific conditions:
+Imagine that you [add a custom flag](#adding-cache-flags) to all posts
+that contain a specific Gutenberg block in the content.
+Instead of clearing the global cache,
+you can just [clear the cache with this flag](#clear-cache-by-flag)
+to clear all caches of posts that contain that block.
 
 ### Default Cache Flags
 
@@ -155,12 +171,12 @@ The Following cache flags are built-in and used by MilliCache for default cache 
 | `archive:?:?` | `is_post_type_archive()`         | Added to all post type archive pages (Site ID & Post Type) |
 | `author:?:?`  | `is_author()`                    | Added to all author pages (Site ID & Author ID)            |
 
-Please note that the `?` in the flags are placeholders for the actual values that will be determined at runtime.
-[Go to Debugging Section](#debugging) to learn how you can see the actual flags in the response headers.
+Note that the `?` in the flags are placeholders for the actual values that will be determined at runtime.
+[Go to the Debugging section](#debugging) to learn how to see the actual flags in the response headers
 
-### Add Cache Flags
+### Adding Cache Flags
 
-You can add flags to your cached pages by using the `millicache_add_flags` filter. Add the flags wisely as they will increase the number of cache entries and the cache size.
+You can add flags to your cached pages by using the `millicache_add_flags` filter. Add the flags wisely, as they will increase the number of cache entries and the cache size.
 
 ```php
 add_filter('millicache_add_flags', function( $flags ) {
@@ -170,21 +186,28 @@ add_filter('millicache_add_flags', function( $flags ) {
 ```
 
 ---
-## Clear & Expire Cache
 
-Please note that MilliCache by default expires (not deletes) cache entries that have reached their lifetime (TTL). When a cache entry is expired, it will regenerate in the background at the next request and a stale copy is served to the visitor.
-That way, the user will not notice any delay while the cache is regenerating.
 
-Cache entries will expire whenever necessary. For example, when a post is published or updated, the cache entry of the post and the front-page will be cleared. When a site option is updated, all cache entries of the site will be cleared and so on.
-MilliCache provides the various methods to clear the cache by flags, URLs, or IDs. You can write your own custom hooks to clear or expire cache whenever you need it.
+Please note that by default, MilliCache will expire (not delete) cache entries that have reached their lifetime (TTL).
+When a cache entry has expired, it will be regenerated in the background on the next request and an outdated copy will be served to the visitor.
+This way, the user will not notice any delay while the cache is regenerated.
 
-The parameter `$expire` is optional. If set to `true`, the cache entries will regenerate in the background at the next request. By default, the cache entries will be deleted by using the following methods.
-It is up to you to decide whether you want to expire or delete cache entries based on your requirements and how time-critical the cache entries are.
+Cache entries expire whenever necessary.
+For example, when a post is published or updated, the cache entry for the post and the front page is cleared.
+When a site option is updated, all cache entries of the site are cleared, and so on.
+MilliCache provides different methods to clear the cache by flags, URLs or IDs.
+You can write your own custom hooks to clear or expire the cache whenever you need it.
+
+The `$expire` parameter is optional.
+If set to `true`, the cache entries will be regenerated in the background on the next request.
+By default, the cache entries are deleted using the following methods.
+It is up to you to decide whether to expire
+or delete cache entries based on your requirements and how time-critical the cache entries are.
 
 ---
 ### Clear Global Cache
 
-To clear all cache entries, use the following function. This will completely clear the cache. Please note the `$expire` parameter to expire the cache entries instead of deleting them.
+To clear all cache entries, use the following function. This will clear the cache completely. Note the `$expire` parameter to expire the cache entries instead of deleting them.
 
 ```php
 /*
@@ -196,7 +219,9 @@ Millicache_Engine::clear_cache($expire);
 ---
 ### Clear Cache by Flag
 
-To clear the cache by specific flags, use the following. This will clear all cache entries flagged with the given flags. Please note the [wildcard support](#wildcards) below.
+To clear the cache by specific flags, use the following.
+This will clear all cache entries marked with the given flags.
+Please note the [wildcard support](#wildcards) below.
 
 ```php
 /*
@@ -208,20 +233,22 @@ Millicache_Engine::clear_cache_by_flags($flags, $expire);
 
 #### Wildcards
 
-Wildcards are supported, so you could clear all cache entries of all sites in a specific network with `site:1:*`.
+Wildcards are supported, so you could use `site:1:*` to clear the cache of all sites in a particular network.
 
-##### `*`-Wildcards
+##### `*` Wildcards
 
-The `*` can be used to match any number of characters. For example, `site:1:*` would match `site:1:1`, `site:1:2`, `site:1:3`, ..., `site:1:123`, etc.
+The `*` can be used to match any number of characters.
+For example, `site:1:*` would match `site:1:1`, `site:1:2`, `site:1:3`, ..., `site:1:123`, etc.
 
-##### `?`-Wildcards
+##### `?` Wildcards
 
-To match exactly one character use `?`. For example, `site:?:*` would match e.g. `site:1:1`, `site:2:123`, `site:9:123`, etc., but not `site:10:1` or `site:11:123`.
+To match exactly one character, use `?`.
+For example, `site:?:*` would match `site:1:1`, `site:2:123`, `site:9:123`, etc., but not `site:10:1` or `site:11:123`.
 
 ---
 ### Clear Cache by URL
 
-To clear the cache by a specific URL, use the following function. This will clear the cache entry of the URL.
+To clear the cache by a specific URL, use the following function. This will clear the cache entry for the URL.
 
 ```php
 /*
@@ -234,7 +261,7 @@ Millicache_Engine::clear_cache_by_urls($urls, $expire);
 
 ### Clear Cache by Post IDs
 
-To clear the cache of specific posts, use the following function. This will clear all cache entries of the post-IDs.
+To clear the cache of specific posts, use the following function. This will clear all cache entries for the post IDs.
 
 ```php
 /*
@@ -247,7 +274,7 @@ Millicache_Engine::clear_cache_by_post_ids($post_ids, $expire);
 
 ### Clear Cache by Site IDs
 
-To clear the cache of specific sites in a WordPress Multisite Network, use the following function. This will clear all cache entries of the site IDs.
+To clear the cache of specific sites in a WordPress multisite network, use the following function. This will clear all cache entries for the site IDs.
 
 ```php
 /*
@@ -260,7 +287,7 @@ Millicache_Engine::clear_cache_by_site_ids($site_ids, $expire);
 
 ### Clear Cache by Network IDs
 
-To clear the cache of specific networks in a Multi-Network installation, use the following function. This will clear all cache entries of the network IDs.
+To clear the cache of specific networks in a multi-network installation, use the following function. This will clear all cache entries for the network IDs.
 
 ```php
 /*
@@ -284,7 +311,8 @@ $ wp millicache stats [--flag=<flag>]
 
 ### Clear Cache
 
-Clear the cache by specific flags, post-IDs, URLs, site IDs or network IDs. The optional `--expire` flag can be used to regenerate the cache entries in the background at the next request.
+Clear the cache for specific flags, post IDs, URLs, site IDs, or network IDs.
+The optional `--expire` flag can be used to regenerate the cache entries in the background on the next request.
 
 ```bash
 $ wp millicache clear [--flags=<flags>] [--ids=<post_ids>] [--urls=<urls>] [--sites=<site_ids>] [--networks=<network_ids>] [--expire] 
@@ -294,13 +322,13 @@ $ wp millicache clear [--flags=<flags>] [--ids=<post_ids>] [--urls=<urls>] [--si
 
 ## Debugging
 
-To enable debug mode, set `MC_DEBUG` to `true` in your `wp-config.php`. This will add various headers to the response.
+To enable debug mode, set `MC_DEBUG` to `true` in your `wp-config.php`. This will add several headers to the response.
 
 ```php
 define('MC_DEBUG', true);
 ```
 
-Visit your website in incognito mode or use cURL to inspect the response headers.
+Visit your site in incognito mode or use cURL to inspect the response headers.
 
 ```bash
 curl -I https://example.com
@@ -308,16 +336,16 @@ curl -I https://example.com
 
 You will see the following headers:
 
-- `X-MilliCache-Flags`: The cache flags of the current request.
+- `X-MilliCache-Flags`: The cache flags for the current request.
 - `X-MilliCache-Status`: The cache status of the current request.
 - `X-MilliCache-Expires`: The left TTL of the current request.
-- `X-MilliCache-Time`: The cache time of the current request.
+- `X-MilliCache-Time`: The cache time for the current request.
 - `X-MilliCache-Key`: The cache key of the current request.
 - `X-MilliCache-Gzip`: If Gzip compression is enabled.
 
 ## Hooks & Filters
 
-MilliCache provides several hooks and filters to extend the functionality. Here are some examples:
+MilliCache provides several hooks and filters to extend its functionality. Here are some examples:
 
 ### `millicache_add_flags`
 
@@ -360,12 +388,12 @@ add_filter('millicache_clear_site_options', function( $options ) {
 
 ## Roadmap
 
-We are planning to implement the following features soon:
+We plan to implement the following features soon:
 
 - [ ] Settings UI
-- [ ] Clear Network Options
+- [ ] Clear network options
 - [ ] Cache Preloading
-- [ ] CDN Integration
+- [ ] CDN integration
 
 ## Credits
 
