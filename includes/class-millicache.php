@@ -275,7 +275,7 @@ final class Millicache {
 		 * @since 1.0.0
 		 * @param array $add_flags The additional flags.
 		 */
-		$additional_flags = apply_filters( 'millicache_additional_flags', array() );
+		$additional_flags = apply_filters( 'millicache_add_flags', array() );
 		if ( is_array( $additional_flags ) && ! empty( $additional_flags ) ) {
 			foreach ( $additional_flags as $flag ) {
 				$this->engine->add_flag( $flag );
