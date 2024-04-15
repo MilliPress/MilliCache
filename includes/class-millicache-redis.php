@@ -52,14 +52,14 @@ final class Millicache_Redis {
 	private $port = 6379;
 
 	/**
-	 * The Redis auth key.
+	 * The Redis Server password.
 	 *
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var      string    $auth    The Redis auth.
+	 * @var      string    $password    The Redis auth.
 	 */
-	private $auth = '';
+	private $password = '';
 
 	/**
 	 * The Redis database.
@@ -100,7 +100,7 @@ final class Millicache_Redis {
 	 *
 	 * @var int The maximum time to live for the cache.
 	 */
-	private static $max_ttl = 2629746; // 1 month.
+	private static $max_ttl = MONTH_IN_SECONDS; // 1 month.
 
 	/**
 	 * Initialize the class and set its properties.
@@ -185,8 +185,8 @@ final class Millicache_Redis {
 				$this->redis->connect( $this->host, $this->port );
 
 			// Authenticate and select database.
-			if ( ! empty( $this->auth ) ) {
-				$this->redis->auth( $this->auth );
+			if ( ! empty( $this->password ) ) {
+				$this->redis->auth( $this->password );
 			}
 
 			$this->redis->select( $this->db );

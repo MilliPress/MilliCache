@@ -94,16 +94,6 @@ final class Millicache_Engine {
 	private static $ignore_cookies = array();
 
 	/**
-	 * Cookies that are whitelisted.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var array Whitelist cookies.
-	 */
-	private static $whitelist_cookies = array();
-
-	/**
 	 * Request keys that are ignored.
 	 *
 	 * @since 1.0.0
@@ -719,12 +709,12 @@ final class Millicache_Engine {
 		}
 
 		// Remove ignored cookies.
-		if ( ! empty( self::$whitelist_cookies ) && ! ( defined( 'WP_ADMIN' ) && WP_ADMIN && ! ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) ) {
+		if ( ! empty( self::$ignore_cookies ) && ! ( defined( 'WP_ADMIN' ) && WP_ADMIN && ! ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) ) {
 			$_COOKIE = array_filter(
 				$_COOKIE,
 				function ( $key ) {
 					return array_reduce(
-						self::$whitelist_cookies,
+						self::$ignore_cookies,
 						function ( $carry, $part ) use ( $key ) {
 							return $carry || strpos( $key, $part ) === 0;
 						},
@@ -767,8 +757,8 @@ final class Millicache_Engine {
 	 */
 	public static function clear_cache_on_shutdown() {
 		$sets = array(
-			'mll:expired-flags' => self::$flags_expire ? self::$flags_expire : array(),
-			'mll:deleted-flags' => self::$flags_delete ? self::$flags_delete : array(),
+			'mll:expired-flags' => self::$flags_expire ?: array(),
+			'mll:deleted-flags' => self::$flags_delete ?: array(),
 		);
 
 		self::$storage->clear_cache_by_flags( $sets, self::$ttl );
