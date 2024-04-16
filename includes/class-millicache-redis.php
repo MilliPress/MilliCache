@@ -139,7 +139,7 @@ final class Millicache_Redis {
 		$keys = array(
 			'host',
 			'port',
-			'auth',
+			'password',
 			'db',
 			'prefix',
 			'persistent',

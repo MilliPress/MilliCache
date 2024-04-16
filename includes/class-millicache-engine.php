@@ -257,7 +257,6 @@ final class Millicache_Engine {
 			'nocache_cookies',
 			'ignore_cookies',
 			'ignore_request_keys',
-			'whitelist_cookies',
 			'should_cache_callback',
 			'debug',
 			'gzip',
