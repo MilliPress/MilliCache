@@ -21,6 +21,7 @@
     <file>includes</file>
     <file>millicache.php</file>
     <file>advanced-cache.php</file>
+    <exclude-pattern>tests/*</exclude-pattern>
     <exclude-pattern>vendor/*</exclude-pattern>
     <exclude-pattern>*/index.php</exclude-pattern>
 
