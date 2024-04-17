@@ -110,7 +110,7 @@ class Millicache_Loader {
 	 * collection.
 	 *
 	 * @since    1.0.0
-	 * @access   private
+	 * @access  private
 	 *
 	 * @param    array<mixed> $hooks            The collection of hooks that is being registered (that is, actions or filters).
 	 * @param    string       $hook             The name of the WordPress filter that is being registered.
@@ -118,7 +118,13 @@ class Millicache_Loader {
 	 * @param    string       $callback         The name of the function definition on the $component.
 	 * @param    int          $priority         The priority at which the function should be fired.
 	 * @param    int          $accepted_args    The number of arguments that should be passed to the $callback.
-	 * @return   array<mixed>                    The collection of actions and filters registered with WordPress.
+	 * @return   array<array{
+	 *       hook: string,
+	 *       component: object,
+	 *       callback: string,
+	 *       priority: int,
+	 *       accepted_args: int
+	 *   }> The collection of actions and filters registered with WordPress.
 	 */
 	private function add( array $hooks, string $hook, object $component, string $callback, int $priority, int $accepted_args ): array {
 
@@ -143,11 +149,25 @@ class Millicache_Loader {
 	public function run(): void {
 
 		foreach ( $this->filters as $hook ) {
-			add_filter( $hook['hook'], array( $hook['component'], $hook['callback'] ), $hook['priority'], $hook['accepted_args'] );
+			/**
+			 * Combine Component & Callback.
+			 *
+			 * @var callable $callable This is the callable reference.
+			 */
+			$callable = array( $hook['component'], $hook['callback'] );
+
+			add_filter( $hook['hook'], $callable, $hook['priority'], $hook['accepted_args'] );
 		}
 
 		foreach ( $this->actions as $hook ) {
-			add_action( $hook['hook'], array( $hook['component'], $hook['callback'] ), $hook['priority'], $hook['accepted_args'] );
+			/**
+			 * Combine Component & Callback.
+			 *
+			 * @var callable $callable This is the callable reference.
+			 */
+			$callable = array( $hook['component'], $hook['callback'] );
+
+			add_action( $hook['hook'], $callable, $hook['priority'], $hook['accepted_args'] );
 		}
 	}
 }

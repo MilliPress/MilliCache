@@ -261,10 +261,14 @@ final class Millicache {
 		if ( is_archive() ) {
 			if ( is_post_type_archive() ) {
 				$post_type = get_query_var( 'post_type' );
-				$this->engine->add_flag( "archive:$blog_id:$post_type" );
+				if ( is_string( $post_type ) ) {
+					$this->engine->add_flag( "archive:$blog_id:$post_type" );
+				}
 			} elseif ( is_author() ) {
 				$author_id = get_query_var( 'author' );
-				$this->engine->add_flag( "author:$blog_id:$author_id" );
+				if ( is_string( $author_id ) ) {
+					$this->engine->add_flag( "author:$blog_id:$author_id" );
+				}
 			}
 		}
 
@@ -441,7 +445,10 @@ final class Millicache {
 		if ( in_array( $option, $options, true ) ) {
 			if ( 'page_on_front' === $option || 'page_for_posts' === $option ) {
 				$this->engine->clear_cache_by_flags( 'home:' . get_current_blog_id() );
-				$this->engine->clear_cache_by_post_ids( array( $old_value, $value ) );
+
+				if ( is_numeric( $old_value ) && is_numeric( $value ) ) {
+					$this->engine->clear_cache_by_post_ids( array( (int) $old_value, (int) $value ) );
+				}
 			} else {
 				$this->engine->clear_cache_by_site_ids();
 			}

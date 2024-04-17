@@ -39,9 +39,9 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var null|Millicache_Redis The Cache Storage object.
+	 * @var Millicache_Redis The Cache Storage object.
 	 */
-	private static ?Millicache_Redis $storage = null;
+	private static Millicache_Redis $storage;
 
 	/**
 	 * TTL.
@@ -282,7 +282,7 @@ final class Millicache_Engine {
 	 * @return   Millicache_Redis The MilliCache Storage instance.
 	 */
 	private static function get_storage(): Millicache_Redis {
-		if ( ! ( self::$storage instanceof Millicache_Redis ) ) {
+		if ( ! isset( self::$storage ) ) {
 
 			/**
 			 * The MilliPress Redis class.
@@ -383,7 +383,15 @@ final class Millicache_Engine {
 		}
 
 		// Look for an existing cache entry by request hash.
-		list( $cache, $flags, $locked ) = self::$storage->get_cache( self::$request_hash );
+		$result = self::$storage->get_cache( self::$request_hash );
+
+		// No cache found.
+		if ( ! $result ) {
+			return;
+		}
+
+		// Unpack the result.
+		list( $cache, $flags, $locked ) = $result;
 
 		// Something is in cache.
 		if ( is_array( $cache ) && ! empty( $cache ) ) {
@@ -691,7 +699,10 @@ final class Millicache_Engine {
 
 		// Remove ignored request keys from the query string.
 		if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
-			$_SERVER['QUERY_STRING'] = self::remove_query_args( filter_var( self::get_server_var( 'QUERY_STRING' ), FILTER_SANITIZE_URL ), self::$ignore_request_keys );
+			$_SERVER['QUERY_STRING'] = self::remove_query_args(
+				(string) filter_var( self::get_server_var( 'QUERY_STRING' ), FILTER_SANITIZE_URL ),
+				self::$ignore_request_keys
+			);
 		}
 
 		// Remove ignored request keys from the request uri.
@@ -739,7 +750,7 @@ final class Millicache_Engine {
 			$url = self::get_server_var( 'HTTP_HOST' ) . self::parse_request_uri( self::get_server_var( 'REQUEST_URI' ) );
 		} else {
 			$parsed = parse_url( $url );
-			$url = $parsed['host'] . self::parse_request_uri( $parsed['path'] . ( $parsed['query'] ?? '' ) );
+			$url = ( $parsed['host'] ?? '' ) . self::parse_request_uri( $parsed['path'] ?? '' . ( $parsed['query'] ?? '' ) );
 		}
 
 		return md5( $url );
@@ -885,9 +896,9 @@ final class Millicache_Engine {
 		 *
 		 * @since 1.0.0
 		 *
-		 * @param array $site_ids The site IDs to expire.
-		 * @param int   $network_id The network ID.
-		 * @param bool  $expire Expire cache if set to true, or delete by default.
+		 * @param array     $site_ids The site IDs to expire.
+		 * @param int|null  $network_id The network ID.
+		 * @param bool      $expire Expire cache if set to true, or delete by default.
 		 */
 		do_action( 'millicache_cleared_by_site_ids', $site_ids, $network_id, $expire );
 	}
@@ -976,7 +987,7 @@ final class Millicache_Engine {
 	 */
 	public static function get_network_ids(): array {
 		if ( self::is_multisite() && function_exists( 'get_networks' ) ) {
-			return get_networks( array( 'fields' => 'ids' ) );
+			return (array) get_networks( array( 'fields' => 'ids' ) );
 		}
 
 		return array( 1 );
@@ -1026,13 +1037,13 @@ final class Millicache_Engine {
 	 * @access private
 	 *
 	 * @param string $key The server variable key.
-	 * @return string|null The server variable value.
+	 * @return string The server variable value.
 	 */
-	private static function get_server_var( string $key ): ?string {
+	private static function get_server_var( string $key ): string {
 		if ( isset( $_SERVER[ $key ] ) ) {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- We are sanitizing & un-slashing here with PHP native functions.
 			return htmlspecialchars( stripslashes( $_SERVER[ $key ] ), ENT_QUOTES, 'UTF-8' );
 		}
-		return null;
+		return '';
 	}
 }

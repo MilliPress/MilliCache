@@ -302,7 +302,7 @@ class Millicache_Admin {
 	public static function get_cache_size( string $flag = '', bool $reload = false ): array {
 		$size = get_transient( 'millicache_size_' . $flag );
 
-		if ( ! $size || $reload ) {
+		if ( ! is_array( $size ) || $reload ) {
 			$redis = new Millicache_Redis();
 			$size = $redis->get_cache_size( $flag );
 
@@ -311,7 +311,10 @@ class Millicache_Admin {
 			}
 		}
 
-		return $size;
+		return array(
+			'index' => $size['index'] ?? 0,
+			'size' => $size['size'] ?? 0,
+		);
 	}
 
 	/**

@@ -58,12 +58,15 @@ class Millicache_Activator {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @return   bool
+	 * @return   void
 	 */
-	private static function create_advanced_cache_file(): bool {
+	private static function create_advanced_cache_file(): void {
 
 		if ( ! is_writable( WP_CONTENT_DIR ) ) {
-			return false;
+			Millicache_Admin::add_notice(
+				'error',
+				__( 'The wp-content directory is not writable. Please make sure that the directory is writable and try again or manually copy advanced-cache.php from the plugin folder.', 'millicache' )
+			);
 		}
 
 		$source_path = dirname( plugin_dir_path( __FILE__ ) );
@@ -77,8 +80,6 @@ class Millicache_Activator {
 					'success',
 					__( 'Symlink for advanced-cache.php created.', 'millicache' )
 				);
-
-				return true;
 			}
 
 			// Could not create symlink, try to copy the file.
@@ -89,7 +90,6 @@ class Millicache_Activator {
 
 				if ( file_put_contents( $destination, $source_content, LOCK_EX ) ) {
 					Millicache_Admin::add_notice( 'success', __( 'advanced-cache.php copied to wp-content directory.', 'millicache' ) );
-					return true;
 				}
 			}
 
@@ -117,7 +117,5 @@ class Millicache_Activator {
 				__( 'advanced-cache.php already exists in your wp-content directory. Please remove it and try again.', 'millicache' )
 			);
 		}
-
-		return false;
 	}
 }

@@ -195,7 +195,7 @@ class Millicache_Adminbar {
 			}
 		} elseif ( 'flush_current' === $_GET['_millicache'] ) {
 			if ( is_singular() ) {
-				Millicache_Engine::clear_cache_by_post_ids( get_the_ID() );
+				Millicache_Engine::clear_cache_by_post_ids( (int) get_the_ID() );
 			} elseif ( is_home() || is_front_page() ) {
 				Millicache_Engine::clear_cache_by_flags( 'home:' . get_current_blog_id() );
 			} else {

@@ -27,9 +27,9 @@ final class Millicache_Redis {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var      null|Redis    $redis    The Redis object.
+	 * @var      Redis    $redis    The Redis object.
 	 */
-	private ?Redis $redis = null;
+	private Redis $redis;
 
 	/**
 	 * The Redis host.
@@ -175,7 +175,7 @@ final class Millicache_Redis {
 
 		try {
 			// If Redis is already connected, return.
-			if ( $this->redis && $this->redis->isConnected() ) {
+			if ( isset( $this->redis ) && $this->redis->isConnected() ) {
 				return true;
 			}
 
@@ -247,9 +247,9 @@ final class Millicache_Redis {
 	 * @access public
 	 *
 	 * @param string $hash The cache hash.
-	 * @return mixed[]|false The cached data.
+	 * @return null|array{mixed[], array<string>, string} The cached data.
 	 */
-	public function get_cache( string $hash ) {
+	public function get_cache( string $hash ): ?array {
 		try {
 			// Get the cache entry and lock status.
 			$key = $this->get_cache_key( $hash );
@@ -265,14 +265,14 @@ final class Millicache_Redis {
 			list($cache, $lock_status) = $this->redis->exec();
 
 			if ( ! $cache ) {
-				return false;
+				return null;
 			}
 
 			// Sort out the flags.
 			$flags = array();
 			foreach ( array_keys( $cache ) as $key ) {
-				if ( strpos( $key, $this->prefix . ':f:' ) === 0 ) {
-					$flags[] = $this->get_flag_key( $key );
+				if ( strpos( (string) $key, $this->prefix . ':f:' ) === 0 ) {
+					$flags[] = $this->get_flag_key( (string) $key );
 				}
 			}
 
@@ -281,10 +281,10 @@ final class Millicache_Redis {
 				$cache['data'],
 				$flags,
 				$lock_status,
-			) : false;
+			) : null;
 		} catch ( RedisException $e ) {
 			error_log( 'Unable to get cache from Redis: ' . $e->getMessage() );
-			return false;
+			return null;
 		}
 	}
 
@@ -373,6 +373,11 @@ final class Millicache_Redis {
 
 			// Get all flags of the key.
 			$flags = $this->redis->hKeys( $key );
+
+			// Check if the flags are an array.
+			if ( ! is_array( $flags ) ) {
+				return false;
+			}
 
 			/**
 			 * Fires before a page cache is deleted in Redis.
@@ -491,10 +496,13 @@ final class Millicache_Redis {
 		if ( isset( $sets['mll:expired-flags'] ) ) {
 			foreach ( array_unique( $sets['mll:expired-flags'] ) as $flag ) {
 				foreach ( $this->get_cache_keys_by_flag( $flag ) as $key ) {
-					list($data, , $locked) = $this->get_cache( $key );
-					if ( $data && ! $locked ) {
-						$data['updated'] -= $ttl;
-						$this->set_cache( $key, $data, array() );
+					$result = $this->get_cache( $key );
+					if ( $result ) {
+						list($data, , $locked) = $result;
+						if ( $data && ! $locked ) {
+							$data['updated'] -= $ttl;
+							$this->set_cache( $key, $data, array() );
+						}
 					}
 				}
 			}
@@ -520,6 +528,12 @@ final class Millicache_Redis {
 
 				// The flag contains wildcard, use SCAN to get all keys.
 				$keys = $this->redis->scan( $iterator, $pattern );
+
+				// Check if the keys are an array.
+				if ( ! is_array( $keys ) ) {
+					return array();
+				}
+
 				foreach ( $keys as $key ) {
 					$key_members = $this->redis->sMembers( $key );
 					$members = array_merge( $members, $key_members );
@@ -627,6 +641,11 @@ final class Millicache_Redis {
 	public function get_cache_size( string $flag = '' ) {
 		try {
 			$keys = ! empty( $flag ) ? $this->get_cache_keys_by_flag( $flag ) : $this->redis->scan( $iterator, $this->prefix . ':c:*' );
+
+			if ( ! is_array( $keys ) ) {
+				return false;
+			}
+
 			$total_size = array_sum(
 				array_map(
 					function ( $key ) use ( $flag ) {

@@ -2,7 +2,7 @@
 /**
  * This is the drop-in plugin file for the MilliCache plugin, responsible for advanced WordPress caching.
  *
- * This file, advanced-cache.php, is automatically placed in the wp-content directory by the MilliCache plugin during its installation.
+ * This file, advanced-cache.php, is automatically placed in the wp-content directory by the MilliCache plugin during its activation.
  * WordPress recognizes this file and loads it during its initialization process.
  *
  * The file can either be a symlink to the actual advanced-cache.php file located in the MilliCache plugin directory (if the hosting environment supports symlinks),
@@ -25,10 +25,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$engine_path = dirname( is_link( __FILE__ ) ? readlink( __FILE__ ) : __FILE__ );
+$engine_path = dirname( is_link( __FILE__ ) ? (string) readlink( __FILE__ ) : __FILE__ );
 $engine_file = realpath( $engine_path . '/includes/class-millicache-engine.php' );
 
-if ( file_exists( $engine_file ) ) {
+if ( file_exists( (string) $engine_file ) ) {
 	require_once $engine_file;
 
 	if ( class_exists( 'MilliCache_Engine' ) ) {
