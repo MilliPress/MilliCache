@@ -20,14 +20,15 @@
         "szepeviktor/phpstan-wordpress": "^1.3",
         "swissspidy/phpstan-no-private": "^0.2.0",
         "phpstan/phpstan-deprecation-rules": "^1.1",
-        "php-stubs/wp-cli-stubs": "^2.10"
+        "php-stubs/wp-cli-stubs": "^2.10",
+        "roave/security-advisories": "dev-latest"
     },
     "suggest": {
         "ext-redis": "Allows connecting to Redis with the fast phpredis extension.",
         "ext-zlib": "Allows compressing the cache with zlib."
     },
     "scripts": {
-        "phpstan": "phpstan analyse -c phpstan.neon",
+        "phpstan": "phpstan analyse -c phpstan.neon --memory-limit 1G",
         "lint": "phpcs --standard=phpcs.xml -s",
         "fix": "phpcbf --standard=phpcs.xml"
     },
