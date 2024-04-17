@@ -306,7 +306,7 @@ MilliCache provides WP CLI commands to clear the cache and get cache information
 Get cache statistics such as the number of cache entries and cache size. The optional flag parameter can be used to filter the cache entries by a specific flag.
 
 ```bash
-$ wp millicache stats [--flag=<flag>]
+$ wp millicache stats [--flag="<flag>"]
 ```
 
 ### Clear Cache
@@ -315,7 +315,7 @@ Clear the cache for specific flags, post IDs, URLs, site IDs, or network IDs.
 The optional `--expire` flag can be used to regenerate the cache entries in the background on the next request.
 
 ```bash
-$ wp millicache clear [--flags=<flags>] [--ids=<post_ids>] [--urls=<urls>] [--sites=<site_ids>] [--networks=<network_ids>] [--expire] 
+$ wp millicache clear [--flags="<flags>"] [--ids="<post_ids>"] [--urls="<urls>"] [--sites="<site_ids>"] [--networks="<network_ids>"] [--expire] 
 ```
 `--flags` [supports wildcards](#wildcards) and can be a single flag or an array of flags separated by a comma as for `--ids`, `--urls`, `--sites` and `--networks`.
 

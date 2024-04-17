@@ -2,11 +2,13 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
-  level: 5
+  level: 6
   paths:
     - millicache.php
     - advanced-cache.php
     - admin/
     - includes/
+  scanFiles:
+    - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
   fileExtensions:
     - php

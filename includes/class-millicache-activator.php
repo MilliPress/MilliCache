@@ -60,7 +60,7 @@ class Millicache_Activator {
 	 *
 	 * @return   bool
 	 */
-	private static function create_advanced_cache_file() {
+	private static function create_advanced_cache_file(): bool {
 
 		if ( ! is_writable( WP_CONTENT_DIR ) ) {
 			return false;
@@ -116,8 +116,8 @@ class Millicache_Activator {
 				'error',
 				__( 'advanced-cache.php already exists in your wp-content directory. Please remove it and try again.', 'millicache' )
 			);
-
 		}
+
 		return false;
 	}
 }

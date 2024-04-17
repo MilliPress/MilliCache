@@ -27,9 +27,9 @@ final class Millicache_Redis {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var      Redis    $redis    The Redis object.
+	 * @var      null|Redis    $redis    The Redis object.
 	 */
-	private $redis;
+	private ?Redis $redis = null;
 
 	/**
 	 * The Redis host.
@@ -39,7 +39,7 @@ final class Millicache_Redis {
 	 *
 	 * @var      string    $host    The Redis host.
 	 */
-	private $host = '127.0.0.1';
+	private string $host = '127.0.0.1';
 
 	/**
 	 * The Redis port.
@@ -49,7 +49,7 @@ final class Millicache_Redis {
 	 *
 	 * @var      int    $port    The Redis port.
 	 */
-	private $port = 6379;
+	private int $port = 6379;
 
 	/**
 	 * The Redis Server password.
@@ -59,7 +59,7 @@ final class Millicache_Redis {
 	 *
 	 * @var      string    $password    The Redis auth.
 	 */
-	private $password = '';
+	private string $password = '';
 
 	/**
 	 * The Redis database.
@@ -69,7 +69,7 @@ final class Millicache_Redis {
 	 *
 	 * @var      int    $db    The Redis database.
 	 */
-	private $db = 0;
+	private int $db = 0;
 
 	/**
 	 * The Redis prefix.
@@ -79,7 +79,7 @@ final class Millicache_Redis {
 	 *
 	 * @var      string    $prefix    The Redis prefix.
 	 */
-	private $prefix = 'mll';
+	private string $prefix = 'mll';
 
 	/**
 	 * Whether to use a persistent connection.
@@ -89,7 +89,7 @@ final class Millicache_Redis {
 	 *
 	 * @var      bool    $persistent    Whether to use a persistent connection.
 	 */
-	private $persistent = true;
+	private bool $persistent = true;
 
 	/**
 	 * The max TTL (Time to Live) of an entry in the Redis Cache to avoid stale data.
@@ -112,7 +112,10 @@ final class Millicache_Redis {
 	 */
 	public function __construct() {
 		$this->get_config();
-		$this->connect();
+
+		if ( ! $this->connect() ) {
+			error_log( 'Unable to connect to Redis.' );
+		}
 	}
 
 	/**
@@ -123,7 +126,7 @@ final class Millicache_Redis {
 	 *
 	 * @return bool Whether Redis is available.
 	 */
-	public static function is_available() {
+	public static function is_available(): bool {
 		return class_exists( 'Redis' );
 	}
 
@@ -163,7 +166,7 @@ final class Millicache_Redis {
 	 *
 	 * @return bool Whether the connection was successful.
 	 */
-	private function connect() {
+	private function connect(): bool {
 		// Check if Redis is available.
 		if ( ! self::is_available() ) {
 			error_log( 'Redis class does not exist.' );
@@ -172,7 +175,7 @@ final class Millicache_Redis {
 
 		try {
 			// If Redis is already connected, return.
-			if ( is_object( $this->redis ) && $this->redis->isConnected() ) {
+			if ( $this->redis && $this->redis->isConnected() ) {
 				return true;
 			}
 
@@ -196,12 +199,7 @@ final class Millicache_Redis {
 			return false;
 		}
 
-		if ( ! $connect ) {
-			error_log( 'Unable to connect to Redis.' );
-			return false;
-		}
-
-		return true;
+		return $connect;
 	}
 
 	/**
@@ -210,13 +208,13 @@ final class Millicache_Redis {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param string $hash The cache hash.
-	 * @param mixed  $data The data to cache.
-	 * @param array  $flags The flags associated with the cache.
-	 * @param bool   $cache Whether to cache or delete the data.
+	 * @param string        $hash The cache hash.
+	 * @param mixed[]       $data The data to cache.
+	 * @param array<string> $flags The flags associated with the cache.
+	 * @param bool          $cache Whether to cache or delete the data.
 	 * @return bool Whether the cache operation was successful.
 	 */
-	public function perform_cache( $hash, $data, $flags = array(), $cache = true ) {
+	public function perform_cache( string $hash, array $data, array $flags = array(), bool $cache = true ): bool {
 		try {
 			// Start a transaction.
 			$this->redis->multi();
@@ -249,9 +247,9 @@ final class Millicache_Redis {
 	 * @access public
 	 *
 	 * @param string $hash The cache hash.
-	 * @return false|array The cached data.
+	 * @return mixed[]|false The cached data.
 	 */
-	public function get_cache( $hash ) {
+	public function get_cache( string $hash ) {
 		try {
 			// Get the cache entry and lock status.
 			$key = $this->get_cache_key( $hash );
@@ -278,7 +276,7 @@ final class Millicache_Redis {
 				}
 			}
 
-			// Return the data, flags and lock status.
+			// Return the data, the flags and lock status.
 			return isset( $cache['data'] ) ? array(
 				$cache['data'],
 				$flags,
@@ -296,12 +294,12 @@ final class Millicache_Redis {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param string $hash The cache hash.
-	 * @param mixed  $data The data to cache.
-	 * @param array  $flags The flags associated with the cache.
+	 * @param string        $hash The cache hash.
+	 * @param mixed[]       $data The data to cache.
+	 * @param array<string> $flags The flags associated with the cache.
 	 * @return bool Whether the cache operation was successful.
 	 */
-	public function set_cache( $hash, $data, $flags ) {
+	public function set_cache( string $hash, array $data, array $flags ): bool {
 		try {
 			// Get the cache key.
 			$key = $this->get_cache_key( $hash );
@@ -369,7 +367,7 @@ final class Millicache_Redis {
 	 * @param string $hash The cache hash.
 	 * @return bool Whether the cache operation was successful.
 	 */
-	public function delete_cache( $hash ) {
+	public function delete_cache( string $hash ): bool {
 		try {
 			$key = $this->get_cache_key( $hash );
 
@@ -435,7 +433,7 @@ final class Millicache_Redis {
 	 * @param string $hash The cache hash.
 	 * @return bool Whether the lock operation was successful.
 	 */
-	public function lock( $hash ) {
+	public function lock( string $hash ): bool {
 		try {
 			return $this->redis->set(
 				$this->get_cache_key( $hash . '-lock' ),
@@ -460,7 +458,7 @@ final class Millicache_Redis {
 	 * @param string $hash The cache hash.
 	 * @return bool Whether the lock operation was successful.
 	 */
-	public function unlock( $hash ) {
+	public function unlock( string $hash ): bool {
 		try {
 			return (bool) $this->redis->del( $this->get_cache_key( $hash . '-lock' ) );
 		} catch ( RedisException $e ) {
@@ -475,11 +473,11 @@ final class Millicache_Redis {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param array $sets The cache sets to clear.
-	 * @param int   $ttl The time-to-live for the cache.
+	 * @param array<array<string>> $sets The cache sets to clear.
+	 * @param int                  $ttl The time-to-live for the cache.
 	 * @return void
 	 */
-	public function clear_cache_by_flags( $sets, $ttl ) {
+	public function clear_cache_by_flags( array $sets, int $ttl ): void {
 		// Delete the Redis entries for the deleted flags.
 		if ( isset( $sets['mll:deleted-flags'] ) ) {
 			foreach ( array_unique( $sets['mll:deleted-flags'] ) as $flag ) {
@@ -493,7 +491,7 @@ final class Millicache_Redis {
 		if ( isset( $sets['mll:expired-flags'] ) ) {
 			foreach ( array_unique( $sets['mll:expired-flags'] ) as $flag ) {
 				foreach ( $this->get_cache_keys_by_flag( $flag ) as $key ) {
-					list($data, $flags, $locked) = $this->get_cache( $key );
+					list($data, , $locked) = $this->get_cache( $key );
 					if ( $data && ! $locked ) {
 						$data['updated'] -= $ttl;
 						$this->set_cache( $key, $data, array() );
@@ -510,24 +508,24 @@ final class Millicache_Redis {
 	 * @access public
 	 *
 	 * @param string $flag The cache flag. Supports wildcards.
-	 * @return array The cache keys associated with the flag.
+	 * @return array<string> The cache keys associated with the flag.
 	 */
-	public function get_cache_keys_by_flag( $flag ) {
+	public function get_cache_keys_by_flag( string $flag ): array {
 		try {
-			// Check if flag contains any wildcard characters.
-			if ( preg_match( '/[\*\?\[\]]/', $flag ) ) {
+			// Check if the flag contains any wildcard characters.
+			if ( preg_match( '/[*?]/', $flag ) ) {
 				$pattern = $this->get_flag_key( $flag );
 				$iterator = null;
 				$members = array();
 
-				// Flag contains wildcard, use SCAN to get all keys.
+				// The flag contains wildcard, use SCAN to get all keys.
 				$keys = $this->redis->scan( $iterator, $pattern );
 				foreach ( $keys as $key ) {
 					$key_members = $this->redis->sMembers( $key );
 					$members = array_merge( $members, $key_members );
 				}
 			} else {
-				// Flag does not contain wildcard, directly call sMembers.
+				// The flag does not contain wildcard, directly call sMembers.
 				$members = $this->redis->sMembers( $this->get_flag_key( $flag ) );
 			}
 
@@ -552,7 +550,7 @@ final class Millicache_Redis {
 	 *
 	 * @return bool Whether the cleanup was successful.
 	 */
-	public function cleanup_expired_flags() {
+	public function cleanup_expired_flags(): bool {
 		try {
 			// Get all flags.
 			$flags = $this->redis->keys( $this->prefix . ':f:*' );
@@ -590,7 +588,7 @@ final class Millicache_Redis {
 	 * @param string $hash The cache hash.
 	 * @return string The cache key.
 	 */
-	private function get_cache_key( $hash ) {
+	private function get_cache_key( string $hash ): string {
 		$prefix = $this->prefix . ':c:';
 		if ( strpos( $hash, $prefix ) === 0 ) {
 			return substr( $hash, strlen( $prefix ) );
@@ -608,7 +606,7 @@ final class Millicache_Redis {
 	 * @param string $flag The flag name.
 	 * @return string The flag key.
 	 */
-	private function get_flag_key( $flag ) {
+	private function get_flag_key( string $flag ): string {
 		$prefix = $this->prefix . ':f:';
 		if ( strpos( $flag, $prefix ) === 0 ) {
 			return substr( $flag, strlen( $prefix ) );
@@ -624,9 +622,9 @@ final class Millicache_Redis {
 	 * @access public
 	 *
 	 * @param string $flag Get cache by flag. Supports wildcards.
-	 * @return false|array The amount of cache keys & size of the cache in kilobytes.
+	 * @return false|array{index: int, size: int} The number of cache keys & the size of the cache in kilobytes.
 	 */
-	public function get_cache_size( $flag = '' ) {
+	public function get_cache_size( string $flag = '' ) {
 		try {
 			$keys = ! empty( $flag ) ? $this->get_cache_keys_by_flag( $flag ) : $this->redis->scan( $iterator, $this->prefix . ':c:*' );
 			$total_size = array_sum(
@@ -639,8 +637,8 @@ final class Millicache_Redis {
 			);
 
 			return array(
-				'index' => count( $keys ),
-				'size' => round( $total_size / 1024 ),
+				'index' => (int) count( $keys ),
+				'size' => (int) round( $total_size / 1024 ),
 			);
 		} catch ( RedisException $e ) {
 			error_log( 'Unable to get cache size from Redis: ' . $e->getMessage() );

@@ -31,7 +31,7 @@ final class Millicache_Engine {
 	 *
 	 * @var bool If the cache engine has been started.
 	 */
-	private static $started = false;
+	private static bool $started = false;
 
 	/**
 	 * The Cache Storage object.
@@ -39,9 +39,9 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var Millicache_Redis The Cache Storage object.
+	 * @var null|Millicache_Redis The Cache Storage object.
 	 */
-	private static $storage;
+	private static ?Millicache_Redis $storage = null;
 
 	/**
 	 * TTL.
@@ -51,7 +51,7 @@ final class Millicache_Engine {
 	 *
 	 * @var int The time to live for the cache.
 	 */
-	private static $ttl = 900;
+	private static int $ttl = 900;
 
 	/**
 	 * Max TTL.
@@ -61,7 +61,7 @@ final class Millicache_Engine {
 	 *
 	 * @var int The maximum time to live for the cache.
 	 */
-	private static $max_ttl = 3600;
+	private static int $max_ttl = 3600;
 
 	/**
 	 * Variables that make the request unique.
@@ -69,9 +69,9 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array Unique request variables.
+	 * @var array<string> Unique request variables.
 	 */
-	private static $unique = array();
+	private static array $unique = array();
 
 	/**
 	 * Cookies that avoid caching.
@@ -79,9 +79,9 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array Do not cache cookies.
+	 * @var array<string> Do not cache cookies.
 	 */
-	private static $nocache_cookies = array( 'comment_author' );
+	private static array $nocache_cookies = array( 'comment_author' );
 
 	/**
 	 * Cookies that are ignored.
@@ -89,9 +89,9 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array Ignore cookies for cache hash.
+	 * @var array<string> Ignore cookies for cache hash.
 	 */
-	private static $ignore_cookies = array();
+	private static array $ignore_cookies = array();
 
 	/**
 	 * Request keys that are ignored.
@@ -99,9 +99,9 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array Ignored request keys.
+	 * @var array<string> Ignored request keys.
 	 */
-	private static $ignore_request_keys = array( '_millicache', '_wpnonce', 'utm_source', 'utm_medium', 'utm_term', 'utm_content', 'utm_campaign' );
+	private static array $ignore_request_keys = array( '_millicache', '_wpnonce', 'utm_source', 'utm_medium', 'utm_term', 'utm_content', 'utm_campaign' );
 
 	/**
 	 * External callback to append cache conditions.
@@ -111,7 +111,7 @@ final class Millicache_Engine {
 	 *
 	 * @var string Callback to append cache conditions.
 	 */
-	private static $should_cache_callback = '';
+	private static string $should_cache_callback = '';
 
 	/**
 	 * Debug mode.
@@ -121,7 +121,7 @@ final class Millicache_Engine {
 	 *
 	 * @var bool Debug mode.
 	 */
-	private static $debug = false;
+	private static bool $debug = false;
 
 	/**
 	 * Gzip compression.
@@ -131,7 +131,7 @@ final class Millicache_Engine {
 	 *
 	 * @var bool Gzip compression.
 	 */
-	private static $gzip = true;
+	private static bool $gzip = true;
 
 	/**
 	 * Request hash.
@@ -141,7 +141,7 @@ final class Millicache_Engine {
 	 *
 	 * @var string The request hash.
 	 */
-	private static $request_hash = '';
+	private static string $request_hash = '';
 
 	/**
 	 * Debug data.
@@ -149,7 +149,7 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array|false Debug data.
+	 * @var array<string,mixed>|false Debug data.
 	 */
 	private static $debug_data = false;
 
@@ -161,7 +161,7 @@ final class Millicache_Engine {
 	 *
 	 * @var bool If we can regenerate the request in background.
 	 */
-	private static $fcgi_regenerate = false;
+	private static bool $fcgi_regenerate = false;
 
 	/**
 	 * Flag requests and expire/delete them efficiently.
@@ -173,9 +173,9 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array Flags.
+	 * @var array<string> Flags.
 	 */
-	private static $flags = array();
+	private static array $flags = array();
 
 	/**
 	 * Flags to expire.
@@ -183,9 +183,9 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array Expire flags.
+	 * @var array<string> Expire flags.
 	 */
-	private static $flags_expire = array();
+	private static array $flags_expire = array();
 
 	/**
 	 * Flags to delete.
@@ -193,9 +193,9 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array Delete flags.
+	 * @var array<string> Delete flags.
 	 */
-	private static $flags_delete = array();
+	private static array $flags_delete = array();
 
 	/**
 	 * Start the cache engine.
@@ -281,7 +281,7 @@ final class Millicache_Engine {
 	 *
 	 * @return   Millicache_Redis The MilliCache Storage instance.
 	 */
-	private static function get_storage() {
+	private static function get_storage(): Millicache_Redis {
 		if ( ! ( self::$storage instanceof Millicache_Redis ) ) {
 
 			/**
@@ -481,13 +481,13 @@ final class Millicache_Engine {
 	/**
 	 * Output buffer callback.
 	 *
-	 * @since    1.0.0
-	 * @access   private
+	 * @since 1.0.0
+	 * @access private
 	 *
 	 * @param    string $output The output buffer.
 	 * @return   string The output buffer.
 	 */
-	private static function output_buffer( $output ) {
+	private static function output_buffer( string $output ): ?string {
 		// Let's start optimistically.
 		$cache = true;
 
@@ -536,7 +536,7 @@ final class Millicache_Engine {
 		}
 
 		// Compress the output.
-		if ( $data['gzip'] ) {
+		if ( $data['gzip'] && function_exists( 'gzcompress' ) ) {
 			$data['output'] = gzcompress( $data['output'] );
 		}
 
@@ -558,7 +558,7 @@ final class Millicache_Engine {
 	 *
 	 * @return   bool   If we should cache this request.
 	 */
-	private static function should_cache() {
+	private static function should_cache(): bool {
 		// Check for a custom callback to determine if caching should be skipped.
 		if ( ! empty( self::$should_cache_callback ) && is_callable( self::$should_cache_callback ) ) {
 			$callback_result = call_user_func( self::$should_cache_callback );
@@ -612,15 +612,15 @@ final class Millicache_Engine {
 	 * @param string $request_uri The request uri.
 	 * @return string The cleaned request uri.
 	 */
-	private static function parse_request_uri( $request_uri ) {
+	private static function parse_request_uri( string $request_uri ): string {
 		// Fix for requests with no host.
 		$parsed = parse_url( 'http://null' . $request_uri );
 
 		// Set query vars.
-		$query = isset( $parsed['query'] ) ? $parsed['query'] : '';
+		$query = $parsed['query'] ?? '';
 
 		// Set request path.
-		$request_uri = isset( $parsed['path'] ) ? $parsed['path'] : '';
+		$request_uri = $parsed['path'] ?? '';
 
 		// Remove ignored query vars.
 		$query = self::remove_query_args( $query, self::$ignore_request_keys );
@@ -635,11 +635,11 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @param string $query_string The input query string, such as foo=bar&baz=qux.
-	 * @param array  $args An array of keys to remove.
+	 * @param string        $query_string The input query string, such as foo=bar&baz=qux.
+	 * @param array<string> $args An array of keys to remove.
 	 * @return string The resulting query string.
 	 */
-	private static function remove_query_args( $query_string, $args ) {
+	private static function remove_query_args( string $query_string, array $args ): string {
 		// Split the query string into an array.
 		$query = explode( '&', $query_string );
 
@@ -647,7 +647,7 @@ final class Millicache_Engine {
 		$query = array_filter(
 			$query,
 			function ( $value ) use ( $args ) {
-				return ! preg_match( '#^(?:' . implode( '|', array_map( 'preg_quote', $args ) ) . ')(?:=|$)#i', $value );
+				return ! preg_match( '#^(' . implode( '|', $args ) . ')(?:=|$)#i', $value );
 			}
 		);
 
@@ -664,10 +664,10 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @param array $cookies The input cookies.
-	 * @return array The resulting cookies.
+	 * @param array<string> $cookies The input cookies.
+	 * @return array<string> The resulting cookies.
 	 */
-	private static function parse_cookies( $cookies ) {
+	private static function parse_cookies( array $cookies ): array {
 		return array_filter(
 			$cookies,
 			function ( $key ) {
@@ -702,7 +702,7 @@ final class Millicache_Engine {
 			$_SERVER['REQUEST_URI'] = $path . ( ! empty( $query ) ? '?' . $query : '' );
 		}
 
-		// Remove ignored request keys from the superglobals.
+		// Remove ignored request keys from the super globals.
 		foreach ( self::$ignore_request_keys as $key ) {
 			unset( $_GET[ $key ], $_REQUEST[ $key ] );
 		}
@@ -734,12 +734,12 @@ final class Millicache_Engine {
 	 * @param string|null $url The URL to hash.
 	 * @return string The URL hash.
 	 */
-	public static function get_url_hash( $url = null ) {
+	public static function get_url_hash( string $url = null ): string {
 		if ( ! $url ) {
 			$url = self::get_server_var( 'HTTP_HOST' ) . self::parse_request_uri( self::get_server_var( 'REQUEST_URI' ) );
 		} else {
 			$parsed = parse_url( $url );
-			$url = $parsed['host'] . self::parse_request_uri( $parsed['path'] . ( isset( $parsed['query'] ) ? $parsed['query'] : '' ) );
+			$url = $parsed['host'] . self::parse_request_uri( $parsed['path'] . ( $parsed['query'] ?? '' ) );
 		}
 
 		return md5( $url );
@@ -756,8 +756,8 @@ final class Millicache_Engine {
 	 */
 	public static function clear_cache_on_shutdown() {
 		$sets = array(
-			'mll:expired-flags' => self::$flags_expire ?: array(),
-			'mll:deleted-flags' => self::$flags_delete ?: array(),
+			'mll:expired-flags' => self::$flags_expire,
+			'mll:deleted-flags' => self::$flags_delete,
 		);
 
 		self::$storage->clear_cache_by_flags( $sets, self::$ttl );
@@ -769,10 +769,10 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param string|array $urls A string or array of URLs to flush.
-	 * @param bool         $expire Expire cache if set to true, or delete by default.
+	 * @param string|array<string> $urls A string or array of URLs to flush.
+	 * @param bool                 $expire Expire cache if set to true, or delete by default.
 	 */
-	public static function clear_cache_by_urls( $urls, $expire = false ) {
+	public static function clear_cache_by_urls( $urls, bool $expire = false ): void {
 		// Convert to array.
 		$urls = is_string( $urls ) ? array( $urls ) : $urls;
 
@@ -794,10 +794,10 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param int|array $post_ids The post IDs to expire.
-	 * @param bool      $expire Expire cache if set to true, or delete by default.
+	 * @param int|array<int> $post_ids The post IDs to expire.
+	 * @param bool           $expire Expire cache if set to true, or delete by default.
 	 */
-	public static function clear_cache_by_post_ids( $post_ids, $expire = false ) {
+	public static function clear_cache_by_post_ids( $post_ids, bool $expire = false ): void {
 		// Convert to array.
 		$post_ids = ! is_array( $post_ids ) ? array( $post_ids ) : $post_ids;
 
@@ -832,10 +832,10 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param string|array $flags A string or array of flags to expire.
-	 * @param bool         $expire Expire cache if set to true, or delete by default.
+	 * @param string|array<string> $flags A string or array of flags to expire.
+	 * @param bool                 $expire Expire cache if set to true, or delete by default.
 	 */
-	public static function clear_cache_by_flags( $flags, $expire = false ) {
+	public static function clear_cache_by_flags( $flags, bool $expire = false ): void {
 		// Convert to array.
 		$flags = is_string( $flags ) ? array( $flags ) : $flags;
 
@@ -858,12 +858,12 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param int|array $site_ids The site IDs to clear.
-	 * @param int       $network_id The network ID.
-	 * @param bool      $expire Expire cache if set to true, or delete by default.
+	 * @param int|array<int> $site_ids The site IDs to clear.
+	 * @param int|null       $network_id The network ID.
+	 * @param bool           $expire Expire cache if set to true, or delete by default.
 	 * @return void
 	 */
-	public static function clear_cache_by_site_ids( $site_ids = null, $network_id = null, $expire = false ) {
+	public static function clear_cache_by_site_ids( $site_ids = null, int $network_id = null, bool $expire = false ): void {
 		// Convert to array.
 		$site_ids = ! is_array( $site_ids ) ? array( $site_ids ) : $site_ids;
 
@@ -871,8 +871,8 @@ final class Millicache_Engine {
 		self::clear_cache_by_flags(
 			array_map(
 				function ( $site_id ) use ( $network_id ) {
-					$network_id = $network_id ? $network_id : get_current_network_id();
-					$site_id = $site_id ? $site_id : get_current_blog_id();
+					$network_id = is_int( $network_id ) ? $network_id : get_current_network_id();
+					$site_id = is_int( $site_id ) ? $site_id : get_current_blog_id();
 					return sprintf( 'site:%d:%d', $network_id, $site_id );
 				},
 				$site_ids
@@ -898,11 +898,11 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param int  $network_id The network ID.
-	 * @param bool $expire Expire cache.
+	 * @param int|null $network_id The network ID.
+	 * @param bool     $expire Expire cache.
 	 * @return void
 	 */
-	public static function clear_cache_by_network_id( $network_id = null, $expire = false ) {
+	public static function clear_cache_by_network_id( int $network_id = null, bool $expire = false ): void {
 		$site_ids = self::get_site_ids( $network_id ?? get_current_network_id() );
 
 		foreach ( $site_ids as $site_id ) {
@@ -922,7 +922,7 @@ final class Millicache_Engine {
 	 * @param bool $expire Expire cache if set to true, or delete by default.
 	 * @return void
 	 */
-	public static function clear_cache( $expire = false ) {
+	public static function clear_cache( bool $expire = false ): void {
 		foreach ( self::get_network_ids() as $network_id ) {
 			self::clear_cache_by_network_id( $network_id, $expire );
 		}
@@ -939,7 +939,7 @@ final class Millicache_Engine {
 	 *
 	 * @return bool If the site is a Multisite network.
 	 */
-	public static function is_multisite() {
+	public static function is_multisite(): bool {
 		return is_multisite();
 	}
 
@@ -950,9 +950,9 @@ final class Millicache_Engine {
 	 * @access public
 	 *
 	 * @param int $network_id The network ID.
-	 * @return array The site IDs.
+	 * @return array<int> The site IDs.
 	 */
-	public static function get_site_ids( $network_id = 1 ) {
+	public static function get_site_ids( int $network_id = 1 ): array {
 		if ( self::is_multisite() && function_exists( 'get_sites' ) ) {
 			return get_sites(
 				array(
@@ -972,9 +972,9 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @return array
+	 * @return array<int>
 	 */
-	public static function get_network_ids() {
+	public static function get_network_ids(): array {
 		if ( self::is_multisite() && function_exists( 'get_networks' ) ) {
 			return get_networks( array( 'fields' => 'ids' ) );
 		}
@@ -990,7 +990,7 @@ final class Millicache_Engine {
 	 *
 	 * @param string $flag Keep these short and unique, don't overuse.
 	 */
-	public static function add_flag( $flag ) {
+	public static function add_flag( string $flag ): void {
 		self::$flags[] = $flag;
 	}
 
@@ -1003,7 +1003,7 @@ final class Millicache_Engine {
 	 * @param string $key The header key.
 	 * @param string $value The header value.
 	 */
-	private static function set_header( $key, $value ) {
+	private static function set_header( string $key, string $value ): void {
 		header( "X-MilliCache-$key: $value" );
 	}
 
@@ -1015,7 +1015,7 @@ final class Millicache_Engine {
 	 *
 	 * @return bool
 	 */
-	private static function can_fcgi_regenerate() {
+	private static function can_fcgi_regenerate(): bool {
 		return function_exists( 'fastcgi_finish_request' );
 	}
 
@@ -1028,9 +1028,9 @@ final class Millicache_Engine {
 	 * @param string $key The server variable key.
 	 * @return string|null The server variable value.
 	 */
-	private static function get_server_var( $key ) {
+	private static function get_server_var( string $key ): ?string {
 		if ( isset( $_SERVER[ $key ] ) ) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- We are sanitizing & unslashing here with PHP native functions.
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- We are sanitizing & un-slashing here with PHP native functions.
 			return htmlspecialchars( stripslashes( $_SERVER[ $key ] ), ENT_QUOTES, 'UTF-8' );
 		}
 		return null;

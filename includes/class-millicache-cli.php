@@ -29,7 +29,7 @@ class Millicache_CLI {
 	 *
 	 * @var      Millicache_Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
-	protected $loader;
+	protected Millicache_Loader $loader;
 
 	/**
 	 * The ID of this plugin.
@@ -39,7 +39,7 @@ class Millicache_CLI {
 	 *
 	 * @var      string    $plugin_name    The ID of this plugin.
 	 */
-	private $plugin_name;
+	private string $plugin_name;
 
 	/**
 	 * The version of this plugin.
@@ -49,7 +49,7 @@ class Millicache_CLI {
 	 *
 	 * @var      string    $version    The current version of this plugin.
 	 */
-	private $version;
+	private string $version;
 
 	/**
 	 * Initialize the class and set its
@@ -64,7 +64,7 @@ class Millicache_CLI {
 	 *
 	 * @return void
 	 */
-	public function __construct( $loader, $plugin_name, $version ) {
+	public function __construct( Millicache_Loader $loader, string $plugin_name, string $version ) {
 
 		$this->loader = $loader;
 		$this->plugin_name = $plugin_name;
@@ -80,7 +80,7 @@ class Millicache_CLI {
 	 *
 	 * @return bool
 	 */
-	public static function is_cli() {
+	public static function is_cli(): bool {
 		return defined( 'WP_CLI' ) && WP_CLI && class_exists( 'WP_CLI' );
 	}
 
@@ -116,11 +116,11 @@ class Millicache_CLI {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param array $args The list of arguments.
-	 * @param array $assoc_args The list of associative arguments.
+	 * @param array<string> $args The list of arguments.
+	 * @param array<string> $assoc_args The list of associative arguments.
 	 * @return void
 	 */
-	public function clear( $args, $assoc_args ) {
+	public function clear( array $args, array $assoc_args ): void {
 		$assoc_args = wp_parse_args(
 			$assoc_args,
 			array(
@@ -206,11 +206,11 @@ class Millicache_CLI {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param array $args The list of arguments.
-	 * @param array $assoc_args The list of associative arguments.
+	 * @param array<string> $args The list of arguments.
+	 * @param array<string> $assoc_args The list of associative arguments.
 	 * @return void
 	 */
-	public function stats( $args, $assoc_args ) {
+	public function stats( array $args, array $assoc_args ): void {
 		$flag = $assoc_args['flag'] ?? '*';
 		$size = Millicache_Admin::get_cache_size( $flag, true );
 		WP_CLI::line(

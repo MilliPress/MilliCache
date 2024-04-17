@@ -29,7 +29,27 @@ class Millicache_Adminbar {
 	 *
 	 * @var      Millicache_Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
-	protected $loader;
+	protected Millicache_Loader $loader;
+
+	/**
+	 * The ID of this plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @var      string    $plugin_name    The ID of this plugin.
+	 */
+	private string $plugin_name;
+
+	/**
+	 * The version of this plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @var      string    $version    The current version of this plugin.
+	 */
+	private string $version;
 
 	/**
 	 * Initialize the class and set its properties.
@@ -37,11 +57,14 @@ class Millicache_Adminbar {
 	 * @since   1.0.0
 	 * @access public
 	 *
-	 * @param Millicache_Loader $loader Maintains and registers all hooks for the plugin.
-	 * @return  void
+	 * @param Millicache_Loader $loader The loader class.
+	 * @param string            $plugin_name The name of this plugin.
+	 * @param string            $version The version of this plugin.
 	 */
-	public function __construct( $loader ) {
+	public function __construct( Millicache_Loader $loader, string $plugin_name, string $version ) {
 		$this->loader = $loader;
+		$this->plugin_name = $plugin_name;
+		$this->version = $version;
 		$this->register_hooks();
 	}
 
@@ -55,9 +78,43 @@ class Millicache_Adminbar {
 	 * @return   void
 	 */
 	private function register_hooks() {
+		// Scripts & Styles.
+		$this->loader->add_action( 'wp_enqueue_scripts', $this, 'enqueue_styles' );
+		$this->loader->add_action( 'wp_enqueue_scripts', $this, 'enqueue_scripts' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_styles' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_scripts' );
+
+		// Menu items.
 		$this->loader->add_action( 'admin_bar_menu', $this, 'add_adminbar_menu', 999 );
+
+		// Clear cache.
 		$this->loader->add_action( 'admin_init', $this, 'maybe_clear_cache' );
 		$this->loader->add_action( 'template_redirect', $this, 'maybe_clear_cache' );
+	}
+
+	/**
+	 * Register the stylesheets for the adminbar.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @return   void
+	 */
+	public function enqueue_styles() {
+		wp_enqueue_style( $this->plugin_name . '-adminbar', plugin_dir_url( __FILE__ ) . 'css/millicache-adminbar.css', array(), $this->version );
+	}
+
+	/**
+	 * Register the JavaScript for the adminbar.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @return   void
+	 */
+	public function enqueue_scripts() {
+		// phpcs:ignore -- While in beta, we don't want to enqueue any scripts.
+		// wp_enqueue_script( $this->plugin_name . '-adminbar', plugin_dir_url( __FILE__ ) . 'js/millicache-adminbar.js', array(), $this->version, false );
 	}
 
 	/**
@@ -69,7 +126,7 @@ class Millicache_Adminbar {
 	 * @param WP_Admin_Bar $wp_admin_bar The admin bar object.
 	 * @return void
 	 */
-	public function add_adminbar_menu( $wp_admin_bar ) {
+	public function add_adminbar_menu( WP_Admin_Bar $wp_admin_bar ) {
 		if ( ! is_admin_bar_showing() || ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
@@ -144,6 +201,10 @@ class Millicache_Adminbar {
 			} else {
 				Millicache_Engine::clear_cache_by_flags( 'url:' . Millicache_Engine::get_url_hash() );
 			}
+		}
+
+		if ( wp_doing_ajax() ) {
+			wp_die();
 		}
 
 		global $pagenow;

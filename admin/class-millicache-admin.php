@@ -35,7 +35,7 @@ class Millicache_Admin {
 	 *
 	 * @var      Millicache_Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
-	protected $loader;
+	protected Millicache_Loader $loader;
 
 	/**
 	 * The ID of this plugin.
@@ -45,7 +45,7 @@ class Millicache_Admin {
 	 *
 	 * @var      string    $plugin_name    The ID of this plugin.
 	 */
-	private $plugin_name;
+	private string $plugin_name;
 
 	/**
 	 * The version of this plugin.
@@ -55,7 +55,7 @@ class Millicache_Admin {
 	 *
 	 * @var      string    $version    The current version of this plugin.
 	 */
-	private $version;
+	private string $version;
 
 	/**
 	 * The notices to display in the admin area.
@@ -63,9 +63,9 @@ class Millicache_Admin {
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @var      array $notices The notices to display in the admin area.
+	 * @var      array<array{message: string, type: string}> $notices The notices to display in the admin area.
 	 */
-	public static $notices = array();
+	public static array $notices = array();
 
 	/**
 	 * Initialize the class and set its properties.
@@ -73,11 +73,11 @@ class Millicache_Admin {
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @param    Millicache_Loader $loader The loader class.
+	 * @param    Millicache_Loader $loader            The loader class.
 	 * @param    string            $plugin_name       The name of this plugin.
 	 * @param    string            $version           The version of this plugin.
 	 */
-	public function __construct( $loader, $plugin_name, $version ) {
+	public function __construct( Millicache_Loader $loader, string $plugin_name, string $version ) {
 
 		$this->loader = $loader;
 		$this->plugin_name = $plugin_name;
@@ -102,7 +102,7 @@ class Millicache_Admin {
 		 */
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-millicache-adminbar.php';
 
-		new Millicache_Adminbar( $this->loader );
+		new Millicache_Adminbar( $this->loader, $this->plugin_name, $this->version );
 	}
 
 	/**
@@ -140,8 +140,9 @@ class Millicache_Admin {
 	 *
 	 * @param    string $message The message to display.
 	 * @param    string $type    The type of notice to display.
+	 * @return   void
 	 */
-	public static function add_notice( $message, $type = 'info' ) {
+	public static function add_notice( string $message, string $type = 'info' ): void {
 		self::$notices[] = array(
 			'message' => $message,
 			'type'    => $type,
@@ -156,7 +157,7 @@ class Millicache_Admin {
 	 *
 	 * @return   void
 	 */
-	public function display_notices() {
+	public function display_notices(): void {
 		foreach ( self::$notices as $notice ) {
 			printf(
 				'<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
@@ -174,12 +175,11 @@ class Millicache_Admin {
 	 *
 	 * @return   void
 	 */
-	public function load_plugin_textdomain() {
-
+	public function load_plugin_textdomain(): void {
 		load_plugin_textdomain(
 			'millicache',
 			false,
-			dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/'
+			dirname( plugin_basename( __FILE__ ), 2 ) . '/languages/'
 		);
 	}
 
@@ -191,8 +191,8 @@ class Millicache_Admin {
 	 *
 	 * @return   void
 	 */
-	public function enqueue_styles() {
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/millicache-admin.css', array(), $this->version, 'all' );
+	public function enqueue_styles(): void {
+		wp_enqueue_style( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'css/millicache-admin.css', array(), $this->version );
 	}
 
 	/**
@@ -203,9 +203,9 @@ class Millicache_Admin {
 	 *
 	 * @return   void
 	 */
-	public function enqueue_scripts() {
+	public function enqueue_scripts(): void {
 		// phpcs:ignore -- While in beta, we don't want to enqueue any scripts.
-		// wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/millicache-admin.js', array(), $this->version, false );
+		// wp_enqueue_script( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'js/millicache-admin.js', array(), $this->version, false );
 	}
 
 	/**
@@ -216,7 +216,7 @@ class Millicache_Admin {
 	 *
 	 * @return   void
 	 */
-	public static function undefined_cache_notice() {
+	public static function undefined_cache_notice(): void {
 		if ( defined( 'WP_CACHE' ) && ! WP_CACHE ) {
 			self::add_notice(
 				__( 'The constant WP_CACHE in your wp-config.php is either not defined or set to false. Please set define( \'WP_CACHE\', true ); in your wp-config.php file to activate MilliCache caching.', 'millicache' ),
@@ -233,22 +233,20 @@ class Millicache_Admin {
 	 *
 	 * @return  void
 	 */
-	public static function add_dashboard_glance_cache_size() {
+	public static function add_dashboard_glance_cache_size(): void {
 		$size = self::get_cache_size( 'site:' . get_current_network_id() . ':' . get_current_blog_id() );
 
-		if ( $size ) {
-			printf(
-				'<li class="cache-count"><a title="%s" href="%s">%s</a></li>',
-				esc_attr__( 'Flush the site cache', 'millicache' ),
-				esc_url(
-					wp_nonce_url(
-						add_query_arg( '_millicache', 'flush' ),
-						'_millicache__flush_nonce'
-					)
-				),
-				esc_html( self::get_cache_size_summary_string( $size ) )
-			);
-		}
+		printf(
+			'<li class="cache-count"><a title="%s" href="%s">%s</a></li>',
+			esc_attr__( 'Flush the site cache', 'millicache' ),
+			esc_url(
+				wp_nonce_url(
+					add_query_arg( '_millicache', 'flush' ),
+					'_millicache__flush_nonce'
+				)
+			),
+			esc_html( self::get_cache_size_summary_string( $size ) )
+		);
 	}
 
 	/**
@@ -259,10 +257,10 @@ class Millicache_Admin {
 	 *
 	 * @return   void
 	 */
-	public static function delete_dashboard_glance_cache_size() {
+	public static function delete_dashboard_glance_cache_size(): void {
 		$site_id = get_current_network_id();
 		$blog_id = get_current_blog_id();
-		delete_transient( "millicache_size_site:{$site_id}:{$blog_id}" );
+		delete_transient( "millicache_size_site:$site_id:$blog_id" );
 	}
 
 	/**
@@ -271,11 +269,11 @@ class Millicache_Admin {
 	 * @since   1.0.0
 	 * @access  public
 	 *
-	 * @param array $size The size of the cache.
+	 * @param array{index: int, size: int} $size The size of the cache.
 	 * @return string The summary string.
 	 */
-	public static function get_cache_size_summary_string( $size = null ) {
-		if ( isset( $size['size'] ) && $size['size'] > 0 ) {
+	public static function get_cache_size_summary_string( array $size ): string {
+		if ( $size['size'] > 0 ) {
 			$unit = $size['size'] > 1024 ? 'mb' : 'kb';
 			$size['size'] /= 'mb' == $unit ? 1024 : 1;
 			return sprintf(
@@ -299,14 +297,18 @@ class Millicache_Admin {
 	 *
 	 * @param string $flag The flag to search for. Wildcards are allowed.
 	 * @param bool   $reload Whether to reload the cache size from the Redis server.
-	 * @return array The index and memory size of the cache.
+	 * @return array{index: int, size: int} The index and memory size of the cache.
 	 */
-	public static function get_cache_size( $flag = '', $reload = false ) {
+	public static function get_cache_size( string $flag = '', bool $reload = false ): array {
 		$size = get_transient( 'millicache_size_' . $flag );
 
 		if ( ! $size || $reload ) {
 			$redis = new Millicache_Redis();
-			set_transient( 'millicache_size_' . $flag, $redis->get_cache_size( $flag ), DAY_IN_SECONDS );
+			$size = $redis->get_cache_size( $flag );
+
+			if ( $size ) {
+				set_transient( 'millicache_size_' . $flag, $size, DAY_IN_SECONDS );
+			}
 		}
 
 		return $size;
@@ -319,10 +321,10 @@ class Millicache_Admin {
 	 * @access  public
 	 *
 	 * @param string $file_path The path to the file.
-	 * @return string The version of the file.
+	 * @return null|string The version of the file.
 	 */
-	public static function get_file_version( $file_path ) {
+	public static function get_file_version( string $file_path ): ?string {
 		$version = get_file_data( $file_path, array( 'Version' => 'Version' ) );
-		return isset( $version['Version'] ) ? $version['Version'] : null;
+		return $version['Version'] ?? null;
 	}
 }

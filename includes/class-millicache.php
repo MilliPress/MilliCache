@@ -41,7 +41,7 @@ final class Millicache {
 	 *
 	 * @var      Millicache_Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
-	protected $loader;
+	protected Millicache_Loader $loader;
 
 	/**
 	 * The Millicache engine.
@@ -51,7 +51,7 @@ final class Millicache {
 	 *
 	 * @var      Millicache_Engine
 	 */
-	protected $engine;
+	protected Millicache_Engine $engine;
 
 	/**
 	 * The unique identifier of this plugin.
@@ -61,7 +61,7 @@ final class Millicache {
 	 *
 	 * @var      string    $plugin_name    The string used to uniquely identify this plugin.
 	 */
-	protected $plugin_name;
+	protected string $plugin_name;
 
 	/**
 	 * The current version of the plugin.
@@ -71,7 +71,7 @@ final class Millicache {
 	 *
 	 * @var      string    $version    The current version of the plugin.
 	 */
-	protected $version;
+	protected string $version;
 
 	/**
 	 * Define the core functionality of the plugin.
@@ -191,7 +191,7 @@ final class Millicache {
 	 *
 	 * @return    string    The name of the plugin.
 	 */
-	public function get_plugin_name() {
+	public function get_plugin_name(): string {
 		return $this->plugin_name;
 	}
 
@@ -203,7 +203,7 @@ final class Millicache {
 	 *
 	 * @return    Millicache_Loader    Orchestrates the hooks of the plugin.
 	 */
-	public function get_loader() {
+	public function get_loader(): Millicache_Loader {
 		return $this->loader;
 	}
 
@@ -215,7 +215,7 @@ final class Millicache {
 	 *
 	 * @return    Millicache_Engine The Millicache engine.
 	 */
-	public function get_engine() {
+	public function get_engine(): Millicache_Engine {
 		return $this->engine;
 	}
 
@@ -227,7 +227,7 @@ final class Millicache {
 	 *
 	 * @return    string    The version number of the plugin.
 	 */
-	public function get_version() {
+	public function get_version(): string {
 		return $this->version;
 	}
 
@@ -243,28 +243,28 @@ final class Millicache {
 		$blog_id = get_current_blog_id();
 		$network_id = get_current_network_id();
 
-		$this->engine->add_flag( "site:{$network_id}:{$blog_id}" );
+		$this->engine->add_flag( "site:$network_id:$blog_id" );
 
 		if ( is_singular() ) {
 			$post_id = get_queried_object_id();
-			$this->engine->add_flag( "post:{$blog_id}:{$post_id}" );
+			$this->engine->add_flag( "post:$blog_id:$post_id" );
 		}
 
 		if ( is_front_page() || is_home() ) {
-			$this->engine->add_flag( "home:{$blog_id}" );
+			$this->engine->add_flag( "home:$blog_id" );
 		}
 
 		if ( is_feed() ) {
-			$this->engine->add_flag( "feed:{$blog_id}" );
+			$this->engine->add_flag( "feed:$blog_id" );
 		}
 
 		if ( is_archive() ) {
 			if ( is_post_type_archive() ) {
 				$post_type = get_query_var( 'post_type' );
-				$this->engine->add_flag( "archive:{$blog_id}:{$post_type}" );
+				$this->engine->add_flag( "archive:$blog_id:$post_type" );
 			} elseif ( is_author() ) {
 				$author_id = get_query_var( 'author' );
-				$this->engine->add_flag( "author:{$blog_id}:{$author_id}" );
+				$this->engine->add_flag( "author:$blog_id:$author_id" );
 			}
 		}
 
@@ -292,15 +292,15 @@ final class Millicache {
 	 * @param int $post_id The post ID.
 	 * @return void
 	 */
-	public function clean_post_cache( $post_id ) {
+	public function clean_post_cache( int $post_id ): void {
 		$post = get_post( $post_id );
 		if ( $post && 'publish' === $post->post_status ) {
 			$blog_id = get_current_blog_id();
 			$this->engine->clear_cache_by_flags(
 				array(
-					"post:{$blog_id}:{$post->ID}",
-					"author:{$blog_id}:{$post->post_author}",
-					"archive:{$blog_id}:{$post->post_type}",
+					"post:$blog_id:$post->ID",
+					"author:$blog_id:$post->post_author",
+					"archive:$blog_id:$post->post_type",
 				)
 			);
 		}
@@ -317,7 +317,7 @@ final class Millicache {
 	 * @param WP_Post $post The post object.
 	 * @return void
 	 */
-	public function transition_post_status( $new_status, $old_status, $post ) {
+	public function transition_post_status( string $new_status, string $old_status, WP_Post $post ) {
 		if ( 'publish' === $new_status || 'publish' === $old_status ) {
 			$this->engine->clear_cache_by_post_ids( $post->ID );
 		}
@@ -331,7 +331,7 @@ final class Millicache {
 	 *
 	 * @return void
 	 */
-	function cleanup_expired_flags() {
+	public function cleanup_expired_flags() {
 		$millicache_redis = new Millicache_Redis();
 		$millicache_redis->cleanup_expired_flags();
 	}
@@ -342,16 +342,16 @@ final class Millicache {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @return array The hooks & priority that clear the full cache of the site.
+	 * @return array<string, int> The hooks & priority that clear the full cache of the site.
 	 */
-	public function get_clear_site_cache_hooks() {
+	public function get_clear_site_cache_hooks(): array {
 
 		/**
 		 * Filter the hooks that clear the full cache.
 		 *
 		 * @since 1.0.0
 		 *
-		 * @param array $hooks The hooks & priority that clear the full cache.
+		 * @param array<string, int> $hooks The hooks & priority that clear the full cache.
 		 */
 		return apply_filters(
 			'millicache_clear_site_hooks',
@@ -376,7 +376,7 @@ final class Millicache {
 	 * @param mixed  $value The new option value.
 	 * @return void
 	 */
-	public function register_clear_site_cache_options( $option, $old_value, $value ) {
+	public function register_clear_site_cache_options( string $option, $old_value, $value ): void {
 
 		/**
 		 * Filter the options that clear the full cache on change.

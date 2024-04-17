@@ -31,6 +31,10 @@ define( 'MILLICACHE_VERSION', '1.0.0-beta.1' );
 
 /**
  * The code that runs during plugin activation.
+ *
+ * @since 1.0.0
+ *
+ * @return void
  */
 function activate_millicache() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-millicache-activator.php';
@@ -39,6 +43,10 @@ function activate_millicache() {
 
 /**
  * The code that runs during plugin deactivation.
+ *
+ * @since 1.0.0
+ *
+ * @return void
  */
 function deactivate_millicache() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-millicache-deactivator.php';
@@ -58,10 +66,13 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-millicache.php';
  * Begins execution of the plugin.
  *
  * @since    1.0.0
+ *
+ * @return void
  */
 function run_millicache() {
 
 	$plugin = new Millicache();
 	$plugin->run();
 }
+
 run_millicache();
