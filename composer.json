@@ -1,5 +1,5 @@
 {
-    "name": "millipress/cache",
+    "name": "millipress/millicache",
     "description": "Redis Full Page Cache for WordPress",
     "type": "wordpress-plugin",
     "license": "GPL3",
@@ -15,12 +15,12 @@
     "require-dev": {
         "wp-coding-standards/wpcs": "^3.0",
         "phpcompatibility/phpcompatibility-wp": "*",
+        "php-stubs/wp-cli-stubs": "^2.10",
         "phpstan/phpstan": "@stable",
         "phpstan/extension-installer": "^1.3",
+        "phpstan/phpstan-deprecation-rules": "^1.1",
         "szepeviktor/phpstan-wordpress": "^1.3",
         "swissspidy/phpstan-no-private": "^0.2.0",
-        "phpstan/phpstan-deprecation-rules": "^1.1",
-        "php-stubs/wp-cli-stubs": "^2.10",
         "roave/security-advisories": "dev-latest"
     },
     "suggest": {
