@@ -1,0 +1,7 @@
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    # command: /bin/bash -c "redis-server --requirepass ''"
+    ports:
+      - "6379:6379"

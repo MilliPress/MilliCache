@@ -1,1 +1,10 @@
+/src/
 /vendor/
+node_modules/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+storage.json
