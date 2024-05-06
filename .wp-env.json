@@ -1,0 +1,29 @@
+{
+  "core": "WordPress/WordPress",
+  "port": 8888,
+  "config": {
+    "MC_REDIS_HOST": "redis",
+    "MC_DEBUG": true,
+    "WP_CACHE": true,
+    "WP_DEBUG": true,
+    "WP_DEBUG_DISPLAY": true
+  },
+  "plugins": ["."],
+  "themes": [],
+  "mappings": {
+    "wp-content/plugins": "./tests/wp-env/plugins",
+    "wp-content/mu-plugins": "./tests/wp-env/mu-plugins"
+  },
+  "env": {
+    "tests": {
+      "config": {
+        "MC_TTL": 10,
+        "MC_REDIS_DB": 1
+      },
+      "plugins": [],
+      "mappings": {
+        "wp-content/plugins/millicache": "."
+      }
+    }
+  }
+}

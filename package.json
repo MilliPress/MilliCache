@@ -1,0 +1,20 @@
+{
+  "name": "millicache",
+  "version": "1.0.0-beta.1",
+  "author": "Philipp <hello@milli.press>",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.43.1",
+    "@types/node": "^20.12.7",
+    "@wordpress/e2e-test-utils-playwright": "^0.23.0",
+    "@wordpress/env": "^9.7.0",
+    "dotenv": "^16.4.5"
+  },
+  "scripts": {
+    "start": "npm run mc-dev start",
+    "stop": "npm run mc-dev stop",
+    "destroy": "npm run mc-dev destroy",
+    "mc-dev": "node ./tests/wp-env/dev-server.mjs",
+    "wp-env": "wp-env"
+  }
+}
