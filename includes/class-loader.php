@@ -2,16 +2,16 @@
 /**
  * Register all actions and filters for the plugin
  *
- * @link       https://www.milli.press
+ * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    Millicache
- * @subpackage Millicache/includes
+ * @package    MilliCache
+ * @subpackage MilliCache/includes
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+namespace MilliCache;
+
+! defined( 'ABSPATH' ) && exit;
 
 /**
  * Register all actions and filters for the plugin.
@@ -20,11 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * the plugin, and register them with the WordPress API. Call the
  * run function to execute the list of actions and filters.
  *
- * @package    Millicache
- * @subpackage Millicache/includes
- * @author     Philipp Wellmer <hello@milli.press>
+ * @package    MilliCache
+ * @subpackage MilliCache/includes
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
-class Millicache_Loader {
+class Loader {
 
 	/**
 	 * The array of actions registered with WordPress.

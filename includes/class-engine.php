@@ -2,12 +2,14 @@
 /**
  * The independent Cache-Engine to avoid an overhead.
  *
- * @link       https://www.milli.press
+ * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    Millicache
- * @subpackage Millicache/includes
+ * @package    MilliCache
+ * @subpackage MilliCache/includes
  */
+
+namespace MilliCache;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -17,11 +19,11 @@
  * This class defines all code necessary for caching.
  *
  * @since      1.0.0
- * @package    Millicache
- * @subpackage Millicache/includes
- * @author     Philipp Wellmer <hello@milli.press>
+ * @package    MilliCache
+ * @subpackage MilliCache/includes
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
-final class Millicache_Engine {
+final class Engine {
 
 	/**
 	 * If the cache engine has been started.
@@ -39,9 +41,9 @@ final class Millicache_Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var Millicache_Redis The Cache Storage object.
+	 * @var Redis The Cache Storage object.
 	 */
-	private static Millicache_Redis $storage;
+	private static Redis $storage;
 
 	/**
 	 * TTL.
@@ -279,17 +281,17 @@ final class Millicache_Engine {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @return   Millicache_Redis The MilliCache Storage instance.
+	 * @return   Redis The MilliCache Storage instance.
 	 */
-	private static function get_storage(): Millicache_Redis {
+	private static function get_storage(): Redis {
 		if ( ! isset( self::$storage ) ) {
 
 			/**
 			 * The MilliPress Redis class.
 			 */
-			require_once __DIR__ . '/class-millicache-redis.php';
+			require_once __DIR__ . '/class-redis.php';
 
-			self::$storage = new Millicache_Redis();
+			self::$storage = new Redis();
 		}
 
 		return self::$storage;

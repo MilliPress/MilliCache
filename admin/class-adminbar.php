@@ -2,23 +2,25 @@
 /**
  * The WordPress Adminbar functionality of the plugin.
  *
- * @link       https://www.milli.press
+ * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    Millicache
- * @subpackage Millicache/admin
+ * @package    MilliCache
+ * @subpackage MilliCache/admin
  */
+
+namespace MilliCache;
 
 ! defined( 'ABSPATH' ) && exit;
 
 /**
  * The WordPress Adminbar functionality of the plugin.
  *
- * @package    Millicache
- * @subpackage Millicache/admin
- * @author     Philipp Wellmer <hello@milli.press>
+ * @package    MilliCache
+ * @subpackage MilliCache/admin
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
-class Millicache_Adminbar {
+class Adminbar {
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -27,9 +29,9 @@ class Millicache_Adminbar {
 	 * @since    1.0.0
 	 * @access   protected
 	 *
-	 * @var      Millicache_Loader    $loader    Maintains and registers all hooks for the plugin.
+	 * @var      Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
-	protected Millicache_Loader $loader;
+	protected Loader $loader;
 
 	/**
 	 * The ID of this plugin.
@@ -57,11 +59,11 @@ class Millicache_Adminbar {
 	 * @since   1.0.0
 	 * @access public
 	 *
-	 * @param Millicache_Loader $loader The loader class.
-	 * @param string            $plugin_name The name of this plugin.
-	 * @param string            $version The version of this plugin.
+	 * @param Loader $loader The loader class.
+	 * @param string $plugin_name The name of this plugin.
+	 * @param string $version The version of this plugin.
 	 */
-	public function __construct( Millicache_Loader $loader, string $plugin_name, string $version ) {
+	public function __construct( Loader $loader, string $plugin_name, string $version ) {
 		$this->loader = $loader;
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
@@ -123,10 +125,10 @@ class Millicache_Adminbar {
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @param WP_Admin_Bar $wp_admin_bar The admin bar object.
+	 * @param \WP_Admin_Bar $wp_admin_bar The admin bar object.
 	 * @return void
 	 */
-	public function add_adminbar_menu( WP_Admin_Bar $wp_admin_bar ) {
+	public function add_adminbar_menu( \WP_Admin_Bar $wp_admin_bar ) {
 		if ( ! is_admin_bar_showing() || ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
@@ -175,7 +177,7 @@ class Millicache_Adminbar {
 	public function maybe_clear_cache() {
 		// Check conditions.
 		if (
-			! class_exists( 'Millicache_Engine' ) ||
+			! class_exists( '\MilliCache\Engine' ) ||
 			! is_admin_bar_showing() ||
 			! current_user_can( 'manage_options' ) ||
 			! isset( $_GET['_millicache'], $_GET['_wpnonce'] ) ||
@@ -187,19 +189,19 @@ class Millicache_Adminbar {
 		// Clear cache.
 		if ( 'flush' === $_GET['_millicache'] ) {
 			if ( ! is_admin() || is_blog_admin() ) {
-				Millicache_Engine::clear_cache_by_site_ids( get_current_blog_id(), get_current_network_id() );
-				Millicache_Admin::add_notice( __( 'The site cache has been cleared.', 'millicache' ), 'success' );
+				Engine::clear_cache_by_site_ids( get_current_blog_id(), get_current_network_id() );
+				Admin::add_notice( __( 'The site cache has been cleared.', 'millicache' ), 'success' );
 			} elseif ( is_network_admin() ) {
-				Millicache_Engine::clear_cache_by_network_id( get_current_network_id() );
-				Millicache_Admin::add_notice( __( 'The network cache has been cleared.', 'millicache' ), 'success' );
+				Engine::clear_cache_by_network_id( get_current_network_id() );
+				Admin::add_notice( __( 'The network cache has been cleared.', 'millicache' ), 'success' );
 			}
 		} elseif ( 'flush_current' === $_GET['_millicache'] ) {
 			if ( is_singular() ) {
-				Millicache_Engine::clear_cache_by_post_ids( (int) get_the_ID() );
+				Engine::clear_cache_by_post_ids( (int) get_the_ID() );
 			} elseif ( is_home() || is_front_page() ) {
-				Millicache_Engine::clear_cache_by_flags( 'home:' . get_current_blog_id() );
+				Engine::clear_cache_by_flags( 'home:' . get_current_blog_id() );
 			} else {
-				Millicache_Engine::clear_cache_by_flags( 'url:' . Millicache_Engine::get_url_hash() );
+				Engine::clear_cache_by_flags( 'url:' . Engine::get_url_hash() );
 			}
 		}
 

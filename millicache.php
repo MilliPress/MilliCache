@@ -2,17 +2,17 @@
 /**
  * The plugin bootstrap file
  *
- * @link              https://www.milli.press
+ * @link              https://www.millipress.com
  * @since             1.0.0
- * @package           Millicache
+ * @package           MilliCache
  *
  * @wordpress-plugin
- * Plugin Name:       MilliCache
- * Plugin URI:        https://www.milli.press/cache
+ * MilliCache Name:       MilliCache
+ * MilliCache URI:        https://www.millipress.com/cache
  * Description:       Redis Full Page Cache for WordPress
  * Version:           1.0.0-beta.1
  * Author:            MilliPress Team
- * Author URI:        https://www.milli.press/
+ * Author URI:        https://www.millipress.com/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       millicache
@@ -37,8 +37,8 @@ define( 'MILLICACHE_VERSION', '1.0.0-beta.1' );
  * @return void
  */
 function activate_millicache() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-millicache-activator.php';
-	Millicache_Activator::activate();
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-activator.php';
+	MilliCache\Activator::activate();
 }
 
 /**
@@ -49,8 +49,8 @@ function activate_millicache() {
  * @return void
  */
 function deactivate_millicache() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-millicache-deactivator.php';
-	Millicache_Deactivator::deactivate();
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-deactivator.php';
+	MilliCache\Deactivator::deactivate();
 }
 
 register_activation_hook( __FILE__, 'activate_millicache' );
@@ -70,7 +70,7 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-millicache.php';
  * @return void
  */
 function run_millicache() {
-	$plugin = new Millicache();
+	$plugin = new MilliCache\MilliCache();
 	$plugin->run();
 }
 

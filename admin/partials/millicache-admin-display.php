@@ -4,11 +4,11 @@
  *
  * This file is used to mark up the admin-facing aspects of the plugin.
  *
- * @link       https://www.milli.press
+ * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    Millicache
- * @subpackage Millicache/admin/partials
+ * @package    MilliCache
+ * @subpackage MilliCache/admin/partials
  */
 
 ?>

@@ -6,7 +6,7 @@
     "authors": [
         {
             "name": "Philipp Wellmer",
-            "email": "hello@milli.press"
+            "email": "hello@millipress.com"
         }
     ],
     "require": {
@@ -52,7 +52,7 @@
             "dep_namespace": "MilliCache\\",
             "dep_directory": "/src/",
             "classmap_directory": "/classes/",
-            "classmap_prefix": "MC_"
+            "classmap_prefix": "MilliCache_"
         }
     }
 }

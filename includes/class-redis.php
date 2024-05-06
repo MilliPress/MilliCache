@@ -2,24 +2,31 @@
 /**
  * The file that defines the Redis class.
  *
- * @link       https://www.milli.press
+ * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    Millicache
- * @subpackage Millicache/includes
+ * @package    MilliCache
+ * @subpackage MilliCache/includes
  */
+
+namespace MilliCache;
+
+use MilliCache\Predis\Autoloader;
+use MilliCache\Predis\Client;
+use MilliCache\Predis\PredisException;
+use MilliCache\Predis\Connection\ConnectionException;
 
 ! defined( 'ABSPATH' ) && exit;
 
 /**
- * Handles Redis operations for the Millicache plugin.
+ * Handles Redis operations for the MilliCache plugin.
  *
  * @since      1.0.0
- * @package    Millicache
- * @subpackage Millicache/includes
- * @author     Philipp Wellmer <hello@milli.press>
+ * @package    MilliCache
+ * @subpackage MilliCache/includes
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
-final class Millicache_Redis {
+final class Redis {
 
 	/**
 	 * The Predis Client object.
@@ -27,9 +34,9 @@ final class Millicache_Redis {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var MilliCache\Predis\Client $redis    The Predis Client object.
+	 * @var Client $redis    The Predis Client object.
 	 */
-	private MilliCache\Predis\Client $redis;
+	private Client $redis;
 
 	/**
 	 * The Redis host.
@@ -127,7 +134,7 @@ final class Millicache_Redis {
 	 * @return bool Whether Redis is available.
 	 */
 	public static function is_available(): bool {
-		return class_exists( 'MilliCache\Predis\Autoloader' );
+		return class_exists( '\MilliCache\Predis\Autoloader' );
 	}
 
 	/**
@@ -169,7 +176,7 @@ final class Millicache_Redis {
 	private function connect(): bool {
 		require_once dirname( __DIR__ ) . '/src/Predis/Autoloader.php';
 
-		// Check if Redis is available.
+		// Check if Predis is available.
 		if ( ! self::is_available() ) {
 			error_log( 'Predis is not available.' );
 			return false;
@@ -182,10 +189,10 @@ final class Millicache_Redis {
 			}
 
 			// Register the autoloader.
-			MilliCache\Predis\Autoloader::register();
+			Autoloader::register();
 
 			// Initialize Redis.
-			$this->redis = new MilliCache\Predis\Client(
+			$this->redis = new Client(
 				array(
 					'scheme' => 'tcp',
 					'host' => $this->host,
@@ -199,7 +206,7 @@ final class Millicache_Redis {
 			$this->redis->connect();
 
 			$connect = $this->redis->isConnected();
-		} catch ( RedisException $e ) {
+		} catch ( ConnectionException $e ) {
 			error_log( 'Unable to connect to Redis: ' . $e->getMessage() );
 			return false;
 		}
@@ -241,7 +248,7 @@ final class Millicache_Redis {
 			);
 
 			return true;
-		} catch ( RedisException $e ) {
+		} catch ( PredisException $e ) {
 			error_log( 'Unable to perform cache in Redis: ' . $e->getMessage() );
 			return false;
 		}
@@ -292,7 +299,7 @@ final class Millicache_Redis {
 				$flags,
 				$lock_status ?? '',
 			) : null;
-		} catch ( RedisException $e ) {
+		} catch ( PredisException $e ) {
 			error_log( 'Unable to get cache from Redis: ' . $e->getMessage() );
 			return null;
 		}
@@ -361,7 +368,7 @@ final class Millicache_Redis {
 			do_action( 'millicache_after_page_cache_stored', $hash, $key, $flags, $data );
 
 			return true;
-		} catch ( RedisException $e ) {
+		} catch ( PredisException $e ) {
 			error_log( 'Unable to set cache in Redis: ' . $e->getMessage() );
 			return false;
 		}
@@ -431,7 +438,7 @@ final class Millicache_Redis {
 			do_action( 'millicache_after_page_cache_deleted', $hash, $key, $flags );
 
 			return true;
-		} catch ( RedisException $e ) {
+		} catch ( PredisException $e ) {
 			error_log( 'Unable to delete cache in Redis: ' . $e->getMessage() );
 			return false;
 		}
@@ -457,7 +464,7 @@ final class Millicache_Redis {
 			);
 
 			return (bool) $status;
-		} catch ( RedisException $e ) {
+		} catch ( PredisException $e ) {
 			error_log( 'Unable to set lock in Redis: ' . $e->getMessage() );
 			return false;
 		}
@@ -475,7 +482,7 @@ final class Millicache_Redis {
 	public function unlock( string $hash ): bool {
 		try {
 			return (bool) $this->redis->del( $this->get_cache_key( $hash . '-lock' ) );
-		} catch ( RedisException $e ) {
+		} catch ( PredisException $e ) {
 			error_log( 'Unable to unlock in Redis: ' . $e->getMessage() );
 			return false;
 		}
@@ -567,7 +574,7 @@ final class Millicache_Redis {
 				},
 				array_unique( $members )
 			);
-		} catch ( RedisException $e ) {
+		} catch ( PredisException $e ) {
 			error_log( 'Unable to get entries with flag from Redis: ' . $e->getMessage() );
 			return array();
 		}
@@ -604,7 +611,7 @@ final class Millicache_Redis {
 			}
 
 			return true;
-		} catch ( RedisException $e ) {
+		} catch ( PredisException $e ) {
 			error_log( 'Unable to cleanup expired cache keys in Redis: ' . $e->getMessage() );
 			return false;
 		}
@@ -684,7 +691,7 @@ final class Millicache_Redis {
 				'index' => (int) count( $keys ),
 				'size' => (int) round( $total_size / 1024 ),
 			);
-		} catch ( RedisException $e ) {
+		} catch ( PredisException $e ) {
 			error_log( 'Unable to get cache size from Redis: ' . $e->getMessage() );
 			return false;
 		}

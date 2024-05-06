@@ -1,6 +1,5 @@
 # MilliCache: Redis Full Page Cache for WordPress
 
-
 As a full page caching solution, MilliCache uses Redis as a backend to store the cached pages.
 It is designed to be fast, reliable and scalable.
 MilliCache is designed for WordPress multisite and multi-network installations,
@@ -16,8 +15,8 @@ but can also be used in single site installations.
 ## Current Features
 
 - Fast in-memory full page caching
-- [Cache Flagging](#cache-flags) for complex cache handling & [Clearing](#clear-cache)
-- [Expired cache handling](#clear--expire-cache) to regenerate the cache in the background
+- [Cache Flagging](#cache-flags) for complex cache handling & [clearing](#clear-cache)
+- [Expired cache handling](#clear-cache) to regenerate the cache in the background
 - Designed for WordPress Multisite & Multi-Network
 - Extensible with [Hooks & Filters](#hooks--filters)
 - [WP CLI commands](#wp-cli) for cache clearing & stats
@@ -30,19 +29,18 @@ but can also be used in single site installations.
 ## Requirements
 
 - PHP 7.4 or higher
-- PHP Redis or Predis extension
 - Redis Server
 
-Please make sure you have a Redis server and the PECL PHP Redis extension installed and running. If you are using Ubuntu, you can install Redis using the following commands
+Please make sure you have a Redis server installed and running.
+If you are using Ubuntu, you can install Redis using the following commands
 
 ### Installing Redis on Ubuntu
 
 ```bash
 $ sudo apt update
-$ sudo apt install redis-server php8-redis
+$ sudo apt install redis-server
 ```
 
-After installing the Redis PECL extension, make sure you restart your PHP server.
 After installing Redis, you can check the status with:
 
 ```bash
@@ -187,6 +185,7 @@ add_filter('millicache_add_flags', function( $flags ) {
 
 ---
 
+## Clear Cache
 
 Please note that by default, MilliCache will expire (not delete) cache entries that have reached their lifetime (TTL).
 When a cache entry has expired, it will be regenerated in the background on the next request and an outdated copy will be served to the visitor.
@@ -195,7 +194,7 @@ This way, the user will not notice any delay while the cache is regenerated.
 Cache entries expire whenever necessary.
 For example, when a post is published or updated, the cache entry for the post and the front page is cleared.
 When a site option is updated, all cache entries of the site are cleared, and so on.
-MilliCache provides different methods to clear the cache by flags, URLs or IDs.
+MilliCache provides different methods to clear the cache by flags, URLs, or IDs.
 You can write your own custom hooks to clear or expire the cache whenever you need it.
 
 The `$expire` parameter is optional.
@@ -213,7 +212,7 @@ To clear all cache entries, use the following function. This will clear the cach
 /*
  * @param bool $expire Expire cache if set to true, or delete by default. (optional)
  */
-Millicache_Engine::clear_cache($expire);
+\MilliCache\Engine::clear_cache($expire);
 ```
 
 ---
@@ -228,7 +227,7 @@ Please note the [wildcard support](#wildcards) below.
  * @param string|array $flags Flag or array of flags to clear.
  * @param bool $expire Expire cache if set to true, or delete by default. (optional)
  */
-Millicache_Engine::clear_cache_by_flags($flags, $expire);
+\MilliCache\Engine::clear_cache_by_flags($flags, $expire);
 ```
 
 #### Wildcards
@@ -255,20 +254,20 @@ To clear the cache by a specific URL, use the following function. This will clea
  * @param string|array $urls URL or array of URLs to clear.
  * @param bool $expire Expire cache if set to true, or delete by default. (optional)
  */
-Millicache_Engine::clear_cache_by_urls($urls, $expire);
+\MilliCache\Engine::clear_cache_by_urls($urls, $expire);
 ```
 ---
 
 ### Clear Cache by Post IDs
 
-To clear the cache of specific posts, use the following function. This will clear all cache entries for the post IDs.
+To clear the cache of specific posts, use the following function. This will clear all cache entries for the post-IDs.
 
 ```php
 /*
  * @param string|array $post_ids Post ID or array of Post IDs to clear.
  * @param bool $expire Expire cache if set to true, or delete by default. (optional)
  */
-Millicache_Engine::clear_cache_by_post_ids($post_ids, $expire);
+\MilliCache\Engine::clear_cache_by_post_ids($post_ids, $expire);
 ```
 ---
 
@@ -281,7 +280,7 @@ To clear the cache of specific sites in a WordPress multisite network, use the f
  * @param string|array $site_ids Site ID or array of Site IDs to clear.
  * @param bool $expire Expire cache if set to true, or delete by default. (optional)
  */
-Millicache_Engine::clear_cache_by_site_ids($site_ids, $expire);
+\MilliCache\Engine::clear_cache_by_site_ids($site_ids, $expire);
 ```
 ---
 
@@ -294,7 +293,7 @@ To clear the cache of specific networks in a multi-network installation, use the
  * @param string|array $network_ids Network ID or array of Network IDs to clear.
  * @param bool $expire Expire cache if set to true, or delete by default. (optional)
  */
-Millicache_Engine::clear_cache_by_network_ids($network_ids, $expire);
+\MilliCache\Engine::clear_cache_by_network_ids($network_ids, $expire);
 ```
 
 ## WP CLI
@@ -311,7 +310,7 @@ $ wp millicache stats [--flag="<flag>"]
 
 ### Clear Cache
 
-Clear the cache for specific flags, post IDs, URLs, site IDs, or network IDs.
+Clear the cache for specific flags, post-IDs, URLs, site IDs, or network IDs.
 The optional `--expire` flag can be used to regenerate the cache entries in the background on the next request.
 
 ```bash

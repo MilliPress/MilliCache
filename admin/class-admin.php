@@ -2,12 +2,14 @@
 /**
  * The admin-specific functionality of the plugin.
  *
- * @link       https://www.milli.press
+ * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    Millicache
- * @subpackage Millicache/admin
+ * @package    MilliCache
+ * @subpackage MilliCache/admin
  */
+
+namespace MilliCache;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -19,11 +21,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Defines the plugin name, version, and two examples hooks for how to
  * enqueue the admin-specific stylesheet and JavaScript.
  *
- * @package    Millicache
- * @subpackage Millicache/admin
- * @author     Philipp Wellmer <hello@milli.press>
+ * @package    MilliCache
+ * @subpackage MilliCache/admin
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
-class Millicache_Admin {
+class Admin {
 
 
 	/**
@@ -33,9 +35,9 @@ class Millicache_Admin {
 	 * @since    1.0.0
 	 * @access   protected
 	 *
-	 * @var      Millicache_Loader    $loader    Maintains and registers all hooks for the plugin.
+	 * @var      Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
-	protected Millicache_Loader $loader;
+	protected Loader $loader;
 
 	/**
 	 * The ID of this plugin.
@@ -73,11 +75,11 @@ class Millicache_Admin {
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @param    Millicache_Loader $loader            The loader class.
-	 * @param    string            $plugin_name       The name of this plugin.
-	 * @param    string            $version           The version of this plugin.
+	 * @param    Loader $loader            The loader class.
+	 * @param    string $plugin_name       The name of this plugin.
+	 * @param    string $version           The version of this plugin.
 	 */
-	public function __construct( Millicache_Loader $loader, string $plugin_name, string $version ) {
+	public function __construct( Loader $loader, string $plugin_name, string $version ) {
 
 		$this->loader = $loader;
 		$this->plugin_name = $plugin_name;
@@ -100,9 +102,9 @@ class Millicache_Admin {
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
-		require_once plugin_dir_path( __DIR__ ) . 'admin/class-millicache-adminbar.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-adminbar.php';
 
-		new Millicache_Adminbar( $this->loader, $this->plugin_name, $this->version );
+		new Adminbar( $this->loader, $this->plugin_name, $this->version );
 	}
 
 	/**
@@ -303,7 +305,7 @@ class Millicache_Admin {
 		$size = get_transient( 'millicache_size_' . $flag );
 
 		if ( ! is_array( $size ) || $reload ) {
-			$redis = new Millicache_Redis();
+			$redis = new Redis();
 			$size = $redis->get_cache_size( $flag );
 
 			if ( $size ) {

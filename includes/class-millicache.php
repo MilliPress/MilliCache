@@ -5,16 +5,16 @@
  * A class definition that includes attributes and functions used across both the
  * public-facing side of the site and the admin area.
  *
- * @link       https://www.milli.press
+ * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    Millicache
- * @subpackage Millicache/includes
+ * @package    MilliCache
+ * @subpackage MilliCache/includes
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+namespace MilliCache;
+
+! defined( 'ABSPATH' ) && exit;
 
 /**
  * The core plugin class.
@@ -26,11 +26,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * version of the plugin.
  *
  * @since      1.0.0
- * @package    Millicache
- * @subpackage Millicache/includes
- * @author     Philipp Wellmer <hello@milli.press>
+ * @package    MilliCache
+ * @subpackage MilliCache/includes
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
-final class Millicache {
+final class MilliCache {
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -39,19 +39,19 @@ final class Millicache {
 	 * @since    1.0.0
 	 * @access   protected
 	 *
-	 * @var      Millicache_Loader    $loader    Maintains and registers all hooks for the plugin.
+	 * @var      Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
-	protected Millicache_Loader $loader;
+	protected Loader $loader;
 
 	/**
-	 * The Millicache engine.
+	 * The MilliCache engine.
 	 *
 	 * @since    1.0.0
 	 * @access   protected
 	 *
-	 * @var      Millicache_Engine
+	 * @var      Engine
 	 */
-	protected Millicache_Engine $engine;
+	protected Engine $engine;
 
 	/**
 	 * The unique identifier of this plugin.
@@ -99,9 +99,9 @@ final class Millicache {
 	 *
 	 * Include the following files that make up the plugin:
 	 *
-	 * - Millicache_Loader. Orchestrates the hooks of the plugin.
-	 * - Millicache_Engine. The Millicache engine.
-	 * - Millicache_Admin. Defines all hooks & methods for the admin area.
+	 * - Loader. Orchestrates the hooks of the plugin.
+	 * - Engine. The MilliCache engine.
+	 * - Admin. Defines all hooks & methods for the admin area.
 	 *
 	 * Create an instance of the loader which will be used to register the hooks
 	 * with WordPress.
@@ -117,28 +117,28 @@ final class Millicache {
 		 * The class responsible for orchestrating the actions and filters of the
 		 * core plugin.
 		 */
-		require_once plugin_dir_path( __DIR__ ) . 'includes/class-millicache-loader.php';
+		require_once plugin_dir_path( __DIR__ ) . 'includes/class-loader.php';
 
 		/**
-		 * The class responsible for the Millicache engine.
+		 * The class responsible for the MilliCache engine.
 		 */
-		require_once plugin_dir_path( __DIR__ ) . 'includes/class-millicache-engine.php';
+		require_once plugin_dir_path( __DIR__ ) . 'includes/class-engine.php';
 
 		/**
 		 * The class responsible for defining all actions for the CLI.
 		 */
-		require_once plugin_dir_path( __DIR__ ) . 'includes/class-millicache-cli.php';
+		require_once plugin_dir_path( __DIR__ ) . 'includes/class-cli.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
-		require_once plugin_dir_path( __DIR__ ) . 'admin/class-millicache-admin.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-admin.php';
 
-		$this->loader = new Millicache_Loader();
-		$this->engine = new Millicache_Engine();
+		$this->loader = new Loader();
+		$this->engine = new Engine();
 
-		new Millicache_CLI( $this->get_loader(), $this->get_plugin_name(), $this->version );
-		new Millicache_Admin( $this->get_loader(), $this->get_plugin_name(), $this->version );
+		new CLI( $this->get_loader(), $this->get_plugin_name(), $this->version );
+		new Admin( $this->get_loader(), $this->get_plugin_name(), $this->version );
 	}
 
 	/**
@@ -201,9 +201,9 @@ final class Millicache {
 	 * @since    1.0.0
 	 * @access  public
 	 *
-	 * @return    Millicache_Loader    Orchestrates the hooks of the plugin.
+	 * @return    Loader    Orchestrates the hooks of the plugin.
 	 */
-	public function get_loader(): Millicache_Loader {
+	public function get_loader(): Loader {
 		return $this->loader;
 	}
 
@@ -213,9 +213,9 @@ final class Millicache {
 	 * @since     1.0.0
 	 * @access   public
 	 *
-	 * @return    Millicache_Engine The Millicache engine.
+	 * @return    Engine The MilliCache engine.
 	 */
-	public function get_engine(): Millicache_Engine {
+	public function get_engine(): Engine {
 		return $this->engine;
 	}
 
@@ -293,7 +293,7 @@ final class Millicache {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param int $post_id The post ID.
+	 * @param int $post_id The post-ID.
 	 * @return void
 	 */
 	public function clean_post_cache( int $post_id ): void {
@@ -316,12 +316,12 @@ final class Millicache {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param string  $new_status The new post status.
-	 * @param string  $old_status The old post status.
-	 * @param WP_Post $post The post object.
+	 * @param string   $new_status The new post status.
+	 * @param string   $old_status The old post status.
+	 * @param \WP_Post $post The post-object.
 	 * @return void
 	 */
-	public function transition_post_status( string $new_status, string $old_status, WP_Post $post ) {
+	public function transition_post_status( string $new_status, string $old_status, \WP_Post $post ) {
 		if ( 'publish' === $new_status || 'publish' === $old_status ) {
 			$this->engine->clear_cache_by_post_ids( $post->ID );
 		}
@@ -336,7 +336,7 @@ final class Millicache {
 	 * @return void
 	 */
 	public function cleanup_expired_flags() {
-		$millicache_redis = new Millicache_Redis();
+		$millicache_redis = new MilliCache\Redis();
 		$millicache_redis->cleanup_expired_flags();
 	}
 
@@ -384,7 +384,7 @@ final class Millicache {
 
 		/**
 		 * Filter the options that clear the full cache on change.
-		 * Credit: Cache Enabler Plugin
+		 * Credit: Cache Enabler MilliCache
 		 *
 		 * @since 1.0.0
 		 *
