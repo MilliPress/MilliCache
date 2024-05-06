@@ -70,7 +70,6 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-millicache.php';
  * @return void
  */
 function run_millicache() {
-
 	$plugin = new Millicache();
 	$plugin->run();
 }

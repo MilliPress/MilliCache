@@ -218,7 +218,7 @@ final class Millicache_Engine {
 	}
 
 	/**
-	 * If not running start the cache engine.
+	 * If not running, start the cache engine.
 	 *
 	 * @since    1.0.0
 	 * @access   public
@@ -393,7 +393,7 @@ final class Millicache_Engine {
 		// Unpack the result.
 		list( $cache, $flags, $locked ) = $result;
 
-		// Something is in cache.
+		// Something is in the cache.
 		if ( is_array( $cache ) && ! empty( $cache ) ) {
 			$serve_cache = true;
 
@@ -408,6 +408,7 @@ final class Millicache_Engine {
 				$serve_cache = false;
 			}
 
+			// Is the cache expired?
 			$expired = $cache['updated'] + self::$ttl < time();
 
 			// Cache is outdated or set to expire.
@@ -416,7 +417,7 @@ final class Millicache_Engine {
 				if ( ! $locked ) {
 					if ( self::$storage->lock( self::$request_hash ) ) {
 						if ( self::can_fcgi_regenerate() ) {
-							// Serve a stale copy & regenerate the cache in background.
+							// Serve a stale copy & regenerate the cache in the background.
 							$serve_cache = true;
 							self::$fcgi_regenerate = true;
 						} else {
@@ -428,7 +429,7 @@ final class Millicache_Engine {
 
 			// Uncompressed cache if gzipped.
 			if ( $serve_cache && $cache['gzip'] ) {
-				if ( self::$gzip && function_exists( 'gzuncompress' ) ) {
+				if ( self::$gzip ) {
 					if ( self::$debug ) {
 						self::set_header( 'Gzip', 'true' );
 					}
@@ -544,7 +545,7 @@ final class Millicache_Engine {
 		}
 
 		// Compress the output.
-		if ( $data['gzip'] && function_exists( 'gzcompress' ) ) {
+		if ( $data['gzip'] ) {
 			$data['output'] = gzcompress( $data['output'] );
 		}
 

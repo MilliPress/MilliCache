@@ -22,14 +22,14 @@
 final class Millicache_Redis {
 
 	/**
-	 * The Redis object.
+	 * The Predis Client object.
 	 *
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var      Redis    $redis    The Redis object.
+	 * @var MilliCache\Predis\Client $redis    The Predis Client object.
 	 */
-	private Redis $redis;
+	private MilliCache\Predis\Client $redis;
 
 	/**
 	 * The Redis host.
@@ -127,7 +127,7 @@ final class Millicache_Redis {
 	 * @return bool Whether Redis is available.
 	 */
 	public static function is_available(): bool {
-		return class_exists( 'Redis' );
+		return class_exists( 'MilliCache\Predis\Autoloader' );
 	}
 
 	/**
@@ -167,9 +167,11 @@ final class Millicache_Redis {
 	 * @return bool Whether the connection was successful.
 	 */
 	private function connect(): bool {
+		require_once dirname( __DIR__ ) . '/src/Predis/Autoloader.php';
+
 		// Check if Redis is available.
 		if ( ! self::is_available() ) {
-			error_log( 'Redis class does not exist.' );
+			error_log( 'Predis is not available.' );
 			return false;
 		}
 
@@ -179,21 +181,24 @@ final class Millicache_Redis {
 				return true;
 			}
 
+			// Register the autoloader.
+			MilliCache\Predis\Autoloader::register();
+
 			// Initialize Redis.
-			$this->redis = new Redis();
+			$this->redis = new MilliCache\Predis\Client(
+				array(
+					'scheme' => 'tcp',
+					'host' => $this->host,
+					'port' => $this->port,
+					'password' => $this->password,
+					'database' => $this->db,
+					'persistent' => $this->persistent,
+				)
+			);
 
-			// Connect to Redis.
-			$connect = $this->persistent ?
-				$this->redis->pconnect( $this->host, $this->port ) :
-				$this->redis->connect( $this->host, $this->port );
+			$this->redis->connect();
 
-			// Authenticate and select database.
-			if ( ! empty( $this->password ) ) {
-				$this->redis->auth( $this->password );
-			}
-
-			$this->redis->select( $this->db );
-			$this->redis->setOption( Redis::OPT_SERIALIZER, Redis::SERIALIZER_PHP );
+			$connect = $this->redis->isConnected();
 		} catch ( RedisException $e ) {
 			error_log( 'Unable to connect to Redis: ' . $e->getMessage() );
 			return false;
@@ -216,22 +221,24 @@ final class Millicache_Redis {
 	 */
 	public function perform_cache( string $hash, array $data, array $flags = array(), bool $cache = true ): bool {
 		try {
-			// Start a transaction.
-			$this->redis->multi();
-
-			if ( $cache ) {
-				// Set cache entry.
-				$this->set_cache( $hash, $data, $flags );
-			} else {
-				// Delete cache entry.
-				$this->delete_cache( $hash );
+			if ( ! isset( $this->redis ) ) {
+				return false;
 			}
 
-			// Unlock the cache entry.
-			$this->unlock( $hash );
+			$this->redis->transaction(
+				function ( $tx ) use ( $cache, $hash, $data, $flags ) {
+					if ( $cache ) {
+						// Set cache entry.
+						$this->set_cache( $hash, $data, $flags );
+					} else {
+						// Delete cache entry.
+						$this->delete_cache( $hash );
+					}
 
-			// Execute the transaction.
-			$this->redis->exec();
+					// Unlock the cache entry.
+					$this->unlock( $hash );
+				}
+			);
 
 			return true;
 		} catch ( RedisException $e ) {
@@ -251,18 +258,21 @@ final class Millicache_Redis {
 	 */
 	public function get_cache( string $hash ): ?array {
 		try {
+			$cache = null;
+			$lock_status = '';
+
 			// Get the cache entry and lock status.
 			$key = $this->get_cache_key( $hash );
 
-			// Start a transaction.
-			$this->redis->multi();
+			$this->redis->transaction(
+				function ( $tx ) use ( $key, &$cache, &$lock_status ) {
+					// Get cache entry.
+					$cache = $this->redis->hgetall( $key );
 
-			// Get entries and lock status.
-			$this->redis->hGetAll( $key );
-			$this->redis->get( $key . '-lock' );
-
-			// Execute the transaction.
-			list($cache, $lock_status) = $this->redis->exec();
+					// Get lock status.
+					$lock_status = $this->redis->get( $key . '-lock' );
+				}
+			);
 
 			if ( ! $cache ) {
 				return null;
@@ -278,9 +288,9 @@ final class Millicache_Redis {
 
 			// Return the data, the flags and lock status.
 			return isset( $cache['data'] ) ? array(
-				$cache['data'],
+				(array) unserialize( $cache['data'] ),
 				$flags,
-				$lock_status,
+				$lock_status ?? '',
 			) : null;
 		} catch ( RedisException $e ) {
 			error_log( 'Unable to get cache from Redis: ' . $e->getMessage() );
@@ -316,28 +326,27 @@ final class Millicache_Redis {
 			 */
 			do_action( 'millicache_before_page_cache_stored', $hash, $key, $flags, $data );
 
-			// Start a transaction.
-			$this->redis->multi();
+			$this->redis->transaction(
+				function ( $tx ) use ( $key, $flags, $data ) {
 
-			// Store the data.
-			$this->redis->hSet( $key, 'data', $data );
+					// Store the data.
+					$tx->hset( $key, 'data', serialize( $data ) );
 
-			// Store the flags and add the key to the sets associated with the flags.
-			foreach ( $flags as $flag ) {
-				$flag = $this->get_flag_key( $flag );
+					// Store the flags and add the key to the sets associated with the flags.
+					foreach ( $flags as $flag ) {
+						$flag = $this->get_flag_key( $flag );
 
-				// Add the key to the set of the flag.
-				$this->redis->hSet( $key, $flag, 1 );
+						// Add the key to the set of the flag.
+						$tx->hset( $key, $flag, '' );
 
-				// Add the flag to the set of the key.
-				$this->redis->sAdd( $flag, $key );
-			}
+						// Add the flag to the set of the key.
+						$tx->sadd( $flag, array( $key ) );
+					}
 
-			// Set the max expiration time to avoid stale data.
-			$this->redis->expire( $key, self::$max_ttl );
-
-			// Execute the transaction.
-			$this->redis->exec();
+					// Set the max expiration time to avoid stale data.
+					$tx->expire( $key, self::$max_ttl );
+				}
+			);
 
 			/**
 			 * Fires after a page cache is stored in Redis.
@@ -372,7 +381,7 @@ final class Millicache_Redis {
 			$key = $this->get_cache_key( $hash );
 
 			// Get all flags of the key.
-			$flags = $this->redis->hKeys( $key );
+			$flags = $this->redis->hkeys( $key );
 
 			// Check if the flags are an array.
 			if ( ! is_array( $flags ) ) {
@@ -388,28 +397,27 @@ final class Millicache_Redis {
 			 */
 			do_action( 'millicache_before_page_cache_deleted', $hash, $key, $flags );
 
-			// Start a transaction.
-			$this->redis->multi();
+			$this->redis->transaction(
+				function ( $tx ) use ( $key, $flags ) {
 
-			// Delete flags and remove the key from the sets associated with the flags.
-			foreach ( $flags as $flag ) {
-				if ( strpos( $flag, $this->prefix . ':f:' ) === 0 ) {
-					// Remove the key from the set of the flag.
-					$this->redis->sRem( $flag, $key );
+					// Delete flags and remove the key from the sets associated with the flags.
+					foreach ( $flags as $flag ) {
+						if ( strpos( $flag, $this->prefix . ':f:' ) === 0 ) {
+							// Remove the key from the set of the flag.
+							$tx->srem( $flag, $key );
 
-					// If the set of the flag is empty, delete the flag.
-					$n = $this->redis->sCard( $flag );
-					if ( is_int( $n ) && 0 == $n ) {
-						$this->redis->del( $flag );
+							// If the set of the flag is empty, delete the flag.
+							$n = $tx->scard( $flag );
+							if ( is_int( $n ) && 0 == $n ) {
+								$tx->del( $flag );
+							}
+						}
 					}
+
+					// Delete the key.
+					$tx->del( $key );
 				}
-			}
-
-			// Delete the key.
-			$this->redis->del( $key );
-
-			// Execute the transaction.
-			$this->redis->exec();
+			);
 
 			/**
 			 * Fires after a page cache is deleted in Redis.
@@ -440,14 +448,15 @@ final class Millicache_Redis {
 	 */
 	public function lock( string $hash ): bool {
 		try {
-			return $this->redis->set(
+			$status = $this->redis->set(
 				$this->get_cache_key( $hash . '-lock' ),
 				true,
-				array(
-					'nx',
-					'ex' => 30,
-				)
+				'EX',
+				30,
+				'NX'
 			);
+
+			return (bool) $status;
 		} catch ( RedisException $e ) {
 			error_log( 'Unable to set lock in Redis: ' . $e->getMessage() );
 			return false;
@@ -520,14 +529,20 @@ final class Millicache_Redis {
 	 */
 	public function get_cache_keys_by_flag( string $flag ): array {
 		try {
+			if ( ! isset( $this->redis ) ) {
+				return array();
+			}
+
 			// Check if the flag contains any wildcard characters.
 			if ( preg_match( '/[*?]/', $flag ) ) {
 				$pattern = $this->get_flag_key( $flag );
-				$iterator = null;
 				$members = array();
 
 				// The flag contains wildcard, use SCAN to get all keys.
-				$keys = $this->redis->scan( $iterator, $pattern );
+				$keys = array();
+				foreach ( new Predis\Collection\Iterator\Keyspace( $this->redis, $pattern ) as $key ) {
+					$keys[] = $key;
+				}
 
 				// Check if the keys are an array.
 				if ( ! is_array( $keys ) ) {
@@ -535,12 +550,14 @@ final class Millicache_Redis {
 				}
 
 				foreach ( $keys as $key ) {
-					$key_members = $this->redis->sMembers( $key );
-					$members = array_merge( $members, $key_members );
+					if ( is_string( $key ) ) {
+						$key_members = $this->redis->smembers( $key );
+						$members = array_merge( $members, $key_members );
+					}
 				}
 			} else {
 				// The flag does not contain wildcard, directly call sMembers.
-				$members = $this->redis->sMembers( $this->get_flag_key( $flag ) );
+				$members = $this->redis->smembers( $this->get_flag_key( $flag ) );
 			}
 
 			// Remove prefix from keys.
@@ -571,17 +588,17 @@ final class Millicache_Redis {
 
 			foreach ( $flags as $flag ) {
 				// Get all keys in the set associated with the flag.
-				$keys = $this->redis->sMembers( $flag );
+				$keys = $this->redis->smembers( $flag );
 
 				foreach ( $keys as $key ) {
 					// If the key does not exist in Redis, remove it from the set.
 					if ( ! $this->redis->exists( $key ) ) {
-						$this->redis->sRem( $flag, $key );
+						$this->redis->srem( $flag, $key );
 					}
 				}
 
 				// If the set of the flag is empty, delete the flag.
-				if ( 0 === $this->redis->sCard( $flag ) ) {
+				if ( 0 === $this->redis->scard( $flag ) ) {
 					$this->redis->del( $flag );
 				}
 			}
@@ -640,7 +657,15 @@ final class Millicache_Redis {
 	 */
 	public function get_cache_size( string $flag = '' ) {
 		try {
-			$keys = ! empty( $flag ) ? $this->get_cache_keys_by_flag( $flag ) : $this->redis->scan( $iterator, $this->prefix . ':c:*' );
+			$keys = array();
+
+			if ( ! empty( $flag ) ) {
+				$keys = $this->get_cache_keys_by_flag( $flag );
+			} else {
+				foreach ( new Predis\Collection\Iterator\Keyspace( $this->redis, $this->prefix . ':c:*' ) as $key ) {
+					$keys[] = $key;
+				}
+			}
 
 			if ( ! is_array( $keys ) ) {
 				return false;
@@ -649,7 +674,7 @@ final class Millicache_Redis {
 			$total_size = array_sum(
 				array_map(
 					function ( $key ) use ( $flag ) {
-						return $this->redis->rawCommand( 'MEMORY', 'USAGE', ! empty( $flag ) ? $this->get_cache_key( $key ) : $key );
+						return $this->redis->executeRaw( array( 'MEMORY', 'USAGE', ! empty( $flag ) ? $this->get_cache_key( $key ) : $key ) );
 					},
 					$keys
 				)

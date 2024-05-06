@@ -10,7 +10,8 @@
         }
     ],
     "require": {
-        "php": ">=7.4"
+        "php": ">=7.4",
+        "predis/predis": "^2.2"
     },
     "require-dev": {
         "wp-coding-standards/wpcs": "^3.0",
@@ -21,21 +22,37 @@
         "phpstan/phpstan-deprecation-rules": "^1.1",
         "szepeviktor/phpstan-wordpress": "^1.3",
         "swissspidy/phpstan-no-private": "^0.2.0",
-        "roave/security-advisories": "dev-latest"
+        "roave/security-advisories": "dev-latest",
+        "coenjacobs/mozart": "^0.7.1"
     },
     "suggest": {
-        "ext-redis": "Allows connecting to Redis with the fast phpredis extension.",
         "ext-zlib": "Allows compressing the cache with zlib."
     },
     "scripts": {
         "phpstan": "phpstan analyse -c phpstan.neon --memory-limit 1G",
         "lint": "phpcs --standard=phpcs.xml -s",
-        "fix": "phpcbf --standard=phpcs.xml"
+        "fix": "phpcbf --standard=phpcs.xml",
+        "post-install-cmd": [
+            "\"vendor/bin/mozart\" compose",
+            "composer dump-autoload"
+        ],
+        "post-update-cmd": [
+            "\"vendor/bin/mozart\" compose",
+            "composer dump-autoload"
+        ]
     },
     "config": {
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "phpstan/extension-installer": true
+        }
+    },
+    "extra": {
+        "mozart": {
+            "dep_namespace": "MilliCache\\",
+            "dep_directory": "/src/",
+            "classmap_directory": "/classes/",
+            "classmap_prefix": "MC_"
         }
     }
 }
