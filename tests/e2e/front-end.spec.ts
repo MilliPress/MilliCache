@@ -66,7 +66,7 @@ test.describe('Visitor', () => {
         await page.goto('/');
 
         // Wait 10 seconds to expire the cache
-        await page.waitForTimeout(4000);
+        await page.waitForTimeout(2000);
 
         // Reload the same page to check if the status is hit
         const response = await page.reload();
@@ -75,7 +75,7 @@ test.describe('Visitor', () => {
         await validateHeader(response, 'status', 'hit');
 
         // Wait 10 seconds to expire the cache
-        await page.waitForTimeout(8000);
+        await page.waitForTimeout(3000);
 
         // Reload the same page to check if the status changes to expire
         const response2 = await page.reload();

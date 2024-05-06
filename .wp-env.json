@@ -17,7 +17,7 @@
   "env": {
     "tests": {
       "config": {
-        "MC_TTL": 10,
+        "MC_TTL": 5,
         "MC_REDIS_DB": 1
       },
       "plugins": [],
