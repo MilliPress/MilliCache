@@ -336,7 +336,7 @@ final class MilliCache {
 	 * @return void
 	 */
 	public function cleanup_expired_flags() {
-		$millicache_redis = new MilliCache\Redis();
+		$millicache_redis = new Redis();
 		$millicache_redis->cleanup_expired_flags();
 	}
 

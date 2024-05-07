@@ -69,6 +69,8 @@ class Activator {
 				'error',
 				__( 'The wp-content directory is not writable. Please make sure that the directory is writable and try again or manually copy advanced-cache.php from the plugin folder.', 'millicache' )
 			);
+
+			return;
 		}
 
 		$source_path = dirname( plugin_dir_path( __FILE__ ) );
@@ -79,9 +81,11 @@ class Activator {
 			// File does not exist, create symlink.
 			if ( symlink( $source_file, $destination ) ) {
 				Admin::add_notice(
-					'success',
-					__( 'Symlink for advanced-cache.php created.', 'millicache' )
+					__( 'Symlink created for advanced-cache.php. Please make sure to configure MilliCache to start caching.', 'millicache' ),
+					'success'
 				);
+
+				return;
 			}
 
 			// Could not create symlink, try to copy the file.
@@ -91,14 +95,16 @@ class Activator {
 				$source_content = str_replace( 'dirname( is_link( __FILE__ ) ? readlink( __FILE__ ) : __FILE__ )', "'" . dirname( __DIR__ ) . "'", $source_content );
 
 				if ( file_put_contents( $destination, $source_content, LOCK_EX ) ) {
-					Admin::add_notice( 'success', __( 'advanced-cache.php copied to wp-content directory.', 'millicache' ) );
+					Admin::add_notice( __( 'The file advanced-cache.php has been copied to the /wp-content directory. Please make sure to configure MilliCache to start caching.', 'millicache' ), 'success' );
+
+					return;
 				}
 			}
 
 			// Could not create symlink or copy the file.
 			Admin::add_notice(
-				'error',
-				__( 'Could not create symlink for advanced-cache.php. Please copy the file manually from the plugin directory to your wp-content directory.', 'millicache' )
+				__( 'Could not create symlink for advanced-cache.php. Please copy the file manually from the plugin directory to your /wp-content directory.', 'millicache' ),
+				'error'
 			);
 
 		} elseif ( ! is_link( $destination ) ) {
@@ -108,15 +114,15 @@ class Activator {
 			if ( $source_version && $destination_version ) {
 				if ( version_compare( $source_version, $destination_version ) > 0 ) {
 					Admin::add_notice(
-						'error',
-						__( 'Your version of advanced-cache.php is outdated. Please copy the file manually from the plugin directory to your wp-content directory.', 'millicache' )
+						__( 'Your version of advanced-cache.php is outdated. Please copy the file manually from the plugin directory to your wp-content directory.', 'millicache' ),
+						'error'
 					);
 				}
 			}
 		} else {
 			Admin::add_notice(
-				'error',
-				__( 'advanced-cache.php already exists in your wp-content directory. Please remove it and try again.', 'millicache' )
+				__( 'advanced-cache.php already exists in your wp-content directory. Please remove it and try again.', 'millicache' ),
+				'error'
 			);
 		}
 	}

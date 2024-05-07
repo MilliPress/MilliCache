@@ -149,6 +149,9 @@ class Admin {
 			'message' => $message,
 			'type'    => $type,
 		);
+
+		// Store the notice transient for 15 seconds.
+		set_transient( 'millicache_admin_notices', self::$notices, 15 );
 	}
 
 	/**
@@ -160,9 +163,20 @@ class Admin {
 	 * @return   void
 	 */
 	public function display_notices(): void {
+		// Check if there are any saved notices in a transient.
+		$saved_notices = get_transient( 'millicache_admin_notices' );
+
+		// If there are saved notices, merge them with the current notices.
+		if ( $saved_notices ) {
+			// Push the saved notices to the current notices array.
+			array_push( self::$notices, ...(array) $saved_notices );
+			// Delete the transient as we don't need it anymore.
+			delete_transient( 'millicache_admin_notices' );
+		}
+
 		foreach ( self::$notices as $notice ) {
 			printf(
-				'<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
+				'<div class="notice notice-%s is-dismissible"><p><b>Page Cache: </b>%s</p></div>',
 				esc_attr( $notice['type'] ),
 				esc_html( $notice['message'] )
 			);
