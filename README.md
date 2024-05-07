@@ -81,7 +81,7 @@ define('MC_REDIS_PORT', 6379); # Redis Port
 ...
 ```
 
-Make sure you have caching enabled in your WordPress installation by setting the `WP_CACHE' constant to `true' in your `wp-config.php' file:
+Make sure you have caching enabled in your WordPress installation by setting the `WP_CACHE` constant to `true` in your `wp-config.php' file:
 
 ```php
 define('WP_CACHE', true); # Enable WordPress Cache

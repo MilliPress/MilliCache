@@ -56,8 +56,8 @@ if (args[0] === 'start') {
         }
 
         console.log('Starting the server');
-        await run(`docker compose ${mergeConfig} up --force-recreate -d redis`);
-        await run(`npx wp-env start --update`);
+        await run(`docker compose ${mergeConfig} up --force-recreate -d redis keydb dragonfly`);
+        await run(`npx wp-env start --update --remove-orphans`);
 
         console.log('Starting bash session to install redis-cli for the CLI container');
         await run(`npx wp-env run cli bash -c "sudo apk add --update redis"`);
