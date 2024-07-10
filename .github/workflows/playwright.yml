@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm ci && composer install --no-interaction --no-progress --no-suggest --prefer-dist --optimize-autoloader --no-dev
+        run: npm ci && composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
       - name: Setup WordPress Environment
         run: npm run env:start
       - name: Install Playwright Browsers
