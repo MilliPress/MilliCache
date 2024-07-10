@@ -1,28 +1,63 @@
 # MilliCache: Redis Full Page Cache for WordPress
 
-As a full page caching solution, MilliCache uses Redis as a backend to store the cached pages.
-It is designed to be fast, reliable and scalable.
-MilliCache is designed for WordPress multisite and multi-network installations,
-but can also be used in single site installations.
+Redis is a very well-known and widely used caching solution for object caching in WordPress, 
+known for its in-memory storage and rapid performance. 
+However, until now, there have been no full-page cache solutions available using Redis for WordPress.
+
+Introducing MilliCache,
+a groundbreaking full-page caching solution that uses Redis as its backend to store cached pages. 
+Leveraging Redis's in-memory storage capabilities,
+MilliCache is designed to be exceptionally fast, reliable, and scalable. 
+While it is specifically optimized for WordPress Multisite and Multi-Network installations, 
+MilliCache is equally effective in single-site setups, 
+providing a versatile and robust caching solution for all types of WordPress environments.
 
 > [!IMPORTANT]
 > 
 > This plugin is currently under active development and not officially ready for production use.
 > There is no settings UI yet, configuration is done via `wp-config.php`.
-> It lacks proper documentation and testing. Also, things may change without notice.
+> It lacks proper documentation and testing.
+> Also, things are subject to change without notice.
 > Please report any problems you encounter.
+
+---
+
+## Table of Contents
+
+- [Current Features](#current-features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Cache Flags](#cache-flags)
+  - [What are cache flags?](#what-are-cache-flags)
+  - [Default Cache Flags](#default-cache-flags)
+  - [Adding Cache Flags](#adding-cache-flags)
+- [Clear Cache](#clear-cache)
+  - [Clear Global Cache](#clear-global-cache)
+  - [Clear Cache by Flag](#clear-cache-by-flag)
+  - [Clear Cache by URL](#clear-cache-by-url)
+  - [Clear Cache by Post IDs](#clear-cache-by-post-ids)
+  - [Clear Cache by Site IDs](#clear-cache-by-site-ids)
+  - [Clear Cache by Network IDs](#clear-cache-by-network-ids)
+- [WP CLI](#wp-cli)
+- [Debugging](#debugging)
+- [Hooks & Filters](#hooks--filters)
+- [Roadmap](#roadmap)
+- [Testing](#testing)
 
 ## Current Features
 
 - Fast in-memory full page caching
-- [Cache Flagging](#cache-flags) for complex cache handling & [clearing](#clear-cache)
+- Gzip cache compression
+- [Cache Flagging](#cache-flags) for complex cache logic & [Clearing](#clear-cache)
 - [Expired cache handling](#clear-cache) to regenerate the cache in the background
-- Designed for WordPress Multisite & Multi-Network
+- Optimised for WordPress Multisite & Multi-Network
 - Extensible with [Hooks & Filters](#hooks--filters)
 - [WP CLI commands](#wp-cli) for cache clearing & stats
 - [Debugging](#debugging) headers for cache information
-- Gzip compression for cache entries
-- Scalable: Even works with Redis cluster
+- Scalable: From local Redis instances to clusters
+- Compatible with Redis object cache plugins like [WP Redis](https://wordpress.org/plugins/wp-redis/) & [Redis Object Cache](https://wordpress.org/plugins/redis-cache/)
+- Compatible with [Redis Server](https://redis.io/), [KeyDB](https://keydb.dev) & [Dragonfly](https://www.dragonflydb.io/)
 
 ---
 
@@ -32,7 +67,7 @@ but can also be used in single site installations.
 - Redis Server
 
 Please make sure you have a Redis server installed and running.
-If you are using Ubuntu, you can install Redis using the following commands
+If you’re using Ubuntu, you can install Redis using the following commands
 
 ### Installing Redis on Ubuntu
 
@@ -51,7 +86,12 @@ If you are using a different operating system, please refer to the [Redis Docume
 
 ### Redis Configuration
 
-Make sure your Redis server has enough memory allocated to store your cached pages. MilliCache compresses cached pages using gzip to reduce memory usage. However, you need to keep an eye on your cache size in the Dashboard to increase according to your hit rate. We also recommend disabling flushing the Redis cache to disk and the `allkeys-lru` eviction policy to ensure the server can make more room for new cached pages by evicting old ones. Here is an example excerpt from the redis.conf file:
+Make sure your Redis server has enough memory allocated to store your cached pages. 
+MilliCache compresses cached pages using gzip to reduce memory usage. 
+However, you need to keep an eye on your cache size in the Dashboard to increase according to your hit rate. 
+We also recommend disabling flushing the Redis cache to disk and the `allkeys-lru` eviction policy 
+to ensure the server can make more room for new cached pages by evicting old ones. 
+Here is an example excerpt from the redis.conf file:
 
 ```
 # Set maximum memory for Redis to 16 megabytes
@@ -81,7 +121,8 @@ define('MC_REDIS_PORT', 6379); # Redis Port
 ...
 ```
 
-Make sure you have caching enabled in your WordPress installation by setting the `WP_CACHE` constant to `true` in your `wp-config.php' file:
+Make sure you have caching enabled in your WordPress installation
+by setting the `WP_CACHE` constant to `true` in your `wp-config.php` file:
 
 ```php
 define('WP_CACHE', true); # Enable WordPress Cache
@@ -136,7 +177,8 @@ https://example.org/post-slug/?show_comments=1
 ```
 
 The cache entries for the above URLs are different because the cache keys are unique based on the request.
-However, they are related to the same post or page and MilliCache groups these cached entries with a common flag `post:1:123`.
+However,
+they’re related to the same post or page and MilliCache groups these cached entries with a common flag `post:1:123`.
 Entries can have multiple flags and can therefore be grouped in different ways.
 This makes it possible to delete all cache entries of a specific group by using the flag.
 For the example above,
@@ -187,7 +229,7 @@ add_filter('millicache_add_flags', function( $flags ) {
 
 ## Clear Cache
 
-Please note that by default, MilliCache will expire (not delete) cache entries that have reached their lifetime (TTL).
+Please note that by default, MilliCache will expire (not delete) cache entries that’ve reached their lifetime (TTL).
 When a cache entry has expired, it will be regenerated in the background on the next request and an outdated copy will be served to the visitor.
 This way, the user will not notice any delay while the cache is regenerated.
 
@@ -390,9 +432,62 @@ add_filter('millicache_clear_site_options', function( $options ) {
 We plan to implement the following features soon:
 
 - [ ] Settings UI
-- [ ] Clear network options
 - [ ] Cache Preloading
 - [ ] CDN integration
+
+## Testing
+
+Testing is automated with tools such as PHPUnit, PHPStan, and PHP CodeSniffer.
+For e2e-tests,
+we use Playwright running on [@wordpress/env](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-env/).
+That makes it basic for you to test the plugin in a real WordPress environment.
+To play with MilliCache or to run the tests, you need to have Docker and Node.js installed.
+
+### Start the Test Environment
+
+The following commands will start the WordPress environment with MilliCache Plugin installed under `http://localhost:8888`.
+
+> [!INFO]
+>
+> Another WordPress environment will be available under `http://localhost:8889` for the Playwright tests. 
+> Please note that this instance is configured for testing, e.g. with 5-second Cache-TTL.
+> So better to play with the first instance.
+
+```bash
+$ npm install
+$ npm run env:start
+```
+
+You can log in with `admin` and `password`. 
+
+### Run the e2e-Tests
+
+To run the Playwright tests under `http://localhost:8889`:
+
+```bash
+$ npm run env:test
+```
+### Stop the Test Environment
+
+To stop the environments:
+
+```bash
+$ npm run env:stop
+```
+
+### Destroy the Test Environment
+
+To destroy and remove the environments:
+
+```bash
+$ npm run env:destroy
+```
+
+### Further useful commands
+
+- `npm run env:cli wp ...` - Run WP-CLI command at the WordPress environment. E.g. `wp-env run cli wp millicache stats`
+- `npm run env:redis-cli` - Open the Redis CLI
+- `npm run env:reset` - Reset the WordPress environments & start from scratch
 
 ## Credits
 
