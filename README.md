@@ -307,7 +307,7 @@ To clear the cache of specific posts, use the following function. This will clea
 
 ```php
 /*
- * @param string|array $post_ids Post ID or array of Post IDs to clear.
+ * @param int|array $post_ids Post ID or array of Post IDs to clear.
  * @param bool $expire Expire cache if set to true, or delete by default. (optional)
  */
 \MilliCache\Engine::clear_cache_by_post_ids($post_ids, $expire);
@@ -320,7 +320,7 @@ To clear the cache of specific sites in a WordPress multisite network, use the f
 
 ```php
 /*
- * @param string|array $site_ids Site ID or array of Site IDs to clear.
+ * @param int|array $site_ids Site ID or array of Site IDs to clear.
  * @param bool $expire Expire cache if set to true, or delete by default. (optional)
  */
 \MilliCache\Engine::clear_cache_by_site_ids($site_ids, $expire);
@@ -333,7 +333,7 @@ To clear the cache of specific networks in a multi-network installation, use the
 
 ```php
 /*
- * @param string|array $network_ids Network ID or array of Network IDs to clear.
+ * @param int|array $network_ids Network ID or array of Network IDs to clear.
  * @param bool $expire Expire cache if set to true, or delete by default. (optional)
  */
 \MilliCache\Engine::clear_cache_by_network_ids($network_ids, $expire);
