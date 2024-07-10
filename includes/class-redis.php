@@ -203,15 +203,11 @@ final class Redis {
 				)
 			);
 
-			$this->redis->connect();
-
-			$connect = $this->redis->isConnected();
+			return true;
 		} catch ( ConnectionException $e ) {
 			error_log( 'Unable to connect to Redis: ' . $e->getMessage() );
 			return false;
 		}
-
-		return $connect;
 	}
 
 	/**
