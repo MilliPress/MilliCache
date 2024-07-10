@@ -47,7 +47,7 @@ export default defineConfig({
   webServer: {
     command: 'npm run env:start',
     url: process.env.WP_BASE_URL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     stdout: 'ignore',
     stderr: 'pipe',
   },
