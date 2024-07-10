@@ -2,7 +2,7 @@
     "name": "millipress/millicache",
     "description": "Redis Full Page Cache for WordPress",
     "type": "wordpress-plugin",
-    "license": "GPL3",
+    "license": "GPL-3.0-or-later",
     "authors": [
         {
             "name": "Philipp Wellmer",
@@ -29,6 +29,7 @@
         "ext-zlib": "Allows compressing the cache with zlib."
     },
     "scripts": {
+        "test": "composer fix && composer lint && composer phpstan",
         "phpstan": "phpstan analyse -c phpstan.neon --memory-limit 1G",
         "lint": "phpcs --standard=phpcs.xml -s",
         "fix": "phpcbf --standard=phpcs.xml",
@@ -39,6 +40,9 @@
         "post-update-cmd": [
             "\"vendor/bin/mozart\" compose",
             "composer dump-autoload"
+        ],
+        "cghooks": [
+            "vendor/bin/cghooks"
         ]
     },
     "config": {
@@ -53,6 +57,22 @@
             "dep_directory": "/src/",
             "classmap_directory": "/classes/",
             "classmap_prefix": "MilliCache_"
+        },
+        "hooks": {
+            "config": {
+                "stop-on-failure": ["pre-push"]
+            },
+            "pre-commit": [
+                "echo committing as $(git config user.name)",
+                "composer test"
+            ],
+            "pre-push": [
+                "composer validate --no-check-all --no-check-publish",
+                "composer test"
+            ],
+            "post-merge": [
+                "composer install"
+            ]
         }
     }
 }
