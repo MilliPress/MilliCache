@@ -1,5 +1,7 @@
 # MilliCache: Redis Full Page Cache for WordPress
 
+[![Playwright Tests](https://github.com/MilliPress/MilliCache/actions/workflows/playwright.yml/badge.svg)](https://github.com/MilliPress/MilliCache/actions/workflows/playwright.yml)
+
 Redis is a very well-known and widely used caching solution for object caching in WordPress, 
 known for its in-memory storage and rapid performance. 
 However, until now, there have been no full-page cache solutions available using Redis for WordPress.
