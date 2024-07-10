@@ -21,7 +21,8 @@
         "MC_REDIS_DB": 1
       },
       "mappings": {
-        "wp-cli.yml": "./tests/wp-env/wp-cli.yml"
+        "wp-cli.yml": "./tests/wp-env/wp-cli.yml",
+        ".htaccess": "./tests/wp-env/.htaccess"
       }
     }
   }
