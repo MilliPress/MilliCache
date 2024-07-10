@@ -80,7 +80,7 @@ if (args[0] === 'start') {
             for (let i = 2; i <= 10; i++) {
                 await run(`npx wp-env run tests-cli wp site create --quiet --slug='site${i}' --title='Site ${i}' --email='site${i}@admin.local'`);
             }
-            // await run('npx wp-env run tests-cli bash -c \"cp wp-content/plugins/millicache/tests/wp-env/.htaccess .htaccess\"');
+            await run('npx wp-env run tests-cli bash -c \"cp wp-content/plugins/millicache/tests/wp-env/.htaccess .htaccess\"');
         }
     };
 

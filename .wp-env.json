@@ -11,7 +11,6 @@
   "plugins": ["."],
   "themes": [],
   "mappings": {
-    ".htaccess": "./tests/wp-env/.htaccess",
     "wp-content/plugins": "./tests/wp-env/plugins",
     "wp-content/mu-plugins": "./tests/wp-env/mu-plugins"
   },
