@@ -78,7 +78,7 @@ if (args[0] === 'start') {
         } catch (error) {
             console.log('Converting to Multisite');
             await run('npx wp-env run tests-cli wp core multisite-convert --quiet --title=\'MilliCache Multisite\'');
-            for (let i = 2; i <= 10; i++) {
+            for (let i = 2; i <= 5; i++) {
                 await run(`npx wp-env run tests-cli wp site create --quiet --slug='site${i}' --title='Site ${i}' --email='site${i}@admin.local'`);
             }
             // await run('npx wp-env run tests-cli bash -c \"cp wp-content/plugins/millicache/tests/wp-env/.htaccess .htaccess\"');

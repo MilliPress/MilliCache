@@ -43,9 +43,9 @@ test.describe('Admin', () => {
             title: "MilliCache Test",
             content: "This is a test post for MilliCache.",
             showWelcomeGuide:false
-        })
+        });
 
-        // Publish the post
+        // Publish the post and get the id
         const id = await editor.publishPost();
 
         // Logout
