@@ -59,8 +59,9 @@ if (args[0] === 'start') {
             await run(`npx wp-env stop`);
         }
 
-        console.log('Starting the server');
-        await run(`docker compose ${mergeConfig} up --force-recreate -d redis keydb dragonfly`);
+        const servicesToRun = !process.env.CI ? 'redis keydb dragonfly' : 'redis';
+        console.log('Starting the server with the following Redis supporting services:', servicesToRun);
+        await run(`docker compose ${mergeConfig} up --force-recreate -d ${servicesToRun}`);
         await run(`npx wp-env start --update --remove-orphans`);
 
         console.log('Starting bash session to install redis-cli for the CLI container');
