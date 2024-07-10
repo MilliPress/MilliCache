@@ -265,8 +265,8 @@ final class MilliCache {
 					$this->engine->add_flag( "archive:$blog_id:$post_type" );
 				}
 			} elseif ( is_author() ) {
-				$author_id = get_query_var( 'author', false );
-				if ($author_id !== false) {
+				$author_id = get_query_var( 'author' );
+				if ( is_string( $author_id ) || is_int( $author_id ) ) {
 					$this->engine->add_flag( "author:$blog_id:$author_id" );
 				}
 			}
