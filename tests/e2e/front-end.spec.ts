@@ -11,14 +11,11 @@ test.describe.configure({ mode: 'serial' });
  * Activate the plugin before running the tests.
  */
 test.beforeAll(async ({ requestUtils }) => {
-    await requestUtils.activatePlugin('millicache');
-});
+    // Wait some seconds for the backend test to test the plugin activation
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
-/**
- * Deactivate the plugin after running the tests.
- */
-test.afterAll(async ({ requestUtils }) => {
-    await requestUtils.deactivatePlugin('millicache');
+    // Activate the plugin
+    await requestUtils.activatePlugin('millicache');
 });
 
 /**
@@ -65,7 +62,7 @@ test.describe('Visitor', () => {
         // Go to the home page
         await page.goto('/');
 
-        // Wait 10 seconds to expire the cache
+        // Wait 2 seconds to expire the cache
         await page.waitForTimeout(2000);
 
         // Reload the same page to check if the status is hit
@@ -74,8 +71,8 @@ test.describe('Visitor', () => {
         // Check if the status is set to miss
         await validateHeader(response, 'status', 'hit');
 
-        // Wait 10 seconds to expire the cache
-        await page.waitForTimeout(3000);
+        // Wait 5 seconds to expire the cache
+        await page.waitForTimeout(5000);
 
         // Reload the same page to check if the status changes to expire
         const response2 = await page.reload();

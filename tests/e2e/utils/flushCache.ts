@@ -5,6 +5,9 @@ export async function flushCache({ page, admin }) {
     // Login to the admin dashboard
     await login(page);
 
+    // Visit the admin dashboard
+    await admin.visitAdminPage('/');
+
     // Flush Button
     const adminBarFlushButton = page.locator('#wp-admin-bar-millicache');
 
@@ -16,6 +19,9 @@ export async function flushCache({ page, admin }) {
 
     // Logout
     await logout(page);
+
+    // Reload the page
+    await page.reload();
 
     // Check if the button is not visible
     await expect(adminBarFlushButton).not.toBeVisible();

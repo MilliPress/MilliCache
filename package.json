@@ -11,10 +11,16 @@
     "dotenv": "^16.4.5"
   },
   "scripts": {
-    "start": "npm run mc-dev start",
-    "stop": "npm run mc-dev stop",
-    "destroy": "npm run mc-dev destroy",
-    "mc-dev": "node ./tests/wp-env/dev-server.mjs",
-    "wp-env": "wp-env"
+    "wp-env": "wp-env",
+    "env": "node ./tests/wp-env/dev-server.mjs",
+    "env:start": "npm run env start",
+    "env:stop": "npm run env stop",
+    "env:reset": "wp-env clean all && npm run env:start",
+    "env:destroy": "npm run env destroy",
+    "env:test": "npx playwright test --headed",
+    "env:cli": "wp-env run cli",
+    "env:redis-cli": "wp-env run cli bash -c 'redis-cli -h ${1:-redis}'",
+    "env:tests-cli": "wp-env run tests-cli $@",
+    "env:tests-redis-cli": "wp-env run test-cli bash -c 'redis-cli -h ${1:-redis}'"
   }
 }

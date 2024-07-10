@@ -45,7 +45,7 @@ export default defineConfig({
 
   /* Run MilliCache dev server before starting the tests */
   webServer: {
-    command: 'npm run mc-dev start',
+    command: 'npm run env:start',
     url: process.env.WP_BASE_URL,
     reuseExistingServer: !process.env.CI,
     stdout: 'ignore',

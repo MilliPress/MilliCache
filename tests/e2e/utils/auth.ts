@@ -1,12 +1,17 @@
+import fs from 'fs';
+
 export async function login(page) {
-    await page.goto('/wp-login.php');
-    await page.fill('#user_login', process.env.WP_USERNAME);
-    await page.fill('#user_pass', process.env.WP_PASSWORD);
-    await page.click('#wp-submit');
-    await page.waitForNavigation();
+    // Read the content of the JSON file
+    const storageStateContent = fs.readFileSync(process.env.WP_AUTH_STORAGE, 'utf8');
+
+    // Parse the content to a JavaScript object
+    const storageState = JSON.parse(storageStateContent);
+
+    // Add the cookies to the current page context
+    await page.context().addCookies(storageState.cookies);
 }
 
 export async function logout(page) {
-    await page.goto('/wp-login.php?action=logout');
-    await page.click('a:has-text("log out")');
+    // Clear the cookies from the current page context
+    await page.context().clearCookies();
 }

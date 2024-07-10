@@ -3,6 +3,7 @@
 node_modules/
 
 # Playwright
+/tests/wp-env/plugins/*/*
 /test-results/
 /playwright-report/
 /blob-report/

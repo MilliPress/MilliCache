@@ -8,8 +8,8 @@ const mergeConfig = '-f $(npx wp-env install-path)/docker-compose.yml -f tests/w
 const args = process.argv.slice(2);
 
 // If the argument is not start or stop, show an error message
-if (args[0] !== 'start' && args[0] !== 'stop' && args[0] !== 'destroy') {
-    console.error('Invalid argument. Please use "start", "stop" or "destroy".');
+if (!['start', 'stop', 'destroy'].includes(args[0])) {
+    console.error(`Invalid argument. Please use "start", "stop", or "destroy".`);
     process.exit(1);
 }
 
@@ -17,9 +17,10 @@ if (args[0] !== 'start' && args[0] !== 'stop' && args[0] !== 'destroy') {
  * Run a command in the console.
  *
  * @param command
+ * @param input
  * @returns {Promise<unknown>}
  */
-const run = (command) => {
+const run = (command, input = '') => {
     return new Promise((resolve, reject) => {
         const process = exec(command, (error, stdout, stderr) => {
             if (error) {
@@ -31,6 +32,9 @@ const run = (command) => {
             console.error(`stderr: ${stderr}`);
             resolve(stdout.trim()); // resolve the Promise with the stdout
         });
+
+        process.stdin.write(input + '\n');
+        process.stdin.end();
 
         process.on('exit', (code) => {
             if (code !== 0) {
@@ -61,6 +65,23 @@ if (args[0] === 'start') {
 
         console.log('Starting bash session to install redis-cli for the CLI container');
         await run(`npx wp-env run cli bash -c "sudo apk add --update redis"`);
+
+        console.log('Set the permalink structure to /%postname%/');
+        await run('npx wp-env run cli wp rewrite structure "/%postname%/" --quiet --hard');
+        await run('npx wp-env run tests-cli wp rewrite structure "/%postname%/" --quiet --hard');
+
+        console.log('Initialize Multisite on Test Server');
+        try {
+            await run('npx wp-env run tests-cli wp site list --quiet');
+            console.log('Multisite already initialized');
+        } catch (error) {
+            console.log('Converting to Multisite');
+            await run('npx wp-env run tests-cli wp core multisite-convert --quiet --title=\'MilliCache Multisite\'');
+            for (let i = 2; i <= 10; i++) {
+                await run(`npx wp-env run tests-cli wp site create --quiet --slug='site${i}' --title='Site ${i}' --email='site${i}@admin.local'`);
+            }
+            // await run('npx wp-env run tests-cli bash -c \"cp wp-content/plugins/millicache/tests/wp-env/.htaccess .htaccess\"');
+        }
     };
 
     runCommands().then(r => console.log('MilliCache Dev Server has been started!'));
@@ -81,9 +102,9 @@ if (args[0] === 'stop') {
 if (args[0] === 'destroy') {
     const runCommands = async () => {
         console.log('Destroying the server')
-        await run(`docker compose ${mergeConfig} down`);
-        await run(`npx wp-env destroy`);
-        await run(`docker rmi redis`);
+        await run(`docker compose ${mergeConfig} down -v`);
+        await run(`npx wp-env destroy`, 'y');
+        await run(`docker rmi redis eqalpha/keydb docker.dragonflydb.io/dragonflydb/dragonfly`);
     }
 
     runCommands().then(r => console.log('MilliCache Dev Server has been destroyed!'));
