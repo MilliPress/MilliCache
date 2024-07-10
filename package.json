@@ -17,7 +17,7 @@
     "env:stop": "npm run env stop",
     "env:reset": "wp-env clean all && npm run env:start",
     "env:destroy": "npm run env destroy",
-    "env:test": "npx playwright test --headed",
+    "env:test": "npx playwright test",
     "env:cli": "wp-env run cli",
     "env:redis-cli": "wp-env run cli bash -c 'redis-cli -h ${1:-redis}'",
     "env:tests-cli": "wp-env run tests-cli $@",
