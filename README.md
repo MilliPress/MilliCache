@@ -18,8 +18,7 @@ providing a versatile and robust caching solution for all types of WordPress env
 > 
 > This plugin is currently under active development and not officially ready for production use.
 > There is no settings UI yet, configuration is done via `wp-config.php`.
-> It lacks proper documentation and testing.
-> Also, things are subject to change without notice.
+> Things are subject to change without notice.
 > Please report any problems you encounter.
 
 ---

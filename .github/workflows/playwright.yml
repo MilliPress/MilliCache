@@ -11,16 +11,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get Composer Cache Directory
+      - name: Get Composer directory path
         id: composer-cache
         run: |
           echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-      - uses: actions/cache@v4
+
+      - name: Cache Composer dependencies
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: composer-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            composer-
+            ${{ runner.os }}-composer-
 
       - name: Setup Node on ${{ runner.os }}
         uses: actions/setup-node@v4
