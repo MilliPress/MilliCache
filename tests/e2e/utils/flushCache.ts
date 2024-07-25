@@ -1,12 +1,12 @@
 import { expect } from '@playwright/test';
 import { login, logout } from './auth';
 
-export async function flushCache({ page, admin }) {
+export async function flushCache({ page, admin, network = false}) {
     // Login to the admin dashboard
     await login(page);
 
     // Visit the admin dashboard
-    await admin.visitAdminPage('/');
+    await admin.visitAdminPage(network ? '/network' : '/');
 
     // Flush Button
     const adminBarFlushButton = page.locator('#wp-admin-bar-millicache');
@@ -14,7 +14,6 @@ export async function flushCache({ page, admin }) {
     // Check if the button is visible & click it
     await expect(adminBarFlushButton).toBeVisible().then(async () => {
         await adminBarFlushButton.click();
-        console.log('Cache flushed');
     });
 
     // Logout

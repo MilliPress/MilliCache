@@ -1,5 +1,5 @@
 import { test, expect } from './setup/e2e-wp-test';
-import { validateHeader } from "./utils/validateHeader";
+import { validateHeader, networkActivatePlugin, networkDeactivatePlugin, runWpCliCommand } from "./utils/tools";
 import { login, logout } from "./utils/auth";
 
 /**
@@ -16,7 +16,7 @@ test.use({ storageState: process.env.WP_AUTH_STORAGE });
  * Activate the plugin before running the tests.
  */
 test.beforeAll(async ({ requestUtils }) => {
-    await requestUtils.activatePlugin('millicache');
+    await networkActivatePlugin();
 });
 
 /**
@@ -24,8 +24,8 @@ test.beforeAll(async ({ requestUtils }) => {
  */
 test.describe('Admin', () => {
     test('Deactivate & Activate Plugin', async ({ requestUtils }) => {
-        await requestUtils.deactivatePlugin('millicache');
-        await requestUtils.activatePlugin('millicache');
+        await networkDeactivatePlugin();
+        await networkActivatePlugin();
     });
 
     test('"At a Glance"-Widget Displays Cache Size', async ({ requestUtils, page, admin}) => {

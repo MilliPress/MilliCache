@@ -21,6 +21,6 @@
     "env:cli": "wp-env run cli",
     "env:redis-cli": "wp-env run cli bash -c 'redis-cli -h ${1:-redis}'",
     "env:tests-cli": "wp-env run tests-cli $@",
-    "env:tests-redis-cli": "wp-env run test-cli bash -c 'redis-cli -h ${1:-redis}'"
+    "env:tests-redis-cli": "wp-env run tests-cli bash -c 'redis-cli -h ${1:-redis}'"
   }
 }

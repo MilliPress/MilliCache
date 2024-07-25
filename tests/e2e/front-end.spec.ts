@@ -1,5 +1,5 @@
-import { test, expect } from './setup/e2e-wp-test';
-import { validateHeader } from './utils/validateHeader';
+import { test } from './setup/e2e-wp-test';
+import { validateHeader, networkActivatePlugin } from './utils/tools';
 import { flushCache } from './utils/flushCache';
 
 /**
@@ -11,11 +11,13 @@ test.describe.configure({ mode: 'serial' });
  * Activate the plugin before running the tests.
  */
 test.beforeAll(async ({ requestUtils }) => {
-    // Wait some seconds for the backend test to test the plugin activation
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    // Wait some seconds for the backend test to first run the plugin activation tests
+    if (process.env.RUN_ALL_TESTS) {
+        await new Promise((resolve) => setTimeout(resolve, 6000));
+    }
 
     // Activate the plugin
-    await requestUtils.activatePlugin('millicache');
+    await networkActivatePlugin();
 });
 
 /**
@@ -62,17 +64,17 @@ test.describe('Visitor', () => {
         // Go to the home page
         await page.goto('/');
 
-        // Wait 2 seconds to expire the cache
-        await page.waitForTimeout(2000);
+        // Wait a second, so the caching is done
+        await page.waitForTimeout(1000);
 
         // Reload the same page to check if the status is hit
         const response = await page.reload();
 
-        // Check if the status is set to miss
+        // Check if the status is set to hit
         await validateHeader(response, 'status', 'hit');
 
-        // Wait 5 seconds to expire the cache
-        await page.waitForTimeout(5000);
+        // Wait 6 seconds to expire the cache
+        await page.waitForTimeout(6000);
 
         // Reload the same page to check if the status changes to expire
         const response2 = await page.reload();

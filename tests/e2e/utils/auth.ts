@@ -1,3 +1,4 @@
+// @ts-ignore
 import fs from 'fs';
 
 export async function login(page) {
