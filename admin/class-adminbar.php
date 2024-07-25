@@ -90,8 +90,9 @@ class Adminbar {
 		$this->loader->add_action( 'admin_bar_menu', $this, 'add_adminbar_menu', 999 );
 
 		// Clear cache.
-		$this->loader->add_action( 'admin_init', $this, 'maybe_clear_cache' );
-		$this->loader->add_action( 'template_redirect', $this, 'maybe_clear_cache' );
+		$this->loader->add_action( 'admin_init', $this, 'process_clear_cache_request' );
+		$this->loader->add_action( 'template_redirect', $this, 'process_clear_cache_request' );
+		$this->loader->add_action( 'wp_ajax_millicache_adminbar_clear_cache', $this, 'ajax_process_clear_cache_request' );
 	}
 
 	/**
@@ -115,8 +116,14 @@ class Adminbar {
 	 * @return   void
 	 */
 	public function enqueue_scripts() {
-		// phpcs:ignore -- While in beta, we don't want to enqueue any scripts.
-		// wp_enqueue_script( $this->plugin_name . '-adminbar', plugin_dir_url( __FILE__ ) . 'js/millicache-adminbar.js', array(), $this->version, false );
+		$inline_script = 'const millicache = ' . json_encode(
+			array(
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			)
+		) . ';';
+
+		wp_enqueue_script( $this->plugin_name . '-adminbar', plugin_dir_url( __FILE__ ) . 'js/millicache-adminbar.js', array(), $this->version, true );
+		wp_add_inline_script( $this->plugin_name . '-adminbar', $inline_script, 'before' );
 	}
 
 	/**
@@ -143,6 +150,7 @@ class Adminbar {
 			)
 		);
 
+		// todo: Add buttons to the admin bar, when on a post edit screen of public post types.
 		if ( ! is_admin() ) {
 			$wp_admin_bar->add_menu(
 				array(
@@ -167,53 +175,136 @@ class Adminbar {
 	}
 
 	/**
-	 * Maybe clear the cache.
+	 * Validate a clear cache request.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @return   bool
+	 */
+	public function validate_clear_cache_request() {
+		// Sanitize the input.
+		$action = $this->get_request_value( '_millicache' );
+		$nonce = $this->get_request_value( '_wpnonce' );
+
+		// Validate nonce here as needed.
+		if ( ! $action || ! in_array( $action, array( 'flush', 'flush_current' ), true ) ) {
+			return false;
+		}
+
+		if ( ! $nonce || ! wp_verify_nonce( sanitize_key( $nonce ), '_millicache__flush_nonce' ) ) {
+			return false;
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Process a clear cache request.
 	 *
 	 * @since    1.0.0
 	 * @access   public
 	 *
 	 * @return   void
 	 */
-	public function maybe_clear_cache() {
-		// Check conditions.
-		if (
-			! class_exists( '\MilliCache\Engine' ) ||
-			! is_admin_bar_showing() ||
-			! current_user_can( 'manage_options' ) ||
-			! isset( $_GET['_millicache'], $_GET['_wpnonce'] ) ||
-			! wp_verify_nonce( sanitize_key( $_GET['_wpnonce'] ), '_millicache__flush_nonce' )
-		) {
+	public function process_clear_cache_request() {
+		// Validate request.
+		if ( ! $this->validate_clear_cache_request() || wp_doing_ajax() ) {
 			return;
 		}
 
 		// Clear cache.
-		if ( 'flush' === $_GET['_millicache'] ) {
-			if ( ! is_admin() || is_blog_admin() ) {
-				Engine::clear_cache_by_site_ids( get_current_blog_id(), get_current_network_id() );
-				Admin::add_notice( __( 'The site cache has been cleared.', 'millicache' ), 'success' );
-			} elseif ( is_network_admin() ) {
-				Engine::clear_cache_by_network_id( get_current_network_id() );
+		$this->process_clear_cache( $this->get_request_value( '_millicache' ) );
+
+		// Reload page.
+		wp_safe_redirect( remove_query_arg( '_millicache', wp_get_referer() ) );
+
+		exit();
+	}
+
+	/**
+	 * Process a clear cache AJAX requests.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @return   void
+	 */
+	public function ajax_process_clear_cache_request() {
+		// Validate request.
+		if ( ! $this->validate_clear_cache_request() || ! wp_doing_ajax() ) {
+			return;
+		}
+
+		// Clear the cache.
+		$action = $this->get_request_value( '_millicache' );
+		$success = $this->process_clear_cache( $action, $this->get_request_value( '_url' ) );
+
+		// Send response.
+		if ( $success ) {
+			wp_send_json_success(
+				sprintf(
+					/* translators: %s: The type of cache being flushed ('full site' or 'current page'). */
+					__( 'Cache for %s flushed successfully.', 'millicache' ),
+					'flush' === $action ? __( 'full site', 'millicache' ) : __( 'current page', 'millicache' )
+				)
+			);
+		} else {
+			wp_send_json_error( __( 'Cache could not be flushed.', 'millicache' ) );
+		}
+	}
+
+	/**
+	 * Process cache clearing by context.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @param   string|null $action The action to perform.
+	 * @param   string|null $url The URL to clear the cache for.
+	 * @return  bool
+	 */
+	private function process_clear_cache( $action = 'flush', $url = '' ) {
+		if ( 'flush' === $action ) {
+			if ( is_network_admin() ) {
+				Engine::clear_cache_by_network_id();
 				Admin::add_notice( __( 'The network cache has been cleared.', 'millicache' ), 'success' );
+			} else {
+				Engine::clear_cache_by_site_ids();
+				Admin::add_notice( __( 'The site cache has been cleared.', 'millicache' ), 'success' );
 			}
-		} elseif ( 'flush_current' === $_GET['_millicache'] ) {
+
+			return true;
+		} elseif ( 'flush_current' === $action ) {
 			if ( is_singular() ) {
 				Engine::clear_cache_by_post_ids( (int) get_the_ID() );
 			} elseif ( is_home() || is_front_page() ) {
 				Engine::clear_cache_by_flags( 'home:' . get_current_blog_id() );
 			} else {
-				Engine::clear_cache_by_flags( 'url:' . Engine::get_url_hash() );
+				Engine::clear_cache_by_flags( 'url:' . Engine::get_url_hash( $url ) );
 			}
+
+			return true;
 		}
 
-		if ( wp_doing_ajax() ) {
-			wp_die();
-		}
+		return false;
+	}
 
-		global $pagenow;
-
-		if ( ! in_array( $pagenow, array( 'post.php', 'post-new.php' ) ) ) {
-			wp_safe_redirect( remove_query_arg( '_millicache', wp_get_referer() ) );
-			exit();
-		}
+	/**
+	 * Retrieves a value from either $_GET or $_POST superglobals with a fallback to null.
+	 *
+	 * This function ensures the value is sanitized using `sanitize_text_field` and `wp_unslash`.
+	 * It checks both $_POST and $_GET for the specified key.
+	 *
+	 * @param string $key The key for the value to be retrieved.
+	 * @return string|null The sanitized value if found, or null otherwise.
+	 */
+	public static function get_request_value( $key ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification is handled earlier.
+		return sanitize_text_field( wp_unslash( $_POST[ $key ] ?? $_GET[ $key ] ?? null ) );
 	}
 }
