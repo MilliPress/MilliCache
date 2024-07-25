@@ -449,7 +449,17 @@ final class Engine {
 				self::set_header( 'Status', self::$fcgi_regenerate ? 'expired' : 'hit' );
 
 				if ( self::$debug ) {
-					self::set_header( 'Expires', (string) round( self::$ttl - ( time() - $cache['updated'] ) ) );
+					$time_left = self::$ttl - ( time() - $cache['updated'] );
+					self::set_header(
+						'Expires',
+						sprintf(
+							'%dd %02dh %02dm %02ds',
+							intdiv( $time_left, 86400 ),
+							intdiv( $time_left % 86400, 3600 ),
+							intdiv( $time_left % 3600, 60 ),
+							$time_left % 60
+						)
+					);
 				}
 
 				// Output cached status code.
