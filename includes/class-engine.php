@@ -400,7 +400,8 @@ final class Engine {
 			$serve_cache = true;
 
 			if ( self::$debug ) {
-				self::set_header( 'Time', $cache['updated'] );
+				// RFC 1123 date format.
+				self::set_header( 'Time', gmdate( 'D, d M Y H:i:s \G\M\T', $cache['updated'] ) );
 				self::set_header( 'Flags', implode( ' ', $flags ) );
 			}
 
@@ -463,7 +464,6 @@ final class Engine {
 					}
 				}
 
-				// todo: Better escape this with native PHP functions?
 				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- We need to output the cache.
 				echo $cache['output'];
 
@@ -798,7 +798,7 @@ final class Engine {
 			$urls
 		);
 
-		// Add flags to expire or delete collection.
+		// Add flags to expire or delete a collection.
 		$expire ? array_push( self::$flags_expire, ...$flags ) : array_push( self::$flags_delete, ...$flags );
 	}
 
@@ -808,7 +808,7 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param int|array<int> $post_ids The post IDs to expire.
+	 * @param int|array<int> $post_ids The post-IDs to expire.
 	 * @param bool           $expire Expire cache if set to true, or delete by default.
 	 */
 	public static function clear_cache_by_post_ids( $post_ids, bool $expire = false ): void {

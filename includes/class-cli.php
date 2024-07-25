@@ -163,7 +163,7 @@ class CLI {
 			\WP_CLI::success( esc_html__( 'Site cache cleared.', 'millicache' ) );
 		}
 
-		// Clear cache by post IDs.
+		// Clear cache by post-IDs.
 		if ( '' !== $assoc_args['ids'] ) {
 			$post_ids = explode( ',', $assoc_args['ids'] );
 			foreach ( $post_ids as $post_id ) {

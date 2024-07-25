@@ -486,7 +486,7 @@ $ npm run env:destroy
 
 ### Further useful commands
 
-- `npm run env:cli wp ...` - Run WP-CLI command at the WordPress environment. E.g. `wp-env run cli wp millicache stats`
+- `npm run env:cli wp ...` - Run WP-CLI command at the WordPress environment. E.g. `npm run env:cli wp millicache stats`
 - `npm run env:redis-cli` - Open the Redis CLI
 - `npm run env:reset` - Reset the WordPress environments & start from scratch
 
