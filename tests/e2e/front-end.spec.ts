@@ -13,7 +13,7 @@ test.describe.configure({ mode: 'serial' });
 test.beforeAll(async ({ requestUtils }) => {
     // Wait some seconds for the backend test to first run the plugin activation tests
     if (process.env.RUN_ALL_TESTS) {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
     }
 
     // Go sure that the plugin is activated
@@ -158,7 +158,7 @@ test.describe('Visitor @ WordPress Multisite', () => {
         }
 
         // Flush the network cache
-        await flushCache({ page, admin, network: true});
+        await flushCache({ page, admin, network: true });
 
         // Check pages of the matrix
         for (let i = 0; i < matrix.length; i++) {
