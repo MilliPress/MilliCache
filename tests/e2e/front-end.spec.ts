@@ -13,7 +13,7 @@ test.describe.configure({ mode: 'serial' });
 test.beforeAll(async ({ requestUtils }) => {
     // Wait some seconds for the backend test to first run the plugin activation tests
     if (process.env.RUN_ALL_TESTS) {
-        await new Promise((resolve) => setTimeout(resolve, 6000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
     }
 
     // Activate the plugin
@@ -26,15 +26,17 @@ test.beforeAll(async ({ requestUtils }) => {
 test.describe('Visitor', () => {
 
     /**
-     * Smoke Test the MilliCache Status Header.
-     * This is a test for the front-end of the plugin and that the Cache is working.
+     * We flush the cache via WP-CLI and check the status again.
      */
-    test('MilliCache Status Header is set to miss|hit', async ({ page }) => {
+    test('Flush Cache & Cache Page', async ({ page, admin, requestUtils }) => {
+        // Flush the cache
+        await flushCache({ page, admin });
+
         // Go to the home page
         const response = await page.goto('/');
 
         // Check if the status is set to miss or hit
-        await validateHeader(response, 'status', ['miss', 'hit']);
+        await validateHeader(response, 'status', 'miss');
 
         // Reload the same page to check if the status is hit
         const response2 = await page.reload();
@@ -44,23 +46,12 @@ test.describe('Visitor', () => {
     });
 
     /**
-     * We flush the cache via WP-CLI and check the status again.
+     * Test Background Cache Regeneration.
      */
-    test('Flush Cache', async ({ page, admin, requestUtils }) => {
+    test('Cache Expiring', async ({ page, admin }) => {
         // Flush the cache
         await flushCache({ page, admin });
 
-        // Go to the home page
-        const response = await page.goto('/');
-
-        // Check if the status is set to miss or hit
-        await validateHeader(response, 'status', 'miss');
-    });
-
-    /**
-     * Test Background Cache Regeneration.
-     */
-    test('Cache Expiring', async ({ page, requestUtils }) => {
         // Go to the home page
         await page.goto('/');
 
@@ -74,7 +65,7 @@ test.describe('Visitor', () => {
         await validateHeader(response, 'status', 'hit');
 
         // Wait 6 seconds to expire the cache
-        await page.waitForTimeout(6000);
+        await page.waitForTimeout(5000);
 
         // Reload the same page to check if the status changes to expire
         const response2 = await page.reload();

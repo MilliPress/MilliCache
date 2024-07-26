@@ -13,7 +13,7 @@ test.describe.configure({ mode: 'serial' });
 test.beforeAll(async ({ requestUtils }) => {
     // Wait some seconds for the backend test to test the plugin activation
     if (process.env.RUN_ALL_TESTS) {
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
     }
 
     // Activate the plugin
