@@ -1,38 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
-// @ts-ignore
-import fs from 'fs';
-// @ts-ignore
-import path from 'path';
 
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
 require('dotenv').config();
-
-// Directory containing the test files
-const testDir = path.join(__dirname, 'tests/e2e');
-
-// Get all files starting with 'step' and ending with '.spec.ts'
-const stepFiles = fs.readdirSync(testDir)
-    .filter(file => file.startsWith('step') && file.endsWith('.spec.ts'))
-    .sort((a, b) => {
-      const stepA = parseInt(a.match(/step(\d+)/)[1], 10);
-      const stepB = parseInt(b.match(/step(\d+)/)[1], 10);
-      return stepA - stepB;
-    });
-
-console.log('Found test files:', stepFiles);
-
-// Build the project array dynamically, adding an object for each test file
-const projects = stepFiles.map(file => ({
-  name: path.basename(file, '.spec.ts'),
-  use: { ...devices['Desktop Firefox'] },
-  testMatch: [path.join(testDir, file)]
-}));
-
-// console.log(stepFiles.map(file => path.join(testDir, file)));
-console.log('Projects:', projects);
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -65,9 +37,6 @@ export default defineConfig({
     /* Run browser in headless mode. */
     headless: !!process.env.CI,
   },
-
-  /* Configure projects for major browsers */
-  projects: projects,
 
   /* Run MilliCache dev server before starting the tests */
   webServer: {
