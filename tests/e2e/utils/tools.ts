@@ -19,10 +19,6 @@ export async function flushCache(flags = '') {
 export async function runWpCliCommand(command: string): Promise<string> {
     return new Promise((resolve) => {
         exec(`npm run env:tests-cli wp ${command}`, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`exec error: ${error}`);
-                return;
-            }
             resolve(stdout);
         });
     });
