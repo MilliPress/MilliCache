@@ -2,9 +2,9 @@ import { test } from './setup/e2e-wp-test';
 import { flushCache, validateHeader } from './utils/tools';
 
 test.describe('Step 4: Cache Expiring', () => {
-    test('Cache Expiring', async ({ page, admin }) => {
+    test('Cache Expiring', async ({ page }) => {
         // Flush the cache
-        await flushCache({ page, admin });
+        await flushCache('site:1:1');
 
         // Go to the home page
         await page.goto('/sample-page');

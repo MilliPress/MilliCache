@@ -12,7 +12,7 @@ test.describe('Step 7: Network Caching & Flushing', () => {
         }
     });
 
-    test('Network Caching & Flushing', async ({ page, admin }) => {
+    test('Network Caching & Flushing', async ({ page }) => {
         // For each Multisite
         for (let i = 1; i <= sites; i++) {
             // Go to the home page
@@ -49,9 +49,9 @@ test.describe('Step 7: Network Caching & Flushing', () => {
         }
     });
 
-    test('Flush network cache & validate sites', async ({ page, admin }) => {
+    test('Flush network cache & validate sites', async ({ page }) => {
         // Flush the network cache
-        await flushCache({ page, admin, network: true });
+        await flushCache();
 
         // Validate all sites of the matrix
         for (let i = 1; i <= sites; i++) {

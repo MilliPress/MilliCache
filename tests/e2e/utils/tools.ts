@@ -1,41 +1,14 @@
 import { exec } from 'child_process';
 import { expect } from '@playwright/test';
-import { login, logout } from "./auth";
 
 /**
  * Clear the MilliCache.
  *
- * @param page The page object.
- * @param admin The admin object.
- * @param network Whether to flush the network cache.
+ * @param flags The cache flags to clear.
  */
-export async function flushCache({ page, admin, network = false}) {
-    // Login to the admin dashboard
-    await login(page);
-
-    // Visit the admin dashboard
-    await admin.visitAdminPage(network ? '/network' : '/');
-
-    // Flush Button
-    const adminBarFlushButton = page.locator('#wp-admin-bar-millicache');
-
-    // Check if the button is visible & click it
-    await expect(adminBarFlushButton).toBeVisible().then(async () => {
-        // Click the button
-        await adminBarFlushButton.click();
-
-        // Wait for the cache to be flushed
-        await page.waitForTimeout(1500);
-    });
-
-    // Logout
-    await logout(page);
-
-    // Reload the page
-    await page.reload();
-
-    // Check if the button is not visible
-    await expect(adminBarFlushButton).not.toBeVisible();
+export async function flushCache(flags = '') {
+    const stdout = await runWpCliCommand(`millicache clear -- --flags="${flags ? flags : '*'}"`);
+    expect(stdout).toContain('Success');
 }
 
 /**
@@ -46,6 +19,10 @@ export async function flushCache({ page, admin, network = false}) {
 export async function runWpCliCommand(command: string): Promise<string> {
     return new Promise((resolve) => {
         exec(`npm run env:tests-cli wp ${command}`, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`exec error: ${error}`);
+                return;
+            }
             resolve(stdout);
         });
     });
@@ -56,19 +33,13 @@ export async function runWpCliCommand(command: string): Promise<string> {
  * @param slug
  */
 export async function networkActivatePlugin(slug = 'millicache') {
-    // CLI command to list all network-activated plugins
-    const listCommand = `plugin list --status=active --field=name --network`;
-
     // Run the WP-CLI command to get the list of activated plugins
-    const activatedPlugins = await runWpCliCommand(listCommand);
+    const activatedPlugins = await runWpCliCommand('plugin list -- --status=active-network -- --field=name');
 
     // Check if the plugin is already activated
-    if (!activatedPlugins.includes(slug)) {
-        // CLI command to activate the plugin
-        const activateCommand = `plugin activate ${slug} --network`;
-
+    if (!activatedPlugins.split('\n').includes(slug)) {
         // Run the WP-CLI command to activate the plugin
-        await runWpCliCommand(activateCommand);
+        await runWpCliCommand(`plugin activate ${slug} --network`);
     }
 }
 
@@ -77,11 +48,8 @@ export async function networkActivatePlugin(slug = 'millicache') {
  * @param slug
  */
 export async function networkDeactivatePlugin(slug = 'millicache') {
-    // CLI command to activate the plugin
-    const command = `plugin deactivate ${slug} --network`;
-
-    // Run the WP-CLI command
-    await runWpCliCommand(command);
+    // Run the WP-CLI command to activate the plugin
+    await runWpCliCommand(`plugin deactivate ${slug} -- --network`);
 }
 
 /**
