@@ -23,8 +23,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}-${{ hashFiles('composer.json') }}
           restore-keys: |
+            ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
             ${{ runner.os }}-composer-
 
       - name: Setup Node on ${{ runner.os }}
@@ -43,7 +44,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
-        run: npm run env:test
+        run: npm run env:e2e
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
