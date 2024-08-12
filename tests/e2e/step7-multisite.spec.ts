@@ -3,6 +3,7 @@ import { flushCache, validateHeader, getRandomAnchor } from './utils/tools';
 
 test.describe('Step 7: Network Caching & Flushing', () => {
     const sites = 5;
+    let matrix = [];
 
     test ('Check network for active plugin', async ({ page }) => {
         for (let i = 1; i <= sites; i++) {
@@ -12,8 +13,6 @@ test.describe('Step 7: Network Caching & Flushing', () => {
     });
 
     test('Network Caching & Flushing', async ({ page, admin }) => {
-        let matrix = [];
-
         // For each Multisite
         for (let i = 1; i <= sites; i++) {
             // Go to the home page
@@ -48,19 +47,15 @@ test.describe('Step 7: Network Caching & Flushing', () => {
                 matrix.push({link: href, flags: flags});
             }
         }
+    });
 
+    test('Flush network cache & validate sites', async ({ page, admin }) => {
         // Flush the network cache
         await flushCache({ page, admin, network: true });
 
-        // Wait a second for the cache to flush
-        await page.waitForTimeout(1000);
-
-        // Check pages of the matrix
-        for (let i = 0; i < matrix.length; i++) {
-            const {link} = matrix[i];
-            const response = await page.goto(link);
-
-            // Check if the status is set to miss
+        // Validate all sites of the matrix
+        for (let i = 1; i <= sites; i++) {
+            const response = await page.goto(`/site${i}/`);
             await validateHeader(response, 'status', 'miss');
         }
     });

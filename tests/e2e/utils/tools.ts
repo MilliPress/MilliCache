@@ -21,7 +21,11 @@ export async function flushCache({ page, admin, network = false}) {
 
     // Check if the button is visible & click it
     await expect(adminBarFlushButton).toBeVisible().then(async () => {
+        // Click the button
         await adminBarFlushButton.click();
+
+        // Wait for the cache to be flushed
+        await page.waitForTimeout(1500);
     });
 
     // Logout
