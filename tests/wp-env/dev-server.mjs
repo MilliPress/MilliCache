@@ -64,10 +64,11 @@ if (args[0] === 'start') {
         await run(`docker compose ${mergeConfig} up --force-recreate -d ${servicesToRun}`);
         await run(`npx wp-env start --update --remove-orphans`);
 
-        console.log('Starting bash session to install redis-cli for the CLI container');
+        console.log('Installing redis-cli for CLI and tests-cli containers');
         await run(`npx wp-env run cli bash -c "sudo apk add --update redis"`);
+        await run(`npx wp-env run tests-cli bash -c "sudo apk add --update redis"`);
 
-        console.log('Set the permalink structure to /%postname%/');
+        console.log('Setting permalink structure to /%postname%/');
         await run('npx wp-env run cli wp rewrite structure "/%postname%/" --quiet --hard');
         await run('npx wp-env run tests-cli wp rewrite structure "/%postname%/" --quiet --hard');
 
