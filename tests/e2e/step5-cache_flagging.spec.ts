@@ -1,6 +1,5 @@
 import { test } from './setup/e2e-wp-test';
-import { flushCache } from "./utils/flushCache";
-import { validateHeader } from './utils/tools';
+import { flushCache, validateHeader } from './utils/tools';
 
 /**
  * Clear cache before running the tests.

@@ -1,6 +1,5 @@
 import { test } from './setup/e2e-wp-test';
-import { flushCache } from './utils/flushCache';
-import { validateHeader } from './utils/tools';
+import { flushCache, validateHeader } from './utils/tools';
 
 test.describe('Step 4: Cache Expiring', () => {
     test('Cache Expiring', async ({ page, admin }) => {

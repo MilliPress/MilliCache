@@ -1,6 +1,5 @@
 import { test } from './setup/e2e-wp-test';
-import { flushCache } from './utils/flushCache';
-import { validateHeader, getRandomAnchor } from './utils/tools';
+import { flushCache, validateHeader, getRandomAnchor } from './utils/tools';
 
 test.describe('Step 7: Network Caching & Flushing', () => {
     const sites = 5;
@@ -52,6 +51,9 @@ test.describe('Step 7: Network Caching & Flushing', () => {
 
         // Flush the network cache
         await flushCache({ page, admin, network: true });
+
+        // Wait a second for the cache to flush
+        await page.waitForTimeout(1000);
 
         // Check pages of the matrix
         for (let i = 0; i < matrix.length; i++) {

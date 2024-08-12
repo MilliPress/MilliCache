@@ -466,7 +466,7 @@ You can log in with `admin` and `password`.
 To run the Playwright tests under `http://localhost:8889`:
 
 ```bash
-$ npm run env:test
+$ npm run env:e2e
 ```
 ### Stop the Test Environment
 
