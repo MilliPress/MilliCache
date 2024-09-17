@@ -39,7 +39,7 @@ jobs:
         with:
           path: '.'
           filename: 'millicache.zip'
-          exclusions: '*.git* .* composer.* package* php*.* playwright.* yarn.* tests vendor'
+          exclusions: '*.git* .* composer.* package* php*.* playwright.* yarn.* mozart.* /tests/* /vendor/*'
 
       - name: Create Release
         id: create_release
