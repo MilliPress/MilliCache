@@ -174,7 +174,7 @@ class Admin {
 			delete_transient( 'millicache_admin_notices' );
 		}
 
-		foreach ( array_unique( self::$notices ) as $notice ) {
+		foreach ( array_unique( self::$notices, SORT_REGULAR ) as $notice ) {
 			printf(
 				'<div class="notice notice-%s is-dismissible"><p><b>Page Cache: </b>%s</p></div>',
 				esc_attr( $notice['type'] ),
