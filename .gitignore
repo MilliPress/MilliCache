@@ -9,3 +9,6 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 storage.json
+
+# Mozart
+mozart.phar
