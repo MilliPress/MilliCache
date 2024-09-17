@@ -1,11 +1,18 @@
 name: GitHub Release
+
 on:
   push:
     tags:
       - "v*"
+
 jobs:
-  tag:
+  call-workflow-e2e-test:
+    name: Run Playwright e2e-Tests
+    uses: ./.github/workflows/playwright.yml
+
+  release:
     name: Release new tagged version
+    needs: call-workflow-e2e-test
     runs-on: ubuntu-latest
     steps:
       # Checkout the repository
