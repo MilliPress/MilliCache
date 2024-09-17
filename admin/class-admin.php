@@ -290,14 +290,14 @@ class Admin {
 	 */
 	public static function get_cache_size_summary_string( array $size ): string {
 		if ( $size['size'] > 0 ) {
-			$unit = $size['size'] > 1024 ? 'mb' : 'kb';
-			$size['size'] /= 'mb' == $unit ? 1024 : 1;
+			$unit = $size['size'] > 1024 ? 'MB' : 'KB';
+			$size['size'] /= 'MB' == $unit ? 1024 : 1;
 			return sprintf(
 				// translators: %1$s is the number of pages, %2$s is singular or plural "page", %3$s is the cache size, %4$s is the cache size unit.
 				__( '%1$s %2$s (%3$s %4$s) cached', 'millicache' ),
 				$size['index'],
 				_n( 'page', 'pages', $size['index'], 'millicache' ),
-				$size['size'],
+				round( $size['size'], 2 ),
 				$unit
 			);
 		} else {
