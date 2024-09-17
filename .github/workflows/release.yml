@@ -8,6 +8,30 @@ jobs:
     name: Release new tagged version
     runs-on: ubuntu-latest
     steps:
+      # Checkout the repository
+      - uses: actions/checkout@v4
+
+      # Get Composer directory path
+      - name: Get Composer directory path
+        id: composer-cache
+        run: |
+          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      # Cache Composer dependencies
+      - name: Cache Composer dependencies
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}-${{ hashFiles('composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+            ${{ runner.os }}-composer-
+
+      # Install Composer dependencies
+      - name: Install Composer dependencies
+        run: composer install --no-dev --no-interaction --no-progress  --prefer-dist --optimize-autoloader
+
       # Build Release Zip for GitHub
       - name: ZIP Release
         uses: thedoctor0/zip-release@master
@@ -36,7 +60,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./millicache.zip
           asset_name: millicache.zip
           asset_content_type: application/zip
