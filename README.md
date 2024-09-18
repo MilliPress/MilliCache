@@ -2,7 +2,7 @@
 
 [![e2e-Tests](https://github.com/MilliPress/MilliCache/actions/workflows/playwright.yml/badge.svg)](https://github.com/MilliPress/MilliCache/actions/workflows/playwright.yml)
 
-**MilliCache is the most flexible full-page caching solution for WordPress**. 
+**MilliCache is a fast & flexible full-page caching solution for WordPress**. 
 Unlike other caching plugins, it uses Redis as its backend to store cached pages. 
 By leveraging Redis's in-memory storage capabilities, MilliCache is exceptionally fast, reliable, and scalable. 
 Moreover, it allows for highly efficient and targeted cache invalidation, 
