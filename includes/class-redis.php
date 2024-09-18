@@ -174,7 +174,7 @@ final class Redis {
 	 * @return bool Whether the connection was successful.
 	 */
 	private function connect(): bool {
-		require_once dirname( __DIR__ ) . '/src/Predis/Autoloader.php';
+		require_once dirname( __DIR__ ) . '/dependencies/Predis/Autoloader.php';
 
 		// Check if Predis is available.
 		if ( ! self::is_available() ) {

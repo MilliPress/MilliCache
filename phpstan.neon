@@ -10,4 +10,4 @@ parameters:
   fileExtensions:
     - php
   scanDirectories:
-    - src
+    - dependencies/

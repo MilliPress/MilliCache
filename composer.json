@@ -54,7 +54,7 @@
     "extra": {
         "mozart": {
             "dep_namespace": "MilliCache\\",
-            "dep_directory": "/src/",
+            "dep_directory": "/dependencies/",
             "classmap_directory": "/classes/",
             "classmap_prefix": "MilliCache_"
         },
