@@ -22,7 +22,8 @@
         "phpstan/phpstan-deprecation-rules": "^1.1",
         "szepeviktor/phpstan-wordpress": "^1.3",
         "swissspidy/phpstan-no-private": "^0.2.0",
-        "roave/security-advisories": "dev-latest"
+        "roave/security-advisories": "dev-latest",
+        "coenjacobs/mozart": "^0.7.1"
     },
     "suggest": {
         "ext-zlib": "Allows compressing the cache with zlib."
@@ -33,12 +34,11 @@
         "lint": "phpcs --standard=phpcs.xml -s",
         "fix": "phpcbf --standard=phpcs.xml",
         "post-install-cmd": [
-            "curl -L -o mozart.phar https://github.com/coenjacobs/mozart/releases/latest/download/mozart.phar",
-            "php mozart.phar compose",
+            "\"vendor/bin/mozart\" compose",
             "composer dump-autoload"
         ],
         "post-update-cmd": [
-            "php mozart.phar compose",
+            "\"vendor/bin/mozart\" compose",
             "composer dump-autoload"
         ],
         "cghooks": [
