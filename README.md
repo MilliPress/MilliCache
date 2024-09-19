@@ -87,23 +87,42 @@ Remember to restart the Redis server after making changes to the configuration f
 
 ## Installation
 
-1. **Install via Composer**:
+1. **Install**:
+
+- **ZIP-File**:
+   - Download the [latest release](https://github.com/millipress/millicache/releases/latest).
+   - Upload the ZIP file in your WordPress admin area under `Plugins > Add New > Upload Plugin`.
+
+- **Composer**:
 
    ```bash
    composer require millipress/millicache
    ```
 
-2. **[Configure the plugin](#configuration)** in your `wp-config.php`:
+    > [!NOTE]
+    >
+    > The plugin is not yet published on Packagist, so you first need to manually add the repository to your `composer.json` file:
+    >  ```json
+    > {
+    >    "repositories": [
+    >      {
+    >        "type": "vcs",
+    >        "url": "https://github.com/millipress/millicache"
+    >      }
+    >    ]
+    > }
+
+2. **[Configure the plugin](#configuration)** in your `wp-config.php` if you want to change the default settings:
 
    ```php
-   define('MC_REDIS_HOST', '127.0.0.1'); // Redis Host
-   define('MC_REDIS_PORT', 6379);        // Redis Port
+   define('MC_REDIS_HOST', '127.0.0.1');
+   define('MC_REDIS_PORT', 6379);
    ```
 
 3. **Enable WordPress caching** by adding to `wp-config.php`:
 
    ```php
-   define('WP_CACHE', true); // Enable WordPress Cache
+   define('WP_CACHE', true);
    ```
 
 4. **Activate the plugin** in your WordPress installation.
