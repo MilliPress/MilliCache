@@ -87,7 +87,7 @@ Remember to restart the Redis server after making changes to the configuration f
 
 ## Installation
 
-1. **Install**:
+1. **Install via**:
 
 - **ZIP-File**:
    - Download the [latest release](https://github.com/millipress/millicache/releases/latest).

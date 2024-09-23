@@ -5,7 +5,7 @@ import { flushCache, validateHeader } from './utils/tools';
  * Clear cache before running the tests.
  */
 test.describe('Step 5: Cache Flagging', () => {
-    test('Cache flagging', async ({ page }) => {
+    test('Check flags by context', async ({ page }) => {
         // Targets and their expected cache flags
         const targets = {
             'Hello World!': ['post:1:1', 'site:1:1'],

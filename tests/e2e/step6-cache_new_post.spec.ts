@@ -22,7 +22,7 @@ test.beforeAll(async () => {
 /**
  * Step 2: Dashboard Elements & Functionality
  */
-test.describe('Step 2: Dashboard Elements & Functionality', () => {
+test.describe('Step 6: Dashboard Elements & Functionality', () => {
     let postId = null;
 
     test('Create new page', async ({ admin, editor }) => {

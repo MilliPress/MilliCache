@@ -17,9 +17,14 @@ export async function flushCache(flags = '') {
  * @returns A promise that resolves with the command output.
  */
 export async function runWpCliCommand(command: string): Promise<string> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         exec(`npm run env:tests-cli wp ${command}`, (error, stdout, stderr) => {
-            resolve(stdout);
+            if (error) {
+                console.error(`Error executing command: ${stderr}`);
+                reject(error);
+            } else {
+                resolve(stdout);
+            }
         });
     });
 }
@@ -29,13 +34,21 @@ export async function runWpCliCommand(command: string): Promise<string> {
  * @param slug
  */
 export async function networkActivatePlugin(slug = 'millicache') {
+    if (slug === 'nocache') {
+        return;
+    }
+
     // Run the WP-CLI command to get the list of activated plugins
     const activatedPlugins = await runWpCliCommand('plugin list -- --status=active-network -- --field=name');
 
     // Check if the plugin is already activated
     if (!activatedPlugins.split('\n').includes(slug)) {
         // Run the WP-CLI command to activate the plugin
-        await runWpCliCommand(`plugin activate ${slug} --network`);
+        try {
+            await runWpCliCommand(`plugin activate ${slug} -- --network`);
+        } catch (error) {
+            console.error(`Failed to activate plugin ${slug}:`, error);
+        }
     }
 }
 
@@ -44,8 +57,16 @@ export async function networkActivatePlugin(slug = 'millicache') {
  * @param slug
  */
 export async function networkDeactivatePlugin(slug = 'millicache') {
-    // Run the WP-CLI command to activate the plugin
-    await runWpCliCommand(`plugin deactivate ${slug} -- --network`);
+    if (slug === 'nocache') {
+        return;
+    }
+
+    try {
+        // Run the WP-CLI command to deactivate the plugin
+        await runWpCliCommand(`plugin deactivate ${slug} -- --network`);
+    } catch (error) {
+        console.error(`Failed to deactivate plugin ${slug}:`, error);
+    }
 }
 
 /**
@@ -103,3 +124,31 @@ export async function getRandomAnchor({ page }) {
 
     return null;
 }
+
+/**
+ * Helper function to camel case the letter after dashes, removing the dashes.
+ *
+ * @param str
+ */
+export function camelCaseDashes(str: string) {
+    return str.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+}
+
+/**
+ * Computes the median number from an array numbers.
+ *
+ * @param array List of numbers.
+ * @return Median.
+ */
+export function median(array: number[]) {
+    const sorted = array.slice().sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+
+    if (sorted.length % 2 !== 0) {
+        return sorted[mid];
+    } else {
+        return (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+}
+
+

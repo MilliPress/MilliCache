@@ -4,11 +4,16 @@ on:
   workflow_call:
   pull_request:
     branches: [ main ]
+  push:
+    branches: [ main ]
 
 jobs:
   test:
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    env:
+      WP_ARTIFACTS_PATH: ${{ github.workspace }}/artifacts
+
     steps:
       - uses: actions/checkout@v4
 
@@ -43,9 +48,56 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
-        run: npm run env:e2e
+        run: |
+          npm run env:e2e
+          mv ${{ env.WP_ARTIFACTS_PATH }}/performance-results.json ${{ runner.temp }}/results_after.json
 
-      - uses: actions/upload-artifact@v4
+      - name: Check out base commit
+        run: |
+          if [[ -z "$BASE_REF" ]]; then
+            git fetch -n origin $BASE_SHA
+            git reset --hard $BASE_SHA
+          else
+            git fetch -n origin $BASE_REF
+            git reset --hard $BASE_SHA
+          fi
+        env:
+          BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || '' }}
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+
+      # Run tests without causing job to fail if they don't pass (e.g. because of env issues).
+      - name: Run tests for base
+        run: |
+          npm run env:e2e:performance || true
+          if [ -f "{{ env.WP_ARTIFACTS_PATH }}/performance-results.json" ]; then
+            mv ${{ env.WP_ARTIFACTS_PATH }}/performance-results.json ${{ runner.temp }}/results_before.json
+          fi;
+
+      - name: Reset to original commit
+        run: |
+          git reset --hard $GITHUB_SHA
+
+      - name: Compare results with base
+        run: |
+          if [ -f "${{ runner.temp }}/results_before.json" ]; then
+            npm run env:e2e:performance:results ${{ runner.temp }}/results_after.json ${{ runner.temp }}/results_before.json
+          else
+            npm run env:e2e:performance:results ${{ runner.temp }}/results_after.json
+          fi;
+
+      - name: Add workflow summary
+        run: |
+          cat ${{ env.WP_ARTIFACTS_PATH }}/performance-results.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload performance results
+        if: success()
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+        with:
+          name: performance-results
+          path: ${{ env.WP_ARTIFACTS_PATH }}/performance-results.json
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report

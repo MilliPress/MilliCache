@@ -18,8 +18,19 @@
     "tests": {
       "config": {
         "MC_TTL": 5,
-        "MC_REDIS_DB": 1
+        "MC_REDIS_DB": 1,
+        "PERFLAB_DISABLE_OBJECT_CACHE_DROPIN": false
       },
+      "plugins": [
+        ".",
+        "https://downloads.wordpress.org/plugin/performance-lab.zip",
+        "https://downloads.wordpress.org/plugin/breeze.zip",
+        "https://downloads.wordpress.org/plugin/cachify.zip",
+        "https://downloads.wordpress.org/plugin/cache-enabler.zip",
+        "https://downloads.wordpress.org/plugin/wp-fastest-cache.zip",
+        "https://downloads.wordpress.org/plugin/wp-super-cache.zip",
+        "https://downloads.wordpress.org/plugin/wordpress-importer.zip"
+      ],
       "mappings": {
         "wp-cli.yml": "./tests/wp-env/wp-cli.yml",
         ".htaccess": "./tests/wp-env/.htaccess"

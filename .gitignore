@@ -1,4 +1,5 @@
 /vendor/
+/artifacts/
 node_modules/
 
 # Playwright
