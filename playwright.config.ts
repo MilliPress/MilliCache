@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 
 require('dotenv').config();
 
-process.env.TEST_ITERATIONS ??= '15';
+process.env.TEST_ITERATIONS ??= '30';
 process.env.WP_ARTIFACTS_PATH ??= join( process.cwd(), 'artifacts' );
 process.env.STORAGE_STATE_PATH ??= join(
     process.env.WP_ARTIFACTS_PATH,
@@ -26,9 +26,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: process.env.CI
-      ? [ [ 'list' ], [ './tests/e2e/setup/e2e-performance-reporter.ts', { only: /performance\.spec\.ts$/ } ] ]
-      : [ [ 'list' ], [ './tests/e2e/setup/e2e-performance-reporter.ts', { only: /performance\.spec\.ts$/ } ] ],
+  reporter: [ [ 'list' ], [ './tests/e2e/setup/e2e-performance-reporter.ts', { only: /performance\.spec\.ts$/ } ] ],
   /* We are running tests in serial */
   reportSlowTests: null,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

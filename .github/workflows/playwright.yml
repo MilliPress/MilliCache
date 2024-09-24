@@ -50,6 +50,14 @@ jobs:
       - name: Run Playwright Tests
         run: npm run env:e2e
 
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 3
+
       - name: Run Performance Playwright Tests
         run: |
           npm run env:e2e:performance
@@ -98,11 +106,4 @@ jobs:
         with:
           name: performance-results
           path: ${{ env.WP_ARTIFACTS_PATH }}/performance-results.json
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: playwright-report/
           retention-days: 3
