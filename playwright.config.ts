@@ -27,7 +27,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI
-      ? [ [ 'blob' ], [ './tests/e2e/setup/e2e-performance-reporter.ts', { only: /performance\.spec\.ts$/ } ] ]
+      ? [ [ 'list' ], [ './tests/e2e/setup/e2e-performance-reporter.ts', { only: /performance\.spec\.ts$/ } ] ]
       : [ [ 'list' ], [ './tests/e2e/setup/e2e-performance-reporter.ts', { only: /performance\.spec\.ts$/ } ] ],
   /* We are running tests in serial */
   reportSlowTests: null,
