@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import type {
     FullConfig,
     FullResult,
@@ -130,13 +130,21 @@ class PerformanceReporter implements Reporter {
         }
 
         if (!this.shard) {
-            writeFileSync(
-                join(
-                    process.env.WP_ARTIFACTS_PATH as string,
-                    'performance-results.json'
-                ),
-                JSON.stringify(summary, null, 2)
-            );
+            const artifactsPath = process.env.WP_ARTIFACTS_PATH as string;
+
+            // Ensure the directory exists
+            if (!existsSync(artifactsPath)) {
+                mkdirSync(artifactsPath, { recursive: true });
+            }
+
+            const summaryFilePath = join(artifactsPath, 'performance-results.json');
+
+            try {
+                writeFileSync(summaryFilePath, JSON.stringify(summary, null, 2));
+                console.log(`Results written to ${summaryFilePath}`);
+            } catch (error) {
+                console.error(`Error writing results: ${error.message}`);
+            }
         }
     }
 }
