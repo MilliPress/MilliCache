@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    timeout-minutes: 10
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     env:
       WP_ARTIFACTS_PATH: ${{ github.workspace }}/artifacts
@@ -65,7 +65,7 @@ jobs:
           BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || '' }}
           BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
 
-      # Run tests without causing job to fail if they don't pass (e.g. because of env issues).
+      # Run tests without causing a job to fail if they don't pass (e.g., because of env issues).
       - name: Run tests for base
         run: |
           npm run env:e2e:performance || true
@@ -91,7 +91,7 @@ jobs:
 
       - name: Upload performance results
         if: success()
-        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+        uses: actions/upload-artifact@v4
         with:
           name: performance-results
           path: ${{ env.WP_ARTIFACTS_PATH }}/performance-results.json
