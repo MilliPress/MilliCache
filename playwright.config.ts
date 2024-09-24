@@ -1,20 +1,14 @@
 import { join } from 'node:path';
 import { defineConfig } from '@playwright/test';
 
-/**
- * Read environment variables from a file.
- * https://github.com/motdotla/dotenv
- */
 require('dotenv').config();
 
+process.env.TEST_ITERATIONS ??= '15';
 process.env.WP_ARTIFACTS_PATH ??= join( process.cwd(), 'artifacts' );
 process.env.STORAGE_STATE_PATH ??= join(
     process.env.WP_ARTIFACTS_PATH,
     'storage-states/admin.json'
 );
-
-/* Iterations for the Performance Tests */
-process.env.TEST_ITERATIONS ??= '30';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -33,8 +27,8 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI
-      ? [ [ 'blob' ], [ './tests/e2e/setup/e2e-performance-reporter.ts' ] ]
-      : [ [ 'list' ], [ './tests/e2e/setup/e2e-performance-reporter.ts' ] ],
+      ? [ [ 'blob' ], [ './tests/e2e/setup/e2e-performance-reporter.ts', { only: /performance\.spec\.ts$/ } ] ]
+      : [ [ 'list' ], [ './tests/e2e/setup/e2e-performance-reporter.ts', { only: /performance\.spec\.ts$/ } ] ],
   /* We are running tests in serial */
   reportSlowTests: null,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

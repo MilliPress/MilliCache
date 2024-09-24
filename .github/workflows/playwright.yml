@@ -47,9 +47,12 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run Playwright tests
+      - name: Run Playwright Tests
+        run: npm run env:e2e
+
+      - name: Run Performance Playwright Tests
         run: |
-          npm run env:e2e
+          npm run env:e2e:performance
           mv ${{ env.WP_ARTIFACTS_PATH }}/performance-results.json ${{ runner.temp }}/results_after.json
 
       - name: Check out base commit

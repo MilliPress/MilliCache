@@ -22,7 +22,7 @@
     "env:tests-cli": "wp-env run tests-cli $@",
     "env:tests-redis-cli": "wp-env run tests-cli bash -c 'redis-cli -h ${1:-redis}'",
     "env:e2e": "npx playwright test step --workers=1",
-    "env:e2e:performance": "npx playwright test step --workers=1",
+    "env:e2e:performance": "npx playwright test performance --workers=1 --verbose",
     "env:e2e:performance:results": "node tests/e2e/performance/results.js"
   }
 }
