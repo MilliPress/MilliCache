@@ -13,7 +13,7 @@ const plugins = [
     'wp-super-cache',
 ];
 
-test.describe('Step 9: Performance Tests', () => {
+test.describe('Various Cache Plugins Performance Tests & Validate MilliCache Results', () => {
     test.use({
         // @ts-ignore
         storageState: {}, // User will be logged out.
