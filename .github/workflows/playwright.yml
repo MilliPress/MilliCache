@@ -32,6 +32,15 @@ jobs:
             ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
             ${{ runner.os }}-composer-
 
+      - name: Cache WP-ENV
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/wp-env
+          key: ${{ runner.os }}-wp-env-${{ hashFiles('**/wp-env.json') }}
+          restore-keys: |
+            ${{ runner.os }}-wp-env-
+
       - name: Setup Node on ${{ runner.os }}
         uses: actions/setup-node@v4
         with:
