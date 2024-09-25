@@ -24,12 +24,12 @@ const run = (command, input = '') => {
     return new Promise((resolve, reject) => {
         const process = exec(command, (error, stdout, stderr) => {
             if (error) {
-                console.error(`exec error: ${error}`);
+                // console.error(`exec error: ${error}`);
                 reject(error);
                 return;
             }
-            console.log(`stdout: ${stdout}`);
-            console.error(`stderr: ${stderr}`);
+            console.log(stdout);
+            // console.error(`stderr: ${stderr}`);
             resolve(stdout.trim()); // resolve the Promise with the stdout
         });
 
@@ -59,12 +59,18 @@ if (args[0] === 'start') {
             await run(`npx wp-env stop`);
         }
 
+        try {
+            await run('npx wp-env run tests-cli wp config set MULTISITE false --raw --no-add --quiet');
+        } catch (error) {
+            console.log('Multisite not yet initialized');
+        }
+
         const servicesToRun = !process.env.CI ? 'redis keydb dragonfly' : 'redis';
         console.log('Starting the server with the following Redis supporting services:', servicesToRun);
         await run(`docker compose ${mergeConfig} up --force-recreate -d ${servicesToRun}`);
         await run(`npx wp-env start --update --remove-orphans`);
 
-        console.log('Installing redis-cli for CLI and tests-cli containers');
+        console.log('Installing redis-cli for cli and tests-cli containers');
         await run(`npx wp-env run cli bash -c "sudo apk add --update redis"`);
         await run(`npx wp-env run tests-cli bash -c "sudo apk add --update redis"`);
 
@@ -77,12 +83,27 @@ if (args[0] === 'start') {
             await run('npx wp-env run tests-cli wp site list --quiet');
             console.log('Multisite already initialized');
         } catch (error) {
-            console.log('Converting to Multisite');
-            await run('npx wp-env run tests-cli wp core multisite-convert --quiet --title=\'MilliCache Multisite\'');
+            console.log('Multisite not yet initialized');
+            let hasConstant;
+
+            try {
+                await run('npx wp-env run tests-cli wp config has MULTISITE --quiet');
+                hasConstant = true;
+            } catch (error) {
+                hasConstant = false;
+            }
+
+            if (hasConstant) {
+                await run(`npx wp-env run tests-cli wp core multisite-convert --quiet --title='MilliCache Multisite' --skip-config`);
+                await run('npx wp-env run tests-cli wp config set MULTISITE true --raw --quiet');
+            } else {
+                await run(`npx wp-env run tests-cli wp core multisite-convert --quiet --title='MilliCache Multisite'`);
+            }
+
             for (let i = 2; i <= 5; i++) {
+                console.log(`Creating site${i}`);
                 await run(`npx wp-env run tests-cli wp site create --quiet --slug='site${i}' --title='Site ${i}' --email='site${i}@admin.local'`);
             }
-            // await run('npx wp-env run tests-cli bash -c \"cp wp-content/plugins/millicache/tests/wp-env/.htaccess .htaccess\"');
         }
     };
 
