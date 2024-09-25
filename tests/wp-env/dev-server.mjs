@@ -24,12 +24,28 @@ const run = (command, input = '') => {
     return new Promise((resolve, reject) => {
         const process = exec(command, (error, stdout, stderr) => {
             if (error) {
-                // console.error(`exec error: ${error}`);
+                console.error(`Error: ${error.message}`);
                 reject(error);
                 return;
             }
-            console.log(stdout);
-            // console.error(`stderr: ${stderr}`);
+
+            if (stderr) {
+                // Filter out the specific warning for the 'version is obsolete'
+                const filteredStderr = stderr.trim()
+                    .split('\n')
+                    .filter(line => !line.includes("is obsolete"))
+                    .join('\n');
+
+                // Only log the error if there are any lines left after filtering
+                if (filteredStderr) {
+                    console.error(filteredStderr);
+                }
+            }
+
+            if (stdout) {
+                console.log(stdout);
+            }
+
             resolve(stdout.trim()); // resolve the Promise with the stdout
         });
 
@@ -62,12 +78,12 @@ if (args[0] === 'start') {
         await run(`perl -pi -e "s/define\\( 'MULTISITE', true \\);/define( 'MULTISITE', false );/g" "${dockerComposePath.trim()}/tests-WordPress/wp-config.php"`);
 
         const servicesToRun = !process.env.CI ? 'redis keydb dragonfly' : 'redis';
-        console.log('Starting the server with the following Redis supporting services:', servicesToRun);
+        console.log('Start Docker Containers with:', servicesToRun.split(' ').join(', '));
         await run(`docker compose ${mergeConfig} up --force-recreate -d ${servicesToRun}`);
-        console.log('Starting the WP-ENV server. This will take a while. Please wait...');
+        console.log('Start and update the WP-ENV server. This will take a while. Please wait...');
         await run(`npx wp-env start --update --remove-orphans`);
 
-        console.log('Installing redis-cli for cli and tests-cli containers');
+        console.log('Installing redis-cli on Docker Containers');
         await run(`npx wp-env run cli bash -c "sudo apk add --update redis"`);
         await run(`npx wp-env run tests-cli bash -c "sudo apk add --update redis"`);
 
@@ -80,10 +96,11 @@ if (args[0] === 'start') {
             await run('npx wp-env run tests-cli wp site list --quiet');
             console.log('Multisite already initialized');
         } catch (error) {
-            console.log('Multisite not yet initialized');
+            console.log('Multisite is not yet initialized');
             let hasConstant;
 
             try {
+                console.log('Checking if MULTISITE constant is already set');
                 await run('npx wp-env run tests-cli wp config has MULTISITE --quiet');
                 hasConstant = true;
             } catch (error) {
@@ -91,14 +108,16 @@ if (args[0] === 'start') {
             }
 
             if (hasConstant) {
+                console.log('MULTISITE constant is already set. Only convert the database to multisite.');
                 await run(`npx wp-env run tests-cli wp core multisite-convert --quiet --title='MilliCache Multisite' --skip-config`);
                 await run('npx wp-env run tests-cli wp config set MULTISITE true --raw --quiet');
             } else {
+                console.log('MULTISITE constant is not set. Convert the database and set the constant.');
                 await run(`npx wp-env run tests-cli wp core multisite-convert --quiet --title='MilliCache Multisite'`);
             }
 
             for (let i = 2; i <= 5; i++) {
-                console.log(`Creating site${i}`);
+                console.log(`Creating Site ${i}`);
                 await run(`npx wp-env run tests-cli wp site create --quiet --slug='site${i}' --title='Site ${i}' --email='site${i}@admin.local'`);
             }
         }
