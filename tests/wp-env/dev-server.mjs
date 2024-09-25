@@ -24,12 +24,12 @@ const run = (command, input = '') => {
     return new Promise((resolve, reject) => {
         const process = exec(command, (error, stdout, stderr) => {
             if (error) {
-                // console.error(`exec error: ${error}`);
+                console.error(`exec error: ${error}`);
                 reject(error);
                 return;
             }
             console.log(stdout);
-            // console.error(`stderr: ${stderr}`);
+            console.error(`stderr: ${stderr}`);
             resolve(stdout.trim()); // resolve the Promise with the stdout
         });
 
@@ -59,7 +59,7 @@ if (args[0] === 'start') {
             await run(`npx wp-env stop`);
         }
 
-        await run(`sed -i '' "s/define( 'MULTISITE', true );/define( 'MULTISITE', false );/g" "${dockerComposePath.trim()}/tests-WordPress/wp-config.php"`);
+        await run(`perl -pi -e "s/define\\( 'MULTISITE', true \\);/define( 'MULTISITE', false );/g" "${dockerComposePath.trim()}/tests-WordPress/wp-config.php"`);
 
         const servicesToRun = !process.env.CI ? 'redis keydb dragonfly' : 'redis';
         console.log('Starting the server with the following Redis supporting services:', servicesToRun);
