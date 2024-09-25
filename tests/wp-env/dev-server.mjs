@@ -1,150 +1,182 @@
-import {exec} from "node:child_process";
-import {accessSync} from "node:fs";
+#!/usr/bin/env node
+
+import { spawn } from 'node:child_process';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 
 // Merge the default docker-compose.yml with the custom docker-compose.custom.yml
 const mergeConfig = '-f $(npx wp-env install-path)/docker-compose.yml -f tests/wp-env/docker-compose.custom.yml';
 
-// Get the start/stop argument passed to the script
+// Get the start/stop/destroy argument passed to the script
 const args = process.argv.slice(2);
 
-// If the argument is not start or stop, show an error message
+// If the argument is not start, stop, or destroy, show an error message
 if (!['start', 'stop', 'destroy'].includes(args[0])) {
     console.error(`Invalid argument. Please use "start", "stop", or "destroy".`);
     process.exit(1);
 }
 
 /**
- * Run a command in the console.
- *
- * @param command
- * @param input
- * @returns {Promise<unknown>}
+ * Run a shell command and capture its output.
+ * @param {string} command The command to run.
+ * @param {Array<string>} args Command arguments.
+ * @returns {Promise<string>} The command's stdout.
  */
-const run = (command, input = '') => {
+const run = (command, args = []) => {
     return new Promise((resolve, reject) => {
-        const process = exec(command, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`Error: ${error.message}`);
-                reject(error);
-                return;
-            }
+        const process = spawn(command, args, { shell: true });
 
-            if (stderr) {
-                // Filter out the specific warning for the 'version is obsolete'
-                const filteredStderr = stderr.trim()
-                    .split('\n')
-                    .filter(line => !line.includes("is obsolete"))
-                    .join('\n');
+        let stdout = '';
+        let stderr = '';
 
-                // Only log the error if there are any lines left after filtering
-                if (filteredStderr) {
-                    console.error(filteredStderr);
-                }
-            }
-
-            if (stdout) {
-                console.log(stdout);
-            }
-
-            resolve(stdout.trim()); // resolve the Promise with the stdout
+        process.stdout.on('data', (data) => {
+            stdout += data.toString();
+            console.log(data.toString());
         });
 
-        process.stdin.write(input + '\n');
-        process.stdin.end();
+        process.stderr.on('data', (data) => {
+            stderr += data.toString();
 
-        process.on('exit', (code) => {
+            // Filter out 'version is obsolete' warning
+            const filteredData = stderr
+                .split('\n')
+                .filter((line) => !line.includes('is obsolete'))
+                .join('\n');
+
+            if (filteredData.trim()) {
+                console.error(filteredData);
+            }
+        });
+
+        process.on('close', (code) => {
             if (code !== 0) {
                 reject(new Error(`Command "${command}" exited with code ${code}`));
+            } else {
+                resolve(stdout.trim());
             }
         });
     });
 };
 
-// If the argument is "start", run the commands to start the server
-if (args[0] === 'start') {
-    const runCommands = async () => {
+/**
+ * Modify wp-config.php to disable Multisite (used in "start").
+ * @param {string} wpConfigPath The path to wp-config.php
+ */
+const disableMultisiteInConfig = (wpConfigPath) => {
+    try {
+        const wpConfig = readFileSync(wpConfigPath, 'utf8');
+        const updatedConfig = wpConfig.replace(/define\( 'MULTISITE', true \);/g, "define( 'MULTISITE', false );");
+        writeFileSync(wpConfigPath, updatedConfig);
+        console.log('Multisite configuration disabled in wp-config.php');
+    } catch (error) {
+        console.error(`Error modifying wp-config.php: ${error.message}`);
+        process.exit(1);
+    }
+};
+
+// Main function for starting the server
+const startServer = async () => {
+    try {
         console.log('Checking if wp-env is already available');
-        const dockerComposePath = await run(`npx wp-env install-path`);
-        try {
-            accessSync(`${dockerComposePath.trim()}/docker-compose.yml`);
+        const dockerComposePath = await run('npx', ['wp-env', 'install-path']);
+        const dockerComposeFilePath = `${dockerComposePath.trim()}/docker-compose.yml`;
+
+        if (existsSync(dockerComposeFilePath)) {
             console.log('WP-ENV docker-compose.yml file is available. Proceeding...');
-        } catch {
-            console.error('WP-ENV is not available. We need to initialize WP-ENV first.');
-            console.log('This will take a few minutes. Please wait...');
-            await run(`npx wp-env start`);
-            await run(`npx wp-env stop`);
+        } else {
+            console.log('WP-ENV is not available. Initializing WP-ENV...');
+            await run('npx', ['wp-env', 'start']);
+            await run('npx', ['wp-env', 'stop']);
         }
 
-        await run(`perl -pi -e "s/define\\( 'MULTISITE', true \\);/define( 'MULTISITE', false );/g" "${dockerComposePath.trim()}/tests-WordPress/wp-config.php"`);
+        // Modify wp-config.php to disable Multisite
+        const wpConfigPath = path.join(dockerComposePath.trim(), 'tests-WordPress/wp-config.php');
+        disableMultisiteInConfig(wpConfigPath);
 
-        const servicesToRun = !process.env.CI ? 'redis keydb dragonfly' : 'redis';
-        console.log('Start Docker Containers with:', servicesToRun.split(' ').join(', '));
-        await run(`docker compose ${mergeConfig} up --force-recreate -d ${servicesToRun}`);
-        console.log('Start and update the WP-ENV server. This will take a while. Please wait...');
-        await run(`npx wp-env start --update --remove-orphans`);
+        // Define which services to run based on environment
+        const servicesToRun = process.env.CI ? 'redis' : 'redis keydb dragonfly';
+        console.log(`Starting Docker Containers with services: ${servicesToRun}`);
+        await run('docker', ['compose', ...mergeConfig.split(' '), 'up', '--force-recreate', '-d', ...servicesToRun.split(' ')]);
+
+        console.log('Starting WP-ENV Dev Server');
+        await run('npx', ['wp-env', 'start', '--update', '--remove-orphans']);
 
         console.log('Installing redis-cli on Docker Containers');
-        await run(`npx wp-env run cli bash -c "sudo apk add --update redis"`);
-        await run(`npx wp-env run tests-cli bash -c "sudo apk add --update redis"`);
+        await run('npx', ['wp-env', 'run', 'cli', 'bash', '-c', '"sudo apk add --update redis"']);
+        await run('npx', ['wp-env', 'run', 'tests-cli', 'bash', '-c', '"sudo apk add --update redis"']);
 
         console.log('Setting permalink structure to /%postname%/');
-        await run('npx wp-env run cli wp rewrite structure "/%postname%/" --quiet --hard');
-        await run('npx wp-env run tests-cli wp rewrite structure "/%postname%/" --quiet --hard');
+        await run('npx', ['wp-env', 'run', 'cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--quiet', '--hard']);
+        await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--quiet', '--hard']);
 
-        console.log('Initialize Multisite on Test Server');
+        console.log('Checking if Multisite is already initialized');
         try {
-            await run('npx wp-env run tests-cli wp site list --quiet');
+            await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'list', '--quiet']);
             console.log('Multisite already initialized');
-        } catch (error) {
-            console.log('Multisite is not yet initialized');
-            let hasConstant;
+        } catch {
+            console.log('Multisite is not initialized. Initializing Multisite...');
 
+            // Check if the MULTISITE constant is already set
+            let hasConstant = false;
             try {
-                console.log('Checking if MULTISITE constant is already set');
-                await run('npx wp-env run tests-cli wp config has MULTISITE --quiet');
+                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'has', 'MULTISITE', '--quiet']);
                 hasConstant = true;
-            } catch (error) {
+            } catch {
                 hasConstant = false;
             }
 
             if (hasConstant) {
-                console.log('MULTISITE constant is already set. Only convert the database to multisite.');
-                await run(`npx wp-env run tests-cli wp core multisite-convert --quiet --title='MilliCache Multisite' --skip-config`);
-                await run('npx wp-env run tests-cli wp config set MULTISITE true --raw --quiet');
+                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet', '--skip-config']);
+                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'set', 'MULTISITE', 'true', '--raw', '--quiet']);
             } else {
-                console.log('MULTISITE constant is not set. Convert the database and set the constant.');
-                await run(`npx wp-env run tests-cli wp core multisite-convert --quiet --title='MilliCache Multisite'`);
+                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet']);
             }
 
+            // Create additional sites
             for (let i = 2; i <= 5; i++) {
-                console.log(`Creating Site ${i}`);
-                await run(`npx wp-env run tests-cli wp site create --quiet --slug='site${i}' --title='Site ${i}' --email='site${i}@admin.local'`);
+                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'create', `--slug='site${i}'`, `--title='Site ${i}'`, `--email='site${i}@admin.local'`]);
+                console.log(`Created Site ${i}`);
             }
         }
-    };
-
-    runCommands().then(r => console.log('MilliCache Dev Server has been started!'));
-}
-
-// If the argument is "stop", run the commands to stop the server
-if (args[0] === 'stop') {
-    const runCommands = async () => {
-        console.log('Stopping the server')
-        await run(`docker compose ${mergeConfig} down`);
-        await run(`npx wp-env stop`);
+        console.log('MilliCache Dev Server has been started!');
+    } catch (error) {
+        console.error(`An error occurred during the start process: ${error.message}`);
+        process.exit(1);
     }
+};
 
-    runCommands().then(r => console.log('MilliCache Dev-Server has been stopped!'));
-}
-
-// If the argument is "destroy", run the commands to destroy the server
-if (args[0] === 'destroy') {
-    const runCommands = async () => {
-        console.log('Destroying the server')
-        await run(`docker compose ${mergeConfig} down -v`);
-        await run(`npx wp-env destroy`, 'y');
-        await run(`docker rmi redis eqalpha/keydb docker.dragonflydb.io/dragonflydb/dragonfly`);
+// Main function for stopping the server
+const stopServer = async () => {
+    try {
+        console.log('Stopping the server');
+        await run('docker', ['compose', ...mergeConfig.split(' '), 'down']);
+        await run('npx', ['wp-env', 'stop']);
+        console.log('MilliCache Dev-Server has been stopped!');
+    } catch (error) {
+        console.error(`An error occurred during the stop process: ${error.message}`);
+        process.exit(1);
     }
+};
 
-    runCommands().then(r => console.log('MilliCache Dev Server has been destroyed!'));
+// Main function for destroying the server
+const destroyServer = async () => {
+    try {
+        console.log('Destroying the server');
+        await run('docker', ['compose', ...mergeConfig.split(' '), 'down', '-v']);
+        await run('npx', ['wp-env', 'destroy', '--yes']);
+        await run('docker', ['rmi', 'redis', 'eqalpha/keydb', 'docker.dragonflydb.io/dragonflydb/dragonfly']);
+        console.log('MilliCache Dev Server has been destroyed!');
+    } catch (error) {
+        console.error(`An error occurred during the destroy process: ${error.message}`);
+        process.exit(1);
+    }
+};
+
+// Execute commands based on the argument
+if (args[0] === 'start') {
+    startServer();
+} else if (args[0] === 'stop') {
+    stopServer();
+} else if (args[0] === 'destroy') {
+    destroyServer();
 }
