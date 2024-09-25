@@ -24,12 +24,12 @@ const run = (command, input = '') => {
     return new Promise((resolve, reject) => {
         const process = exec(command, (error, stdout, stderr) => {
             if (error) {
-                console.error(`exec error: ${error}`);
+                // console.error(`exec error: ${error}`);
                 reject(error);
                 return;
             }
             console.log(stdout);
-            console.error(`stderr: ${stderr}`);
+            // console.error(`stderr: ${stderr}`);
             resolve(stdout.trim()); // resolve the Promise with the stdout
         });
 
@@ -64,6 +64,7 @@ if (args[0] === 'start') {
         const servicesToRun = !process.env.CI ? 'redis keydb dragonfly' : 'redis';
         console.log('Starting the server with the following Redis supporting services:', servicesToRun);
         await run(`docker compose ${mergeConfig} up --force-recreate -d ${servicesToRun}`);
+        console.log('Starting the WP-ENV server. This will take a while. Please wait...');
         await run(`npx wp-env start --update --remove-orphans`);
 
         console.log('Installing redis-cli for cli and tests-cli containers');
