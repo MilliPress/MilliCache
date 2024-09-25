@@ -59,11 +59,7 @@ if (args[0] === 'start') {
             await run(`npx wp-env stop`);
         }
 
-        try {
-            await run('npx wp-env run tests-cli wp config set MULTISITE false --raw --no-add --quiet');
-        } catch (error) {
-            console.log('Multisite not yet initialized');
-        }
+        await run(`sed -i '' "s/define( 'MULTISITE', true );/define( 'MULTISITE', false );/g" "${dockerComposePath.trim()}/tests-WordPress/wp-config.php"`);
 
         const servicesToRun = !process.env.CI ? 'redis keydb dragonfly' : 'redis';
         console.log('Starting the server with the following Redis supporting services:', servicesToRun);
