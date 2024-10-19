@@ -1028,7 +1028,9 @@ final class Engine {
 	 * @param string $value The header value.
 	 */
 	private static function set_header( string $key, string $value ): void {
-		header( "X-MilliCache-$key: $value" );
+		if ( ! headers_sent() ) {
+			header( "X-MilliCache-$key: $value" );
+		}
 	}
 
 	/**
