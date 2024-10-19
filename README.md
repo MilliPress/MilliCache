@@ -96,21 +96,9 @@ Remember to restart the Redis server after making changes to the configuration f
 - **Composer**:
 
    ```bash
-   composer require millipress/millicache
+   $ composer config repositories.millicache vcs https://github.com/millipress/millicache
+   $ composer require millipress/millicache
    ```
-
-    > [!NOTE]
-    >
-    > The plugin is not yet published on Packagist, so you first need to manually add the repository to your `composer.json` file:
-    >  ```json
-    > {
-    >    "repositories": [
-    >      {
-    >        "type": "vcs",
-    >        "url": "https://github.com/millipress/millicache"
-    >      }
-    >    ]
-    > }
 
 2. **[Configure the plugin](#configuration)** in your `wp-config.php` if you want to change the default settings:
 
