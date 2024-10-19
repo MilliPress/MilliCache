@@ -14,8 +14,8 @@
  * Network:           true
  * Author:            MilliPress Team
  * Author URI:        https://www.millipress.com/
- * License:           GPL-2.0+
- * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
+ * License:           GPL-3.0+
+ * License URI:       http://www.gnu.org/licenses/gpl-3.0.txt
  * Text Domain:       millicache
  * Domain Path:       /languages
  */
