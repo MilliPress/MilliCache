@@ -81,10 +81,8 @@ class Adminbar {
 	 */
 	private function register_hooks() {
 		// Scripts & Styles.
-		$this->loader->add_action( 'wp_enqueue_scripts', $this, 'enqueue_styles' );
-		$this->loader->add_action( 'wp_enqueue_scripts', $this, 'enqueue_scripts' );
-		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_styles' );
-		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_scripts' );
+		$this->loader->add_action( 'wp_enqueue_scripts', $this, 'enqueue_styles_scripts' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_styles_scripts' );
 
 		// Menu items.
 		$this->loader->add_action( 'admin_bar_menu', $this, 'add_adminbar_menu', 999 );
@@ -96,16 +94,49 @@ class Adminbar {
 	}
 
 	/**
-	 * Register the stylesheets for the adminbar.
-	 *
-	 * @since    1.0.0
-	 * @access   public
+	 * Register the stylesheets & JavaScript for the adminbar.
 	 *
 	 * @return   void
+	 * @since    1.0.0
+	 * @access   public
 	 */
-	public function enqueue_styles() {
-		wp_enqueue_style( $this->plugin_name . '-adminbar', plugin_dir_url( __FILE__ ) . 'css/millicache-adminbar.css', array(), $this->version );
+	public function enqueue_styles_scripts() {
+		$asset_file = dirname( plugin_dir_path( __FILE__ ) ) . '/build/adminbar.asset.php';
+		if ( ! file_exists( $asset_file ) ) {
+			return;
+		}
+
+		$asset = include $asset_file;
+
+		// Enqueue the adminbar script.
+		wp_enqueue_script(
+			$this->plugin_name . '-adminbar',
+			plugins_url( 'build/adminbar.js', __DIR__ ),
+			$asset['dependencies'],
+			$asset['version'],
+			array(
+				'in_footer' => true,
+			)
+		);
+
+		// Attach inline script.
+		$inline_script = 'const millicache = ' . json_encode(
+			array(
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			)
+		) . ';';
+
+		wp_add_inline_script( $this->plugin_name . '-adminbar', $inline_script, 'before' );
+
+		// Enqueue the adminbar styles.
+		wp_enqueue_style(
+			$this->plugin_name . '-adminbar',
+			plugins_url( 'build/adminbar.css', __DIR__ ),
+			$asset['dependencies'],
+			$asset['version'],
+		);
 	}
+
 
 	/**
 	 * Register the JavaScript for the adminbar.

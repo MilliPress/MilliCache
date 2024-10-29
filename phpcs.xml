@@ -26,7 +26,7 @@
     <exclude-pattern>*/index.php</exclude-pattern>
 
     <!-- WordPress coding standards -->
-    <config name="minimum_supported_wp_version" value="4.7"/>
+    <config name="minimum_supported_wp_version" value="5.1"/>
     <rule ref="WordPress">
         <exclude name="PSR2.Classes.PropertyDeclaration.Underscore"/>
         <exclude name="PSR2.Methods.MethodDeclaration.Underscore"/>

@@ -98,13 +98,11 @@ class Admin {
 	 * @return   void
 	 */
 	private function load_dependencies() {
-
-		/**
-		 * The class responsible for defining all actions that occur in the admin area.
-		 */
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-adminbar.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-restapi.php';
 
 		new Adminbar( $this->loader, $this->plugin_name, $this->version );
+		new RestAPI( $this->loader, $this->plugin_name, $this->version );
 	}
 
 	/**
@@ -118,8 +116,8 @@ class Admin {
 	 */
 	private function define_admin_hooks() {
 		// Scripts & Styles.
-		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_styles' );
-		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_scripts' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_admin_styles_scripts' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_settings_styles_scripts' );
 
 		// Text Domain.
 		$this->loader->add_action( 'plugins_loaded', $this, 'load_plugin_textdomain' );
@@ -201,27 +199,87 @@ class Admin {
 
 	/**
 	 * Register the stylesheets for the admin area.
+	 * Register the stylesheets & JavaScript for the admin area.
 	 *
 	 * @since    1.0.0
 	 * @access   public
 	 *
 	 * @return   void
 	 */
-	public function enqueue_styles(): void {
-		wp_enqueue_style( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'css/millicache-admin.css', array(), $this->version );
+	public function enqueue_admin_styles_scripts() {
+		$asset_file = dirname( plugin_dir_path( __FILE__ ) ) . '/build/admin.asset.php';
+
+		if ( ! file_exists( $asset_file ) ) {
+			return;
+		}
+
+		$asset = include $asset_file;
+
+		// Enqueue the admin styles.
+		wp_enqueue_style(
+			$this->plugin_name . '-admin',
+			plugins_url( 'build/admin.css', __DIR__ ),
+			$asset['dependencies'],
+			$asset['version'],
+		);
+
+		// Enqueue the admin script.
+		wp_enqueue_script(
+			$this->plugin_name . '-admin',
+			plugins_url( 'build/admin.js', __DIR__ ),
+			$asset['dependencies'],
+			$asset['version'],
+			array(
+				'in_footer' => true,
+			)
+		);
 	}
 
 	/**
 	 * Register the JavaScript for the admin area.
+	 * Register the stylesheets & JavaScript for the settings page.
 	 *
 	 * @since    1.0.0
 	 * @access   public
 	 *
+	 * @param    string $admin_page The current admin page.
+	 *
 	 * @return   void
 	 */
-	public function enqueue_scripts(): void {
-		// phpcs:ignore -- While in beta, we don't want to enqueue any scripts.
-		// wp_enqueue_script( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'js/millicache-admin.js', array(), $this->version, false );
+	public function enqueue_settings_styles_scripts( string $admin_page ) {
+		if ( 'settings_page_millicache' !== $admin_page ) {
+			return;
+		}
+
+		$asset_file = dirname( plugin_dir_path( __FILE__ ) ) . '/build/settings.asset.php';
+
+		if ( ! file_exists( $asset_file ) ) {
+			return;
+		}
+
+		$asset = include $asset_file;
+
+		// Enqueue the settings page script.
+		wp_enqueue_script(
+			$this->plugin_name . '-settings',
+			plugins_url( 'build/settings.js', __DIR__ ),
+			array_merge( $asset['dependencies'], array( 'wp-api-fetch' ) ),
+			$asset['version'],
+			array(
+				'in_footer' => true,
+			)
+		);
+
+		// Enqueue the settings page styles.
+		wp_enqueue_style(
+			$this->plugin_name . '-settings',
+			plugins_url( 'build/settings.css', __DIR__ ),
+			array(),
+			$asset['version'],
+		);
+
+		// Enqueue the WordPress components.
+		wp_enqueue_style( 'wp-components' );
 	}
 
 	/**
@@ -319,7 +377,7 @@ class Admin {
 		$size = get_transient( 'millicache_size_' . $flag );
 
 		if ( ! is_array( $size ) || $reload ) {
-			$redis = new Redis();
+			$redis = Engine::get_storage();
 			$size = $redis->get_cache_size( $flag );
 
 			if ( $size ) {

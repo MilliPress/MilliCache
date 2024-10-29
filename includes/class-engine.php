@@ -46,6 +46,26 @@ final class Engine {
 	private static Redis $storage;
 
 	/**
+	 * The MilliPress Settings instance.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var Settings The MilliPress Settings instance.
+	 */
+	private static Settings $settings_instance;
+
+	/**
+	 * The MilliPress Settings.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var array<mixed> The MilliPress Settings.
+	 */
+	private static array $settings;
+
+	/**
 	 * TTL.
 	 *
 	 * @since 1.0.0
@@ -53,7 +73,7 @@ final class Engine {
 	 *
 	 * @var int The time to live for the cache.
 	 */
-	private static int $ttl = 900;
+	private static int $ttl;
 
 	/**
 	 * Max TTL.
@@ -63,7 +83,7 @@ final class Engine {
 	 *
 	 * @var int The maximum time to live for the cache.
 	 */
-	private static int $max_ttl = 3600;
+	public static int $max_ttl;
 
 	/**
 	 * Variables that make the request unique.
@@ -73,7 +93,7 @@ final class Engine {
 	 *
 	 * @var array<string> Unique request variables.
 	 */
-	private static array $unique = array();
+	private static array $unique;
 
 	/**
 	 * Cookies that avoid caching.
@@ -83,7 +103,7 @@ final class Engine {
 	 *
 	 * @var array<string> Do not cache cookies.
 	 */
-	private static array $nocache_cookies = array( 'comment_author' );
+	private static array $nocache_cookies;
 
 	/**
 	 * Cookies that are ignored.
@@ -93,7 +113,7 @@ final class Engine {
 	 *
 	 * @var array<string> Ignore cookies for cache hash.
 	 */
-	private static array $ignore_cookies = array();
+	private static array $ignore_cookies;
 
 	/**
 	 * Request keys that are ignored.
@@ -103,7 +123,7 @@ final class Engine {
 	 *
 	 * @var array<string> Ignored request keys.
 	 */
-	private static array $ignore_request_keys = array( '_millicache', '_wpnonce', 'utm_source', 'utm_medium', 'utm_term', 'utm_content', 'utm_campaign' );
+	private static array $ignore_request_keys;
 
 	/**
 	 * External callback to append cache conditions.
@@ -113,7 +133,7 @@ final class Engine {
 	 *
 	 * @var string Callback to append cache conditions.
 	 */
-	private static string $should_cache_callback = '';
+	private static string $should_cache_callback;
 
 	/**
 	 * Debug mode.
@@ -123,7 +143,7 @@ final class Engine {
 	 *
 	 * @var bool Debug mode.
 	 */
-	private static bool $debug = false;
+	private static bool $debug;
 
 	/**
 	 * Gzip compression.
@@ -133,7 +153,7 @@ final class Engine {
 	 *
 	 * @var bool Gzip compression.
 	 */
-	private static bool $gzip = true;
+	private static bool $gzip;
 
 	/**
 	 * Request hash.
@@ -143,7 +163,7 @@ final class Engine {
 	 *
 	 * @var string The request hash.
 	 */
-	private static string $request_hash = '';
+	private static string $request_hash;
 
 	/**
 	 * Debug data.
@@ -208,6 +228,7 @@ final class Engine {
 	 * @return   void
 	 */
 	public static function start() {
+		self::get_settings();
 		self::config();
 		self::get_storage();
 		self::warmup();
@@ -242,6 +263,11 @@ final class Engine {
 	 * @return   void
 	 */
 	private static function config() {
+		// Load the cache configuration.
+		foreach ( (array) self::$settings['cache'] as $key => $value ) {
+			self::$$key = $value;
+		}
+
 		// Ignore test cookie by default.
 		$test_cookie = defined( 'TEST_COOKIE' ) ? TEST_COOKIE : 'wordpress_test_cookie';
 		$logged_in_cookie = defined( 'LOGGED_IN_COOKIE' ) ? LOGGED_IN_COOKIE : 'wordpress_logged_in';
@@ -252,23 +278,6 @@ final class Engine {
 		// No caching with auth cookies by default.
 		self::$nocache_cookies[] = $logged_in_cookie;
 
-		// Load the configuration from wp-config.php.
-		foreach ( array(
-			'ttl',
-			'unique',
-			'nocache_cookies',
-			'ignore_cookies',
-			'ignore_request_keys',
-			'should_cache_callback',
-			'debug',
-			'gzip',
-		) as $key ) {
-			$constant = strtoupper( 'MC_' . $key );
-			if ( defined( $constant ) ) {
-				self::$$key = constant( $constant );
-			}
-		}
-
 		// Always set test cookie for wp-login.php POST requests.
 		if ( strpos( self::get_server_var( 'REQUEST_URI' ), '/wp-login.php' ) === 0 && strtoupper( self::get_server_var( 'REQUEST_METHOD' ) ) == 'POST' ) {
 			$_COOKIE[ $test_cookie ] = 'WP Cookie check';
@@ -276,22 +285,39 @@ final class Engine {
 	}
 
 	/**
+	 * Get the Settings.
+	 *
+	 * @return array<mixed> The MilliPress Settings.
+	 */
+	public static function get_settings(): array {
+		if ( ! isset( self::$settings ) ) {
+			/**
+			 * The MilliPress Settings class.
+			 */
+			require_once __DIR__ . '/class-settings.php';
+
+			self::$settings_instance = new Settings();
+			self::$settings = self::$settings_instance->get_settings();
+		}
+
+		return self::$settings;
+	}
+
+	/**
 	 * Returns the MilliCache Storage instance.
 	 *
 	 * @since    1.0.0
-	 * @access   private
+	 * @access   public
 	 *
 	 * @return   Redis The MilliCache Storage instance.
 	 */
-	private static function get_storage(): Redis {
+	public static function get_storage(): Redis {
 		if ( ! isset( self::$storage ) ) {
-
 			/**
 			 * The MilliPress Redis class.
 			 */
 			require_once __DIR__ . '/class-redis.php';
-
-			self::$storage = new Redis();
+			self::$storage = new Redis( (array) self::$settings['redis'] );
 		}
 
 		return self::$storage;
@@ -1049,12 +1075,12 @@ final class Engine {
 	 * Get the value of a server variable.
 	 *
 	 * @since 1.0.0
-	 * @access private
+	 * @access public
 	 *
 	 * @param string $key The server variable key.
 	 * @return string The server variable value.
 	 */
-	private static function get_server_var( string $key ): string {
+	public static function get_server_var( string $key ): string {
 		if ( isset( $_SERVER[ $key ] ) ) {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- We are sanitizing & un-slashing here with PHP native functions.
 			return htmlspecialchars( stripslashes( $_SERVER[ $key ] ), ENT_QUOTES, 'UTF-8' );

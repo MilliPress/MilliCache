@@ -46,7 +46,7 @@ final class Redis {
 	 *
 	 * @var      string    $host    The Redis host.
 	 */
-	private string $host = '127.0.0.1';
+	private string $host;
 
 	/**
 	 * The Redis port.
@@ -56,7 +56,7 @@ final class Redis {
 	 *
 	 * @var      int    $port    The Redis port.
 	 */
-	private int $port = 6379;
+	private int $port;
 
 	/**
 	 * The Redis Server password.
@@ -66,7 +66,7 @@ final class Redis {
 	 *
 	 * @var      string    $password    The Redis auth.
 	 */
-	private string $password = '';
+	private string $password;
 
 	/**
 	 * The Redis database.
@@ -76,7 +76,7 @@ final class Redis {
 	 *
 	 * @var      int    $db    The Redis database.
 	 */
-	private int $db = 0;
+	private int $db;
 
 	/**
 	 * The Redis prefix.
@@ -86,7 +86,7 @@ final class Redis {
 	 *
 	 * @var      string    $prefix    The Redis prefix.
 	 */
-	private string $prefix = 'mll';
+	private string $prefix;
 
 	/**
 	 * Whether to use a persistent connection.
@@ -96,29 +96,19 @@ final class Redis {
 	 *
 	 * @var      bool    $persistent    Whether to use a persistent connection.
 	 */
-	private bool $persistent = true;
-
-	/**
-	 * The max TTL (Time to Live) of an entry in the Redis Cache to avoid stale data.
-	 * Redis will automatically delete the cache after the max TTL.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var int The maximum time to live for the cache.
-	 */
-	private static $max_ttl = MONTH_IN_SECONDS; // 1 month.
+	private bool $persistent;
 
 	/**
 	 * Initialize the class and set its properties.
 	 *
-	 * @since    1.0.0
-	 * @access   public
+	 * @param array<mixed> $settings The settings for the Redis connection.
 	 *
 	 * @return void
+	 * @since    1.0.0
+	 * @access   public
 	 */
-	public function __construct() {
-		$this->get_config();
+	public function __construct( array $settings ) {
+		$this->config( $settings );
 
 		if ( ! $this->connect() ) {
 			error_log( 'Unable to connect to Redis.' );
@@ -138,30 +128,30 @@ final class Redis {
 	}
 
 	/**
-	 * Load & set configuration from wp-config.php.
+	 * Check if Redis is connected.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return bool Whether Redis is connected.
+	 */
+	public function is_connected(): bool {
+		return isset( $this->redis ) && $this->redis->ping();
+	}
+
+	/**
+	 * Configure the Redis connection.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
+	 * @param array<mixed> $settings The settings for the Redis connection.
+	 *
 	 * @return void
 	 */
-	private function get_config() {
-		$keys = array(
-			'host',
-			'port',
-			'password',
-			'db',
-			'prefix',
-			'persistent',
-			'max_ttl',
-		);
-
-		foreach ( $keys as $key ) {
-			$constant = strtoupper( 'MC_REDIS_' . $key );
-
-			if ( defined( $constant ) ) {
-				$this->$key = constant( $constant );
-			}
+	private function config( array $settings ): void {
+		foreach ( $settings as $key => $value ) {
+			$this->$key = $value;
 		}
 	}
 
@@ -347,7 +337,7 @@ final class Redis {
 					}
 
 					// Set the max expiration time to avoid stale data.
-					$tx->expire( $key, self::$max_ttl );
+					$tx->expire( $key, Engine::$max_ttl );
 				}
 			);
 
