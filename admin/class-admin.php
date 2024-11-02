@@ -343,20 +343,17 @@ class Admin {
 	 * @since   1.0.0
 	 * @access  public
 	 *
-	 * @param array{index: int, size: int} $size The size of the cache.
+	 * @param array{index: int, size: int, size_human: string} $size The size of the cache.
 	 * @return string The summary string.
 	 */
 	public static function get_cache_size_summary_string( array $size ): string {
 		if ( $size['size'] > 0 ) {
-			$unit = $size['size'] > 1024 ? 'MB' : 'KB';
-			$size['size'] /= 'MB' == $unit ? 1024 : 1;
 			return sprintf(
 				// translators: %1$s is the number of pages, %2$s is singular or plural "page", %3$s is the cache size, %4$s is the cache size unit.
-				__( '%1$s %2$s (%3$s %4$s) cached', 'millicache' ),
+				__( '%1$s %2$s (%3$s) cached', 'millicache' ),
 				$size['index'],
 				_n( 'page', 'pages', $size['index'], 'millicache' ),
-				round( $size['size'], 2 ),
-				$unit
+				$size['size_human'],
 			);
 		} else {
 			return __( 'Empty cache', 'millicache' );
@@ -371,7 +368,7 @@ class Admin {
 	 *
 	 * @param string $flag The flag to search for. Wildcards are allowed.
 	 * @param bool   $reload Whether to reload the cache size from the Redis server.
-	 * @return array{index: int, size: int} The index and memory size of the cache.
+	 * @return array{index: int, size: int, size_human: string} The index and memory size of the cache.
 	 */
 	public static function get_cache_size( string $flag = '', bool $reload = false ): array {
 		$size = get_transient( 'millicache_size_' . $flag );
@@ -388,6 +385,10 @@ class Admin {
 		return array(
 			'index' => $size['index'] ?? 0,
 			'size' => $size['size'] ?? 0,
+			'size_human' => (string) size_format(
+				$size['size'] ?? 0,
+				( $size['size'] ?? 0 ) > 1024 ? 2 : 0
+			),
 		);
 	}
 
@@ -403,5 +404,57 @@ class Admin {
 	public static function get_file_version( string $file_path ): ?string {
 		$version = get_file_data( $file_path, array( 'Version' => 'Version' ) );
 		return $version['Version'] ?? null;
+	}
+
+	/**
+	 * Validate the advanced-cache.php file.
+	 *
+	 * @since   1.0.0
+	 * @access  public
+	 *
+	 * @return array<string, bool|string> The validation information or empty array if the file doesn’t exist.
+	 */
+	public static function validate_advanced_cache_file(): array {
+		$info = array(
+			'type' => 'file',
+			'custom' => false,
+			'outdated' => false,
+		);
+
+		$destination = WP_CONTENT_DIR . '/advanced-cache.php';
+
+		if ( is_link( $destination ) ) {
+			$info['type'] = 'symlink';
+			$destination = readlink( $destination );
+		}
+
+		if ( ! file_exists( (string) $destination ) ) {
+			return array();
+		}
+
+		if ( 'symlink' !== $info['type'] ) {
+			$source = dirname( plugin_dir_path( __FILE__ ) ) . '/advanced-cache.php';
+
+			// Compare the file with the plugin version.
+			$source_version = self::get_file_version( $source );
+			$destination_version = self::get_file_version( (string) $destination );
+
+			// Compare versions.
+			if ( $source_version && $destination_version ) {
+				if ( version_compare( $source_version, $destination_version ) > 0 ) {
+					$info['outdated'] = true;
+				}
+			}
+
+			// Compare file content.
+			$source_content = file_get_contents( $source );
+			$destination_content = file_get_contents( (string) $destination );
+
+			if ( $source_content && $destination_content ) {
+				$info['custom'] = $source_content !== $destination_content;
+			}
+		}
+
+		return $info;
 	}
 }

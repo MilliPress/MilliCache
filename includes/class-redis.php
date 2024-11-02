@@ -64,9 +64,9 @@ final class Redis {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var      string    $password    The Redis auth.
+	 * @var      string    $enc_password   The Redis auth.
 	 */
-	private string $password;
+	private string $enc_password;
 
 	/**
 	 * The Redis database.
@@ -151,6 +151,12 @@ final class Redis {
 	 */
 	private function config( array $settings ): void {
 		foreach ( $settings as $key => $value ) {
+
+			// If setting starts with enc_ we need first to decrypt the value
+			if ( strpos( $key, 'enc_' ) === 0 && strpos( $value, 'ENC' ) === 0 ) {
+				$value = Settings::decrypt_value( $value );
+			}
+
 			$this->$key = $value;
 		}
 	}
@@ -187,7 +193,7 @@ final class Redis {
 					'scheme' => 'tcp',
 					'host' => $this->host,
 					'port' => $this->port,
-					'password' => $this->password,
+					'password' => $this->enc_password,
 					'database' => $this->db,
 					'persistent' => $this->persistent,
 				)
@@ -681,5 +687,72 @@ final class Redis {
 			error_log( 'Unable to get cache size from Redis: ' . $e->getMessage() );
 			return false;
 		}
+	}
+
+	/**
+	 * Get meaningful Redis config and info.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return array<mixed> The Redis status.
+	 */
+	public function get_status(): array {
+		$status = array(
+			'connected' => $this->is_connected(),
+			'config' => array(
+				'host' => $this->host,
+				'port' => $this->port,
+				'database' => $this->db,
+				'prefix' => $this->prefix,
+				'persistent' => $this->persistent,
+			),
+			'info' => array(),
+		);
+
+		if ( $status['connected'] ) {
+			// Get Redis config.
+			$config_keys = array(
+				'databases',
+				'maxmemory',
+				'maxmemory-policy',
+			);
+
+			foreach ( $config_keys as $key ) {
+				$status['config'] = array_merge( $status['config'], (array) $this->redis->config( 'GET', $key ) );
+			}
+
+			// Get Redis info.
+			$info_keys = array(
+				'Memory' => array(
+					'used_memory',
+					'used_memory_peak',
+					'used_memory_human',
+					'maxmemory',
+					'maxmemory_human',
+					'maxmemory_policy',
+				),
+				'Server' => array(
+					'redis_version',
+					'tcp_port',
+				),
+			);
+
+			foreach ( $info_keys as $section => $keys ) {
+				$info = $this->redis->info( $section );
+
+				if ( ! is_array( $info ) ) {
+					continue;
+				}
+
+				foreach ( $keys as $key ) {
+					if ( isset( $info[ $section ][ $key ] ) ) {
+						$status['info'][ $section ][ $key ] = $info[ $section ][ $key ];
+					}
+				}
+			}
+		}
+
+		return $status;
 	}
 }

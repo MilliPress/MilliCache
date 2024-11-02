@@ -38,6 +38,9 @@ class Activator {
 
 		// Schedule the cron events.
 		self::schedule_events();
+
+		// Set option autoload to false.
+		wp_set_option_autoload( Settings::$option_name, 'no' );
 	}
 
 	/**

@@ -115,14 +115,13 @@ class RestAPI {
 	 */
 	public function get_status() {
 		try {
-			$redis = Engine::get_storage();
-
 			return new \WP_REST_Response(
 				array(
-					'connected' => $redis->is_connected(),
 					'plugin_name' => $this->plugin_name,
 					'version' => $this->version,
-					'size' => $redis->get_cache_size(),
+					'cache' => Engine::get_status(),
+					'redis' => Engine::get_storage()->get_status(),
+					'dropin' => Admin::validate_advanced_cache_file(),
 				)
 			);
 		} catch ( \Exception $e ) {

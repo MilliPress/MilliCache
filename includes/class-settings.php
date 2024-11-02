@@ -32,7 +32,7 @@ class Settings {
 	 *
 	 * @var string
 	 */
-	private static string $option_name = 'millicache';
+	public static string $option_name = 'millicache';
 
 	/**
 	 * Initialize the class and set its properties.
@@ -46,6 +46,9 @@ class Settings {
 		if ( function_exists( 'add_action' ) ) {
 			add_action( 'init', array( $this, 'register_settings' ) );
 			add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+			add_filter( 'option_' . self::$option_name, array( $this, 'apply_constant_overrides_to_settings' ) );
+			add_filter( 'pre_update_option_' . self::$option_name, array( $this, 'encrypt_sensitive_settings_data' ), 0 );
+			add_filter( 'option_' . self::$option_name, array( $this, 'decrypt_sensitive_settings_data' ), 0 );
 			add_action( 'update_option_' . self::$option_name, array( $this, 'write_config_file' ), 10, 2 );
 		}
 	}
@@ -65,11 +68,32 @@ class Settings {
 			'manage_options',
 			'millicache',
 			function () {
-				printf(
-					'<div class="wrap" id="millicache-settings">%s</div>',
-					esc_html__( 'Loading Settings...', 'millicache' )
-				);
+				echo '<div class="wrap" id="millicache-settings"></div>';
 			},
+		);
+	}
+
+	/**
+	 * Register the plugin settings.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @return   void
+	 */
+	public function register_settings(): void {
+		$default_settings = $this->get_default_settings();
+
+		register_setting(
+			'options',
+			self::$option_name,
+			array(
+				'type'         => 'object',
+				'default'      => $default_settings,
+				'show_in_rest' => array(
+					'schema' => $this->get_settings_schema( $default_settings ),
+				),
+			)
 		);
 	}
 
@@ -81,7 +105,7 @@ class Settings {
 	 *
 	 * @param string|null $module The settings module to retrieve (e.g., 'caching', 'redis').
 	 *
-	 * @return   array<mixed> The default settings.
+	 * @return array<array<mixed>> The default settings.
 	 */
 	public function get_default_settings( ?string $module = null ): array {
 		$defaults = apply_filters(
@@ -90,7 +114,7 @@ class Settings {
 				'redis' => array(
 					'host' => '127.0.0.1',
 					'port' => 6379,
-					'password' => '',
+					'enc_password' => '',
 					'db' => 0,
 					'persistent' => true,
 					'prefix' => 'mll',
@@ -117,136 +141,84 @@ class Settings {
 	}
 
 	/**
-	 * Get the schema for the settings object.
+	 * Get the generated schema for the settings object based on default settings.
 	 *
 	 * @since    1.0.0
 	 * @access   public
+	 *
+	 * @param array<array<mixed>> $settings The settings to generate the schema for.
 	 *
 	 * @return   array<mixed> The settings schema.
 	 */
-	public function get_settings_schema(): array {
-		return apply_filters(
-			'millicache_settings_schema',
-			array(
-				'type'       => 'object',
-				'properties' => array(
-					'redis' => array(
-						'type'       => 'object',
-						'properties' => array(
-							'host' => array(
-								'type' => 'string',
-							),
-							'port' => array(
-								'type' => 'integer',
-							),
-							'password' => array(
-								'type' => 'string',
-							),
-							'db' => array(
-								'type' => 'integer',
-							),
-							'persistent' => array(
-								'type' => 'boolean',
-							),
-							'prefix' => array(
-								'type' => 'string',
-							),
-						),
-					),
-					'cache' => array(
-						'type'       => 'object',
-						'properties' => array(
-							'ttl' => array(
-								'type' => 'integer',
-							),
-							'max_ttl' => array(
-								'type' => 'integer',
-							),
-							'unique' => array(
-								'type' => 'array',
-							),
-							'nocache_cookies' => array(
-								'type' => 'array',
-							),
-							'ignore_cookies' => array(
-								'type' => 'array',
-							),
-							'ignore_request_keys' => array(
-								'type' => 'array',
-							),
-							'should_cache_callback' => array(
-								'type' => 'string',
-							),
-							'debug' => array(
-								'type' => 'boolean',
-							),
-							'gzip' => array(
-								'type' => 'boolean',
-							),
-						),
-					),
-				),
-			)
+	public function get_settings_schema( array $settings ): array {
+		$schema = array(
+			'type'       => 'object',
+			'properties' => array(),
 		);
-	}
 
-	/**
-	 * Register the plugin settings.
-	 *
-	 * @since    1.0.0
-	 * @access   public
-	 *
-	 * @return   void
-	 */
-	public function register_settings(): void {
-		register_setting(
-			'options',
-			self::$option_name,
-			array(
-				'type'         => 'object',
-				'default'      => $this->get_default_settings(),
-				'show_in_rest' => array(
-					'schema' => $this->get_settings_schema(),
-				),
-			)
-		);
+		foreach ( $settings as $module_key => $module_settings ) {
+			$module_schema = array(
+				'type'       => 'object',
+				'properties' => array(),
+			);
+
+			foreach ( $module_settings as $key => $value ) {
+				$module_schema['properties'][ $key ] = array( 'type' => gettype( $value ) );
+			}
+
+			$schema['properties'][ $module_key ] = $module_schema;
+		}
+
+		return $schema;
 	}
 
 	/**
 	 * Get MilliCache settings with priority from constants, config file, and database.
 	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
 	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'redis').
 	 *
-	 * @return array<mixed> The settings array.
+	 * @return array<array<mixed>> The settings array.
 	 */
 	public function get_settings( ?string $module = null ): array {
 		// Step 1: Get default settings.
 		$settings = $this->get_default_settings( $module );
 
-		// Step 2: Overwrite with values from the MilliCache settings file or DB.
-		$config_settings = $this->get_settings_from_file( $module );
-		if ( ! empty( $config_settings ) ) {
-			$settings = array_merge( $settings, $config_settings );
-		} elseif ( function_exists( 'get_option' ) ) {
-			$db_settings = $this->get_settings_from_db( $module );
-			if ( ! empty( $db_settings ) ) {
-				$settings = array_merge( $settings, $db_settings );
+		// Step 2: Overwrite with values from the (synced) MilliCache settings file or DB.
+		$file_settings = $this->get_settings_from_file( $module );
+		$config_settings = $file_settings ? $file_settings : $this->get_settings_from_db( $module );
+		foreach ( $config_settings as $module_key => $module_settings ) {
+			foreach ( $module_settings as $key => $value ) {
+				$settings[ $module_key ][ $key ] = $value;
 			}
 		}
 
 		// Step 3: Overwrite with values from constants in wp-config.php.
-		return $this->get_settings_from_constants( $settings, $module );
+		$constant_settings = $this->get_settings_from_constants( $module );
+		foreach ( $constant_settings as $module_key => $module_settings ) {
+			foreach ( $module_settings as $key => $value ) {
+				$settings[ $module_key ][ $key ] = $value;
+			}
+		}
+
+		return $settings;
 	}
 
 	/**
 	 * Get settings from wp-config.php constants if they exist.
 	 *
-	 * @param array<mixed> $settings The default settings.
-	 * @param string|null  $module The settings module to retrieve (e.g., 'caching', 'redis').
+	 * @since    1.0.0
+	 * @access   private
 	 *
-	 * @return array<mixed> The updated settings.
+	 * @param string|null $module The settings module to retrieve (e.g., 'caching', 'redis').
+	 *
+	 * @return array<array<mixed>> The updated settings.
 	 */
-	private function get_settings_from_constants( array $settings, ?string $module = null ): array {
+	private function get_settings_from_constants( ?string $module = null ): array {
+		$settings = $this->get_default_settings();
+
 		if ( $module ) {
 			// If a specific module is specified.
 			foreach ( $settings as $key => $value ) {
@@ -254,6 +226,8 @@ class Settings {
 
 				if ( defined( $constant ) ) {
 					$settings[ $key ] = constant( $constant );
+				} else {
+					unset( $settings[ $key ] );
 				}
 			}
 		} else {
@@ -264,28 +238,31 @@ class Settings {
 						$constant = strtoupper( "MC_{$module_key}_{$key}" );
 
 						if ( defined( $constant ) ) {
-							if ( is_array( $settings[ $module_key ] ) ) {
-								$settings[ $module_key ][ $key ] = constant( $constant );
-							}
+							$settings[ $module_key ][ $key ] = constant( $constant );
+						} else {
+							unset( $settings[ $module_key ][ $key ] );
 						}
 					}
 				}
 			}
 		}
 
-		return $settings;
+		return array_filter( $settings );
 	}
 
 	/**
 	 * Get settings from the MilliCache configuration file.
 	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
 	 * @param string|null $module The settings module to retrieve (e.g., 'caching', 'redis').
 	 *
-	 * @return array<string, mixed> The settings from the config file.
+	 * @return array<array<mixed>> The settings from the config file.
 	 */
 	private function get_settings_from_file( ?string $module = null ): array {
 		$config_directory = WP_CONTENT_DIR . '/settings/millicache/';
-		$config_file = $config_directory . sanitize_file_name( self::$domain ) . '.php';
+		$config_file = $config_directory . self::$domain . '.php';
 
 		if ( file_exists( $config_file ) ) {
 			$config_settings = include $config_file;
@@ -301,21 +278,70 @@ class Settings {
 	/**
 	 * Get settings from the database.
 	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
 	 * @param string|null $module The settings module to retrieve (e.g., 'caching', 'redis').
 	 *
-	 * @return array<mixed> The settings from the database.
+	 * @return array<array<mixed>> The settings from the database.
 	 */
 	private function get_settings_from_db( ?string $module = null ): array {
-		$db_settings = (array) get_option( self::$option_name, array() );
-		if ( $module ) {
-			return isset( $db_settings[ $module ] ) ? (array) $db_settings[ $module ] : array();
+		if( ! function_exists('get_option')) {
+			return array();
 		}
 
-		return $db_settings;
+		$db_settings = (array) get_option( self::$option_name, array() );
+		if ( $module ) {
+			return isset( $db_settings[ $module ] ) ? array( (array) $db_settings[ $module ] ) : array();
+		}
+
+		return array_map(
+			function ( $setting ) {
+				return (array) $setting;
+			},
+			$db_settings
+		);
+	}
+
+	/**
+	 * Remove constants defined in wp-config.php from the settings option.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @param array<array<mixed>> $settings The settings to filter.
+	 *
+	 * @return array<array<mixed>> The filtered settings.
+	 */
+	public function apply_constant_overrides_to_settings( array $settings ): array {
+		// Do not save settings that are defined as constants in wp-config.php.
+		$constant_settings = $this->get_settings_from_constants();
+		if ( ! empty( $constant_settings ) ) {
+			foreach ( $constant_settings as $module => $module_settings ) {
+				foreach ( $module_settings as $key => $value ) {
+					unset( $settings[ $module ][ $key ] );
+				}
+			}
+		}
+
+		// When constants are removed, we need to add the default settings back in.
+		$default_settings = $this->get_default_settings();
+		foreach ( $default_settings as $module => $module_settings ) {
+			foreach ( $module_settings as $key => $value ) {
+				if ( ! isset( $settings[ $module ][ $key ] ) && ! isset( $constant_settings[ $module ][ $key ] ) ) {
+					$settings[ $module ][ $key ] = $value;
+				}
+			}
+		}
+
+		return $settings;
 	}
 
 	/**
 	 * Delete MilliCache settings.
+	 *
+	 * @since    1.0.0
+	 * @access   public
 	 *
 	 * @return bool Whether the deletion was successful.
 	 */
@@ -331,6 +357,9 @@ class Settings {
 
 	/**
 	 * Write settings to the configuration file.
+	 *
+	 * @since    1.0.0
+	 * @access   public
 	 *
 	 * @param array<mixed> $old_settings The old settings.
 	 * @param array<mixed> $settings The settings to write.
@@ -360,6 +389,9 @@ class Settings {
 	/**
 	 * Delete the configuration file for the current site.
 	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
 	 * @return void
 	 */
 	private static function delete_config_file(): void {
@@ -369,5 +401,115 @@ class Settings {
 		if ( file_exists( $config_file ) ) {
 			unlink( $config_file );
 		}
+	}
+
+	/**
+	 * Encrypt sensitive settings data.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param array<array<mixed>> $settings The plugin settings before saving.
+	 *
+	 * @return array<array<mixed>>
+	 *
+	 * @throws \Exception If random bytes cannot be generated.
+	 * @throws \SodiumException If the encryption fails.
+	 */
+	public function encrypt_sensitive_settings_data( array $settings ): array {
+		foreach ( $settings as $module => $module_settings ) {
+			foreach ( $module_settings as $key => $value ) {
+				if ( strpos( $key, 'enc_' ) === 0 ) {
+					if ( is_string( $value ) ) {
+						$settings[ $module ][ $key ] = $this->encrypt_value( $value );
+					}
+				}
+			}
+		}
+
+		return $settings;
+	}
+
+	/**
+	 * Decrypt sensitive settings data.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param array<array<mixed>> $settings The stored plugin settings.
+	 *
+	 * @return array<array<mixed>>
+	 *
+	 * @throws \SodiumException If the decryption fails.
+	 */
+	public function decrypt_sensitive_settings_data( array $settings ): array {
+		foreach ( $settings as $module => $module_settings ) {
+			foreach ( $module_settings as $key => $value ) {
+				if ( strpos( $key, 'enc_' ) === 0 ) {
+					if ( is_string( $value ) ) {
+						$settings[ $module ][ $key ] = $this->decrypt_value( $value );
+					}
+				}
+			}
+		}
+
+		return $settings;
+	}
+
+	/**
+	 * Encrypt the value using sodium.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @param string $value The value to encrypt.
+	 *
+	 * @return string
+	 *
+	 * @throws \Exception If random bytes cannot be generated.
+	 * @throws \SodiumException If the encryption fails.
+	 */
+	private function encrypt_value( string $value ) {
+		if ( empty( $value ) ) {
+			return $value;
+		}
+
+		$nonce = random_bytes( SODIUM_CRYPTO_SECRETBOX_NONCEBYTES );
+		$key = sodium_crypto_generichash( AUTH_KEY . SECURE_AUTH_KEY, '', SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES ); // @phpstan-ignore-line
+
+		$encrypted = sodium_crypto_secretbox( $value, $nonce, $key );
+		return 'ENC:' . base64_encode( $nonce . $encrypted );
+	}
+
+	/**
+	 * Decrypt the value using sodium.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param string $encrypted_value The encrypted value to decrypt.
+	 *
+	 * @return string|mixed
+	 *
+	 * @throws \SodiumException If the decryption fails.
+	 */
+	public static function decrypt_value( string $encrypted_value ) {
+		if ( ! function_exists( 'sodium_crypto_secretbox_open' ) ) {
+			require_once ABSPATH . 'wp-includes/sodium-compat/autoload.php';
+		}
+
+		// Check if the value is already decrypted.
+		if ( strpos( $encrypted_value, 'ENC:' ) !== 0 ) {
+			return $encrypted_value;
+		}
+
+		$encrypted_value = substr( $encrypted_value, 4 );
+		$key = sodium_crypto_generichash( AUTH_KEY . SECURE_AUTH_KEY, '', SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES ); // @phpstan-ignore-line
+		$decoded = base64_decode( $encrypted_value );
+
+		$nonce = mb_substr( $decoded, 0, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES, '8bit' );
+		$ciphertext = mb_substr( $decoded, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES, null, '8bit' );
+
+		return sodium_crypto_secretbox_open( $ciphertext, $nonce, $key );
 	}
 }

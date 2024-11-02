@@ -136,16 +136,6 @@ final class Engine {
 	private static string $should_cache_callback;
 
 	/**
-	 * Debug mode.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var bool Debug mode.
-	 */
-	private static bool $debug;
-
-	/**
 	 * Gzip compression.
 	 *
 	 * @since 1.0.0
@@ -154,6 +144,16 @@ final class Engine {
 	 * @var bool Gzip compression.
 	 */
 	private static bool $gzip;
+
+	/**
+	 * Debug mode.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var bool Debug mode.
+	 */
+	private static bool $debug;
 
 	/**
 	 * Request hash.
@@ -1086,5 +1086,27 @@ final class Engine {
 			return htmlspecialchars( stripslashes( $_SERVER[ $key ] ), ENT_QUOTES, 'UTF-8' );
 		}
 		return '';
+	}
+
+	/**
+	 * Get meaningful Cache config and info.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return array<mixed> The Cache status.
+	 */
+	public static function get_status(): array {
+		$cache = array(
+			'ttl' => self::$ttl,
+			'max_ttl' => self::$max_ttl,
+			'gzip' => self::$gzip,
+			'debug' => self::$debug,
+			'ignore_cookies' => self::$ignore_cookies,
+			'nocache_cookies' => self::$nocache_cookies,
+			'ignore_request_keys' => self::$ignore_request_keys,
+		);
+
+		return array_merge( $cache, Admin::get_cache_size( '', true ) );
 	}
 }

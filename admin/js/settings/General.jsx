@@ -17,8 +17,8 @@ import { __ } from '@wordpress/i18n';
 import { connection, plugins } from '@wordpress/icons';
 import { useSettings } from './context/Settings.jsx';
 
-const GeneralSettings = ( { status } ) => {
-	const { settings, updateSetting } = useSettings();
+const GeneralSettings = () => {
+	const { status, settings, updateSetting } = useSettings();
 
 	return (
 		<Panel>
@@ -33,10 +33,10 @@ const GeneralSettings = ( { status } ) => {
 			<PanelBody
 				title={ __( 'Redis Settings', 'millicache' ) }
 				className={ `redis-settings-${
-					status?.connected ? 'connected' : 'disconnected'
+					status?.redis?.connected ? 'connected' : 'disconnected'
 				}` }
-				icon={ ! status?.connected ? plugins : connection }
-				initialOpen={ ! status?.connected }
+				icon={ ! status?.redis?.connected ? plugins : connection }
+				initialOpen={ ! status?.redis?.connected }
 			>
 				<Flex direction="column" gap="4">
 					<Flex justify="start">
@@ -44,7 +44,11 @@ const GeneralSettings = ( { status } ) => {
 							<InputControl
 								__next40pxDefaultSize
 								label={ __( 'Redis Host', 'millicache' ) }
-								value={ settings.redis.host ?? '' }
+								value={
+									settings.redis.host ??
+									status.redis?.config.host
+								}
+								disabled={ ! ( 'host' in settings.redis ) }
 								onChange={ ( value ) =>
 									updateSetting( 'redis', 'host', value )
 								}
@@ -54,7 +58,13 @@ const GeneralSettings = ( { status } ) => {
 							<NumberControl
 								__next40pxDefaultSize
 								label={ __( 'Redis Port', 'millicache' ) }
-								value={ settings.redis.port ?? '' }
+								value={
+									settings.redis.port ??
+									status.redis?.config.port
+								}
+								disabled={ ! ( 'port' in settings.redis ) }
+								min="1024"
+								max="65535"
 								onChange={ ( value ) =>
 									updateSetting( 'redis', 'port', value )
 								}
@@ -67,9 +77,16 @@ const GeneralSettings = ( { status } ) => {
 								__next40pxDefaultSize
 								type="password"
 								label={ __( 'Redis Password', 'millicache' ) }
-								value={ settings.redis.password ?? '' }
+								value={ settings.redis.enc_password ?? '' }
+								disabled={
+									! ( 'enc_password' in settings.redis )
+								}
 								onChange={ ( value ) =>
-									updateSetting( 'redis', 'password', value )
+									updateSetting(
+										'redis',
+										'enc_password',
+										value
+									)
 								}
 							/>
 						</FlexItem>
@@ -77,7 +94,13 @@ const GeneralSettings = ( { status } ) => {
 							<NumberControl
 								__next40pxDefaultSize
 								label={ __( 'Redis Database', 'millicache' ) }
-								value={ settings.redis.db ?? '' }
+								value={
+									settings.redis.db ??
+									status.redis?.config.database
+								}
+								disabled={ ! ( 'db' in settings.redis ) }
+								max={ status?.redis?.config.databases ?? 16 }
+								min="0"
 								onChange={ ( value ) =>
 									updateSetting( 'redis', 'db', value )
 								}
@@ -91,7 +114,11 @@ const GeneralSettings = ( { status } ) => {
 								'Persistent Redis Connection',
 								'millicache'
 							) }
-							checked={ settings.redis.persistent ?? false }
+							checked={
+								settings.redis.persistent ??
+								status.redis?.config.persistent
+							}
+							disabled={ ! ( 'persistent' in settings.redis ) }
 							onChange={ ( value ) =>
 								updateSetting( 'redis', 'persistent', value )
 							}
@@ -101,10 +128,10 @@ const GeneralSettings = ( { status } ) => {
 			</PanelBody>
 			<PanelBody
 				title={ __( 'Cache Settings', 'millicache' ) }
-				initialOpen={ status?.connected }
+				initialOpen={ status?.redis?.connected }
 			>
 				<Flex direction="column" gap="4">
-					<Flex justify="start">
+					<Flex justify="start" align={ 'start' }>
 						<FlexItem isBlock="true">
 							<UnitControl
 								__next40pxDefaultSize
@@ -116,8 +143,10 @@ const GeneralSettings = ( { status } ) => {
 									'The time that the cache will be stored for.',
 									'millicache'
 								) }
+								disabled={ ! ( 'ttl' in settings.cache ) }
 								value={ ( () => {
-									const ttl = settings.cache.ttl ?? 0;
+									const ttl =
+										settings.cache.ttl ?? status.cache?.ttl;
 									let value, unit;
 									if ( ttl % 86400 === 0 ) {
 										value = ttl / 86400;
@@ -196,8 +225,11 @@ const GeneralSettings = ( { status } ) => {
 									'The maximum time stale cache will be stored for background update.',
 									'millicache'
 								) }
+								disabled={ ! ( 'max_ttl' in settings.cache ) }
 								value={ ( () => {
-									const ttl = settings.cache.max_ttl ?? 0;
+									const ttl =
+										settings.cache.max_ttl ??
+										status.cache?.max_ttl;
 									let value, unit;
 									if ( ttl % 2592000 === 0 ) {
 										value = ttl / 2592000;
@@ -281,7 +313,8 @@ const GeneralSettings = ( { status } ) => {
 					<ToggleControl
 						__nextHasNoMarginBottom
 						label={ __( 'Enable Gzip Compression', 'millicache' ) }
-						checked={ settings.cache.gzip ?? false }
+						checked={ settings.cache.gzip ?? status.cache?.gzip }
+						disabled={ ! ( 'gzip' in settings.cache ) }
 						onChange={ ( value ) =>
 							updateSetting( 'cache', 'gzip', value )
 						}
@@ -289,7 +322,8 @@ const GeneralSettings = ( { status } ) => {
 					<ToggleControl
 						__nextHasNoMarginBottom
 						label={ __( 'Enable Debugging', 'millicache' ) }
-						checked={ settings.cache.debug ?? false }
+						checked={ settings.cache.debug ?? status.cache?.debug }
+						disabled={ ! ( 'debug' in settings.cache ) }
 						onChange={ ( value ) =>
 							updateSetting( 'cache', 'debug', value )
 						}
@@ -301,8 +335,9 @@ const GeneralSettings = ( { status } ) => {
 						value={
 							settings.cache.ignore_cookies
 								? settings.cache.ignore_cookies
-								: []
+								: status.cache?.ignore_cookies
 						}
+						disabled={ ! ( 'ignore_cookies' in settings.cache ) }
 						onChange={ ( tokens ) =>
 							updateSetting( 'cache', 'ignore_cookies', tokens )
 						}
@@ -315,8 +350,9 @@ const GeneralSettings = ( { status } ) => {
 						value={
 							settings.cache.nocache_cookies
 								? settings.cache.nocache_cookies
-								: []
+								: status.cache?.nocache_cookies
 						}
+						disabled={ ! ( 'nocache_cookies' in settings.cache ) }
 						onChange={ ( tokens ) =>
 							updateSetting( 'cache', 'nocache_cookies', tokens )
 						}
@@ -329,7 +365,10 @@ const GeneralSettings = ( { status } ) => {
 						value={
 							settings.cache.ignore_request_keys
 								? settings.cache.ignore_request_keys
-								: []
+								: status.cache?.ignore_request_keys
+						}
+						disabled={
+							! ( 'ignore_request_keys' in settings.cache )
 						}
 						onChange={ ( tokens ) =>
 							updateSetting(

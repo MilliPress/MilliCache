@@ -1,6 +1,5 @@
 import { __ } from '@wordpress/i18n';
-import apiFetch from '@wordpress/api-fetch';
-import { useState, useEffect } from '@wordpress/element';
+import { useState } from '@wordpress/element';
 import {
 	Animate,
 	Button,
@@ -14,48 +13,25 @@ import {
 	ExternalLink,
 } from '@wordpress/components';
 import { useSettings } from './context/Settings.jsx';
+import StatusTab from './Status.jsx';
 import GeneralSettings from './General.jsx';
-import RulesSettings from './Rules.jsx';
 
 const MilliCacheUI = () => {
 	const [ isOpen, setOpen ] = useState( false );
-	const [ status, setStatus ] = useState( {} );
 	const { error, saveSettings, isSaving, isLoading, hasChanges } =
 		useSettings();
 
 	const openModal = () => setOpen( true );
 	const closeModal = () => setOpen( false );
 
-	useEffect( () => {
-		const loadStatus = async () => {
-			try {
-				const response = await apiFetch( {
-					path: '/millicache/v1/status',
-					method: 'GET',
-				} );
-
-				setStatus( response );
-			} catch ( fetchError ) {
-				setStatus( {
-					connected: false,
-					error: __( 'Failed to load status', 'millicache' ),
-				} );
-			}
-		};
-
-		loadStatus();
-	}, [] );
-
 	return (
-		<div
-			style={ { maxWidth: '1200px', minHeight: '100%', margin: 'auto' } }
-		>
+		<div style={ { maxWidth: '900px' } }>
 			<Panel>
 				<PanelBody>
 					<Flex align="center">
 						<FlexItem>
 							<h1 style={ { padding: '0' } }>
-								{ __( 'MilliCache Settings', 'millicache' ) }
+								{ __( 'MilliCache', 'millicache' ) }
 							</h1>
 
 							<Flex expanded="false" justify="start">
@@ -154,16 +130,13 @@ const MilliCacheUI = () => {
 									} }
 									tabs={ [
 										{
-											name: 'general',
-											title: __(
-												'General Settings',
-												'millicache'
-											),
+											name: 'status',
+											title: __( 'Status', 'millicache' ),
 										},
 										{
-											name: 'rules',
+											name: 'settings',
 											title: __(
-												'Cache Rules',
+												'Settings',
 												'millicache'
 											),
 										},
@@ -175,13 +148,11 @@ const MilliCacheUI = () => {
 											style={ { margin: '-1px' } }
 										>
 											<div>
-												{ tab.name === 'general' && (
-													<GeneralSettings
-														status={ status }
-													/>
+												{ tab.name === 'status' && (
+													<StatusTab />
 												) }
-												{ tab.name === 'rules' && (
-													<RulesSettings />
+												{ tab.name === 'settings' && (
+													<GeneralSettings />
 												) }
 											</div>
 										</div>

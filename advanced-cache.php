@@ -1,21 +1,17 @@
 <?php
 /**
- * This is the drop-in plugin file for the MilliCache plugin, responsible for advanced WordPress caching.
+ * Drop-in plugin file for MilliCache, enabling advanced WordPress caching.
  *
- * This file, advanced-cache.php, is automatically placed in the wp-content directory by the MilliCache plugin during its activation.
- * WordPress recognizes this file and loads it during its initialization process.
+ * This file (advanced-cache.php) is placed in wp-content by MilliCache during activation.
+ * It can be either a symlink or a copy, depending on server support.
  *
- * The file can either be a symlink to the actual advanced-cache.php file located in the MilliCache plugin directory (if the hosting environment supports symlinks),
- * or it can be a direct copy of that file.
+ * It initializes the caching engine defined in '/includes/class-millicache-engine.php' by invoking \\MilliCache\\Engine::start().
  *
- * This file is crucial for the operation of the MilliCache plugin as it kickstarts the caching engine.
- * If this file is missing or not loaded correctly, the caching engine will not start, and the MilliCache plugin will not function as expected.
  *
- * The caching engine is defined in the '/includes/class-millicache-engine.php' file in the plugin folder, which is required by this file.
- * The caching engine is started by invoking the static method start() on the '\MilliCache\Engine' class.
- *
- * Version:           1.0.0
- * Author:            MilliPress Team
+ * Description: MilliCache Drop-in file, enabling advanced WordPress caching.
+ * Plugin URI:  https://www.millipress.com/cache
+ * Version:     1.0.0
+ * Author:      MilliPress Team
  *
  * @package MilliCache
  * @since 1.0.0

@@ -67,6 +67,7 @@ class Adminbar {
 		$this->loader = $loader;
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+
 		$this->register_hooks();
 	}
 

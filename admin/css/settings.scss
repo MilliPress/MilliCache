@@ -1,6 +1,10 @@
 #millicache-settings {
 	padding-bottom: 100px;
 
+	table.widefat {
+		margin-bottom: 20px;
+	}
+
 	.components-panel__body {
 
 		&.redis-settings-connected svg.components-panel__icon {
@@ -9,14 +13,6 @@
 
 		&.redis-settings-disconnected svg.components-panel__icon {
 			fill: #cc1818;
-		}
-	}
-
-	.components-external-link {
-		color: #949494;
-
-		&:hover {
-			color: var(--wp-admin-theme-color, #3858e9);
 		}
 	}
 
@@ -31,6 +27,32 @@
 		bottom: 20px;
 		left: 20px;
 		z-index: 1000;
+	}
+
+	.components-external-link {
+		color: #949494;
+
+		&:hover {
+			color: var(--wp-admin-theme-color, #3858e9);
+		}
+	}
+
+	.components-form-token-field {
+
+		.components-form-token-field__input-container {
+
+			&.is-disabled {
+				background-color: var(--wp-components-color-gray-100, #f0f0f0);
+
+				.components-form-token-field__token-text {
+					padding: 0 8px 0 8px;
+				}
+
+				.components-button.components-form-token-field__remove-token {
+					display: none;
+				}
+			}
+		}
 	}
 
 	.components-input-control {
