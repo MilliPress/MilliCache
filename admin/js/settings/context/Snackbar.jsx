@@ -1,32 +1,38 @@
 import { createContext, useContext, useState } from '@wordpress/element';
-import { Snackbar } from '@wordpress/components';
+import { SnackbarList } from '@wordpress/components';
 
 const SnackbarContext = createContext();
 
 export const SnackbarProvider = ( { children } ) => {
-	const [ snackbarMessage, setSnackbarMessage ] = useState( '' );
-	const [ isSnackbarVisible, setIsSnackbarVisible ] = useState( false );
+	const [ snackMessages, setSnackMessages ] = useState( [] );
 
-	const showSnackbar = ( message ) => {
-		setSnackbarMessage( message );
-		setIsSnackbarVisible( true );
+	const showSnackbar = ( message, actions = [], timeout = 3000, explicitDismiss= false ) => {
+		const id = Date.now();
+		setSnackMessages( ( prevMessages ) => [ ...prevMessages, {
+			id: id,
+			content: message,
+			actions: actions,
+			explicitDismiss: explicitDismiss,
+			spokenMessage: message,
+		} ] );
+
+		setTimeout(() => {
+			hideSnackbar(id);
+		}, timeout);
 	};
 
-	const hideSnackbar = () => {
-		setIsSnackbarVisible( false );
+	const hideSnackbar = ( id ) => {
+		setSnackMessages( ( prevMessages ) => prevMessages.filter( ( msg ) => msg.id !== id ) );
 	};
 
 	return (
 		<SnackbarContext.Provider value={ { showSnackbar } }>
 			{ children }
-			{ isSnackbarVisible && (
-				<Snackbar
-					className="millicache-settings-snacks"
-					onRemove={ hideSnackbar }
-				>
-					{ snackbarMessage }
-				</Snackbar>
-			) }
+			<SnackbarList
+				className="millicache-settings-snacks"
+				notices={ snackMessages }
+				onRemove={ ( id ) => hideSnackbar( id ) }
+			/>
 		</SnackbarContext.Provider>
 	);
 };
