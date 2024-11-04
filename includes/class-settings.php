@@ -46,10 +46,17 @@ class Settings {
 		if ( function_exists( 'add_action' ) ) {
 			add_action( 'init', array( $this, 'register_settings' ) );
 			add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
-			add_filter( 'option_' . self::$option_name, array( $this, 'apply_constant_overrides_to_settings' ) );
+
+			// Settings storage.
+			add_filter( 'option_' . self::$option_name, array( $this, 'filter_settings_by_constants' ) );
+			add_filter( 'default_option_' . self::$option_name, array( $this, 'filter_settings_by_constants' ) );
+			add_action( 'add_option_' . self::$option_name, array( $this, 'add_config_file' ), 10, 2 );
+			add_action( 'update_option_' . self::$option_name, array( $this, 'update_config_file' ), 10, 2 );
+			add_action( 'delete_option', array( $this, 'delete_config_file' ) );
+
+			// Encrypt and decrypt sensitive settings data.
 			add_filter( 'pre_update_option_' . self::$option_name, array( $this, 'encrypt_sensitive_settings_data' ), 0 );
 			add_filter( 'option_' . self::$option_name, array( $this, 'decrypt_sensitive_settings_data' ), 0 );
-			add_action( 'update_option_' . self::$option_name, array( $this, 'write_config_file' ), 10, 2 );
 		}
 	}
 
@@ -136,6 +143,10 @@ class Settings {
 		if ( $module ) {
 			return isset( $defaults[ $module ] ) ? $defaults[ $module ] : array();
 		}
+
+		$defaults['host'] = array(
+			'domain' => self::$domain,
+		);
 
 		return $defaults;
 	}
@@ -286,7 +297,7 @@ class Settings {
 	 * @return array<array<mixed>> The settings from the database.
 	 */
 	private function get_settings_from_db( ?string $module = null ): array {
-		if( ! function_exists('get_option')) {
+		if ( ! function_exists( 'get_option' ) ) {
 			return array();
 		}
 
@@ -304,16 +315,20 @@ class Settings {
 	}
 
 	/**
-	 * Remove constants defined in wp-config.php from the settings option.
+	 * Filter settings by constants defined in wp-config.php.
 	 *
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @param array<array<mixed>> $settings The settings to filter.
+	 * @param false|array<array<mixed>> $settings The settings to filter.
 	 *
 	 * @return array<array<mixed>> The filtered settings.
 	 */
-	public function apply_constant_overrides_to_settings( array $settings ): array {
+	public function filter_settings_by_constants( $settings ): array {
+		if ( ! is_array( $settings ) ) {
+			return array();
+		}
+
 		// Do not save settings that are defined as constants in wp-config.php.
 		$constant_settings = $this->get_settings_from_constants();
 		if ( ! empty( $constant_settings ) ) {
@@ -338,21 +353,33 @@ class Settings {
 	}
 
 	/**
-	 * Delete MilliCache settings.
+	 * Add the configuration file for the current site.
 	 *
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @return bool Whether the deletion was successful.
+	 * @param string       $option The option name.
+	 * @param array<mixed> $settings The settings to write.
+	 *
+	 * @return void
 	 */
-	public static function delete_settings(): bool {
-		// Delete settings from the database.
-		$deleted = delete_option( self::$option_name );
+	public function add_config_file( string $option, array $settings ): void {
+		$this->write_config_file( $settings );
+	}
 
-		// Delete the corresponding configuration file.
-		self::delete_config_file();
-
-		return $deleted;
+	/**
+	 * Update the configuration file for the current site.
+	 *
+	 * @since   1.0.0
+	 * @access  public
+	 *
+	 * @param array<mixed> $old_settings The old settings.
+	 * @param array<mixed> $settings The new settings.
+	 *
+	 * @return void
+	 */
+	public function update_config_file( array $old_settings, array $settings ): void {
+		$this->write_config_file( $settings );
 	}
 
 	/**
@@ -361,12 +388,11 @@ class Settings {
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @param array<mixed> $old_settings The old settings.
 	 * @param array<mixed> $settings The settings to write.
 	 *
 	 * @return void
 	 */
-	public function write_config_file( array $old_settings, array $settings ): void {
+	private function write_config_file( array $settings ): void {
 		$config_directory = WP_CONTENT_DIR . '/settings/millicache/';
 
 		// Ensure the directory exists.
@@ -392,14 +418,24 @@ class Settings {
 	 * @since    1.0.0
 	 * @access   private
 	 *
+	 * @param string $option The option name.
+	 *
 	 * @return void
 	 */
-	private static function delete_config_file(): void {
-		$config_directory = WP_CONTENT_DIR . '/settings/millicache/';
-		$config_file = $config_directory . sanitize_file_name( self::$domain ) . '.php';
+	public function delete_config_file( string $option ): void {
+		if ( $option !== self::$option_name ) {
+			return;
+		}
 
-		if ( file_exists( $config_file ) ) {
-			unlink( $config_file );
+		$settings = get_option( self::$option_name, array() );
+
+		if ( is_array( $settings ) && isset( $settings['host']['domain'] ) ) {
+			$config_directory = WP_CONTENT_DIR . '/settings/millicache/';
+			$config_file = $config_directory . sanitize_file_name( $settings['host']['domain'] ) . '.php';
+
+			if ( file_exists( $config_file ) ) {
+				unlink( $config_file );
+			}
 		}
 	}
 

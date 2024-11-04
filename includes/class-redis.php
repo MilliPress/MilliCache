@@ -148,12 +148,12 @@ final class Redis {
 	 * @param array<mixed> $settings The settings for the Redis connection.
 	 *
 	 * @return void
+	 *
+	 * @throws \SodiumException
 	 */
 	private function config( array $settings ): void {
 		foreach ( $settings as $key => $value ) {
-
-			// If setting starts with enc_ we need first to decrypt the value
-			if ( strpos( $key, 'enc_' ) === 0 && strpos( $value, 'ENC' ) === 0 ) {
+			if ( is_string( $value ) && strpos( $value, 'ENC:' ) === 0 ) {
 				$value = Settings::decrypt_value( $value );
 			}
 
