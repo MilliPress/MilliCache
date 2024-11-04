@@ -136,7 +136,7 @@ final class Redis {
 	 * @return bool Whether Redis is connected.
 	 */
 	public function is_connected(): bool {
-		return isset( $this->redis ) && $this->redis->ping();
+		return isset( $this->redis ) && $this->redis->isConnected();
 	}
 
 	/**
@@ -180,7 +180,7 @@ final class Redis {
 
 		try {
 			// If Redis is already connected, return.
-			if ( isset( $this->redis ) && $this->redis->isConnected() ) {
+			if ( $this->is_connected() ) {
 				return true;
 			}
 
@@ -710,7 +710,13 @@ final class Redis {
 			'info' => array(),
 		);
 
-		if ( $status['connected'] ) {
+		if ( ! $status['connected'] ) {
+			try {
+				$this->redis->ping();
+			} catch ( PredisException $e ) {
+				$status['error'] = $e->getMessage();
+			}
+		} else {
 			// Get Redis config.
 			$config_keys = array(
 				'databases',
