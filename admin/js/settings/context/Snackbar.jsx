@@ -12,7 +12,7 @@ export const SnackbarProvider = ( { children } ) => {
 		timeout = 3000,
 		explicitDismiss = false
 	) => {
-		const id = Date.now();
+		const id = Math.random().toString(36).slice(2, 11);
 		setSnackMessages( ( prevMessages ) => [
 			...prevMessages,
 			{

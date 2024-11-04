@@ -44,9 +44,9 @@ const StatusTab = () => {
 		[ __( 'Used Memory', 'millicache' ) ]:
 			status.redis?.info?.Memory?.used_memory_human ?? 'N/A',
 		[ __( 'Max Memory', 'millicache' ) ]:
-			status.redis?.info?.Memory.maxmemory_human ?? 'N/A',
+			status.redis?.info?.Memory?.maxmemory_human ?? 'N/A',
 		[ __( 'Max Memory Policy', 'millicache' ) ]:
-			status.redis?.info?.Memory.maxmemory_policy ?? 'N/A',
+			status.redis?.info?.Memory?.maxmemory_policy ?? 'N/A',
 	};
 
 	return (

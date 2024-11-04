@@ -154,6 +154,10 @@ export const SettingsProvider = ( { children } ) => {
 					);
 				}
 
+				if ( newStatus.redis?.error ) {
+					showSnackbar( newStatus.redis?.error, [], 6000, true );
+				}
+
 				setHasRedisChanges( false );
 			}
 		} catch ( fetchError ) {
