@@ -21,6 +21,9 @@ export const SettingsProvider = ( { children } ) => {
 	const [ hasRedisChanges, setHasRedisChanges ] = useState( false );
 	const { showSnackbar } = useSnackbar();
 
+	const delay = ( ms ) =>
+		new Promise( ( resolve ) => setTimeout( resolve, ms ) );
+
 	const fetchStatus = async () => {
 		try {
 			const response = await apiFetch( {
@@ -29,11 +32,19 @@ export const SettingsProvider = ( { children } ) => {
 			} );
 
 			setStatus( response );
+			return response;
 		} catch ( fetchError ) {
+			const errorMessage =
+				fetchError?.message ??
+				__( 'Failed to load status.', 'millicache' );
+
 			setStatus( {
 				connected: false,
-				error: __( 'Failed to load status', 'millicache' ),
+				error: errorMessage,
 			} );
+
+			showSnackbar( errorMessage, [], 6000, true );
+			return errorMessage;
 		}
 	};
 
@@ -44,13 +55,18 @@ export const SettingsProvider = ( { children } ) => {
 			setSettings( response?.millicache );
 			setInitialSettings( response?.millicache );
 		} catch ( fetchError ) {
-			setError( __( 'Failed to load settings', 'millicache' ) );
+			const errorMessage =
+				fetchError?.message ??
+				__( 'Failed to load settings.', 'millicache' );
+
+			setError( errorMessage );
+			showSnackbar( errorMessage );
 		} finally {
 			setIsLoading( false );
 		}
 	};
 
-	// Load the settings & status when the component mounts
+	// Load the settings and status when the component mounts
 	useEffect( () => {
 		fetchSettings();
 		fetchStatus();
@@ -98,18 +114,50 @@ export const SettingsProvider = ( { children } ) => {
 			} );
 
 			setInitialSettings( settings );
+			showSnackbar( __( 'Settings saved successfully.', 'millicache' ) );
 			setHasChanges( false );
-			showSnackbar( __( 'Settings saved successfully!', 'millicache' ) );
-
-			// Reload settings to get the updated status and settings defined as constants
-			// await fetchSettings();
 
 			if ( hasRedisChanges ) {
-				setTimeout( await fetchStatus, 3000 );
-				setTimeout( setHasRedisChanges( false ), 5000 );
+				const previousStatus = status;
+
+				await delay( 500 );
+				showSnackbar(
+					__(
+						'Redis settings updated. Testing connection…',
+						'millicache'
+					)
+				);
+
+				await delay( 3000 );
+				const newStatus = await fetchStatus();
+
+				if (
+					previousStatus.redis?.connected &&
+					! newStatus.redis?.connected
+				) {
+					await delay( 50 );
+					showSnackbar(
+						__(
+							'Redis connection lost. Please check your settings.',
+							'millicache'
+						)
+					);
+				} else if (
+					! previousStatus.redis?.connected &&
+					newStatus.redis?.connected
+				) {
+					showSnackbar(
+						__(
+							'Redis connection established successfully.',
+							'millicache'
+						)
+					);
+				}
+
+				setHasRedisChanges( false );
 			}
 		} catch ( fetchError ) {
-			showSnackbar( __( 'Failed to save settings', 'millicache' ) );
+			showSnackbar( __( 'Failed to save settings.', 'millicache' ) );
 		} finally {
 			setTimeout( () => setIsSaving( false ), 1200 );
 		}

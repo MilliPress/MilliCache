@@ -6,23 +6,33 @@ const SnackbarContext = createContext();
 export const SnackbarProvider = ( { children } ) => {
 	const [ snackMessages, setSnackMessages ] = useState( [] );
 
-	const showSnackbar = ( message, actions = [], timeout = 3000, explicitDismiss= false ) => {
+	const showSnackbar = (
+		message,
+		actions = [],
+		timeout = 3000,
+		explicitDismiss = false
+	) => {
 		const id = Date.now();
-		setSnackMessages( ( prevMessages ) => [ ...prevMessages, {
-			id: id,
-			content: message,
-			actions: actions,
-			explicitDismiss: explicitDismiss,
-			spokenMessage: message,
-		} ] );
+		setSnackMessages( ( prevMessages ) => [
+			...prevMessages,
+			{
+				id,
+				content: message,
+				actions,
+				explicitDismiss,
+				spokenMessage: message,
+			},
+		] );
 
-		setTimeout(() => {
-			hideSnackbar(id);
-		}, timeout);
+		setTimeout( () => {
+			hideSnackbar( id );
+		}, timeout );
 	};
 
 	const hideSnackbar = ( id ) => {
-		setSnackMessages( ( prevMessages ) => prevMessages.filter( ( msg ) => msg.id !== id ) );
+		setSnackMessages( ( prevMessages ) =>
+			prevMessages.filter( ( msg ) => msg.id !== id )
+		);
 	};
 
 	return (
