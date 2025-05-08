@@ -41,7 +41,7 @@ class Settings {
 	 * @access   public
 	 */
 	public function __construct() {
-		self::$domain = Engine::get_server_var( 'HTTP_HOST' );
+		self::$domain = preg_replace( '/[^a-zA-Z0-9_\-]/', '_', Engine::get_server_var( 'HTTP_HOST' ) );
 
 		if ( function_exists( 'add_action' ) ) {
 			add_action( 'init', array( $this, 'register_settings' ) );
@@ -127,7 +127,7 @@ class Settings {
 					'prefix' => 'mll',
 				),
 				'cache' => array(
-					'ttl' => 900,
+					'ttl' => DAY_IN_SECONDS,
 					'max_ttl' => MONTH_IN_SECONDS,
 					'unique' => array(),
 					'nocache_cookies' => array( 'comment_author' ),
