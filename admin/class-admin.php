@@ -293,7 +293,7 @@ class Admin {
 	public static function undefined_cache_notice(): void {
 		if ( defined( 'WP_CACHE' ) && ! WP_CACHE ) {
 			self::add_notice(
-				__( 'The constant WP_CACHE in your wp-config.php is either not defined or set to false. Please set define( \'WP_CACHE\', true ); in your wp-config.php file to activate MilliCache caching.', 'millicache' ),
+				__( 'The constant WP_CACHE is either not defined or set to false in your wp-config.php. Please add "define( \'WP_CACHE\', true );" to activate MilliCache caching.', 'millicache' ),
 				'warning'
 			);
 		}
