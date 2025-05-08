@@ -253,7 +253,33 @@ Cache entries expire whenever necessary.
 For example, when a post is published or updated, the cache entry for the post and the front page is cleared. 
 When a site option is updated, all cache entries of the site are cleared, and so on. 
 
-MilliCache offers various methods to clear the cache by flags, URLs, or IDs.
+### Using the Settings UI
+
+The MilliCache Settings UI provides a user-friendly way to clear cache:
+
+1. Navigate to `Settings -> MilliCache` in your WordPress admin
+2. In the "Cache Management" section:
+   - Use "Clear All Cache" to remove all cached entries
+   - Use "Clear By Flag" to selectively clear cache by specific flags
+   - View the current cache statistics (size, entries count)
+
+This interface makes it easy to manage cache without writing code or running CLI commands.
+
+### Using the Adminbar
+
+MilliCache integrates with the WordPress admin bar for quick cache management:
+
+1. While logged in as an administrator, the admin bar displays a "MilliCache" menu item
+2. Click on the menu to reveal options:
+   - **Clear All Cache**: Immediately clear all cached content 
+   - **Clear by Flag**: Expand to see common flag options (Home, Current Page, etc.)
+   - **Settings**: Quick access to the MilliCache settings page
+
+This provides convenient access to cache management functions from any page of your site without having to navigate to the settings page.
+
+### Using PHP Functions
+
+MilliCache offers various methods to clear the cache by flags, URLs, or IDs programmatically.
 You can also create custom hooks to clear or expire the cache whenever needed.
 
 The `$expire` parameter in cache-clearing methods is optional:
@@ -363,6 +389,42 @@ Decide whether to expire or delete cache entries based on your requirements and 
    */
   \MilliCache\Engine::clear_cache_by_network_ids($network_ids, $expire);
   ```
+
+- ### Clear Cache by Targets
+
+  A convenient method to clear the cache based on different target types in a single call.
+  This method automatically determines the target type by its format (URL, numeric Post ID, or cache flag).
+  
+  ```php
+  /*
+   * @param string|array $targets String or array of targets to clear:
+   *   - URLs (any valid URL that starts with your site URL)
+   *   - Post IDs (any numeric value will be treated as a post-ID)
+   *   - Cache flags (any non-numeric, non-URL string will be treated as a flag)
+   * @param bool $expire Expire cache if set to true, or delete by default. (optional)
+   * @return void
+   */
+  \MilliCache\Engine::clear_cache_by_targets($targets, $expire);
+  ```
+  
+  Example usage:
+  
+  ```php
+  // Clear cache for multiple types of targets at once
+  \MilliCache\Engine::clear_cache_by_targets([
+      'home',                             // Treated as a flag
+      'post:123',                         // Treated as a flag
+      123,                                // Treated as a post-ID
+      'https://example.com/special-page/' // Treated as a URL
+  ]);
+  
+  // If no targets are provided, the entire site cache will be cleared
+  \MilliCache\Engine::clear_cache_by_targets([]);
+  ```
+  
+  In multisite installations,
+  the method automatically limits flag-based clearing to the current site
+  when called from a non-network admin context.
 
 ---
 
