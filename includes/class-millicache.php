@@ -161,7 +161,7 @@ final class MilliCache {
 		// Register options that clear the full site cache.
 		$this->loader->add_action( 'updated_option', $this, 'register_clear_site_cache_options', 10, 3 );
 
-		// Register hooks that clear full site cache.
+		// Register hooks that clear the full site cache.
 		foreach ( $this->get_clear_site_cache_hooks() as $hook => $priority ) {
 			$this->loader->add_action( $hook, $this->engine, 'clear_cache_by_site_ids', $priority, 0 );
 		}
@@ -240,34 +240,29 @@ final class MilliCache {
 	 * @return void
 	 */
 	public function set_cache_flags() {
-		$blog_id = get_current_blog_id();
-		$network_id = get_current_network_id();
-
-		$this->engine->add_flag( "site:$network_id:$blog_id" );
-
 		if ( is_singular() ) {
 			$post_id = get_queried_object_id();
-			$this->engine->add_flag( "post:$blog_id:$post_id" );
+			$this->engine->add_flag( "post:$post_id" );
 		}
 
 		if ( is_front_page() || is_home() ) {
-			$this->engine->add_flag( "home:$blog_id" );
+			$this->engine->add_flag( 'home' );
 		}
 
 		if ( is_feed() ) {
-			$this->engine->add_flag( "feed:$blog_id" );
+			$this->engine->add_flag( 'feed' );
 		}
 
 		if ( is_archive() ) {
 			if ( is_post_type_archive() ) {
 				$post_type = get_query_var( 'post_type' );
 				if ( is_string( $post_type ) ) {
-					$this->engine->add_flag( "archive:$blog_id:$post_type" );
+					$this->engine->add_flag( "archive:$post_type" );
 				}
 			} elseif ( is_author() ) {
 				$author_id = get_query_var( 'author' );
 				if ( is_string( $author_id ) || is_int( $author_id ) ) {
-					$this->engine->add_flag( "author:$blog_id:$author_id" );
+					$this->engine->add_flag( "author:$author_id" );
 				}
 			}
 		}
@@ -346,7 +341,7 @@ final class MilliCache {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @return array<string, int> The hooks & priority that clear the full cache of the site.
+	 * @return array<string, int> The hooks and priority that clear the full cache of the site.
 	 */
 	public function get_clear_site_cache_hooks(): array {
 
@@ -355,7 +350,7 @@ final class MilliCache {
 		 *
 		 * @since 1.0.0
 		 *
-		 * @param array<string, int> $hooks The hooks & priority that clear the full cache.
+		 * @param array<string, int> $hooks The hooks and priority that clear the full cache.
 		 */
 		return apply_filters(
 			'millicache_clear_site_hooks',
@@ -388,7 +383,7 @@ final class MilliCache {
 		 *
 		 * @since 1.0.0
 		 *
-		 * @param array $hooks The hooks & priority that clear the full cache.
+		 * @param array $hooks The hooks and priority that clear the full cache.
 		 */
 		$options = apply_filters(
 			'millicache_clear_site_options',
