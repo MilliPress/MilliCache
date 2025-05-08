@@ -293,13 +293,14 @@ final class MilliCache {
 	 */
 	public function clean_post_cache( int $post_id ): void {
 		$post = get_post( $post_id );
+
 		if ( $post && 'publish' === $post->post_status ) {
-			$blog_id = get_current_blog_id();
+			$prefix = $this->engine->get_flag_prefix();
 			$this->engine->clear_cache_by_flags(
 				array(
-					"post:$blog_id:$post->ID",
-					"author:$blog_id:$post->post_author",
-					"archive:$blog_id:$post->post_type",
+					$prefix . "post:$post->ID",
+					$prefix . "author:$post->post_author",
+					$prefix . "archive:$post->post_type",
 				)
 			);
 		}

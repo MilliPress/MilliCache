@@ -354,7 +354,7 @@ final class Engine {
 		// Get the cache.
 		self::get_cache();
 
-		// Start the output buffer & init output.
+		// Start the output buffer and init output.
 		self::start_buffer();
 	}
 
@@ -666,7 +666,7 @@ final class Engine {
 		// Set query vars.
 		$query = $parsed['query'] ?? '';
 
-		// Set request path.
+		// Set the request path.
 		$request_uri = $parsed['path'] ?? '';
 
 		// Remove ignored query vars.
@@ -905,11 +905,11 @@ final class Engine {
 		);
 
 		/**
-		 * Clear cache by post ids action.
+		 * Clear cache by post-ids action.
 		 *
 		 * @since 1.0.0
 		 *
-		 * @param array $post_ids The post IDs to expire.
+		 * @param array $post_ids The post-IDs to expire.
 		 * @param bool  $expire Expire cache if set to true, or delete by default.
 		 */
 		do_action( 'millicache_cleared_by_post_ids', $post_ids, $expire );
@@ -942,7 +942,7 @@ final class Engine {
 	}
 
 	/**
-	 * Clear full cache of a given website.
+	 * Clear the full cache of a given website.
 	 *
 	 * @since 1.0.0
 	 * @access public
