@@ -100,39 +100,43 @@ Remember to restart the Redis server after making changes to the configuration f
    $ composer require millipress/millicache
    ```
 
-2. **[Configure the plugin](#configuration)** in your `wp-config.php` if you want to change the default settings:
+2. **Activate the plugin** in your WordPress installation.
 
-   ```php
-   define('MC_REDIS_HOST', '127.0.0.1');
-   define('MC_REDIS_PORT', 6379);
-   ```
+3. **[Configure the plugin](#configuration)** in your Dashboard `Settings -> MilliCache` or by defining constants in your `wp-config.php`.
 
-3. **Enable WordPress caching** by adding to `wp-config.php`:
+4. **Enable WordPress caching** by adding to `wp-config.php`:
 
    ```php
    define('WP_CACHE', true);
    ```
 
-4. **Activate the plugin** in your WordPress installation.
-
 ---
 
 ## Configuration
 
-Configure MilliCache by setting constants in your `wp-config.php` file:
+Configure MilliCache either in your Dashboard `Settings -> MilliCache` 
+or by setting constants in your `wp-config.php` file.
+You can combine both methods, **the constants overwrite the settings** with higher priority.
+
+```php
+# Optional: Set Settings with Constants
+define('MC_REDIS_HOST', '127.0.0.1');
+define('MC_REDIS_PORT', 6379);
+```
 
 ### General Configuration
 
-| Constant                   | Description                                           | Default                             |
-|----------------------------|-------------------------------------------------------|-------------------------------------|
-| `MC_DEBUG`                 | Enable Debugging                                      | `false`                             |
-| `MC_GZIP`                  | Enable Gzip Compression                               | `true`                              |
-| `MC_TTL`                   | Default Cache TTL                                     | `DAY_IN_SECONDS`                    |
-| `MC_IGNORE_COOKIES`        | Cookies that are ignored/stripped from the request    | `[]`                                |
-| `MC_NOCACHE_COOKIES`       | Cookies which avoid caching                           | `['comment_author']`                |
-| `MC_IGNORE_REQUEST_KEYS`   | Request keys that are ignored                         | `['utm_source', 'utm_medium', ...]` |
-| `MC_SHOULD_CACHE_CALLBACK` | External callback to append custom cache conditions   | `''`                                |
-| `MC_UNIQUE`                | Variables that make the request & cache entry unique  | `[]`                                |
+| Constant                         | Description                                          | Default                             |
+|----------------------------------|------------------------------------------------------|-------------------------------------|
+| `MC_CACHE_DEBUG`                 | Enable Debugging                                     | `false`                             |
+| `MC_CACHE_GZIP`                  | Enable Gzip Compression                              | `true`                              |
+| `MC_CACHE_TTL`                   | Default Cache TTL                                    | `DAY_IN_SECONDS`                    |
+| `MC_CACHE_MAX_TTL`               | Max TTL for Stale Cache Entries                      | `MONTH_IN_SECONDS`                  |
+| `MC_CACHE_IGNORE_COOKIES`        | Cookies that are ignored/stripped from the request   | `[]`                                |
+| `MC_CACHE_NOCACHE_COOKIES`       | Cookies which avoid caching                          | `['comment_author']`                |
+| `MC_CACHE_IGNORE_REQUEST_KEYS`   | Request keys that are ignored                        | `['utm_source', 'utm_medium', ...]` |
+| `MC_CACHE_SHOULD_CACHE_CALLBACK` | External callback to append custom cache conditions  | `''`                                |
+| `MC_CACHE_UNIQUE`                | Variables that make the request & cache entry unique | `[]`                                |
 
 ### Redis Connection Configuration
 
@@ -144,7 +148,6 @@ Configure MilliCache by setting constants in your `wp-config.php` file:
 | `MC_REDIS_DB`         | Redis Database                    | `0`                |
 | `MC_REDIS_PERSISTENT` | Redis Persistent Connection       | `true`             |
 | `MC_REDIS_PREFIX`     | Redis Key Prefix                  | `mll`              |
-| `MC_REDIS_MAX_TTL`    | Max TTL for Expired Cache Entries | `MONTH_IN_SECONDS` |
 
 ---
 
@@ -222,7 +225,7 @@ and improving performance.
 
 ## Clearing Cache
 
-By default, MilliCache expires (does not delete) cache entries when they reach their Time-To-Live (TTL).
+By default, MilliCache expires (not deletes) cache entries when they reach their Time-To-Live (TTL).
 When a cache entry expires, 
 MilliCache serves the outdated copy to the visitor while regenerating the cache in the background. 
 This ensures users experience no delay during cache regeneration.
