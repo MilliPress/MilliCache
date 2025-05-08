@@ -49,7 +49,7 @@ const Header = () => {
 							<FlexItem>
 								<ExternalLink
 									className="external-link"
-									href="https://millipress.com/docs"
+									href="https://github.com/MilliPress/MilliCache/blob/main/README.md"
 								>
 									{ __( 'Documentation', 'millicache' ) }
 								</ExternalLink>
@@ -57,7 +57,7 @@ const Header = () => {
 							<FlexItem>
 								<ExternalLink
 									className="external-link"
-									href="https://millipress.com/support"
+									href="https://github.com/MilliPress/MilliCache/issues"
 								>
 									{ __( 'Support', 'millicache' ) }
 								</ExternalLink>
@@ -130,7 +130,7 @@ const Header = () => {
 												iconPosition="left"
 												onClick={ () =>
 													window.open(
-														'https://millipress.com/support',
+														'https://github.com/MilliPress/MilliCache/issues',
 														'_blank'
 													)
 												}
