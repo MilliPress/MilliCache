@@ -797,7 +797,7 @@ final class Engine {
 
 
 	/**
-	 * Clears items from cache during shutdown.
+	 * Clears items from the cache during shutdown.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -811,6 +811,45 @@ final class Engine {
 		);
 
 		self::$storage->clear_cache_by_flags( $sets, self::$ttl );
+	}
+
+	/**
+	 * Clear cache by given Targets.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param string|array<string> $targets The targets (Flags, Post-IDs or URLs) to clear the cache for.
+	 * @param bool                 $expire Expire cache if set to true, or delete by default.
+	 * @return void
+	 */
+	public static function clear_cache_by_targets( $targets, bool $expire = false ): void {
+		// Convert to array.
+		$targets = is_string( $targets ) ? array( $targets ) : $targets;
+
+		// Current site only?
+		$current_site_only = self::is_multisite() && ! is_network_admin();
+
+		// Clear the full site cache.
+		if ( empty( $targets ) ) {
+			self::clear_cache_by_site_ids();
+			return;
+		}
+
+		foreach ( $targets as $target ) {
+			if ( filter_var( $target, FILTER_VALIDATE_URL ) ) {
+				// Clear by URL.
+				if ( str_starts_with( $target, get_home_url() ) ) {
+					self::clear_cache_by_urls( $target, $expire );
+				}
+			} elseif ( is_numeric( $target ) ) {
+				// Clear by Post ID.
+				self::clear_cache_by_post_ids( (int) $target );
+			} else {
+				// Clear by Flag. Limit to the current site if not network admin.
+				self::clear_cache_by_flags( $current_site_only ? self::get_flag_prefix() . $target : $target );
+			}
+		}
 	}
 
 	/**
@@ -851,16 +890,16 @@ final class Engine {
 		// Convert to array.
 		$post_ids = ! is_array( $post_ids ) ? array( $post_ids ) : $post_ids;
 
-		// Add flags to expire or delete collection.
+		// Add flags to expire or delete the collection.
 		self::clear_cache_by_flags(
 			array_merge(
 				array_map(
 					function ( $post_id ) {
-						return sprintf( 'post:%d:%d', get_current_blog_id(), $post_id );
+						return self::get_flag_prefix() . "post:$post_id";
 					},
 					$post_ids
 				),
-				array( sprintf( 'feed:%d', get_current_blog_id() ) )
+				array( self::get_flag_prefix() . 'feed' )
 			),
 			$expire
 		);
@@ -917,13 +956,11 @@ final class Engine {
 		// Convert to array.
 		$site_ids = ! is_array( $site_ids ) ? array( $site_ids ) : $site_ids;
 
-		// Add flags to expire or delete collection.
+		// Add flags to expire or delete a collection.
 		self::clear_cache_by_flags(
 			array_map(
 				function ( $site_id ) use ( $network_id ) {
-					$network_id = is_int( $network_id ) ? $network_id : get_current_network_id();
-					$site_id = is_int( $site_id ) ? $site_id : get_current_blog_id();
-					return sprintf( 'site:%d:%d', $network_id, $site_id );
+					return self::get_flag_prefix( $site_id, $network_id ) . '*';
 				},
 				$site_ids
 			),
@@ -1033,6 +1070,31 @@ final class Engine {
 	}
 
 	/**
+	 * Get the flag prefix with network and site namespace.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param int|null $site_id The site ID.
+	 * @param int|null $network_id The network ID.
+	 *
+	 * @return string The flag prefix.
+	 */
+	public static function get_flag_prefix( int $site_id = null, int $network_id = null ): string {
+		$prefix = '';
+
+		if ( self::is_multisite() ) {
+			$prefix = ( is_int( $site_id ) ? $site_id : get_current_blog_id() ) . ':';
+
+			if ( count( self::get_network_ids() ) > 1 ) {
+				$prefix = ( is_int( $network_id ) ? $network_id : get_current_network_id() ) . ':' . $prefix;
+			}
+		}
+
+		return $prefix;
+	}
+
+	/**
 	 * Add a flag to this request.
 	 *
 	 * @since 1.0.0
@@ -1041,7 +1103,7 @@ final class Engine {
 	 * @param string $flag Keep these short and unique, don't overuse.
 	 */
 	public static function add_flag( string $flag ): void {
-		self::$flags[] = $flag;
+		self::$flags[] = self::get_flag_prefix() . $flag;
 	}
 
 	/**
