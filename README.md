@@ -16,7 +16,6 @@ MilliCache provides a versatile and robust caching solution for all types of Wor
 > [!IMPORTANT]
 >
 > This plugin is currently under active development and not officially ready for production use.
-> There is no settings UI yet; configuration is done via `wp-config.php`.
 > Things may change without notice.
 > Please [report](https://github.com/MilliPress/MilliCache/issues/new) any problems you encounter.
 
@@ -41,6 +40,7 @@ MilliCache provides a versatile and robust caching solution for all types of Wor
 ## Features
 
 - **Lightning Fast**: In-memory full-page caching using Redis.
+- **Settings UI**: Easy configuration and cache management through the WordPress admin.
 - **[Cache Flagging](#cache-flags)**: High efficiency by supporting complex cache logic and selective clearing.
 - **[Expired Cache Handling](#clearing-cache)**: Regenerates cache in the background.
 - **Multisite Optimized**: Ideal for WordPress Multisite and Multi-Network.
