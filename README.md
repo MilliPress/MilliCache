@@ -157,7 +157,8 @@ MilliCache supports cache flags to group and clear caches based on flags, useful
 
 ### What are Cache Flags?
 
-A single post or page can generate multiple cache entries because the cache keys change based on the request details—like different cookies or query parameters. 
+A single post or page can generate multiple cache entries because the cache keys change based on the request details,
+such as different cookies or query parameters. 
 For example, the following URLs, although they refer to the same content, will have separate cache entries:
 
 - `https://example.org/?p=123`
@@ -168,7 +169,7 @@ For example, the following URLs, although they refer to the same content, will h
 These different cache entries are necessary because each URL might serve slightly different content. 
 However, they are all related to the same post or page. 
 To manage these related entries efficiently, MilliCache groups them using **cache flags**. 
-In this case, all entries might share a flag like `post:1:123`.
+In this case, all entries might share a flag like `post:123`.
 
 **Cache flags allow you to:**
 
@@ -177,24 +178,25 @@ In this case, all entries might share a flag like `post:1:123`.
 - **Clear all related cache entries** at once by targeting a specific flag.
 
 For example, to clear all cache entries related to a specific post,
-you can use the flag `post:1:123` with [WP-CLI commands](#wp-cli-commands) or MilliCache's [clearing functions](#clearing-cache).
+you can use the flag `post:123` with [WP-CLI commands](#wp-cli-commands) or MilliCache's [clearing functions](#clearing-cache).
 
 ### Built-in Flags
 
-**Example `home:?` Flag:** Groups all cached entries of the home and blog pages.
-  - The `?` is a wildcard representing the site ID in multisite installations (it's `1` in single-site setups).
-  - You can clear all home page caches across all sites using `home:?` or target a specific site like `home:1`.
+> **Note:** Flag prefixes are only added in multisite and multinetwork installations. In a standard single site installation, flags are used without prefixes.
+>
+> - **Single site:** `post:123`
+> - **Multisite:** `1:post:123` (where `1` is the site ID)
+> - **Multinetwork:** `1:2:post:123` (where `1` is the network ID and `2` is the site ID)
 
-Further built-in flags are:
+The basic built-in flags are:
 
 | Flag          | Description                                                |
 |---------------|------------------------------------------------------------|
-| `site:?:?`    | Added to all cache entries (Network ID & Site ID)          |
-| `home:?`      | Added to home & blog pages (Site ID)                       |
-| `post:?:?`    | Added to all posts, pages & CPT (Site ID & Post ID)        |
-| `feed:?`      | Added to all feed pages (Site ID)                          |
-| `archive:?:?` | Added to all post type archive pages (Site ID & Post Type) |
-| `author:?:?`  | Added to all author pages (Site ID & Author ID)            |
+| `home`        | Added to home & blog pages                                 |
+| `post:?`      | Added to all posts, pages & CPT (Post ID)                  |
+| `feed`        | Added to all feed pages                                    |
+| `archive:?`   | Added to all post type archive pages (Post Type)           |
+| `author:?`    | Added to all author pages (Author ID)                      |
 
 ### Adding Custom Cache Flags:
 
@@ -215,7 +217,11 @@ For instance, if you want to group all posts containing a particular Gutenberg b
 2. **Clear the Cache Using the Custom Flag:**
    Instead of clearing the entire cache, you can clear only the entries with the custom flag:
    ```bash
+   # Single site
    wp millicache clear --flags="block:my-custom/block"
+   
+   # Multisite (with site ID 1)
+   wp millicache clear --flags="1:block:my-custom/block"
    ```
 
 This way, you efficiently manage your cache by only refreshing the parts that need updating, saving resources, 
@@ -237,7 +243,7 @@ When a site option is updated, all cache entries of the site are cleared, and so
 MilliCache offers various methods to clear the cache by flags, URLs, or IDs.
 You can also create custom hooks to clear or expire the cache whenever needed.
 
-The $expire parameter in cache-clearing methods is optional:
+The `$expire` parameter in cache-clearing methods is optional:
 
 - **Set to `true`**: Cache entries expire and regenerate in the background on the next request.
 - **Default (`false`)**: Cache entries are deleted immediately.

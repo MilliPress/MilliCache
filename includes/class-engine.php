@@ -980,7 +980,7 @@ final class Engine {
 	}
 
 	/**
-	 * Clear full cache of each site in a given network.
+	 * Clear the full cache of each site in a given network.
 	 *
 	 * @since 1.0.0
 	 * @access public
