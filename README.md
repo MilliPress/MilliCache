@@ -89,16 +89,16 @@ Remember to restart the Redis server after making changes to the configuration f
 
 1. **Install via**:
 
-- **ZIP-File**:
-   - Download the [latest release](https://github.com/millipress/millicache/releases/latest).
-   - Upload the ZIP file in your WordPress admin area under `Plugins > Add New > Upload Plugin`.
+   - **ZIP-File**:
+      - Download the [latest release](https://github.com/millipress/millicache/releases/latest).
+      - Upload the ZIP file in your WordPress admin area under `Plugins > Add New > Upload Plugin`.
 
-- **Composer**:
+   - **Composer**:
 
-   ```bash
-   $ composer config repositories.millicache vcs https://github.com/millipress/millicache
-   $ composer require millipress/millicache
-   ```
+      ```bash
+      $ composer config repositories.millicache vcs https://github.com/millipress/millicache
+      $ composer require millipress/millicache
+      ```
 
 2. **Activate the plugin** in your WordPress installation.
 
@@ -182,11 +182,15 @@ you can use the flag `post:123` with [WP-CLI commands](#wp-cli-commands) or Mill
 
 ### Built-in Flags
 
-> **Note:** Flag prefixes are only added in multisite and multinetwork installations. In a standard single site installation, flags are used without prefixes.
+> **Important:** Flag prefixes are only added in multisite and multinetwork installations. Here's how the same flag appears in different WordPress setups:
 >
-> - **Single site:** `post:123`
-> - **Multisite:** `1:post:123` (where `1` is the site ID)
-> - **Multinetwork:** `1:2:post:123` (where `1` is the network ID and `2` is the site ID)
+> | Installation Type | Example Flag Format             | Example                                |
+> |-------------------|---------------------------------|----------------------------------------|
+> | Single site       | `flag:value`                    | `post:123`, `home`, `site`             |
+> | Multisite         | `site_id:flag:value`            | `1:post:123`, `2:home`, `3:site`       |
+> | Multinetwork      | `network_id:site_id:flag:value` | `1:2:post:123`, `1:3:home`, `2:1:site` |
+>
+> When using WP-CLI or API functions, you must include these prefixes appropriately for multisite/multinetwork environments.
 
 The basic built-in flags are:
 
@@ -217,11 +221,20 @@ For instance, if you want to group all posts containing a particular Gutenberg b
 2. **Clear the Cache Using the Custom Flag:**
    Instead of clearing the entire cache, you can clear only the entries with the custom flag:
    ```bash
-   # Single site
+   # Single site - clear all pages with the custom block
    wp millicache clear --flags="block:my-custom/block"
    
-   # Multisite (with site ID 1)
-   wp millicache clear --flags="1:block:my-custom/block"
+   # Single site - clear all posts and home page
+   wp millicache clear --flags="post:123,home"
+   
+   # Multisite - clear all posts on site 1
+   wp millicache clear --flags="1:post:*"
+   
+   # Multisite - clear home pages across all sites
+   wp millicache clear --flags="*:home"
+   
+   # Multinetwork - clear all content on network 2, site 3
+   wp millicache clear --flags="2:3:*"
    ```
 
 This way, you efficiently manage your cache by only refreshing the parts that need updating, saving resources, 
@@ -276,18 +289,31 @@ Decide whether to expire or delete cache entries based on your requirements and 
   
   #### Wildcards
 
-  Wildcards are supported, so you could use `site:1:*` to clear the cache of all sites in a particular network.
+  MilliCache supports wildcards when clearing cache by flags.
+  The way these wildcards are used depends on your WordPress installation type.
   
   - ##### `*`-Wildcards
   
-    The `*` can be used to match any number of characters.
-    For example, `site:1:*` would match `site:1:1`, `site:1:2`, `site:1:3`, ..., `site:1:123`, etc.
+    The `*` can be used to match any number of characters. Here are examples of different WordPress installations:
+    
+    | Installation Type | Example Pattern | What It Matches                                     |
+    |-------------------|-----------------|-----------------------------------------------------|
+    | Single site       | `post:*`        | All posts (matches `post:1`, `post:123`, etc.)      |
+    | Single site       | `archive:*`     | All archive pages (matches `archive:post`, etc.)    |
+    | Multisite         | `1:post:*`      | All posts on site 1                                 |
+    | Multisite         | `*:home`        | Home page on all sites (matches `1:home`, `2:home`) |
+    | Multinetwork      | `1:*:post:*`    | All posts on all sites in network 1                 |
+    | Multinetwork      | `*:*:home`      | Home pages across all sites in all networks         |
   
   - ##### `?`-Wildcards
   
-    To match exactly one character, use `?`.
-    For example, `site:?:*` would match `site:1:1`, `site:2:123`, 
-  - `site:9:123`, etc., but **not** `site:10:1` or `site:11:123`.
+    The `?` matches exactly one character:
+    
+    | Installation Type | Example Pattern | What It Matches                                                              |
+    |-------------------|-----------------|------------------------------------------------------------------------------|
+    | Single site       | `post:?`        | Posts with single-digit IDs (1-9)                                            |
+    | Multisite         | `?:home`        | Home pages on sites with single-digit IDs                                    |
+    | Multinetwork      | `?:?:*`         | All content on sites with single-digit IDs in networks with single-digit IDs |
 
 - ### Clear Cache by URL
 
@@ -303,7 +329,7 @@ Decide whether to expire or delete cache entries based on your requirements and 
 
 - ### Clear Cache by Post IDs
 
-  To clear the cache of specific posts, pages or CPTs.
+  To clear the cache of specific posts, pages, or CPTs.
   
   ```php
   /*
@@ -410,7 +436,7 @@ Filter the hooks that clear the full cache.
 ```php
 add_filter('millicache_clear_site_hooks', function( $hooks ) {
     
-    // Add additional hook with priority that clears the cache
+    // Add a custom hook with priority that clears the cache
     $hooks['my_custom_hook'] = 10;
     
     return $hooks;
@@ -437,7 +463,7 @@ add_filter('millicache_clear_site_options', function( $options ) {
 
 Planned features:
 
-- [ ] Settings UI
+- [x] Settings UI
 - [ ] Cache Preloading
 - [ ] CDN Integration
 
@@ -495,7 +521,7 @@ $ npm run env:destroy
 
 - `npm run env:cli wp ...` - Run WP-CLI command at the WordPress environment. E.g. `npm run env:cli wp millicache stats`
 - `npm run env:redis-cli` - Open the Redis CLI
-- `npm run env:reset` - Reset the WordPress environments & start from scratch
+- `npm run env:reset` - Reset the WordPress environments and start from scratch
 
 
 ---
