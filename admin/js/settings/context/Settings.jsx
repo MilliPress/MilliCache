@@ -3,6 +3,7 @@ import {
 	useContext,
 	useState,
 	useEffect,
+	useCallback,
 } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
@@ -24,7 +25,30 @@ export const SettingsProvider = ( { children } ) => {
 	const delay = ( ms ) =>
 		new Promise( ( resolve ) => setTimeout( resolve, ms ) );
 
-	const fetchStatus = async () => {
+	const triggerAction = async ( action, data = {} ) => {
+		setIsLoading( true );
+		try {
+			const response = await apiFetch( {
+				path: `/millicache/v1/action`,
+				method: 'POST',
+				data: { action, ...data },
+			} );
+
+			await delay( 800 );
+
+			if ( response.success ) {
+				showSnackbar( response.message );
+				fetchSettings();
+				fetchStatus();
+			}
+		} catch ( errorMessage ) {
+			throw errorMessage;
+		} finally {
+			setIsLoading( false );
+		}
+	};
+
+	const fetchStatus = useCallback( async () => {
 		try {
 			const response = await apiFetch( {
 				path: '/millicache/v1/status',
@@ -46,9 +70,9 @@ export const SettingsProvider = ( { children } ) => {
 			showSnackbar( errorMessage, [], 6000, true );
 			return errorMessage;
 		}
-	};
+	}, [ showSnackbar ] );
 
-	const fetchSettings = async () => {
+	const fetchSettings = useCallback( async () => {
 		try {
 			setIsLoading( true );
 			const response = await apiFetch( { path: '/wp/v2/settings' } );
@@ -64,13 +88,20 @@ export const SettingsProvider = ( { children } ) => {
 		} finally {
 			setIsLoading( false );
 		}
-	};
+	}, [ showSnackbar ] );
 
 	// Load the settings and status when the component mounts
 	useEffect( () => {
 		fetchSettings();
 		fetchStatus();
-	}, [] );
+
+		// Fetch the status every 15 seconds
+		const intervalId = setInterval( () => {
+			fetchStatus();
+		}, 15000 );
+
+		return () => clearInterval( intervalId );
+	}, [ fetchSettings, fetchStatus ] );
 
 	// Update a setting in the context
 	const updateSetting = ( module, key, value ) => {
@@ -178,6 +209,7 @@ export const SettingsProvider = ( { children } ) => {
 				hasChanges,
 				updateSetting,
 				saveSettings,
+				triggerAction,
 			} }
 		>
 			{ children }

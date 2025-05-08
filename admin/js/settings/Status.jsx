@@ -28,7 +28,7 @@ const StatusTab = () => {
 		[ __( 'Drop-in Type', 'millicache' ) ]:
 			Array.isArray( status.dropin ) && status.dropin.length === 0
 				? __( 'Missing', 'millicache' )
-				: ( status.dropin?.file === 'symlink'
+				: ( status.dropin?.type === 'symlink'
 						? __( 'Symlinked', 'millicache' )
 						: __( 'Copied', 'millicache' ) ) +
 				  ( status.dropin?.custom
