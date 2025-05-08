@@ -16,6 +16,11 @@
 		}
 	}
 
+	.millicache-actions-dropdown {
+		vertical-align: top;
+		margin-left: -1px;
+	}
+
 	.millicache-settings-progress {
 		--wp-components-color-foreground: var(--wp-admin-theme-color, #3858e9);
 		width: 100%;
