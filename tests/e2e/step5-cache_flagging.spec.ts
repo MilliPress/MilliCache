@@ -7,14 +7,14 @@ import { flushCache, validateHeader } from './utils/tools';
 test.describe('Step 5: Cache Flagging', () => {
     test('Check flags by context', async ({ page }) => {
         // Targets and their expected cache flags
+        // Multisite prefix for flags is "{site_id}:".
         const targets = {
-            'Hello World!': ['post:1:1', 'site:1:1'],
-            'Sample Page': ['post:1:2', 'site:1:1'],
-            'admin': ['author:1:1', 'site:1:1'],
+            'Hello World!': ['1:post:1'],
+            'Sample Page': ['1:post:2'],
         };
 
         // Flush the cache
-        await flushCache('site:1:1');
+        await flushCache('1:*');
 
         // Check pages for cache flags
         for (const [linkTitle, expectedFlags] of Object.entries(targets)) {

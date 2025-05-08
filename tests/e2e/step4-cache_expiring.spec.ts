@@ -4,7 +4,7 @@ import { flushCache, validateHeader } from './utils/tools';
 test.describe('Step 4: Cache Expiring', () => {
     test('Cache Expiring', async ({ page }) => {
         // Flush the cache
-        await flushCache('site:1:1');
+        await flushCache('1:1:*');
 
         // Go to the home page
         await page.goto('/sample-page');

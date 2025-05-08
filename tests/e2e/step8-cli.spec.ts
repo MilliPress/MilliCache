@@ -26,7 +26,7 @@ test.describe('Step 8: WP-CLI Commands', () => {
         await validateHeader(response2, 'status', 'hit');
 
         // Clear cache by flag, this tests other commands as well as they all use the same final function
-        await flushCache('home:1');
+        await flushCache('1:home');
 
         // Go to the home page
         const response3 = await page.goto('/');
@@ -39,23 +39,23 @@ test.describe('Step 8: WP-CLI Commands', () => {
         // General cache stats
         const stdout = await runWpCliCommand('millicache stats');
 
-        // If output contains "Empty", the cache is empty. Otherwise, it is not empty.
+        // If the output contains "Empty", the cache is empty. Otherwise, it is not empty.
         expect(stdout).not.toContain('Empty');
 
         // Clear cache of another site
-        await flushCache('site:2');
+        await flushCache('2:*');
 
         // Get stats by flag of site 1
-        const stdout3 = await runWpCliCommand('millicache stats -- --flag=home:1');
+        const stdout3 = await runWpCliCommand('millicache stats -- --flag=1:home');
 
         // Validate network 1 cache is still available
         expect(stdout3).not.toContain('Empty');
 
         // Clear cache of network 1
-        await flushCache('site:1:1');
+        await flushCache('1:*');
 
         // Stats by flag of network 1
-        const stdout5 = await runWpCliCommand('millicache stats -- --flag=site:1');
+        const stdout5 = await runWpCliCommand('millicache stats -- --flag=1:*');
 
         // Validate network 1 cache is empty
         expect(stdout5).toContain('Empty');
