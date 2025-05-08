@@ -269,7 +269,7 @@ final class MilliCache {
 
 		/**
 		 * Filter to add additional cache flags.
-		 * Note: Don't use this too excessive, as it will increase the cache size.
+		 * Note: Don't use this too excessively, as it will increase the cache size.
 		 *
 		 * @since 1.0.0
 		 * @param array $add_flags The additional flags.
