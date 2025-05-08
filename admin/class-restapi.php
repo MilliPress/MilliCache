@@ -97,8 +97,20 @@ class RestAPI {
 			'millicache/v1',
 			'/status',
 			array(
-				'methods'             => 'GET',
+				'methods'             => \WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'get_status' ),
+				'permission_callback' => function () {
+					return current_user_can( 'manage_options' );
+				},
+			)
+		);
+
+		register_rest_route(
+			'millicache/v1',
+			'/action',
+			array(
+				'methods'  => \WP_REST_Server::CREATABLE,
+				'callback' => array( $this, 'perform_action' ),
 				'permission_callback' => function () {
 					return current_user_can( 'manage_options' );
 				},
@@ -113,7 +125,7 @@ class RestAPI {
 	 * @since    1.0.0
 	 * @access   public
 	 */
-	public function get_status() {
+	public function get_status(): \WP_REST_Response {
 		try {
 			return new \WP_REST_Response(
 				array(
@@ -133,5 +145,78 @@ class RestAPI {
 				500
 			);
 		}
+	}
+
+	/**
+	 * Perform custom REST API actions for MilliCache plugin.
+	 *
+	 * @since   1.0.0
+	 * @access  public
+	 *
+	 * @param \WP_REST_Request<array<string, mixed>> $request The REST API request object.
+	 *
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function perform_action( \WP_REST_Request $request ) {
+		$action = $request->get_param( 'action' );
+		$params = $request->get_params();
+
+		$supported_actions = apply_filters(
+			'millicache_rest_supported_actions',
+			array(
+				'clear_cache_by_targets',
+				'reset_settings',
+			)
+		);
+
+		if ( ! is_string($action) || ! in_array( $action, $supported_actions, true ) ) {
+			return new \WP_Error( 'invalid_action', __( 'Invalid cache action.', 'millicache' ), array( 'status' => 400 ) );
+		}
+
+		try {
+			switch ( $action ) {
+				case 'clear_cache_by_targets':
+					$targets = $request->get_param( 'targets' );
+
+					if ( ! is_string( $targets ) && ! is_array( $targets ) ) {
+						return new \WP_REST_Response(
+							array(
+								'success' => false,
+								'message' => 'Missing targets parameter to clear cache by targets.',
+							),
+							400
+						);
+					}
+
+					Engine::clear_cache_by_targets( $targets );
+					$message = __( 'Cache cleared.', 'millicache' );
+					break;
+				case 'reset_settings':
+					delete_option( 'millicache' );
+					$message = __( 'Settings reset.', 'millicache' );
+					break;
+			}
+		} catch ( \Exception $e ) {
+			return new \WP_Error( 'cache_clear_failed', __( 'Failed to clear cache: ', 'millicache' ) . $e->getMessage(), array( 'status' => 500 ) );
+		}
+
+		/**
+		 * Fires after a MilliCache REST API action has been processed.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param string $action The action that was processed.
+		 * @param array  $params The parameters passed to the action.
+		 * @param \WP_REST_Request $request The REST API request object.
+		 */
+		do_action( 'millicache_rest_perform_action', $action, $params, $request );
+
+		return rest_ensure_response(
+			array(
+				'success' => true,
+				'message' => $message ?? '',
+				'action'  => $action,
+			)
+		);
 	}
 }
