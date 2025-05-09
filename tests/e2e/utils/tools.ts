@@ -107,6 +107,38 @@ export async function validateHeader(response: { headers: () => any; }, name: st
 }
 
 /**
+ * Reloads the page and validates that a specific header has the expected value
+ * @param page - The Playwright page object
+ * @param headerName - Name of the header to validate
+ * @param expectedValue - Expected value of the header
+ * @param urlPattern - Optional URL pattern to match (defaults to any URL)
+ */
+export async function validateHeaderAfterReload(
+    page,
+    headerName: string,
+    expectedValue: string
+) {
+    // Wait for any response when reloading the page
+    const responsePromise = page.waitForResponse(response => {
+        // We want the main page response, which typically contains the final '/' path
+        return response.url().includes(page.url());
+    });
+
+    await page.reload();
+    const response = await responsePromise;
+
+    // Validate the header
+    const headerValue = response.headers()['x-millicache-' + headerName.toLowerCase()];
+    if (headerValue !== expectedValue) {
+        throw new Error(
+            `Expected header "${headerName}" to be "${expectedValue}", but got "${headerValue}"`
+        );
+    }
+
+    return response;
+}
+
+/**
  * Get a random link on the page.
  *
  * @param page
