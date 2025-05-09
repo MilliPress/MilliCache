@@ -13,7 +13,7 @@ test.describe('Step 3: Cache Clearing', () => {
         // Flush Button
         const adminBarFlushButton = page.locator('#wp-admin-bar-millicache');
 
-        // Check if the button is visible & click it
+        // Check if the button is visible and click it
         await expect(adminBarFlushButton).toBeVisible().then(async () => {
             // Click the button
             await adminBarFlushButton.click();
