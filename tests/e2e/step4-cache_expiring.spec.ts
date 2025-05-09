@@ -4,13 +4,13 @@ import { flushCache, validateHeader } from './utils/tools';
 test.describe('Step 4: Cache Expiring', () => {
     test('Cache Expiring', async ({ page }) => {
         // Flush the cache
-        await flushCache('1:*');
+        await flushCache();
 
         // Go to the home page
         await page.goto('/sample-page');
 
         // Wait a second, so the caching is done
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(1000);
 
         // Reload the same page to check if the status is hit
         const response = await page.reload();
@@ -19,7 +19,7 @@ test.describe('Step 4: Cache Expiring', () => {
         await validateHeader(response, 'status', 'hit');
 
         // Wait 5 seconds to expire the cache
-        await page.waitForTimeout(6000);
+        await page.waitForTimeout(5000);
 
         // Reload the same page to check if the status changes to expire
         const response2 = await page.reload();
