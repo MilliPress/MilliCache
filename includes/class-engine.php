@@ -928,7 +928,7 @@ final class Engine {
 		// Convert to array.
 		$flags = is_string( $flags ) ? array( $flags ) : $flags;
 
-		// Add flags to expire or delete collection.
+		// Add flags to expire or to delete the collection.
 		$expire ? array_push( self::$flags_expire, ...$flags ) : array_push( self::$flags_delete, ...$flags );
 
 		/**

@@ -139,7 +139,7 @@ class CLI {
 
 		$expire = $assoc_args['expire'];
 
-		// Clear full cache if no arguments are given.
+		// Clear the full cache if no arguments are given.
 		if ( '' === $assoc_args['ids'] && '' === $assoc_args['urls'] && '' === $assoc_args['flags'] && '' === $assoc_args['sites'] && '' === $assoc_args['networks'] ) {
 			$engine::clear_cache( $expire );
 			\WP_CLI::success( is_multisite() ? esc_html__( 'Network cache cleared.', 'millicache' ) : esc_html__( 'Site cache cleared.', 'millicache' ) );
