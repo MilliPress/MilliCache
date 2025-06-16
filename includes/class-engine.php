@@ -278,7 +278,7 @@ final class Engine {
 		// No caching with auth cookies by default.
 		self::$nocache_cookies[] = $logged_in_cookie;
 
-		// Always set test cookie for wp-login.php POST requests.
+		// Always set the test-cookie for wp-login.php POST requests.
 		if ( strpos( self::get_server_var( 'REQUEST_URI' ), '/wp-login.php' ) === 0 && strtoupper( self::get_server_var( 'REQUEST_METHOD' ) ) == 'POST' ) {
 			$_COOKIE[ $test_cookie ] = 'WP Cookie check';
 		}
@@ -332,10 +332,10 @@ final class Engine {
 	 * @return   void
 	 */
 	private static function warmup() {
-		// Register shutdown function to expire/delete cache flags.
+		// Register the shutdown function to expire/delete cache flags.
 		register_shutdown_function( array( __CLASS__, 'clear_cache_on_shutdown' ) );
 
-		// Always set initial header.
+		// Always set the initial header.
 		self::set_header( 'Status', 'miss' );
 	}
 
@@ -603,7 +603,7 @@ final class Engine {
 			self::$storage->perform_cache( self::$request_hash, $data, $flags, $cache );
 		}
 
-		// Return output, but not for background task.
+		// Return output, but not for the background task.
 		return self::$fcgi_regenerate ? null : $output;
 	}
 
