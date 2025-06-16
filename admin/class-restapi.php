@@ -121,20 +121,26 @@ class RestAPI {
 	/**
 	 * Get the status of MilliCache, including Redis connection status.
 	 *
+	 * @since   1.0.0
+	 * @access  public
+	 *
+	 * @param \WP_REST_Request<array<string, mixed>> $request The REST API request object.
+	 *
 	 * @return \WP_REST_Response
-	 * @since    1.0.0
-	 * @access   public
 	 */
-	public function get_status(): \WP_REST_Response {
+	public function get_status( \WP_REST_Request $request ): \WP_REST_Response {
 		try {
 			return new \WP_REST_Response(
-				array(
-					'plugin_name' => $this->plugin_name,
-					'version' => $this->version,
-					'cache' => Engine::get_status(),
-					'redis' => Engine::get_storage()->get_status(),
-					'dropin' => Admin::validate_advanced_cache_file(),
-				)
+				apply_filters(
+					'millicache_rest_status',
+					array(
+						'plugin_name' => $this->plugin_name,
+						'version' => $this->version,
+						'cache' => Engine::get_status( $request->get_param( 'network' ) === 'true' ),
+						'redis' => Engine::get_storage()->get_status(),
+						'dropin' => Admin::validate_advanced_cache_file(),
+					)
+				),
 			);
 		} catch ( \Exception $e ) {
 			return new \WP_REST_Response(
@@ -169,7 +175,7 @@ class RestAPI {
 			)
 		);
 
-		if ( ! is_string($action) || ! in_array( $action, $supported_actions, true ) ) {
+		if ( ! is_string( $action ) || ! in_array( $action, $supported_actions, true ) ) {
 			return new \WP_Error( 'invalid_action', __( 'Invalid cache action.', 'millicache' ), array( 'status' => 400 ) );
 		}
 
