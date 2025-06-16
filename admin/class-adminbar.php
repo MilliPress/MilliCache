@@ -102,7 +102,7 @@ class Adminbar {
 	 * @access   public
 	 */
 	public function enqueue_styles_scripts() {
-		$asset_file = dirname( plugin_dir_path( __FILE__ ) ) . '/build/adminbar.asset.php';
+		$asset_file = dirname( __DIR__ ) . '/build/adminbar.asset.php';
 		if ( ! file_exists( $asset_file ) ) {
 			return;
 		}
