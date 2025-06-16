@@ -1208,9 +1208,11 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
+	 * @param bool $network If the network is set to true, get the network cache status.
+	 *
 	 * @return array<mixed> The Cache status.
 	 */
-	public static function get_status(): array {
+	public static function get_status( bool $network = false ): array {
 		$cache = array(
 			'ttl' => self::$ttl,
 			'max_ttl' => self::$max_ttl,
@@ -1221,6 +1223,6 @@ final class Engine {
 			'ignore_request_keys' => self::$ignore_request_keys,
 		);
 
-		return array_merge( $cache, Admin::get_cache_size( '', true ) );
+		return array_merge( $cache, Admin::get_cache_size( $network ? self::get_flag_key( 'site', '*' ) : self::get_flag_key( '*' ), true ) );
 	}
 }
