@@ -1131,6 +1131,22 @@ final class Engine {
 	}
 
 	/**
+	 * Get the flag key.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param string          $flag The flag name.
+	 * @param int|string|null $site_id The site ID.
+	 * @param int|string|null $network_id The network ID.
+	 *
+	 * @return string The flag key.
+	 */
+	public static function get_flag_key( string $flag, $site_id = null, $network_id = null ): string {
+		return self::get_flag_prefix( $site_id, $network_id ) . $flag;
+	}
+
+	/**
 	 * Add a flag to this request.
 	 *
 	 * @since 1.0.0
