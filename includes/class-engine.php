@@ -569,18 +569,18 @@ final class Engine {
 				$cookie = wp_parse_args( $cookie );
 
 				// If there is a cookie that is not in the ignore list, disable caching.
-				foreach ($cookie as $cookie_key => $cookie_value) {
-					$cookie_key = strtolower($cookie_key);
+				foreach ( $cookie as $cookie_key => $cookie_value ) {
+					$cookie_key = strtolower( $cookie_key );
 					$is_ignored = false;
 
-					foreach (self::$ignore_cookies as $pattern) {
-						if (strpos($cookie_key, $pattern) !== false) {
+					foreach ( self::$ignore_cookies as $pattern ) {
+						if ( strpos( $cookie_key, $pattern ) !== false ) {
 							$is_ignored = true;
 							break;
 						}
 					}
 
-					if (!$is_ignored) {
+					if ( ! $is_ignored ) {
 						$cache = false;
 						break 2;
 					}
@@ -757,7 +757,21 @@ final class Engine {
 		return array_filter(
 			$cookies,
 			function ( $key ) {
-				return ! in_array( strtolower( $key ), self::$ignore_cookies ) && '_' !== $key[0];
+				$key = strtolower( $key );
+
+				// Starts with any pattern in the ignore list.
+				foreach ( self::$ignore_cookies as $pattern ) {
+					if ( strpos( $key, $pattern ) === 0 ) {
+						return false;
+					}
+				}
+
+				// Starts with '_'
+				if ( substr( $key, 0, 1 ) === '_' ) {
+					return false;
+				}
+
+				return true;
 			},
 			ARRAY_FILTER_USE_KEY
 		);
@@ -794,23 +808,6 @@ final class Engine {
 		// Remove ignored request keys from the super globals.
 		foreach ( self::$ignore_request_keys as $key ) {
 			unset( $_GET[ $key ], $_REQUEST[ $key ] );
-		}
-
-		// Remove ignored cookies.
-		if ( ! empty( self::$ignore_cookies ) && ! ( defined( 'WP_ADMIN' ) && WP_ADMIN && ! ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) ) {
-			$_COOKIE = array_filter(
-				$_COOKIE,
-				function ( $key ) {
-					return ! array_reduce(
-						self::$ignore_cookies,
-						function ( $carry, $part ) use ( $key ) {
-							return $carry || strpos( strtolower( $key ), $part ) === 0;
-						},
-						false
-					);
-				},
-				ARRAY_FILTER_USE_KEY
-			);
 		}
 	}
 
