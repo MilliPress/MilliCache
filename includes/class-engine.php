@@ -1111,19 +1111,19 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param int|null $site_id The site ID.
-	 * @param int|null $network_id The network ID.
+	 * @param int|string|null $site_id The site ID.
+	 * @param int|string|null $network_id The network ID.
 	 *
 	 * @return string The flag prefix.
 	 */
-	public static function get_flag_prefix( int $site_id = null, int $network_id = null ): string {
+	public static function get_flag_prefix( $site_id = null, $network_id = null ): string {
 		$prefix = '';
 
 		if ( self::is_multisite() ) {
-			$prefix = ( is_int( $site_id ) ? $site_id : get_current_blog_id() ) . ':';
+			$prefix = ( is_int( $site_id ) || is_string( $site_id ) ? $site_id : get_current_blog_id() ) . ':';
 
 			if ( count( self::get_network_ids() ) > 1 ) {
-				$prefix = ( is_int( $network_id ) ? $network_id : get_current_network_id() ) . ':' . $prefix;
+				$prefix = ( is_int( $network_id ) || is_string( $network_id ) ? $network_id : get_current_network_id() ) . ':' . $prefix;
 			}
 		}
 
