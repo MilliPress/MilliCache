@@ -641,8 +641,8 @@ final class Engine {
 			defined( 'WP_CACHE' ) && ! WP_CACHE, // Skip caching if deactivated via constant.
 			defined( 'REST_REQUEST' ) && REST_REQUEST, // Skip caching for Rest API requests.
 			defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST, // Skip caching for XML-RPC requests.
-			http_response_code() >= 500, // Don't cache 5xx errors.
 			php_sapi_name() === 'cli' || ( defined( 'WP_CLI' ) && WP_CLI ), // Skip caching for CLI requests.
+			http_response_code() >= 500, // Don't cache 5xx errors.
 			strtolower( self::get_server_var( 'REQUEST_METHOD' ) ) === 'post', // Skip caching for POST requests.
 			preg_match( '/\.(ico|txt|xml|xsl)$/', self::get_server_var( 'REQUEST_URI' ) ), // Skip specific file types.
 			self::$ttl < 1, // Skip caching if TTL (Time To Live) is not set.
