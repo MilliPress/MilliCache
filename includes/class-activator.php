@@ -33,13 +33,16 @@ class Activator {
 	 * @return   void
 	 */
 	public static function activate() {
+		// Load the required settings class.
+		require_once plugin_dir_path( __FILE__ ) . 'class-settings.php';
+
 		// Create advanced-cache.php.
 		self::create_advanced_cache_file();
 
 		// Schedule the cron events.
 		self::schedule_events();
 
-		// Set option autoload to false.
+		// Set the option autoload to false.
 		wp_set_option_autoload( Settings::$option_name, 'no' );
 	}
 
