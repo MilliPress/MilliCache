@@ -233,7 +233,7 @@ final class Engine {
 		self::get_storage();
 		self::warmup();
 
-		if ( self::should_start() ) {
+		if ( self::could_cache_request() ) {
 			self::run();
 		}
 
@@ -358,11 +358,11 @@ final class Engine {
 		add_action(
 			'template_redirect',
 			function () {
-				if ( self::should_cache() ) {
+				if ( self::should_cache_request() ) {
 					self::start_buffer();
 				}
 			},
-			0
+			-100
 		);
 	}
 
@@ -454,7 +454,7 @@ final class Engine {
 				if ( ! $locked ) {
 					if ( self::$storage->lock( self::$request_hash ) ) {
 						if ( self::can_fcgi_regenerate() ) {
-							// Serve a stale copy & regenerate the cache in the background.
+							// Serve a stale copy and regenerate the cache in the background.
 							$serve_cache = true;
 							self::$fcgi_regenerate = true;
 						} else {
@@ -519,6 +519,93 @@ final class Engine {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Determines if this request is cacheable (runs before WordPress loads).
+	 * Only uses server variables and constants available early in the request.
+	 *
+	 * @return   bool   True if the request is cacheable, false otherwise.
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private static function could_cache_request(): bool {
+		// Check for a custom callback to determine if MilliCache should be skipped.
+		if ( ! empty( self::$should_cache_callback ) && is_callable( self::$should_cache_callback ) ) {
+			$callback_result = call_user_func( self::$should_cache_callback );
+			if ( is_bool( $callback_result ) && ! $callback_result ) {
+				self::set_header( 'Status', 'bypass' );
+				return false;
+			}
+		}
+
+		// Skip MilliCache if specific cookies are present.
+		foreach ( $_COOKIE as $name => $value ) {
+			foreach ( self::$nocache_cookies as $part ) {
+				if ( strpos( strtolower( $name ), $part ) === 0 ) {
+					self::set_header( 'Status', 'bypass' );
+					return false;
+				}
+			}
+		}
+
+		// Skip running MilliCache if any of the following conditions are met.
+		$skip_conditions = array(
+			defined( 'WP_CACHE' ) && ! WP_CACHE, // Skip caching if deactivated via constant.
+			defined( 'REST_REQUEST' ) && REST_REQUEST, // Skip caching for Rest API requests.
+			defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST, // Skip caching for XML-RPC requests.
+			php_sapi_name() === 'cli' || ( defined( 'WP_CLI' ) && WP_CLI ), // Skip caching for CLI requests.
+			http_response_code() >= 500, // Don't cache 5xx errors.
+			strtolower( self::get_server_var( 'REQUEST_METHOD' ) ) === 'post', // Skip caching for POST requests.
+			preg_match( '/\.(ico|txt|xml|xsl)$/', self::get_server_var( 'REQUEST_URI' ) ), // Skip specific file types.
+			self::$ttl < 1, // Skip caching if TTL (Time To Live) is not set.
+		);
+
+		// If any skip condition is true, return false early.
+		foreach ( $skip_conditions as $condition ) {
+			if ( $condition ) {
+				self::set_header( 'Status', 'bypass' );
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Checks if the current request should be cached based on WordPress-specific conditions.
+	 * Runs after WordPress is fully loaded.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @return bool True to cache, false to skip caching.
+	 */
+	private static function should_cache_request(): bool {
+		$should_cache = true;
+
+		$wp_skip_conditions = array(
+			defined( 'DOING_CRON' ) && DOING_CRON,
+			defined( 'DOING_AJAX' ) && DOING_AJAX,
+			defined( 'DONOTCACHEPAGE' ) && DONOTCACHEPAGE,
+		);
+
+		foreach ( $wp_skip_conditions as $condition ) {
+			if ( $condition ) {
+				$should_cache = false;
+				break;
+			}
+		}
+
+		/**
+		 * Filter whether to cache this request.
+		 * Return true to proceed with caching, or false to skip caching.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param bool $should_cache Whether the request should be cached.
+		 */
+		return apply_filters( 'millicache_should_cache_request', $should_cache );
 	}
 
 	/**
@@ -605,88 +692,6 @@ final class Engine {
 
 		// Return output, but not for the background task.
 		return self::$fcgi_regenerate ? null : $output;
-	}
-
-	/**
-	 * Determine if cache logics should start and run MilliCache Engine & Caching.
-	 * This runs very early, before WordPress is fully loaded.
-	 * Only use server variables and constants that are guaranteed to be available.
-	 *
-	 * @return   bool   If we start MilliCache Engine & Caching.
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	private static function should_start(): bool {
-		// Check for a custom callback to determine if MilliCache should be skipped.
-		if ( ! empty( self::$should_cache_callback ) && is_callable( self::$should_cache_callback ) ) {
-			$callback_result = call_user_func( self::$should_cache_callback );
-			if ( is_bool( $callback_result ) && ! $callback_result ) {
-				self::set_header( 'Status', 'bypass' );
-				return false;
-			}
-		}
-
-		// Skip MilliCache if specific cookies are present.
-		foreach ( $_COOKIE as $name => $value ) {
-			foreach ( self::$nocache_cookies as $part ) {
-				if ( strpos( strtolower( $name ), $part ) === 0 ) {
-					self::set_header( 'Status', 'bypass' );
-					return false;
-				}
-			}
-		}
-
-		// Skip running MilliCache if any of the following conditions are met.
-		$skip_conditions = array(
-			defined( 'WP_CACHE' ) && ! WP_CACHE, // Skip caching if deactivated via constant.
-			defined( 'REST_REQUEST' ) && REST_REQUEST, // Skip caching for Rest API requests.
-			defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST, // Skip caching for XML-RPC requests.
-			php_sapi_name() === 'cli' || ( defined( 'WP_CLI' ) && WP_CLI ), // Skip caching for CLI requests.
-			http_response_code() >= 500, // Don't cache 5xx errors.
-			strtolower( self::get_server_var( 'REQUEST_METHOD' ) ) === 'post', // Skip caching for POST requests.
-			preg_match( '/\.(ico|txt|xml|xsl)$/', self::get_server_var( 'REQUEST_URI' ) ), // Skip specific file types.
-			self::$ttl < 1, // Skip caching if TTL (Time To Live) is not set.
-		);
-
-		// If any skip condition is true, return false early.
-		foreach ( $skip_conditions as $condition ) {
-			if ( $condition ) {
-				self::set_header( 'Status', 'bypass' );
-				return false;
-			}
-		}
-
-		// MilliCache should start.
-		return true;
-	}
-
-	/**
-	 * Determine if we should cache this request.
-	 * This runs after WordPress is fully loaded (during template_redirect).
-	 * The full WordPress context is available here.
-	 *
-	 * @return   bool   If we should cache this request.
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	private static function should_cache(): bool {
-		$wp_skip_conditions = array_merge(
-			array(
-				defined( 'DOING_CRON' ) && DOING_CRON,
-				defined( 'DOING_AJAX' ) && DOING_AJAX,
-				defined( 'DONOTCACHEPAGE' ) && DONOTCACHEPAGE,
-			),
-			apply_filters( 'millicache_skip_caching_conditions', array() ),
-		);
-
-		foreach ( $wp_skip_conditions as $condition ) {
-			if ( $condition ) {
-				self::set_header( 'Status', 'bypass' );
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	/**
