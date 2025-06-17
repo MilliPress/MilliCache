@@ -133,7 +133,7 @@ class Settings {
 					'nocache_cookies' => array( 'comment_author' ),
 					'ignore_cookies' => array(),
 					'ignore_request_keys' => array( '_millicache', '_wpnonce', 'utm_source', 'utm_medium', 'utm_term', 'utm_content', 'utm_campaign' ),
-					'should_cache_callback' => '',
+					'skip_millicache_callback' => '',
 					'debug' => false,
 					'gzip' => true,
 				),

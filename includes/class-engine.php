@@ -133,7 +133,7 @@ final class Engine {
 	 *
 	 * @var string Callback to append cache conditions.
 	 */
-	private static string $should_cache_callback;
+	private static string $skip_millicache_callback;
 
 	/**
 	 * Gzip compression.
@@ -531,8 +531,8 @@ final class Engine {
 	 */
 	private static function could_cache_request(): bool {
 		// Check for a custom callback to determine if MilliCache should be skipped.
-		if ( ! empty( self::$should_cache_callback ) && is_callable( self::$should_cache_callback ) ) {
-			$callback_result = call_user_func( self::$should_cache_callback );
+		if ( ! empty( self::$skip_millicache_callback ) && is_callable( self::$skip_millicache_callback ) ) {
+			$callback_result = call_user_func( self::$skip_millicache_callback );
 			if ( is_bool( $callback_result ) && ! $callback_result ) {
 				self::set_header( 'Status', 'bypass' );
 				return false;
