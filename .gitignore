@@ -5,6 +5,7 @@ node_modules/
 
 # Playwright
 /tests/wp-env/plugins/*/*
+/tests/wp-env/.htaccess
 /test-results/
 /playwright-report/
 /blob-report/
