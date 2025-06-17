@@ -605,7 +605,12 @@ final class Engine {
 		 *
 		 * @param bool $should_cache Whether the request should be cached.
 		 */
-		return apply_filters( 'millicache_should_cache_request', $should_cache );
+		if ( ! apply_filters( 'millicache_should_cache_request', $should_cache ) ) {
+			self::set_header( 'Status', 'bypass' );
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
