@@ -767,18 +767,11 @@ final class Engine {
 		return array_filter(
 			$cookies,
 			function ( $key ) {
-				$key = strtolower( $key );
-
 				// Starts with any pattern in the ignore list.
 				foreach ( self::$ignore_cookies as $pattern ) {
-					if ( strpos( $key, $pattern ) === 0 ) {
+					if ( strpos( strtolower( $key ), $pattern ) === 0 ) {
 						return false;
 					}
-				}
-
-				// Starts with '_'
-				if ( substr( $key, 0, 1 ) === '_' ) {
-					return false;
 				}
 
 				return true;
