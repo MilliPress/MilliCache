@@ -268,15 +268,15 @@ final class MilliCache {
 		}
 
 		/**
-		 * Filter to add additional cache flags.
+		 * Filter for custom cache flags.
 		 * Note: Don't use this too excessively, as it will increase the cache size.
 		 *
 		 * @since 1.0.0
-		 * @param array $add_flags The additional flags.
+		 * @param array $custom_flags The custom flags.
 		 */
-		$additional_flags = apply_filters( 'millicache_add_flags', array() );
-		if ( is_array( $additional_flags ) && ! empty( $additional_flags ) ) {
-			foreach ( $additional_flags as $flag ) {
+		$custom_flags = apply_filters( 'millicache_custom_flags', array() );
+		if ( is_array( $custom_flags ) && ! empty( $custom_flags ) ) {
+			foreach ( $custom_flags as $flag ) {
 				$this->engine->add_flag( $flag );
 			}
 		}

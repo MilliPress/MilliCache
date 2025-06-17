@@ -205,12 +205,12 @@ The basic built-in flags are:
 ### Adding Custom Cache Flags:
 
 You can define your own cache flags to group entries based on specific conditions 
-by using the `millicache_add_flags` filter.
+by using the `millicache_custom_flags` filter.
 For instance, if you want to group all posts containing a particular Gutenberg block:
 
 1. **Add a Custom Flag:**
    ```php
-   add_filter('millicache_add_flags', function($flags) {
+   add_filter('millicache_custom_flags', function($flags) {
        if (has_block('my-custom/block')) {
            $flags[] = 'block:my-custom/block';
        }
@@ -495,12 +495,12 @@ add_filter(`millicache_should_cache_request`, function( $should_cache ) {
 });
 ```
 
-### `millicache_add_flags`
+### `millicache_custom_flags`
 
 Add custom flags to the cache entries.
 
 ```php
-add_filter('millicache_add_flags', function( $flags ) {
+add_filter('millicache_custom_flags', function( $flags ) {
     $flags[] = 'my-custom-tag';
     return $flags;
 });
