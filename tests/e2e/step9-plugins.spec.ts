@@ -31,7 +31,7 @@ test.describe('Step 9: Plugins Compatibility', () => {
 
         await runWpCliCommand('plugin deactivate woocommerce');
 
-        // Reset ignore cookies to the original value
+        // Reset ignore cookies
         await runWpCliCommand(`config set MC_CACHE_IGNORE_COOKIES '[]' -- --raw`);
     });
 });
