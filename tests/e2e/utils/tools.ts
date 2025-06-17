@@ -126,20 +126,22 @@ export async function validateHeaderAfterReload(
     await page.reload();
     const response = await responsePromise;
 
-    // Log the response headers for debugging
-    const allHeaders = await response.allHeaders();
-    const millicacheHeaders = Object.keys(allHeaders)
-        .filter(key => key.toLowerCase().startsWith('x-millicache-'))
-        .reduce((obj, key) => {
-            obj[key] = allHeaders[key];
-            return obj;
-        }, {});
-
-    console.log(page.url() + ' expected status: ' + expectedValue + ':', millicacheHeaders);
-
     // Validate the header
     const headerValue = response.headers()['x-millicache-' + headerName.toLowerCase()];
     if (headerValue !== expectedValue) {
+        // Log the response headers for debugging
+        const allHeaders = await response.allHeaders();
+        const millicacheHeaders = Object.keys(allHeaders)
+            .filter(key => key.toLowerCase().startsWith('x-millicache-'))
+            .reduce((obj, key) => {
+                obj[key] = allHeaders[key];
+                return obj;
+            }, {});
+
+        // Log the headers for debugging
+        console.log(`Expected header "${page.url()}" to be "${expectedValue}"`, millicacheHeaders);
+
+        // Throw an error if the header value does not match the expected value
         throw new Error(
             `Expected header "${headerName}" to be "${expectedValue}", but got "${headerValue}"`
         );
