@@ -19,6 +19,7 @@
       "config": {
         "MC_CACHE_TTL": 5,
         "MC_REDIS_DB": 1,
+        "FS_METHOD": "direct",
         "PERFLAB_DISABLE_OBJECT_CACHE_DROPIN": false
       },
       "plugins": [
