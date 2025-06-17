@@ -78,12 +78,18 @@ jobs:
 
       - name: Check out base commit
         run: |
-          if [[ -z "$BASE_REF" ]]; then
-            git fetch -n origin $BASE_SHA
-            git reset --hard $BASE_SHA
-          else
+          # Checkout the repo first (make sure we have the history)
+          git fetch --prune --unshallow || git fetch --prune
+          
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            # For pull requests, get the base commit as before
             git fetch -n origin $BASE_REF
             git reset --hard $BASE_SHA
+          else
+            # For tags and pushes, get the parent of the current commit
+            LAST_COMMIT=$(git rev-parse HEAD^)
+            echo "Getting parent commit: $LAST_COMMIT"
+            git reset --hard $LAST_COMMIT
           fi
         env:
           BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || '' }}
