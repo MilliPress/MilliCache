@@ -19,7 +19,6 @@
       "config": {
         "MC_CACHE_TTL": 5,
         "MC_REDIS_DB": 1,
-        "FS_METHOD": "direct",
         "PERFLAB_DISABLE_OBJECT_CACHE_DROPIN": false
       },
       "plugins": [
@@ -29,12 +28,15 @@
       "mappings": {
         "wp-cli.yml": "./tests/wp-env/wp-cli.yml",
         ".htaccess": "./tests/wp-env/.htaccess",
+
         "wp-content/plugins/millicache": ".",
         "wp-content/plugins/breeze": "https://downloads.wordpress.org/plugin/breeze.zip",
         "wp-content/plugins/cachify": "https://downloads.wordpress.org/plugin/cachify.zip",
         "wp-content/plugins/cache-enabler": "https://downloads.wordpress.org/plugin/cache-enabler.zip",
         "wp-content/plugins/wp-fastest-cache": "https://downloads.wordpress.org/plugin/wp-fastest-cache.zip",
-        "wp-content/plugins/wp-super-cache": "https://downloads.wordpress.org/plugin/wp-super-cache.zip"
+        "wp-content/plugins/wp-super-cache": "https://downloads.wordpress.org/plugin/wp-super-cache.zip",
+
+        "wp-content/plugins/woocommerce": "https://downloads.wordpress.org/plugin/woocommerce.zip"
       }
     }
   }

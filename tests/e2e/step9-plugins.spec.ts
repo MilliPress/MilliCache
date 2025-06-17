@@ -7,14 +7,14 @@ test.beforeEach(async () => {
 
 test.describe('Step 9: Plugins Compatibility', () => {
     test('WooCommerce', async ({ page }) => {
-        await runWpCliCommand('plugin install woocommerce -- --activate');
-        await runWpCliCommand('wc product create -- --user="admin" --name="New Product" --type="simple" --regular_price="19.99"');
+        await runWpCliCommand('plugin activate woocommerce');
+        await runWpCliCommand('wc product create -- --user="admin" --name="Test Product" --type="simple" --regular_price="19.99"');
 
         // Set MilliCache to ignore WooCommerce cookies
         await runWpCliCommand('config set MC_CACHE_IGNORE_COOKIES "array(\'sbjs\',\'woocommerce_\',\'wp_\')" -- --raw');
 
         // Product Page
-        await page.goto('/product/new-product/');
+        await page.goto('/product/test-product/');
         await validateHeaderAfterReload(page, 'status', 'hit');
 
         // Cart
@@ -29,7 +29,7 @@ test.describe('Step 9: Plugins Compatibility', () => {
         await page.goto('/my-account/');
         await validateHeaderAfterReload(page, 'status', 'bypass');
 
-        await runWpCliCommand('plugin uninstall woocommerce -- --deactivate');
+        await runWpCliCommand('plugin deactivate woocommerce');
 
         // Reset ignore cookies to the original value
         await runWpCliCommand(`config set MC_CACHE_IGNORE_COOKIES '[]' -- --raw`);
