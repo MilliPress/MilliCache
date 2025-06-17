@@ -445,11 +445,11 @@ final class Engine {
 				$serve_cache = false;
 			}
 
-			// Is the cache expired?
-			$expired = $cache['updated'] + self::$ttl < time();
+			// Is the cache stale?
+			$stale = $cache['updated'] + self::$ttl < time();
 
 			// Cache is outdated or set to expire.
-			if ( $expired && $serve_cache ) {
+			if ( $stale && $serve_cache ) {
 				// If it's not locked, lock it for regeneration.
 				if ( ! $locked ) {
 					if ( self::$storage->lock( self::$request_hash ) ) {
@@ -480,7 +480,7 @@ final class Engine {
 			// Output the cache if we can.
 			if ( $serve_cache ) {
 				// Set the status header.
-				self::set_header( 'Status', self::$fcgi_regenerate ? 'expired' : 'hit' );
+				self::set_header( 'Status', self::$fcgi_regenerate ? 'stale' : 'hit' );
 
 				if ( self::$debug ) {
 					$time_left = self::$ttl - ( time() - $cache['updated'] );
@@ -556,7 +556,7 @@ final class Engine {
 			'updated' => time(),
 		);
 
-		// Repsonse: If a cookie is being set that is NOT in our ignore list, disable caching for this page.
+		// Response: If a cookie is being set that is NOT in our ignore list, disable caching for this page.
 		foreach ( headers_list() as $header ) {
 			list($key, $value) = explode( ':', $header, 2 );
 			$key = strtolower( $key );

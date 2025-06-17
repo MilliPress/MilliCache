@@ -481,7 +481,7 @@ final class Redis {
 	}
 
 	/**
-	 * Clear expired & deleted caches, running on shutdown.
+	 * Clear stale and deleted cache entries, running on shutdown.
 	 *
 	 * @since 1.0.0
 	 * @access public
