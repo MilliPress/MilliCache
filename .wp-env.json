@@ -3,7 +3,7 @@
   "port": 8888,
   "config": {
     "MC_REDIS_HOST": "redis",
-    "MC_DEBUG": true,
+    "MC_CACHE_DEBUG": true,
     "WP_CACHE": true,
     "WP_DEBUG": true,
     "WP_DEBUG_DISPLAY": true

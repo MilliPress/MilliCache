@@ -453,10 +453,10 @@ $ wp millicache clear [--flags="<flags>"] [--ids="<post_ids>"] [--urls="<urls>"]
 
 ## Debugging
 
-Enable debug mode by setting `MC_DEBUG` to `true` in your `wp-config.php`. This adds headers to the response:
+Enable debug mode by setting `MC_CACHE_DEBUG` to `true` in your `wp-config.php`. This adds headers to the response:
 
 ```php
-define('MC_DEBUG', true);
+define('MC_CACHE_DEBUG', true);
 ```
 
 Inspect response headers using cURL or browser developer tools:
