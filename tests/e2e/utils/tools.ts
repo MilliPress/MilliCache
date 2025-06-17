@@ -111,7 +111,6 @@ export async function validateHeader(response: { headers: () => any; }, name: st
  * @param page - The Playwright page object
  * @param headerName - Name of the header to validate
  * @param expectedValue - Expected value of the header
- * @param urlPattern - Optional URL pattern to match (defaults to any URL)
  */
 export async function validateHeaderAfterReload(
     page,
@@ -126,6 +125,17 @@ export async function validateHeaderAfterReload(
 
     await page.reload();
     const response = await responsePromise;
+
+    // Log the response headers for debugging
+    const allHeaders = await response.allHeaders();
+    const millicacheHeaders = Object.keys(allHeaders)
+        .filter(key => key.toLowerCase().startsWith('x-millicache-'))
+        .reduce((obj, key) => {
+            obj[key] = allHeaders[key];
+            return obj;
+        }, {});
+
+    console.log('MilliCache Headers (expecting status: ' + expectedValue + '):', millicacheHeaders);
 
     // Validate the header
     const headerValue = response.headers()['x-millicache-' + headerName.toLowerCase()];
