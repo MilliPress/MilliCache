@@ -36,8 +36,11 @@ jobs:
         if: runner.os == 'Linux'
         uses: actions/cache@v4
         with:
-          path: /home/runner/wp-env
-          key: ${{ runner.os }}-wp-env-${{ hashFiles('**/wp-env.json') }}
+          path: |
+            /home/runner/wp-env
+            /home/runner/.wp-env
+            /home/runner/.wp-cli
+          key: ${{ runner.os }}-wp-env-${{ hashFiles('**/wp-env.json') }}-v1
           restore-keys: |
             ${{ runner.os }}-wp-env-
 
@@ -48,7 +51,7 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Install dependencies
-        run: npm ci && composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+        run: npm ci --production && composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
       - name: Setup WordPress Environment
         run: npm run env:start
