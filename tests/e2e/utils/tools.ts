@@ -135,7 +135,7 @@ export async function validateHeaderAfterReload(
             return obj;
         }, {});
 
-    console.log('MilliCache Headers (expecting status: ' + expectedValue + '):', millicacheHeaders);
+    console.log(page.url() + ' expected status: ' + expectedValue + ':', millicacheHeaders);
 
     // Validate the header
     const headerValue = response.headers()['x-millicache-' + headerName.toLowerCase()];
