@@ -52,7 +52,7 @@ jobs:
         with:
           path: '.'
           filename: 'millicache.zip'
-          exclusions: '*.git* .* composer.* package* php*.* playwright.* yarn.* mozart.* /tests/* /vendor/* /admin/css/* /admin/js/*'
+          exclusions: '*.git* .* composer.* package* php*.* playwright.* yarn.* mozart.* /tests/* /vendor/* /node_modules/* /admin/css/* /admin/js/*'
 
       - name: Create Release
         id: create_release
