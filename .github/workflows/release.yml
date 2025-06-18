@@ -39,13 +39,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm ci
 
       - name: Build styles and scripts
-        run: pnpm run build
+        run: npm run build
 
       - name: Build Release Zip
         uses: thedoctor0/zip-release@master
