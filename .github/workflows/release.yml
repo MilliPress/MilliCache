@@ -1,9 +1,22 @@
 name: GitHub Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag (e.g. v1.2.3)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Is this a prerelease?'
+        required: false
+        default: false
+        type: boolean
+      draft:
+        description: 'Is this a draft release?'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   call-workflow-e2e-test:
@@ -47,11 +60,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          body: Bump to ${{ github.ref }}
-          draft: false
-          prerelease: true
+          tag_name: ${{ inputs.tag }}
+          release_name: ${{ inputs.tag }}
+          body: Bump to ${{ inputs.tag }}
+          draft: ${{ inputs.draft }}
+          prerelease: ${{ inputs.prerelease }}
 
       - name: Upload Release Asset
         id: upload-release-asset
