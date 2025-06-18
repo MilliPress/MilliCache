@@ -15,15 +15,31 @@ jobs:
     needs: call-workflow-e2e-test
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repository
       - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build styles and scripts
+        run: pnpm run build
 
       - name: Build Release Zip
         uses: thedoctor0/zip-release@master
         with:
           path: '.'
           filename: 'millicache.zip'
-          exclusions: '*.git* .* composer.* package* php*.* playwright.* yarn.* mozart.* /tests/* /vendor/*'
+          exclusions: '*.git* .* composer.* package* php*.* playwright.* yarn.* mozart.* /tests/* /vendor/* /admin/css/* /admin/js/*'
 
       - name: Create Release
         id: create_release
