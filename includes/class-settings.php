@@ -112,7 +112,7 @@ class Settings {
 	 *
 	 * @param string|null $module The settings module to retrieve (e.g., 'caching', 'redis').
 	 *
-	 * @return array<array<mixed>> The default settings.
+	 * @return array<array<bool|float|int|string|null|array<mixed>>> The default settings.
 	 */
 	public function get_default_settings( ?string $module = null ): array {
 		$defaults = apply_filters(
@@ -131,7 +131,7 @@ class Settings {
 					'max_ttl' => MONTH_IN_SECONDS,
 					'unique' => array(),
 					'nocache_cookies' => array( 'comment_author' ),
-					'ignore_cookies' => array(),
+					'ignore_cookies' => array( '_' ),
 					'ignore_request_keys' => array( '_millicache', '_wpnonce', 'utm_source', 'utm_medium', 'utm_term', 'utm_content', 'utm_campaign' ),
 					'skip_millicache_callback' => '',
 					'debug' => false,
