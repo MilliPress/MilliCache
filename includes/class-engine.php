@@ -356,7 +356,7 @@ final class Engine {
 		// Get the cache.
 		self::get_cache();
 
-		// Start the output buffer and init output.
+		// Start the output buffer.
 		add_action(
 			'template_redirect',
 			function () {
