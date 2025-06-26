@@ -264,8 +264,10 @@ final class Engine {
 	 */
 	private static function config() {
 		// Load the cache configuration.
-		foreach ( (array) self::$settings['cache'] as $key => $value ) {
-			self::$$key = $value;
+		foreach ( (array) self::$settings['cache'] as $prop => $value ) {
+			if (property_exists(__CLASS__, $prop) || isset(self::$$prop)) {
+				self::$$prop = $value;
+			}
 		}
 
 		// Ignore test cookie by default.
