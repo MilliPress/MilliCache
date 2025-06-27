@@ -25,10 +25,11 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-/**
- * Current plugin version.
- */
+// Define constants for the plugin.
 define( 'MILLICACHE_VERSION', '1.0.0-beta.2' );
+define( 'MILLICACHE_BASENAME', plugin_basename( __FILE__ ) );
+define( 'MILLICACHE_FILE', __FILE__ );
+define( 'MILLICACHE_DIR', __DIR__ );
 
 /**
  * The code that runs during plugin activation.
