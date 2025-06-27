@@ -112,7 +112,7 @@ class Adminbar {
 		// Enqueue the adminbar script.
 		wp_enqueue_script(
 			$this->plugin_name . '-adminbar',
-			plugins_url( 'build/adminbar.js', MILLICACHE_FILE ),
+			plugins_url( 'build/adminbar.js', __DIR__ ),
 			$asset['dependencies'],
 			$asset['version'],
 			array(
@@ -132,7 +132,7 @@ class Adminbar {
 		// Enqueue the adminbar styles.
 		wp_enqueue_style(
 			$this->plugin_name . '-adminbar',
-			plugins_url( 'build/adminbar.css', MILLICACHE_FILE ),
+			plugins_url( 'build/adminbar.css', __DIR__ ),
 			$asset['dependencies'],
 			$asset['version'],
 		);

@@ -27,6 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Admin {
 
+
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
 	 * the plugin.
@@ -192,11 +193,12 @@ class Admin {
 		load_plugin_textdomain(
 			'millicache',
 			false,
-			MILLICACHE_DIR . '/languages/'
+			dirname( plugin_basename( __FILE__ ), 2 ) . '/languages/'
 		);
 	}
 
 	/**
+	 * Register the stylesheets for the admin area.
 	 * Register the stylesheets & JavaScript for the admin area.
 	 *
 	 * @since    1.0.0
@@ -205,7 +207,7 @@ class Admin {
 	 * @return   void
 	 */
 	public function enqueue_admin_styles_scripts() {
-		$asset_file = MILLICACHE_DIR . '/build/admin.asset.php';
+		$asset_file = dirname( plugin_dir_path( __FILE__ ) ) . '/build/admin.asset.php';
 
 		if ( ! file_exists( $asset_file ) ) {
 			return;
@@ -216,7 +218,7 @@ class Admin {
 		// Enqueue the admin styles.
 		wp_enqueue_style(
 			$this->plugin_name . '-admin',
-			plugins_url( 'build/admin.css', MILLICACHE_FILE ),
+			plugins_url( 'build/admin.css', __DIR__ ),
 			$asset['dependencies'],
 			$asset['version'],
 		);
@@ -224,7 +226,7 @@ class Admin {
 		// Enqueue the admin script.
 		wp_enqueue_script(
 			$this->plugin_name . '-admin',
-			plugins_url( 'build/admin.js', MILLICACHE_FILE ),
+			plugins_url( 'build/admin.js', __DIR__ ),
 			$asset['dependencies'],
 			$asset['version'],
 			array(
@@ -249,7 +251,7 @@ class Admin {
 			return;
 		}
 
-		$asset_file = MILLICACHE_DIR. '/build/settings.asset.php';
+		$asset_file = dirname( plugin_dir_path( __FILE__ ) ) . '/build/settings.asset.php';
 
 		if ( ! file_exists( $asset_file ) ) {
 			return;
@@ -260,7 +262,7 @@ class Admin {
 		// Enqueue the settings page script.
 		wp_enqueue_script(
 			$this->plugin_name . '-settings',
-			plugins_url( 'build/settings.js', MILLICACHE_FILE ),
+			plugins_url( 'build/settings.js', __DIR__ ),
 			array_merge( $asset['dependencies'], array( 'wp-api-fetch' ) ),
 			$asset['version'],
 			array(
@@ -271,7 +273,7 @@ class Admin {
 		// Enqueue the settings page styles.
 		wp_enqueue_style(
 			$this->plugin_name . '-settings',
-			plugins_url( 'build/settings.css', MILLICACHE_FILE ),
+			plugins_url( 'build/settings.css', __DIR__ ),
 			array(),
 			$asset['version'],
 		);
