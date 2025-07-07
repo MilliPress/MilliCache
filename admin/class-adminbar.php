@@ -124,6 +124,7 @@ class Adminbar {
 		$inline_script = 'const millicache = ' . json_encode(
 			array(
 				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+				'is_network_admin' => is_network_admin(),
 			)
 		) . ';';
 
@@ -302,7 +303,7 @@ class Adminbar {
 	 */
 	private function process_clear_cache( $action = 'flush', $url = '' ) {
 		if ( 'flush' === $action ) {
-			if ( is_network_admin() ) {
+			if ( $this->get_request_value( '_is_network_admin' ) === 'true' ) {
 				Engine::clear_cache_by_network_id();
 				Admin::add_notice( __( 'The network cache has been cleared.', 'millicache' ), 'success' );
 			} else {
