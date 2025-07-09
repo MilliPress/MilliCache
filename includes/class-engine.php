@@ -265,20 +265,14 @@ final class Engine {
 	private static function config() {
 		// Load the cache configuration.
 		foreach ( (array) self::$settings['cache'] as $prop => $value ) {
-			if (property_exists(__CLASS__, $prop) || isset(self::$$prop)) {
+			if ( property_exists( __CLASS__, $prop ) || isset( self::$$prop ) ) {
 				self::$$prop = $value;
 			}
 		}
 
 		// Ignore test cookie by default.
 		$test_cookie = defined( 'TEST_COOKIE' ) ? TEST_COOKIE : 'wordpress_test_cookie';
-		$logged_in_cookie = defined( 'LOGGED_IN_COOKIE' ) ? LOGGED_IN_COOKIE : 'wordpress_logged_in';
-
-		// Ignore test cookie by default.
 		self::$ignore_cookies[] = $test_cookie;
-
-		// No caching with auth cookies by default.
-		self::$nocache_cookies[] = $logged_in_cookie;
 
 		// Always set the test-cookie for wp-login.php POST requests.
 		if ( strpos( self::get_server_var( 'REQUEST_URI' ), '/wp-login.php' ) === 0 && strtoupper( self::get_server_var( 'REQUEST_METHOD' ) ) == 'POST' ) {
@@ -326,7 +320,7 @@ final class Engine {
 	}
 
 	/**
-	 * Warmup the cache engine.
+	 * Warm up the cache engine.
 	 *
 	 * @since    1.0.0
 	 * @access   private
@@ -542,12 +536,19 @@ final class Engine {
 		}
 
 		// Skip MilliCache if specific cookies are present.
+		$nocache_cookies = self::$nocache_cookies;
+		$nocache_cookies[] = defined( 'LOGGED_IN_COOKIE' ) ? LOGGED_IN_COOKIE : 'wordpress_logged_in';
+		$nocache_cookies[] = 'wp-resetpass-';
+
 		foreach ( $_COOKIE as $name => $value ) {
-			foreach ( self::$nocache_cookies as $part ) {
-				if ( strpos( strtolower( $name ), $part ) === 0 ) {
-					self::set_header( 'Status', 'bypass' );
-					return false;
+			if ( array_filter(
+				$nocache_cookies,
+				function ( $part ) use ( $name ) {
+					return strpos( strtolower( $name ), $part ) === 0;
 				}
+			) ) {
+				self::set_header( 'Status', 'bypass' );
+				return false;
 			}
 		}
 
