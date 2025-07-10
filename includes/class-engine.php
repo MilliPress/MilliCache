@@ -739,6 +739,9 @@ final class Engine {
 	 * @return string The resulting query string.
 	 */
 	private static function remove_query_args( string $query_string, array $args ): string {
+		// Decode HTML entities to convert &amp; to &
+		$query_string = html_entity_decode($query_string);
+
 		// Split the query string into an array.
 		$query = explode( '&', $query_string );
 
