@@ -139,26 +139,6 @@ class Adminbar {
 		);
 	}
 
-
-	/**
-	 * Register the JavaScript for the adminbar.
-	 *
-	 * @since    1.0.0
-	 * @access   public
-	 *
-	 * @return   void
-	 */
-	public function enqueue_scripts() {
-		$inline_script = 'const millicache = ' . json_encode(
-			array(
-				'ajaxurl' => admin_url( 'admin-ajax.php' ),
-			)
-		) . ';';
-
-		wp_enqueue_script( $this->plugin_name . '-adminbar', plugin_dir_url( __FILE__ ) . 'js/millicache-adminbar.js', array(), $this->version, true );
-		wp_add_inline_script( $this->plugin_name . '-adminbar', $inline_script, 'before' );
-	}
-
 	/**
 	 * Add the cache flush button to the admin bar.
 	 *
