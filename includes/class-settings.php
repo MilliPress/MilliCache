@@ -410,6 +410,11 @@ class Settings {
 
 		// Write the content to the configuration file.
 		file_put_contents( $config_file, $config_content );
+
+		// After saving, invalidate OPcache for this file.
+		if ( function_exists( 'opcache_invalidate' ) ) {
+			opcache_invalidate( $config_file, true );
+		}
 	}
 
 	/**
