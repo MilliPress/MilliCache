@@ -11,7 +11,7 @@ test.describe('Step 9: Plugins Compatibility', () => {
         await runWpCliCommand('wc product create -- --user="admin" --name="Test Product" --type="simple" --regular_price="19.99"');
 
         // Set MilliCache to ignore WooCommerce cookies
-        await runWpCliCommand('config set MC_CACHE_IGNORE_COOKIES "array(\'sbjs\',\'woocommerce_\',\'wp_\')" -- --raw');
+        await runWpCliCommand('config set MC_CACHE_IGNORE_COOKIES "array(\'sbjs_*\',\'woocommerce_*\',\'wp_*\')" -- --raw');
 
         // Product Page
         await page.goto('/product/test-product/');
