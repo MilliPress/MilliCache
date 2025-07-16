@@ -4,6 +4,7 @@ import {
 	useState,
 	useEffect,
 	useCallback,
+	useRef,
 } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
@@ -20,16 +21,55 @@ export const SettingsProvider = ( { children } ) => {
 	const [ error, setError ] = useState( null );
 	const [ hasChanges, setHasChanges ] = useState( false );
 	const [ hasRedisChanges, setHasRedisChanges ] = useState( false );
-	const [activeTab, setActiveTab] = useState('status');
+	const [ activeTab, setActiveTab ] = useState('status');
+	const [ isRetrying, setIsRetrying ] = useState( false );
+	const statusIntervalRef = useRef( null );
 	const { showSnackbar } = useSnackbar();
 
 	const delay = ( ms ) =>
 		new Promise( ( resolve ) => setTimeout( resolve, ms ) );
 
+	// Use WordPress's built-in error handling
+	const handleApiError = useCallback( (error) => {
+		let message = __( 'An unexpected error occurred.', 'millicache' );
+
+		// Handle different error types
+		if ( error?.message ) {
+			message = error.message;
+		} else if ( error?.code ) {
+			switch ( error.code ) {
+				case 'rest_no_route':
+					message = __( 'API endpoint not found. Please check your WordPress installation.', 'millicache' );
+					break;
+				case 'rest_forbidden':
+					message = __( 'Access denied. Please check your permissions.', 'millicache' );
+					break;
+				case 'rest_cookie_invalid_nonce':
+					message = __( 'Security check failed. Please refresh the page.', 'millicache' );
+					break;
+				default:
+					message = error.message || __( 'API request failed.', 'millicache' );
+			}
+		}
+
+		return message;
+	}, []);
+
+	// Basic API wrapper with WordPress error handling
+	const apiRequest = useCallback( async ( options ) => {
+		try {
+			await delay(300);
+			return await apiFetch( options );
+		} catch ( error ) {
+			const errorMessage = handleApiError( error );
+			throw new Error( errorMessage );
+		}
+	}, [ handleApiError ] );
+
 	const triggerAction = async ( action, data = {} ) => {
 		setIsLoading( true );
 		try {
-			const response = await apiFetch( {
+			const response = await apiRequest( {
 				path: `/millicache/v1/action`,
 				method: 'POST',
 				data: { action, ...data },
@@ -41,9 +81,13 @@ export const SettingsProvider = ( { children } ) => {
 				showSnackbar( response.message );
 				fetchSettings();
 				fetchStatus();
+			} else {
+				throw new Error( response.message || __( 'Action failed', 'millicache' ) );
 			}
-		} catch ( errorMessage ) {
-			throw errorMessage;
+		} catch ( error ) {
+			const errorText = error.message || __( 'Action failed', 'millicache' );
+			showSnackbar( errorText, [], 6000, true );
+			throw error;
 		} finally {
 			setIsLoading( false );
 		}
@@ -51,58 +95,78 @@ export const SettingsProvider = ( { children } ) => {
 
 	const fetchStatus = useCallback( async () => {
 		try {
-			const response = await apiFetch( {
+			const response = await apiRequest( {
 				path: '/millicache/v1/status',
 				method: 'GET',
 			} );
 
 			setStatus( response );
+			setError( null ); // Clear any previous errors
 			return response;
-		} catch ( fetchError ) {
-			const errorMessage =
-				fetchError?.message ??
-				__( 'Failed to load status.', 'millicache' );
-
+		} catch ( error ) {
+			const errorMessage = error.message;
 			setStatus( {
 				connected: false,
 				error: errorMessage,
 			} );
-
-			showSnackbar( errorMessage, [], 6000, true );
+			setError( errorMessage );
 			return errorMessage;
 		}
-	}, [ showSnackbar ] );
+	}, [ apiRequest ] );
 
 	const fetchSettings = useCallback( async () => {
 		try {
 			setIsLoading( true );
-			const response = await apiFetch( { path: '/wp/v2/settings' } );
+			const response = await apiRequest( { path: '/wp/v2/settings' } );
 			setSettings( response?.millicache );
 			setInitialSettings( response?.millicache );
-		} catch ( fetchError ) {
-			const errorMessage =
-				fetchError?.message ??
-				__( 'Failed to load settings.', 'millicache' );
-
+			setError( null ); // Clear any previous errors
+		} catch ( error ) {
+			const errorMessage = error.message;
 			setError( errorMessage );
-			showSnackbar( errorMessage );
 		} finally {
 			setIsLoading( false );
 		}
-	}, [ showSnackbar ] );
+	}, [ apiRequest ] );
 
-	// Load the settings and status when the component mounts
+	const retryConnection = useCallback( async () => {
+		setIsRetrying( true );
+		setError( null );
+
+		try {
+			await Promise.all([
+				fetchSettings(),
+				fetchStatus()
+			]);
+		} catch ( error ) {
+			// Errors are already handled in the individual functions
+		} finally {
+			setIsRetrying( false );
+		}
+	}, [ fetchSettings, fetchStatus ] );
+
+	// Basic periodic status check
 	useEffect( () => {
 		fetchSettings();
 		fetchStatus();
 
-		// Fetch the status every 15 seconds
-		const intervalId = setInterval( () => {
-			fetchStatus();
+		if ( statusIntervalRef.current ) {
+			clearInterval( statusIntervalRef.current );
+		}
+
+		// Only poll if there's no error
+		statusIntervalRef.current = setInterval( () => {
+			if ( !error ) {
+				fetchStatus();
+			}
 		}, 15000 );
 
-		return () => clearInterval( intervalId );
-	}, [ fetchSettings, fetchStatus ] );
+		return () => {
+			if ( statusIntervalRef.current ) {
+				clearInterval( statusIntervalRef.current );
+			}
+		};
+	}, [ fetchSettings, fetchStatus, error ] );
 
 	// Update a setting in the context
 	const updateSetting = ( module, key, value ) => {
@@ -117,7 +181,7 @@ export const SettingsProvider = ( { children } ) => {
 
 			setHasChanges(
 				JSON.stringify( updatedSettings ) !==
-					JSON.stringify( initialSettings )
+				JSON.stringify( initialSettings )
 			);
 
 			if ( module === 'redis' ) {
@@ -128,7 +192,7 @@ export const SettingsProvider = ( { children } ) => {
 		} );
 	};
 
-	// Save the settings to the server
+	// Save settings with WordPress error handling
 	const saveSettings = async () => {
 		if ( ! hasChanges ) {
 			return;
@@ -137,7 +201,7 @@ export const SettingsProvider = ( { children } ) => {
 		try {
 			setIsSaving( true );
 
-			await apiFetch( {
+			await apiRequest( {
 				path: '/wp/v2/settings',
 				method: 'POST',
 				data: {
@@ -192,8 +256,9 @@ export const SettingsProvider = ( { children } ) => {
 
 				setHasRedisChanges( false );
 			}
-		} catch ( fetchError ) {
-			showSnackbar( __( 'Failed to save settings.', 'millicache' ) );
+		} catch ( error ) {
+			const errorMessage = error.message || __( 'Failed to save settings.', 'millicache' );
+			showSnackbar( errorMessage, [], 6000, true );
 		} finally {
 			setTimeout( () => setIsSaving( false ), 1200 );
 		}
@@ -213,6 +278,8 @@ export const SettingsProvider = ( { children } ) => {
 				triggerAction,
 				activeTab,
 				setActiveTab,
+				retryConnection,
+				isRetrying,
 			} }
 		>
 			{ children }
@@ -220,7 +287,6 @@ export const SettingsProvider = ( { children } ) => {
 	);
 };
 
-// Custom hook to use the SettingsContext
 export const useSettings = () => {
 	return useContext( SettingsContext );
 };
