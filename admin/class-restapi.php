@@ -22,7 +22,6 @@ namespace MilliCache;
  */
 class RestAPI {
 
-
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
 	 * the plugin.
@@ -30,7 +29,7 @@ class RestAPI {
 	 * @since    1.0.0
 	 * @access   protected
 	 *
-	 * @var      Loader    $loader    Maintains and registers all hooks for the plugin.
+	 * @var      Loader $loader Maintains and registers all hooks for the plugin.
 	 */
 	protected Loader $loader;
 
@@ -40,7 +39,7 @@ class RestAPI {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var      string    $plugin_name    The ID of this plugin.
+	 * @var      string $plugin_name The ID of this plugin.
 	 */
 	private string $plugin_name;
 
@@ -50,10 +49,9 @@ class RestAPI {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var      string    $version    The current version of this plugin.
+	 * @var      string $version The current version of this plugin.
 	 */
 	private string $version;
-
 
 	/**
 	 * Initialize the class and set its properties.
@@ -97,8 +95,8 @@ class RestAPI {
 			'millicache/v1',
 			'/status',
 			array(
-				'methods'             => \WP_REST_Server::READABLE,
-				'callback'            => array( $this, 'get_status' ),
+				'methods' => \WP_REST_Server::READABLE,
+				'callback' => array( $this, 'get_status' ),
 				'permission_callback' => function () {
 					return current_user_can( 'manage_options' );
 				},
@@ -109,7 +107,7 @@ class RestAPI {
 			'millicache/v1',
 			'/action',
 			array(
-				'methods'  => \WP_REST_Server::CREATABLE,
+				'methods' => \WP_REST_Server::CREATABLE,
 				'callback' => array( $this, 'perform_action' ),
 				'permission_callback' => function () {
 					return current_user_can( 'manage_options' );
@@ -165,8 +163,6 @@ class RestAPI {
 	 */
 	public function perform_action( \WP_REST_Request $request ) {
 		$action = $request->get_param( 'action' );
-		$params = $request->get_params();
-
 		$supported_actions = apply_filters(
 			'millicache_rest_supported_actions',
 			array(
@@ -195,11 +191,18 @@ class RestAPI {
 					}
 
 					Engine::clear_cache_by_targets( $targets );
-					$message = __( 'Cache cleared.', 'millicache' );
+					$message = __( 'Cache cleared successfully.', 'millicache' );
 					break;
+
 				case 'reset_settings':
+					// Backup before reset.
+					$current_settings = get_option( 'millicache' );
+					if ( $current_settings ) {
+						set_transient( 'millicache_settings_backup', $current_settings, HOUR_IN_SECONDS );
+					}
+
 					delete_option( 'millicache' );
-					$message = __( 'Settings reset.', 'millicache' );
+					$message = __( 'Settings reset successfully.', 'millicache' );
 					break;
 			}
 		} catch ( \Exception $e ) {
@@ -215,13 +218,14 @@ class RestAPI {
 		 * @param array  $params The parameters passed to the action.
 		 * @param \WP_REST_Request $request The REST API request object.
 		 */
-		do_action( 'millicache_rest_perform_action', $action, $params, $request );
+		do_action( 'millicache_rest_perform_action', $action, $request->get_params(), $request );
 
 		return rest_ensure_response(
 			array(
-				'success' => true,
-				'message' => $message ?? '',
-				'action'  => $action,
+				'success'   => true,
+				'message'   => $message ?? '',
+				'action'    => $action,
+				'timestamp' => time(),
 			)
 		);
 	}
