@@ -20,6 +20,7 @@ export const SettingsProvider = ( { children } ) => {
 	const [ error, setError ] = useState( null );
 	const [ hasChanges, setHasChanges ] = useState( false );
 	const [ hasRedisChanges, setHasRedisChanges ] = useState( false );
+	const [activeTab, setActiveTab] = useState('status');
 	const { showSnackbar } = useSnackbar();
 
 	const delay = ( ms ) =>
@@ -210,6 +211,8 @@ export const SettingsProvider = ( { children } ) => {
 				updateSetting,
 				saveSettings,
 				triggerAction,
+				activeTab,
+				setActiveTab,
 			} }
 		>
 			{ children }

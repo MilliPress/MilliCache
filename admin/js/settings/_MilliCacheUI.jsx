@@ -6,7 +6,7 @@ import StatusTab from './Status.jsx';
 import GeneralSettings from './General.jsx';
 
 const MilliCacheUI = () => {
-	const { error, isLoading } = useSettings();
+	const { error, isLoading, activeTab, setActiveTab } = useSettings();
 
 	return (
 		<div style={ { maxWidth: '900px' } }>
@@ -35,11 +35,15 @@ const MilliCacheUI = () => {
 							{ ( { className } ) => (
 								<TabPanel
 									className={ `millicache-settings-tabs ${ className }` }
-									style={ {
+									style={{
 										border: '1px solid #ddd',
 										marginLeft: '-1px',
 										marginRight: '-1px',
-									} }
+									}}
+									initialTabName={activeTab}
+									onSelect={(tabName) => {
+										setActiveTab(tabName);
+									}}
 									tabs={ [
 										{
 											name: 'status',
