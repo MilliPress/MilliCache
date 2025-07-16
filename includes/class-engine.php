@@ -537,7 +537,7 @@ final class Engine {
 
 		// Skip MilliCache if specific cookies are present.
 		$nocache_cookies = self::$nocache_cookies;
-		$nocache_cookies[] = defined( 'LOGGED_IN_COOKIE' ) ? LOGGED_IN_COOKIE : 'wordpress_logged_in';
+		$nocache_cookies[] = ( defined( 'LOGGED_IN_COOKIE' ) ? LOGGED_IN_COOKIE : 'wordpress_logged_in' ) . '*';
 		$nocache_cookies[] = 'wp-resetpass-*';
 
 		foreach ( $_COOKIE as $name => $value ) {
