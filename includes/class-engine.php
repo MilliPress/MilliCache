@@ -538,17 +538,14 @@ final class Engine {
 		// Skip MilliCache if specific cookies are present.
 		$nocache_cookies = self::$nocache_cookies;
 		$nocache_cookies[] = defined( 'LOGGED_IN_COOKIE' ) ? LOGGED_IN_COOKIE : 'wordpress_logged_in';
-		$nocache_cookies[] = 'wp-resetpass-';
+		$nocache_cookies[] = 'wp-resetpass-*';
 
 		foreach ( $_COOKIE as $name => $value ) {
-			if ( array_filter(
-				$nocache_cookies,
-				function ( $part ) use ( $name ) {
-					return strpos( strtolower( $name ), $part ) === 0;
+			foreach ( $nocache_cookies as $pattern ) {
+				if ( self::pattern_match( strtolower( $name ), $pattern ) ) {
+					self::set_header( 'Status', 'bypass' );
+					return false;
 				}
-			) ) {
-				self::set_header( 'Status', 'bypass' );
-				return false;
 			}
 		}
 
@@ -669,7 +666,7 @@ final class Engine {
 					$is_ignored = false;
 
 					foreach ( self::$ignore_cookies as $pattern ) {
-						if ( strpos( $cookie_key, $pattern ) !== false ) {
+						if ( self::pattern_match( $cookie_key, $pattern ) ) {
 							$is_ignored = true;
 							break;
 						}
@@ -739,8 +736,8 @@ final class Engine {
 	 * @return string The resulting query string.
 	 */
 	private static function remove_query_args( string $query_string, array $args ): string {
-		// Decode HTML entities to convert &amp; to &
-		$query_string = html_entity_decode($query_string);
+		// Decode HTML entities to convert &amp; to &.
+		$query_string = html_entity_decode( $query_string );
 
 		// Split the query string into an array.
 		$query = explode( '&', $query_string );
@@ -749,7 +746,18 @@ final class Engine {
 		$query = array_filter(
 			$query,
 			function ( $value ) use ( $args ) {
-				return ! preg_match( '#^(' . implode( '|', $args ) . ')(?:=|$)#i', $value );
+				// Extract parameter name (everything before = or the entire string if no =).
+				$param_name = strpos( $value, '=' ) !== false ?
+					substr( $value, 0, strpos( $value, '=' ) ) :
+					$value;
+
+				foreach ( $args as $pattern ) {
+					if ( self::pattern_match( $param_name, $pattern ) ) {
+						return false;
+					}
+				}
+
+				return true;
 			}
 		);
 
@@ -775,7 +783,7 @@ final class Engine {
 			function ( $key ) {
 				// Starts with any pattern in the ignore list.
 				foreach ( self::$ignore_cookies as $pattern ) {
-					if ( strpos( strtolower( $key ), $pattern ) === 0 ) {
+					if ( self::pattern_match( strtolower( $key ), $pattern ) ) {
 						return false;
 					}
 				}
@@ -815,13 +823,18 @@ final class Engine {
 		}
 
 		// Remove ignored request keys from the super globals.
-		foreach ( self::$ignore_request_keys as $key ) {
-			unset( $_GET[ $key ], $_REQUEST[ $key ] );
+		foreach ( $_GET as $key => $value ) {
+			foreach ( self::$ignore_request_keys as $pattern ) {
+				if ( self::pattern_match( $key, $pattern ) ) {
+					unset( $_GET[ $key ], $_REQUEST[ $key ] );
+					break;
+				}
+			}
 		}
 	}
 
 	/**
-	 * Get a md5 URL hash for domain.com/path?query.
+	 * Get an md5 URL hash for domain.com/path?query.
 	 *
 	 * @since 1.0.0
 	 * @access public
@@ -1192,6 +1205,40 @@ final class Engine {
 	 */
 	private static function can_fcgi_regenerate(): bool {
 		return function_exists( 'fastcgi_finish_request' );
+	}
+
+	/**
+	 * Checks if a string matches a pattern that may contain wildcards.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @param string $string The string to check.
+	 * @param string $pattern The pattern to match against. Can contain * wildcards.
+	 * @return bool True if the string matches the pattern, false otherwise.
+	 */
+	private static function pattern_match( string $string, string $pattern ): bool {
+		// For empty patterns or strings.
+		if ( '' === $pattern || '' === $string ) {
+			return $pattern === $string;
+		}
+
+		// If the pattern contains a wildcard *.
+		if ( false !== strpos( $pattern, '*' ) ) {
+			// Just a wildcard means match anything.
+			if ( '*' === $pattern ) {
+				return true;
+			}
+
+			// Convert the wildcard pattern to regex.
+			$regex_pattern = preg_quote( $pattern, '/' );
+			$regex_pattern = str_replace( '\*', '.*', $regex_pattern );
+
+			return (bool) preg_match( '/^' . $regex_pattern . '$/i', $string );
+		}
+
+		// No wildcard, perform exact match.
+		return $pattern === $string;
 	}
 
 	/**
