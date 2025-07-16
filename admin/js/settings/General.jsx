@@ -222,7 +222,7 @@ const GeneralSettings = () => {
 								__next40pxDefaultSize
 								label={ __( 'Max TTL', 'millicache' ) }
 								help={ __(
-									'The maximum time stale cache will be stored for background update.',
+									'The maximum time stale cache will be kept for background regeneration.',
 									'millicache'
 								) }
 								disabled={ ! ( 'max_ttl' in settings.cache ) }
