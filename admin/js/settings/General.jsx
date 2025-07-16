@@ -140,7 +140,7 @@ const GeneralSettings = () => {
 									'millicache'
 								) }
 								help={ __(
-									'The time that the cache will be stored for.',
+									'The duration the cache will be stored for.',
 									'millicache'
 								) }
 								disabled={ ! ( 'ttl' in settings.cache ) }
