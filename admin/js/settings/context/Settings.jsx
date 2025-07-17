@@ -7,6 +7,7 @@ import {
 	useRef,
 } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
+import { stripTags } from '@wordpress/sanitize';
 import { __ } from '@wordpress/i18n';
 import { useSnackbar } from './Snackbar.jsx';
 
@@ -52,7 +53,7 @@ export const SettingsProvider = ( { children } ) => {
 			}
 		}
 
-		return message;
+		return  typeof message === 'string' ? stripTags(message) : message;
 	}, []);
 
 	// Basic API wrapper with WordPress error handling
