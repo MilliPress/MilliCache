@@ -312,14 +312,19 @@ final class MilliCache {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param string   $new_status The new post status.
-	 * @param string   $old_status The old post status.
+	 * @param string   $new_status The new post-status.
+	 * @param string   $old_status The old post-status.
 	 * @param \WP_Post $post The post-object.
+	 *
 	 * @return void
 	 */
 	public function transition_post_status( string $new_status, string $old_status, \WP_Post $post ) {
 		if ( 'publish' === $new_status || 'publish' === $old_status ) {
 			$this->engine->clear_cache_by_post_ids( $post->ID );
+		}
+
+		if ( 'publish' === $new_status && 'publish' !== $old_status ) {
+			$this->engine->clear_cache_by_urls( (string) get_permalink( $post->ID ) );
 		}
 	}
 
