@@ -137,6 +137,10 @@ class RestAPI {
 						'cache' => Engine::get_status( $request->get_param( 'network' ) === 'true' ),
 						'redis' => Engine::get_storage()->get_status(),
 						'dropin' => Admin::validate_advanced_cache_file(),
+						'settings' => array(
+							'has_defaults' => Settings::has_default_settings(),
+							'has_backup' => Settings::has_backup(),
+						),
 					)
 				),
 			);
@@ -168,6 +172,7 @@ class RestAPI {
 			array(
 				'clear_cache_by_targets',
 				'reset_settings',
+				'restore_settings',
 			)
 		);
 

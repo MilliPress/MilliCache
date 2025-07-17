@@ -372,6 +372,18 @@ class Settings {
 	}
 
 	/**
+	 * Check if a backup of the settings exists in a transient.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @return bool True if a backup exists, false otherwise.
+	 */
+	public static function has_backup(): bool {
+		return (bool) get_transient( 'millicache_settings_backup' );
+	}
+
+	/**
 	 * Restore the settings from the backup stored in a transient.
 	 *
 	 * @since    1.0.0
@@ -381,7 +393,7 @@ class Settings {
 	 *
 	 * @return bool True if the settings were restored, false otherwise.
 	 */
-	public static function restore_backup( string $module = null ) {
+	public static function restore_backup( string $module = null ): bool {
 		$backup = get_transient( 'millicache_settings_backup' );
 
 		if ( ! $backup ) {
