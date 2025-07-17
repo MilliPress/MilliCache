@@ -538,7 +538,7 @@ final class Engine {
 		// Skip MilliCache if specific cookies are present.
 		$nocache_cookies = self::$nocache_cookies;
 		$nocache_cookies[] = ( defined( 'LOGGED_IN_COOKIE' ) ? LOGGED_IN_COOKIE : 'wordpress_logged_in' ) . '*';
-		$nocache_cookies[] = 'wp-resetpass-*';
+		$nocache_cookies[] = 'wp-*pass*';
 
 		foreach ( $_COOKIE as $name => $value ) {
 			foreach ( $nocache_cookies as $pattern ) {
@@ -924,12 +924,14 @@ final class Engine {
 		$urls = is_string( $urls ) ? array( $urls ) : $urls;
 
 		// Add flags.
-		$flags = array_map(
-			function ( $url ) {
-				return 'url:' . self::get_url_hash( $url );
-			},
-			$urls
-		);
+		$flags = array();
+		foreach ( $urls as $url ) {
+			// Add URL with a trailing slash.
+			$flags[] = 'url:' . self::get_url_hash( trailingslashit( $url ) );
+
+			// Add URL without a trailing slash.
+			$flags[] = 'url:' . self::get_url_hash( untrailingslashit( $url ) );
+		}
 
 		// Add flags to expire or delete a collection.
 		$expire ? array_push( self::$flags_expire, ...$flags ) : array_push( self::$flags_delete, ...$flags );
