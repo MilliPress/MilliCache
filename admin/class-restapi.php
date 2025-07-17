@@ -196,13 +196,26 @@ class RestAPI {
 
 				case 'reset_settings':
 					// Backup before reset.
-					$current_settings = get_option( 'millicache' );
-					if ( $current_settings ) {
-						set_transient( 'millicache_settings_backup', $current_settings, HOUR_IN_SECONDS );
-					}
+					Settings::backup();
 
+					// Reset settings.
 					delete_option( 'millicache' );
+
 					$message = __( 'Settings reset successfully.', 'millicache' );
+					break;
+
+				case 'restore_settings':
+					$backup_settings = Settings::restore_backup();
+					if ( ! $backup_settings ) {
+						return new \WP_REST_Response(
+							array(
+								'success' => false,
+								'message' => __( 'No backup settings found or backup has expired.', 'millicache' ),
+							),
+							400
+						);
+					}
+					$message = __( 'Settings successfully restored from backup.', 'millicache' );
 					break;
 			}
 		} catch ( \Exception $e ) {

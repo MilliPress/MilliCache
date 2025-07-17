@@ -353,6 +353,63 @@ class Settings {
 	}
 
 	/**
+	 * Back up the current settings to a transient.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @param string|null $module The settings module to back up (e.g., 'caching', 'redis').
+	 *
+	 * @return void
+	 */
+	public static function backup( string $module = null ): void {
+		$settings = new self();
+		$current_settings = $settings->get_settings( $module );
+
+		if ( $current_settings ) {
+			set_transient( 'millicache_settings_backup', $current_settings, 12 * HOUR_IN_SECONDS );
+		}
+	}
+
+	/**
+	 * Restore the settings from the backup stored in a transient.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @param string|null $module The settings module to restore (e.g., 'caching', 'redis').
+	 *
+	 * @return bool True if the settings were restored, false otherwise.
+	 */
+	public static function restore_backup( string $module = null ) {
+		$backup = get_transient( 'millicache_settings_backup' );
+
+		if ( ! $backup ) {
+			return false;
+		}
+
+		update_option( 'millicache', $backup );
+		delete_transient( 'millicache_settings_backup' );
+
+		return true;
+	}
+
+	/**
+	 * Check if the settings are the default settings.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @param string|null $module The settings module to check (e.g., 'caching', 'redis').
+	 *
+	 * @return bool True if the settings are the default settings, false otherwise.
+	 */
+	public static function has_default_settings( string $module = null ): bool {
+		$settings = new self();
+		return $settings->get_settings( $module ) === $settings->get_default_settings( $module );
+	}
+
+	/**
 	 * Add the configuration file for the current site.
 	 *
 	 * @since    1.0.0

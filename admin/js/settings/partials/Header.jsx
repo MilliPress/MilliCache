@@ -12,7 +12,7 @@ import {
 	ExternalLink,
 	ProgressBar,
 } from '@wordpress/components';
-import { flipVertical, lifesaver, moreVertical } from '@wordpress/icons';
+import { backup, flipVertical, lifesaver, moreVertical } from '@wordpress/icons';
 import { useSettings } from '../context/Settings.jsx';
 import ClearCacheModal from './ClearCacheModal.jsx';
 
@@ -140,6 +140,7 @@ const Header = () => {
 													'millicache'
 												) }
 											</MenuItem>
+
 											<MenuItem
 												__next40pxDefaultSize
 												icon={ flipVertical }
@@ -149,12 +150,33 @@ const Header = () => {
 														'reset_settings'
 													)
 												}
+												disabled={
+													status.settings?.has_defaults
+												}
 											>
 												{ __(
 													'Reset all Settings',
 													'millicache'
 												) }
 											</MenuItem>
+
+											{status.settings?.has_backup && status.settings?.has_defaults && (
+												<MenuItem
+													__next40pxDefaultSize
+													icon={ backup }
+													iconPosition="left"
+													onClick={ () =>
+														triggerAction(
+															'restore_settings'
+														)
+													}
+												>
+													{ __(
+														'Restore previous Settings',
+														'millicache'
+													) }
+												</MenuItem>
+											)}
 										</MenuGroup>
 									</>
 								);
