@@ -77,9 +77,9 @@ class Deactivator {
 			// Delete the advanced-cache.php file if it is a symlink or if the version is equal or lower than the plugin version.
 			if ( is_link( $dropin_file ) || ( $dropin_version && $plugin_version && version_compare( $dropin_version, $plugin_version ) <= 0 ) ) {
 				wp_delete_file( $dropin_file );
-				Admin::add_notice( 'success', __( 'MilliCache deactivated & advanced-cache.php removed.', 'millicache' ) );
+				Admin::add_notice( __( 'MilliCache deactivated & advanced-cache.php removed.', 'millicache' ), 'success' );
 			} else {
-				Admin::add_notice( 'error', __( 'Your version of advanced-cache.php is higher than the original plugin version. We did not delete it, please do it yourself.', 'millicache' ) );
+				Admin::add_notice( __( 'Your version of advanced-cache.php is higher than the original plugin version. We did not delete it, please do it yourself.', 'millicache' ), 'error' );
 			}
 		}
 	}
