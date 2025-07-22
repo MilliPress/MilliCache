@@ -5,7 +5,7 @@
  * This file (advanced-cache.php) is placed in wp-content by MilliCache during activation.
  * It can be either a symlink or a copy, depending on server support.
  *
- * It initializes the caching engine defined in '/includes/class-millicache-engine.php' by invoking \\MilliCache\\Engine::start().
+ * It initializes the caching engine defined in '/includes/class-millicache-engine.php' by invoking \MilliCache\Engine::start().
  *
  *
  * Description: MilliCache Drop-in file, enabling advanced WordPress caching.

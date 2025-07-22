@@ -68,7 +68,7 @@ class Deactivator {
 	 */
 	private static function remove_advanced_cache_file() {
 		$dropin_file = WP_CONTENT_DIR . '/advanced-cache.php';
-		$plugin_file = dirname( plugin_dir_path( __FILE__ ) ) . '/advanced-cache.php';
+		$plugin_file = MILLICACHE_DIR . '/advanced-cache.php';
 
 		if ( file_exists( $dropin_file ) ) {
 			$dropin_version = Admin::get_file_version( $dropin_file );

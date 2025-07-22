@@ -34,7 +34,7 @@ class Activator {
 	 */
 	public static function activate() {
 		// Load the required settings class.
-		require_once plugin_dir_path( __FILE__ ) . 'class-settings.php';
+		require_once MILLICACHE_DIR . '/includes/class-settings.php';
 
 		// Create advanced-cache.php.
 		self::create_advanced_cache_file();
@@ -79,8 +79,7 @@ class Activator {
 			return;
 		}
 
-		$source_path = dirname( plugin_dir_path( __FILE__ ) );
-		$source_file = $source_path . '/advanced-cache.php';
+		$source_file = MILLICACHE_DIR . '/advanced-cache.php';
 		$destination = WP_CONTENT_DIR . '/advanced-cache.php';
 
 		if ( file_exists( $destination ) ) {

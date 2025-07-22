@@ -98,8 +98,8 @@ class Admin {
 	 * @return   void
 	 */
 	private function load_dependencies() {
-		require_once plugin_dir_path( __DIR__ ) . 'admin/class-adminbar.php';
-		require_once plugin_dir_path( __DIR__ ) . 'admin/class-restapi.php';
+		require_once MILLICACHE_DIR . '/admin/class-adminbar.php';
+		require_once MILLICACHE_DIR . '/admin/class-restapi.php';
 
 		new Adminbar( $this->loader, $this->plugin_name, $this->version );
 		new RestAPI( $this->loader, $this->plugin_name, $this->version );
@@ -193,7 +193,7 @@ class Admin {
 		load_plugin_textdomain(
 			'millicache',
 			false,
-			dirname( plugin_basename( __FILE__ ), 2 ) . '/languages/'
+			MILLICACHE_DIR . '/languages/'
 		);
 	}
 
@@ -207,7 +207,7 @@ class Admin {
 	 * @return   void
 	 */
 	public function enqueue_admin_styles_scripts() {
-		$asset_file = dirname( plugin_dir_path( __FILE__ ) ) . '/build/admin.asset.php';
+		$asset_file = MILLICACHE_DIR . '/build/admin.asset.php';
 
 		if ( ! file_exists( $asset_file ) ) {
 			return;
@@ -218,7 +218,7 @@ class Admin {
 		// Enqueue the admin styles.
 		wp_enqueue_style(
 			$this->plugin_name . '-admin',
-			plugins_url( 'build/admin.css', __DIR__ ),
+			plugins_url( 'build/admin.css', MILLICACHE_FILE ),
 			$asset['dependencies'],
 			$asset['version'],
 		);
@@ -226,7 +226,7 @@ class Admin {
 		// Enqueue the admin script.
 		wp_enqueue_script(
 			$this->plugin_name . '-admin',
-			plugins_url( 'build/admin.js', __DIR__ ),
+			plugins_url( 'build/admin.js', MILLICACHE_FILE ),
 			$asset['dependencies'],
 			$asset['version'],
 			array(
@@ -251,7 +251,7 @@ class Admin {
 			return;
 		}
 
-		$asset_file = dirname( plugin_dir_path( __FILE__ ) ) . '/build/settings.asset.php';
+		$asset_file = MILLICACHE_DIR . '/build/settings.asset.php';
 
 		if ( ! file_exists( $asset_file ) ) {
 			return;
@@ -262,7 +262,7 @@ class Admin {
 		// Enqueue the settings page script.
 		wp_enqueue_script(
 			$this->plugin_name . '-settings',
-			plugins_url( 'build/settings.js', __DIR__ ),
+			plugins_url( 'build/settings.js', MILLICACHE_FILE ),
 			array_merge( $asset['dependencies'], array( 'wp-api-fetch' ) ),
 			$asset['version'],
 			array(
@@ -273,7 +273,7 @@ class Admin {
 		// Enqueue the settings page styles.
 		wp_enqueue_style(
 			$this->plugin_name . '-settings',
-			plugins_url( 'build/settings.css', __DIR__ ),
+			plugins_url( 'build/settings.css', MILLICACHE_FILE ),
 			array(),
 			$asset['version'],
 		);

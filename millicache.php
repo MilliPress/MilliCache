@@ -27,9 +27,15 @@ if ( ! defined( 'WPINC' ) ) {
 
 // Define constants for the plugin.
 define( 'MILLICACHE_VERSION', '1.0.0-beta.5' );
-define( 'MILLICACHE_BASENAME', plugin_basename( __FILE__ ) );
-define( 'MILLICACHE_FILE', __FILE__ );
-define( 'MILLICACHE_DIR', __DIR__ );
+
+if ( ! defined( 'MILLICACHE_BASENAME' ) ) {
+	define( 'MILLICACHE_BASENAME', plugin_basename( __FILE__ ) );
+}
+
+if ( ! defined( 'MILLICACHE_FILE' ) ) {
+	define( 'MILLICACHE_FILE', __FILE__ );
+	define( 'MILLICACHE_DIR', __DIR__ );
+}
 
 /**
  * The code that runs during plugin activation.
@@ -39,7 +45,7 @@ define( 'MILLICACHE_DIR', __DIR__ );
  * @return void
  */
 function activate_millicache() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-activator.php';
+	require_once MILLICACHE_DIR . '/includes/class-activator.php';
 	MilliCache\Activator::activate();
 }
 
@@ -51,18 +57,18 @@ function activate_millicache() {
  * @return void
  */
 function deactivate_millicache() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-deactivator.php';
+	require_once MILLICACHE_DIR . '/includes/class-deactivator.php';
 	MilliCache\Deactivator::deactivate();
 }
 
-register_activation_hook( __FILE__, 'activate_millicache' );
-register_deactivation_hook( __FILE__, 'deactivate_millicache' );
+register_activation_hook( MILLICACHE_FILE, 'activate_millicache' );
+register_deactivation_hook( MILLICACHE_FILE, 'deactivate_millicache' );
 
 /**
  * The core plugin class that is used to define internationalization,
  * admin-specific hooks, and public-facing site hooks.
  */
-require plugin_dir_path( __FILE__ ) . 'includes/class-millicache.php';
+require MILLICACHE_DIR . '/includes/class-millicache.php';
 
 /**
  * Begins execution of the plugin.
