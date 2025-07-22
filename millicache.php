@@ -8,7 +8,7 @@
  *
  * @wordpress-plugin
  * Plugin Name:       MilliCache
- * Plugin URI:        https://www.millipress.com/cache
+ * Plugin URI:        https://www.millipress.com/millicache
  * Description:       Redis Full Page Cache for WordPress
  * Version:           1.0.0-beta.5
  * Network:           true
