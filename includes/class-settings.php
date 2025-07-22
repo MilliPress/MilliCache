@@ -25,7 +25,7 @@ class Settings {
 	 *
 	 * @var string
 	 */
-	private static string $domain = 'no.tld';
+	private static string $domain;
 
 	/**
 	 * The option name used in the database.
@@ -41,7 +41,7 @@ class Settings {
 	 * @access   public
 	 */
 	public function __construct() {
-		self::$domain = preg_replace( '/[^a-zA-Z0-9_\-]/', '_', Engine::get_server_var( 'HTTP_HOST' ) );
+		self::$domain = (string) preg_replace( '/[^a-zA-Z0-9_\-]/', '_', Engine::get_server_var( 'HTTP_HOST' ) );
 
 		if ( function_exists( 'add_action' ) ) {
 			add_action( 'init', array( $this, 'register_settings' ) );
@@ -579,7 +579,7 @@ class Settings {
 	 * @throws \Exception If random bytes cannot be generated.
 	 * @throws \SodiumException If the encryption fails.
 	 */
-	private function encrypt_value( string $value ) {
+	private function encrypt_value( string $value ): string {
 		if ( empty( $value ) ) {
 			return $value;
 		}
@@ -599,7 +599,7 @@ class Settings {
 	 *
 	 * @param string $encrypted_value The encrypted value to decrypt.
 	 *
-	 * @return string|mixed
+	 * @return string|bool The decrypted value, or false if the value is not encrypted.
 	 *
 	 * @throws \SodiumException If the decryption fails.
 	 */
