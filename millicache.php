@@ -10,7 +10,7 @@
  * Plugin Name:       MilliCache
  * Plugin URI:        https://www.millipress.com/cache
  * Description:       Redis Full Page Cache for WordPress
- * Version:           1.0.0-beta.3
+ * Version:           1.0.0-beta.5
  * Network:           true
  * Author:            MilliPress Team
  * Author URI:        https://www.millipress.com/
@@ -26,7 +26,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 // Define constants for the plugin.
-define( 'MILLICACHE_VERSION', '1.0.0-beta.3' );
+define( 'MILLICACHE_VERSION', '1.0.0-beta.5' );
 define( 'MILLICACHE_BASENAME', plugin_basename( __FILE__ ) );
 define( 'MILLICACHE_FILE', __FILE__ );
 define( 'MILLICACHE_DIR', __DIR__ );
