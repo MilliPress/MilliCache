@@ -207,7 +207,7 @@ class Admin {
 	 * @return   void
 	 */
 	public function enqueue_admin_styles_scripts() {
-		$asset_file = MILLICACHE_DIR . '/build/admin.asset.php';
+		$asset_file = dirname( plugin_dir_path( MILLICACHE_BASENAME ) ) . '/build/admin.asset.php';
 
 		if ( ! file_exists( $asset_file ) ) {
 			return;
@@ -218,7 +218,7 @@ class Admin {
 		// Enqueue the admin styles.
 		wp_enqueue_style(
 			$this->plugin_name . '-admin',
-			plugins_url( 'build/admin.css', MILLICACHE_FILE ),
+			plugins_url( 'build/admin.css', MILLICACHE_BASENAME ),
 			$asset['dependencies'],
 			$asset['version'],
 		);
@@ -226,7 +226,7 @@ class Admin {
 		// Enqueue the admin script.
 		wp_enqueue_script(
 			$this->plugin_name . '-admin',
-			plugins_url( 'build/admin.js', MILLICACHE_FILE ),
+			plugins_url( 'build/admin.js', MILLICACHE_BASENAME ),
 			$asset['dependencies'],
 			$asset['version'],
 			array(
@@ -251,7 +251,7 @@ class Admin {
 			return;
 		}
 
-		$asset_file = MILLICACHE_DIR . '/build/settings.asset.php';
+		$asset_file = plugin_dir_path( WP_PLUGIN_DIR . '/' . MILLICACHE_BASENAME ) . 'build/settings.asset.php';
 
 		if ( ! file_exists( $asset_file ) ) {
 			return;
@@ -262,7 +262,7 @@ class Admin {
 		// Enqueue the settings page script.
 		wp_enqueue_script(
 			$this->plugin_name . '-settings',
-			plugins_url( 'build/settings.js', MILLICACHE_FILE ),
+			plugins_url( 'build/settings.js', MILLICACHE_BASENAME ),
 			array_merge( $asset['dependencies'], array( 'wp-api-fetch' ) ),
 			$asset['version'],
 			array(
@@ -273,7 +273,7 @@ class Admin {
 		// Enqueue the settings page styles.
 		wp_enqueue_style(
 			$this->plugin_name . '-settings',
-			plugins_url( 'build/settings.css', MILLICACHE_FILE ),
+			plugins_url( 'build/settings.css', MILLICACHE_BASENAME ),
 			array(),
 			$asset['version'],
 		);
