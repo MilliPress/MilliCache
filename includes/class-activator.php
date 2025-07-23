@@ -115,21 +115,21 @@ class Activator {
 					'success'
 				);
 				return;
-			}
+			} else {
+				// Could not create symlink, try to copy the file.
+				$source_content = file_get_contents( $source_file );
+				if ( false !== $source_content ) {
+					// Replace the path to the engine file.
+					$source_content = preg_replace(
+						'/(\$engine_path\s*=\s*)dirname.*?;/s',
+						"$1'" . dirname( __DIR__ ) . "';",
+						$source_content
+					);
 
-			// Could not create symlink, try to copy the file.
-			$source_content = file_get_contents( $source_file );
-			if ( false !== $source_content ) {
-				// Replace the path to the engine file.
-				$source_content = preg_replace(
-					'/(\$engine_path\s*=\s*)dirname.*?;/s',
-					"$1'" . dirname( __DIR__ ) . "';",
-					$source_content
-				);
-
-				if ( file_put_contents( $destination, $source_content, LOCK_EX ) ) {
-					Admin::add_notice( __( 'The file advanced-cache.php has been copied to the /wp-content directory. Please make sure to configure MilliCache to start caching.', 'millicache' ), 'success' );
-					return;
+					if ( file_put_contents( $destination, $source_content, LOCK_EX ) ) {
+						Admin::add_notice( __( 'The file advanced-cache.php has been copied to the /wp-content directory. Please make sure to configure MilliCache to start caching.', 'millicache' ), 'success' );
+						return;
+					}
 				}
 			}
 
