@@ -9,13 +9,14 @@
  * @wordpress-plugin
  * Plugin Name:       MilliCache
  * Plugin URI:        https://www.millipress.com/millicache
- * Description:       Redis Full Page Cache for WordPress
- * Version:           1.0.0-beta.5
+ * Description:       The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, Dragonfly, KeyDB, or your preferred alternative.
+
+ * Version:           1.0.0-rc.1
  * Network:           true
  * Author:            MilliPress Team
  * Author URI:        https://www.millipress.com/
- * License:           GPL-3.0+
- * License URI:       http://www.gnu.org/licenses/gpl-3.0.txt
+ * License:           GPL-2.0+
+ * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       millicache
  * Domain Path:       /languages
  */
@@ -29,7 +30,7 @@ if ( ! defined( 'WPINC' ) ) {
  *
  * @since 1.0.0
  */
-define( 'MILLICACHE_VERSION', '1.0.0-beta.5' );
+define( 'MILLICACHE_VERSION', '1.0.0-rc.1' );
 
 if ( ! defined( 'MILLICACHE_BASENAME' ) ) {
 	define( 'MILLICACHE_BASENAME', plugin_basename( __FILE__ ) );

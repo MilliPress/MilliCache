@@ -1,8 +1,8 @@
 {
   "name": "millicache",
-  "version": "1.0.0-beta.5",
+  "version": "1.0.0-rc.1",
   "author": "Philipp Wellmer <hello@millipress.com>",
-  "license": "GPL-3.0-or-later",
+  "license": "GPL-2.0-or-later",
   "devDependencies": {
     "@playwright/test": "^1.43.1",
     "@types/node": "^20.12.7",

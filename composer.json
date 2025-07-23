@@ -1,8 +1,8 @@
 {
     "name": "millipress/millicache",
-    "description": "Redis Full Page Cache for WordPress",
+    "description": "The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, Dragonfly, KeyDB, or your preferred alternative.",
     "type": "wordpress-plugin",
-    "license": "GPL-3.0-or-later",
+    "license": "GPL-2.0-or-later",
     "authors": [
         {
             "name": "Philipp Wellmer",
