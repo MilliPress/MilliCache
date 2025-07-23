@@ -117,22 +117,30 @@ final class MilliCache {
 		 * The class responsible for orchestrating the actions and filters of the
 		 * core plugin.
 		 */
-		require_once MILLICACHE_DIR . '/includes/class-loader.php';
+		if ( ! class_exists( 'MilliCache\Loader' ) ) {
+			require_once MILLICACHE_DIR . '/includes/class-loader.php';
+		}
 
 		/**
 		 * The class responsible for the MilliCache engine.
 		 */
-		require_once MILLICACHE_DIR . '/includes/class-engine.php';
+		if ( ! class_exists( 'MilliCache\Engine' ) ) {
+			require_once MILLICACHE_DIR . '/includes/class-engine.php';
+		}
 
 		/**
 		 * The class responsible for defining all actions for the CLI.
 		 */
-		require_once MILLICACHE_DIR . '/includes/class-cli.php';
+		if ( ! class_exists( 'MilliCache\CLI' ) ) {
+			require_once MILLICACHE_DIR . '/includes/class-cli.php';
+		}
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
-		require_once MILLICACHE_DIR . '/admin/class-admin.php';
+		if ( ! class_exists( 'MilliCache\Admin' ) ) {
+			require_once MILLICACHE_DIR . '/admin/class-admin.php';
+		}
 
 		$this->loader = new Loader();
 		$this->engine = new Engine();
