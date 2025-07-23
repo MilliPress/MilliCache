@@ -20,21 +20,24 @@
  * Domain Path:       /languages
  */
 
-// If this file is called directly, abort.
 if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-// Define constants for the plugin.
+/**
+ * Define constants for the plugin.
+ *
+ * @since 1.0.0
+ */
 define( 'MILLICACHE_VERSION', '1.0.0-beta.5' );
 
 if ( ! defined( 'MILLICACHE_BASENAME' ) ) {
 	define( 'MILLICACHE_BASENAME', plugin_basename( __FILE__ ) );
-}
 
-if ( ! defined( 'MILLICACHE_FILE' ) ) {
-	define( 'MILLICACHE_FILE', __FILE__ );
-	define( 'MILLICACHE_DIR', __DIR__ );
+	if ( ! defined( 'MILLICACHE_FILE' ) ) {
+		define( 'MILLICACHE_FILE', __FILE__ );
+		define( 'MILLICACHE_DIR', __DIR__ );
+	}
 }
 
 /**
