@@ -9,12 +9,14 @@
  * @subpackage MilliCache/includes
  */
 
-namespace MilliCache;
+namespace MilliCache\Core;
 
+use MilliCache\Engine;
+use MilliCache\Predis;
 use MilliCache\Predis\Autoloader;
 use MilliCache\Predis\Client;
-use MilliCache\Predis\PredisException;
 use MilliCache\Predis\Connection\ConnectionException;
+use MilliCache\Predis\PredisException;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -149,7 +151,7 @@ final class Redis {
 	 *
 	 * @return void
 	 *
-	 * @throws \SodiumException
+	 * @throws \SodiumException If the decryption fails.
 	 */
 	private function config( array $settings ): void {
 		foreach ( $settings as $key => $value ) {
@@ -170,12 +172,8 @@ final class Redis {
 	 * @return bool Whether the connection was successful.
 	 */
 	private function connect(): bool {
-		require_once dirname( __DIR__ ) . '/dependencies/Predis/Autoloader.php';
-
-		// Check if Predis is available.
 		if ( ! self::is_available() ) {
-			error_log( 'Predis is not available.' );
-			return false;
+			require_once dirname( __DIR__, 2 ) . '/dependencies/Predis/Autoloader.php';
 		}
 
 		try {

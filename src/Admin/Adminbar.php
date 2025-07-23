@@ -9,7 +9,10 @@
  * @subpackage MilliCache/admin
  */
 
-namespace MilliCache;
+namespace MilliCache\Admin;
+
+use MilliCache\Core\Loader;
+use MilliCache\Engine;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -44,16 +47,6 @@ class Adminbar {
 	private string $plugin_name;
 
 	/**
-	 * The version of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @var      string    $version    The current version of this plugin.
-	 */
-	private string $version;
-
-	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since   1.0.0
@@ -61,12 +54,10 @@ class Adminbar {
 	 *
 	 * @param Loader $loader The loader class.
 	 * @param string $plugin_name The name of this plugin.
-	 * @param string $version The version of this plugin.
 	 */
-	public function __construct( Loader $loader, string $plugin_name, string $version ) {
+	public function __construct( Loader $loader, string $plugin_name ) {
 		$this->loader = $loader;
 		$this->plugin_name = $plugin_name;
-		$this->version = $version;
 
 		$this->register_hooks();
 	}
@@ -82,8 +73,8 @@ class Adminbar {
 	 */
 	private function register_hooks() {
 		// Scripts & Styles.
-		$this->loader->add_action( 'wp_enqueue_scripts', $this, 'enqueue_styles_scripts' );
-		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_styles_scripts' );
+		$this->loader->add_action( 'wp_enqueue_scripts', $this, 'enqueue_adminbar_assets' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_adminbar_assets' );
 
 		// Menu items.
 		$this->loader->add_action( 'admin_bar_menu', $this, 'add_adminbar_menu', 999 );
@@ -101,42 +92,17 @@ class Adminbar {
 	 * @since    1.0.0
 	 * @access   public
 	 */
-	public function enqueue_styles_scripts() {
-		$asset_file = dirname( __DIR__ ) . '/build/adminbar.asset.php';
-		if ( ! file_exists( $asset_file ) ) {
-			return;
+	public function enqueue_adminbar_assets() {
+		if ( Admin::enqueue_assets( 'adminbar' ) ) {
+			$inline_script = 'const millicache = ' . json_encode(
+				array(
+					'ajaxurl' => admin_url( 'admin-ajax.php' ),
+					'is_network_admin' => is_network_admin(),
+				)
+			) . ';';
+
+			wp_add_inline_script( 'millicache-adminbar', $inline_script, 'before' );
 		}
-
-		$asset = include $asset_file;
-
-		// Enqueue the adminbar script.
-		wp_enqueue_script(
-			$this->plugin_name . '-adminbar',
-			plugins_url( 'build/adminbar.js', MILLICACHE_FILE ),
-			$asset['dependencies'],
-			$asset['version'],
-			array(
-				'in_footer' => true,
-			)
-		);
-
-		// Attach inline script.
-		$inline_script = 'const millicache = ' . json_encode(
-			array(
-				'ajaxurl' => admin_url( 'admin-ajax.php' ),
-				'is_network_admin' => is_network_admin(),
-			)
-		) . ';';
-
-		wp_add_inline_script( $this->plugin_name . '-adminbar', $inline_script, 'before' );
-
-		// Enqueue the adminbar styles.
-		wp_enqueue_style(
-			$this->plugin_name . '-adminbar',
-			plugins_url( 'build/adminbar.css', MILLICACHE_FILE ),
-			$asset['dependencies'],
-			$asset['version'],
-		);
 	}
 
 	/**
@@ -195,13 +161,13 @@ class Adminbar {
 	 *
 	 * @return   bool
 	 */
-	public function validate_clear_cache_request() {
+	public function validate_clear_cache_request(): bool {
 		// Sanitize the input.
 		$action = $this->get_request_value( '_millicache' );
 		$nonce = $this->get_request_value( '_wpnonce' );
 
 		// Validate nonce here as needed.
-		if ( ! $action || ! in_array( $action, array( 'flush', 'flush_current' ), true ) ) {
+		if ( ! in_array( $action, array( 'flush', 'flush_current' ), true ) ) {
 			return false;
 		}
 

@@ -7,7 +7,9 @@
  * @author     Philipp Wellmer <hello@millicache.com>
  */
 
-namespace MilliCache;
+namespace MilliCache\Core;
+
+use MilliCache\Engine;
 
 ! defined( 'ABSPATH' ) && exit;
 

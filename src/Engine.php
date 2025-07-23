@@ -11,6 +11,10 @@
 
 namespace MilliCache;
 
+use MilliCache\Admin\Admin;
+use MilliCache\Core\Redis;
+use MilliCache\Core\Settings;
+
 ! defined( 'ABSPATH' ) && exit;
 
 /**
@@ -290,7 +294,9 @@ final class Engine {
 			/**
 			 * The MilliPress Settings class.
 			 */
-			require_once __DIR__ . '/class-settings.php';
+			if ( ! class_exists( 'MilliCache\Core\Settings' ) ) {
+				require_once __DIR__ . '/Settings.php';
+			}
 
 			self::$settings_instance = new Settings();
 			self::$settings = self::$settings_instance->get_settings();
@@ -312,7 +318,10 @@ final class Engine {
 			/**
 			 * The MilliPress Redis class.
 			 */
-			require_once __DIR__ . '/class-redis.php';
+			if ( ! class_exists( 'MilliCache\Core\Redis' ) ) {
+				require_once __DIR__ . '/Redis.php';
+			}
+
 			self::$storage = new Redis( (array) self::$settings['redis'] );
 		}
 
@@ -555,7 +564,7 @@ final class Engine {
 			defined( 'REST_REQUEST' ) && REST_REQUEST, // Skip caching for Rest API requests.
 			defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST, // Skip caching for XML-RPC requests.
 			preg_match( '/\.[a-z0-9]+($|\?)/i', self::get_server_var( 'REQUEST_URI' ) ), // Skip files.
-			php_sapi_name() === 'cli' || ( defined( 'WP_CLI' ) && WP_CLI ), // Skip caching for CLI requests.
+			php_sapi_name() === 'cli' || ( defined( 'WP_CLI' ) && true === WP_CLI ), // Skip caching for CLI requests.
 			http_response_code() >= 500, // Don't cache 5xx errors.
 			strtolower( self::get_server_var( 'REQUEST_METHOD' ) ) === 'post', // Skip caching for POST requests.
 			self::$ttl < 1, // Skip caching if TTL (Time To Live) is not set.

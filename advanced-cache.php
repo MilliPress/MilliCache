@@ -22,12 +22,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $engine_path = dirname( is_link( __FILE__ ) ? (string) readlink( __FILE__ ) : __FILE__ );
-$engine_file = realpath( $engine_path . '/includes/class-engine.php' );
+$engine_file = realpath( $engine_path . '/includes/Engine.php' );
 
 if ( file_exists( (string) $engine_file ) ) {
 	require_once $engine_file;
 
-	if ( class_exists( '\MilliCache\Engine' ) ) {
-		\MilliCache\Engine::start();
+	if ( class_exists('\MilliCache\Engine') ) {
+		MilliCache\Engine::start();
 	}
 }

@@ -9,7 +9,10 @@
  * @subpackage MilliCache/includes
  */
 
-namespace MilliCache;
+namespace MilliCache\Admin;
+
+use MilliCache\Core\Loader;
+use MilliCache\Engine;
 
 ! defined( 'ABSPATH' ) && exit;
 

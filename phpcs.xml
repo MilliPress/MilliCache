@@ -22,11 +22,14 @@
     <file>millicache.php</file>
     <file>advanced-cache.php</file>
     <exclude-pattern>tests/*</exclude-pattern>
-    <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>lib/*</exclude-pattern>
     <exclude-pattern>*/index.php</exclude-pattern>
 
     <!-- WordPress coding standards -->
     <config name="minimum_supported_wp_version" value="5.1"/>
+    <rule ref="WordPress-Core">
+        <exclude name="WordPress.Files.FileName" />
+    </rule>
     <rule ref="WordPress">
         <exclude name="PSR2.Classes.PropertyDeclaration.Underscore"/>
         <exclude name="PSR2.Methods.MethodDeclaration.Underscore"/>

@@ -9,7 +9,10 @@
  * @subpackage MilliCache/admin
  */
 
-namespace MilliCache;
+namespace MilliCache\Admin;
+
+use MilliCache\Core\Loader;
+use MilliCache\Engine;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -26,7 +29,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 class Admin {
-
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -98,10 +100,7 @@ class Admin {
 	 * @return   void
 	 */
 	private function load_dependencies() {
-		require_once MILLICACHE_DIR . '/admin/class-adminbar.php';
-		require_once MILLICACHE_DIR . '/admin/class-restapi.php';
-
-		new Adminbar( $this->loader, $this->plugin_name, $this->version );
+		new Adminbar( $this->loader, $this->plugin_name );
 		new RestAPI( $this->loader, $this->plugin_name, $this->version );
 	}
 
@@ -116,8 +115,8 @@ class Admin {
 	 */
 	private function define_admin_hooks() {
 		// Scripts & Styles.
-		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_admin_styles_scripts' );
-		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_settings_styles_scripts' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_admin_assets' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_settings_assets' );
 
 		// Text Domain.
 		$this->loader->add_action( 'plugins_loaded', $this, 'load_plugin_textdomain' );
@@ -206,33 +205,8 @@ class Admin {
 	 *
 	 * @return   void
 	 */
-	public function enqueue_admin_styles_scripts() {
-		$asset_file = dirname( plugin_dir_path( MILLICACHE_BASENAME ) ) . '/build/admin.asset.php';
-
-		if ( ! file_exists( $asset_file ) ) {
-			return;
-		}
-
-		$asset = include $asset_file;
-
-		// Enqueue the admin styles.
-		wp_enqueue_style(
-			$this->plugin_name . '-admin',
-			plugins_url( 'build/admin.css', MILLICACHE_BASENAME ),
-			$asset['dependencies'],
-			$asset['version'],
-		);
-
-		// Enqueue the admin script.
-		wp_enqueue_script(
-			$this->plugin_name . '-admin',
-			plugins_url( 'build/admin.js', MILLICACHE_BASENAME ),
-			$asset['dependencies'],
-			$asset['version'],
-			array(
-				'in_footer' => true,
-			)
-		);
+	public function enqueue_admin_assets() {
+		self::enqueue_assets( 'admin' );
 	}
 
 	/**
@@ -246,40 +220,61 @@ class Admin {
 	 *
 	 * @return   void
 	 */
-	public function enqueue_settings_styles_scripts( string $admin_page ) {
+	public function enqueue_settings_assets( string $admin_page ) {
 		if ( 'settings_page_millicache' !== $admin_page ) {
 			return;
 		}
 
-		$asset_file = plugin_dir_path( WP_PLUGIN_DIR . '/' . MILLICACHE_BASENAME ) . 'build/settings.asset.php';
+		// Enqueue the settings assets.
+		self::enqueue_assets( 'settings', array( 'wp-api-fetch' ) );
+
+		// Enqueue the WordPress components.
+		wp_enqueue_style( 'wp-components' );
+	}
+
+	/**
+	 * Helper method to enqueue assets.
+	 *
+	 * @since    1.0.0
+	 * @access   public static
+	 *
+	 * @param string        $asset_name      The asset name without extension.
+	 * @param array<string> $js_deps         An array of JavaScript dependencies to include.
+	 * @param array<string> $css_deps        An array of CSS dependencies to include.
+	 *
+	 * @return bool True if assets were successfully enqueued, false otherwise.
+	 */
+	public static function enqueue_assets( string $asset_name, array $js_deps = array(), array $css_deps = array() ): bool {
+		if ( ! defined( 'MILLICACHE_BASENAME' ) ) {
+			return false;
+		}
+
+		$asset_file = plugin_dir_path( WP_PLUGIN_DIR . '/' . MILLICACHE_BASENAME ) . '/build/' . $asset_name . '.asset.php';
 
 		if ( ! file_exists( $asset_file ) ) {
-			return;
+			return false;
 		}
 
 		$asset = include $asset_file;
 
-		// Enqueue the settings page script.
-		wp_enqueue_script(
-			$this->plugin_name . '-settings',
-			plugins_url( 'build/settings.js', MILLICACHE_BASENAME ),
-			array_merge( $asset['dependencies'], array( 'wp-api-fetch' ) ),
-			$asset['version'],
-			array(
-				'in_footer' => true,
-			)
-		);
-
-		// Enqueue the settings page styles.
+		// Enqueue the styles.
 		wp_enqueue_style(
-			$this->plugin_name . '-settings',
-			plugins_url( 'build/settings.css', MILLICACHE_BASENAME ),
-			array(),
-			$asset['version'],
+			"millicache-{$asset_name}",
+			plugins_url( 'build/' . $asset_name . '.css', MILLICACHE_BASENAME ),
+			$css_deps,
+			$asset['version']
 		);
 
-		// Enqueue the WordPress components.
-		wp_enqueue_style( 'wp-components' );
+		// Enqueue the script.
+		wp_enqueue_script(
+			"millicache-{$asset_name}",
+			plugins_url( 'build/' . $asset_name . '.js', MILLICACHE_BASENAME ),
+			array_merge( $asset['dependencies'], $js_deps ),
+			$asset['version'],
+			array( 'in_footer' => true )
+		);
+
+		return true;
 	}
 
 	/**

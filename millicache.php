@@ -41,6 +41,15 @@ if ( ! defined( 'MILLICACHE_BASENAME' ) ) {
 }
 
 /**
+ * Autoloader.
+ *
+ * @since 1.0.0
+ */
+if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+	require_once __DIR__ . '/vendor/autoload.php';
+}
+
+/**
  * The code that runs during plugin activation.
  *
  * @since 1.0.0
@@ -48,8 +57,7 @@ if ( ! defined( 'MILLICACHE_BASENAME' ) ) {
  * @return void
  */
 function activate_millicache() {
-	require_once MILLICACHE_DIR . '/includes/class-activator.php';
-	MilliCache\Activator::activate();
+	\MilliCache\Admin\Activator::activate();
 }
 
 /**
@@ -60,18 +68,11 @@ function activate_millicache() {
  * @return void
  */
 function deactivate_millicache() {
-	require_once MILLICACHE_DIR . '/includes/class-deactivator.php';
-	MilliCache\Deactivator::deactivate();
+	\MilliCache\Admin\Deactivator::deactivate();
 }
 
 register_activation_hook( MILLICACHE_FILE, 'activate_millicache' );
 register_deactivation_hook( MILLICACHE_FILE, 'deactivate_millicache' );
-
-/**
- * The core plugin class that is used to define internationalization,
- * admin-specific hooks, and public-facing site hooks.
- */
-require MILLICACHE_DIR . '/includes/class-millicache.php';
 
 /**
  * Begins execution of the plugin.

@@ -25,8 +25,13 @@
         "roave/security-advisories": "dev-latest",
         "coenjacobs/mozart": "^0.7.1"
     },
+    "autoload": {
+        "psr-4": {
+            "MilliCache\\": "src/"
+        }
+    },
     "suggest": {
-        "ext-zlib": "Allows compressing the cache with zlib."
+        "ext-zlib": "Allows MilliCache to compress the cache with zlib."
     },
     "scripts": {
         "test": "composer fix && composer lint && composer phpstan",
@@ -46,6 +51,7 @@
         ]
     },
     "config": {
+        "vendor-dir": "vendor",
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "phpstan/extension-installer": true

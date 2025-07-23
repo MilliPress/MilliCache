@@ -9,7 +9,11 @@
  * @subpackage MilliCache/includes
  */
 
-namespace MilliCache;
+namespace MilliCache\Admin;
+
+use MilliCache\Core\Loader;
+use MilliCache\Core\Settings;
+use MilliCache\Engine;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -122,7 +126,8 @@ class RestAPI {
 	 * @since   1.0.0
 	 * @access  public
 	 *
-	 * @param \WP_REST_Request<array<string, mixed>> $request The REST API request object.
+	 * @param \WP_REST_Request $request The REST API request object.
+	 * @phpstan-param \WP_REST_Request<array<string, mixed>> $request
 	 *
 	 * @return \WP_REST_Response
 	 */
@@ -161,7 +166,8 @@ class RestAPI {
 	 * @since   1.0.0
 	 * @access  public
 	 *
-	 * @param \WP_REST_Request<array<string, mixed>> $request The REST API request object.
+	 * @param \WP_REST_Request $request The REST API request object.
+	 * @phpstan-param \WP_REST_Request<array<string, mixed>> $request
 	 *
 	 * @return \WP_REST_Response|\WP_Error
 	 */

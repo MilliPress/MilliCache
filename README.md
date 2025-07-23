@@ -292,7 +292,7 @@ Decide whether to expire or delete cache entries based on your requirements and 
 - ### Clear Global Cache
 
   To clear all cache entries.
-  
+
   ```php
   /*
    * @param bool $expire Expire cache if set to true, or delete by default. (optional)
@@ -304,7 +304,7 @@ Decide whether to expire or delete cache entries based on your requirements and 
 
   To clear the cache by specific flags.
   Please note the [wildcard support](#wildcards) below.
-  
+
   ```php
   /*
    * @param string|array $flags Flag or array of flags to clear.
@@ -344,7 +344,7 @@ Decide whether to expire or delete cache entries based on your requirements and 
 - ### Clear Cache by URL
 
   To clear the cache by a specific URL.
-  
+
   ```php
   /*
    * @param string|array $urls URL or array of URLs to clear.
@@ -356,7 +356,7 @@ Decide whether to expire or delete cache entries based on your requirements and 
 - ### Clear Cache by Post IDs
 
   To clear the cache of specific posts, pages, or CPTs.
-  
+
   ```php
   /*
    * @param int|array $post_ids Post ID or array of Post IDs to clear.
@@ -368,20 +368,20 @@ Decide whether to expire or delete cache entries based on your requirements and 
 - ### Clear Cache by Site IDs
   
   To clear the cache of specific sites in a WordPress Multisite network.
-  
+
   ```php
     /*
      * @param int|array $site_ids Site ID or array of Site IDs to clear.
      * @param bool $expire Expire cache if set to true, or delete by default. (optional)
      */
-    \MilliCache\Engine::clear_cache_by_site_ids($site_ids, $expire);
+  \MilliCache\Engine::clear_cache_by_site_ids($site_ids, $expire);
   ```
 
 
 - ### Clear Cache by Network IDs
 
   To clear the cache of specific networks in a multi-network installation.
-  
+
   ```php
   /*
    * @param int|array $network_ids Network ID or array of Network IDs to clear.
@@ -394,7 +394,7 @@ Decide whether to expire or delete cache entries based on your requirements and 
 
   A convenient method to clear the cache based on different target types in a single call.
   This method automatically determines the target type by its format (URL, numeric Post ID, or cache flag).
-  
+
   ```php
   /*
    * @param string|array $targets String or array of targets to clear:
@@ -408,7 +408,7 @@ Decide whether to expire or delete cache entries based on your requirements and 
   ```
   
   Example usage:
-  
+
   ```php
   // Clear cache for multiple types of targets at once
   \MilliCache\Engine::clear_cache_by_targets([

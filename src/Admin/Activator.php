@@ -9,7 +9,9 @@
  * @subpackage MilliCache/includes
  */
 
-namespace MilliCache;
+namespace MilliCache\Admin;
+
+use MilliCache\Core\Settings;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -33,9 +35,6 @@ class Activator {
 	 * @return   void
 	 */
 	public static function activate() {
-		// Load the required settings class.
-		require_once MILLICACHE_DIR . '/includes/class-settings.php';
-
 		// Create advanced-cache.php.
 		self::create_advanced_cache_file();
 
