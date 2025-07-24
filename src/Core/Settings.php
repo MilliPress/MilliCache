@@ -192,10 +192,11 @@ class Settings {
 	 * @access   public
 	 *
 	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'redis').
+	 * @param bool $skip_constants Whether to skip constants defined in wp-config.php.
 	 *
 	 * @return array<array<mixed>> The settings array.
 	 */
-	public function get_settings( ?string $module = null ): array {
+	public function get_settings( ?string $module = null, bool $skip_constants = false ): array {
 		// Step 1: Get default settings.
 		$settings = $this->get_default_settings( $module );
 
@@ -209,10 +210,12 @@ class Settings {
 		}
 
 		// Step 3: Overwrite with values from constants in wp-config.php.
-		$constant_settings = $this->get_settings_from_constants( $module );
-		foreach ( $constant_settings as $module_key => $module_settings ) {
-			foreach ( $module_settings as $key => $value ) {
-				$settings[ $module_key ][ $key ] = $value;
+		if ( ! $skip_constants ) {
+			$constant_settings = $this->get_settings_from_constants($module);
+			foreach ($constant_settings as $module_key => $module_settings) {
+				foreach ($module_settings as $key => $value) {
+					$settings[$module_key][$key] = $value;
+				}
 			}
 		}
 
@@ -420,7 +423,7 @@ class Settings {
 	 */
 	public static function has_default_settings( string $module = null ): bool {
 		$settings = new self();
-		return $settings->get_settings( $module ) === $settings->get_default_settings( $module );
+		return $settings->get_settings( $module, true ) === $settings->get_default_settings( $module );
 	}
 
 	/**
