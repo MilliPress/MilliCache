@@ -12,11 +12,11 @@
 namespace MilliCache\Core;
 
 use MilliCache\Engine;
-use MilliCache\Predis;
-use MilliCache\Predis\Autoloader;
-use MilliCache\Predis\Client;
-use MilliCache\Predis\Connection\ConnectionException;
-use MilliCache\Predis\PredisException;
+use MilliCache\Deps\Predis;
+use MilliCache\Deps\Predis\Autoloader;
+use MilliCache\Deps\Predis\Client;
+use MilliCache\Deps\Predis\Connection\ConnectionException;
+use MilliCache\Deps\Predis\PredisException;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -126,7 +126,7 @@ final class Redis {
 	 * @return bool Whether Redis is available.
 	 */
 	public static function is_available(): bool {
-		return class_exists( '\MilliCache\Predis\Autoloader' );
+		return class_exists( '\MilliCache\Deps\Predis\Autoloader' );
 	}
 
 	/**
@@ -173,7 +173,7 @@ final class Redis {
 	 */
 	private function connect(): bool {
 		if ( ! self::is_available() ) {
-			require_once dirname( __DIR__, 2 ) . '/dependencies/Predis/Autoloader.php';
+			require_once dirname( __DIR__, 2 ) . '/src/Deps/Predis/Autoloader.php';
 		}
 
 		try {
