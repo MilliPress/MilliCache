@@ -1,6 +1,6 @@
 {
     "name": "millipress/millicache",
-    "description": "The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, Dragonfly, KeyDB, or your preferred alternative.",
+    "description": "The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any alternative.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "authors": [
@@ -10,10 +10,10 @@
         }
     ],
     "require": {
-        "php": ">=7.4",
-        "predis/predis": "^2.2"
+        "php": ">=7.4"
     },
     "require-dev": {
+        "predis/predis": "^2.2",
         "wp-coding-standards/wpcs": "^3.0",
         "phpcompatibility/phpcompatibility-wp": "*",
         "php-stubs/wp-cli-stubs": "^2.10",
@@ -39,12 +39,15 @@
         "lint": "phpcs --standard=phpcs.xml -s",
         "fix": "phpcbf --standard=phpcs.xml",
         "post-install-cmd": [
-            "\"vendor/bin/mozart\" compose",
+            "@mozart-if-present",
             "composer dump-autoload"
         ],
         "post-update-cmd": [
-            "\"vendor/bin/mozart\" compose",
+            "@mozart-if-present",
             "composer dump-autoload"
+        ],
+        "mozart-if-present": [
+            "bash -c \"if [ -f 'vendor/bin/mozart' ]; then vendor/bin/mozart compose; fi\""
         ],
         "cghooks": [
             "vendor/bin/cghooks"
@@ -59,10 +62,13 @@
     },
     "extra": {
         "mozart": {
-            "dep_namespace": "MilliCache\\",
-            "dep_directory": "/dependencies/",
+            "dep_namespace": "MilliCache\\Deps\\",
+            "dep_directory": "/src/Deps/",
             "classmap_directory": "/classes/",
-            "classmap_prefix": "MilliCache_"
+            "classmap_prefix": "MilliCache_",
+            "packages": [
+                "predis/predis"
+            ]
         },
         "hooks": {
             "config": {

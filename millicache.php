@@ -9,7 +9,7 @@
  * @wordpress-plugin
  * Plugin Name:       MilliCache
  * Plugin URI:        https://www.millipress.com/millicache
- * Description:       The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, Dragonfly, KeyDB, or your preferred alternative.
+ * Description:       The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any alternative.
 
  * Version:           1.0.0-rc.1
  * Network:           true

@@ -1,0 +1,42 @@
+<?php
+
+/*
+ * This file is part of the MilliCache\Deps\Predis package.
+ *
+ * (c) 2009-2020 Daniele Alessandri
+ * (c) 2021-2025 Till Krüss
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace MilliCache\Deps\Predis\Command\Redis;
+
+use MilliCache\Deps\Predis\Command\Command as RedisCommand;
+
+/**
+ * @see http://redis.io/commands/geohash
+ */
+class GEOHASH extends RedisCommand
+{
+    /**
+     * {@inheritdoc}
+     */
+    public function getId()
+    {
+        return 'GEOHASH';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setArguments(array $arguments)
+    {
+        if (count($arguments) === 2 && is_array($arguments[1])) {
+            $members = array_pop($arguments);
+            $arguments = array_merge($arguments, $members);
+        }
+
+        parent::setArguments($arguments);
+    }
+}
