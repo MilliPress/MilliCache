@@ -4,10 +4,8 @@ parameters:
     - millicache.php
     - advanced-cache.php
     - admin/
-    - includes/
+    - src/
   scanFiles:
     - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
   fileExtensions:
     - php
-  scanDirectories:
-    - dependencies/
