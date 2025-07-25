@@ -100,7 +100,7 @@ class Admin {
 	 * @return   void
 	 */
 	private function load_dependencies() {
-		new Adminbar( $this->loader, $this->plugin_name );
+		new Adminbar( $this->loader );
 		new RestAPI( $this->loader, $this->plugin_name, $this->version );
 	}
 

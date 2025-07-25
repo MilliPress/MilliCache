@@ -27,7 +27,7 @@ $engine_file = realpath( $engine_path . '/includes/Engine.php' );
 if ( file_exists( (string) $engine_file ) ) {
 	require_once $engine_file;
 
-	if ( class_exists('\MilliCache\Engine') ) {
+	if ( class_exists( '\MilliCache\Engine' ) ) {
 		MilliCache\Engine::start();
 	}
 }

@@ -5,6 +5,8 @@ parameters:
     - advanced-cache.php
     - admin/
     - src/
+  excludePaths:
+    - src/Deps/
   scanFiles:
     - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
   fileExtensions:

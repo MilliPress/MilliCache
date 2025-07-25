@@ -192,7 +192,7 @@ class Settings {
 	 * @access   public
 	 *
 	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'storage').
-	 * @param bool $skip_constants Whether to skip constants defined in wp-config.php.
+	 * @param bool        $skip_constants Whether to skip constants defined in wp-config.php.
 	 *
 	 * @return array<array<mixed>> The settings array.
 	 */
@@ -211,10 +211,10 @@ class Settings {
 
 		// Step 3: Overwrite with values from constants in wp-config.php.
 		if ( ! $skip_constants ) {
-			$constant_settings = $this->get_settings_from_constants($module);
-			foreach ($constant_settings as $module_key => $module_settings) {
-				foreach ($module_settings as $key => $value) {
-					$settings[$module_key][$key] = $value;
+			$constant_settings = $this->get_settings_from_constants( $module );
+			foreach ( $constant_settings as $module_key => $module_settings ) {
+				foreach ( $module_settings as $key => $value ) {
+					$settings[ $module_key ][ $key ] = $value;
 				}
 			}
 		}

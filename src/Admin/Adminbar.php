@@ -37,27 +37,15 @@ class Adminbar {
 	protected Loader $loader;
 
 	/**
-	 * The ID of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @var      string    $plugin_name    The ID of this plugin.
-	 */
-	private string $plugin_name;
-
-	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since   1.0.0
 	 * @access public
 	 *
 	 * @param Loader $loader The loader class.
-	 * @param string $plugin_name The name of this plugin.
 	 */
-	public function __construct( Loader $loader, string $plugin_name ) {
+	public function __construct( Loader $loader ) {
 		$this->loader = $loader;
-		$this->plugin_name = $plugin_name;
 
 		$this->register_hooks();
 	}

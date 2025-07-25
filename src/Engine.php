@@ -308,19 +308,17 @@ final class Engine {
 	/**
 	 * Returns the MilliCache Storage instance.
 	 *
-	 * @return   Storage The MilliCache Storage instance.
 	 * @since    1.0.0
 	 * @access   public
 	 *
 	 * @return   Storage The MilliCache Storage instance.
 	 */
-	public static function get_storage(): Storage
-	{
+	public static function get_storage(): Storage {
 		if ( ! isset( self::$storage ) ) {
 			/**
 			 * The MilliPress Storage class.
 			 */
-			if ( ! class_exists( 'MilliCache\Core\Storage') ) {
+			if ( ! class_exists( 'MilliCache\Core\Storage' ) ) {
 				require_once __DIR__ . '/Core/Storage.php';
 			}
 
