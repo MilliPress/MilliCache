@@ -1,13 +1,13 @@
-# MilliCache: Redis Full Page Cache for WordPress
+# MilliCache: High-Performance Full Page Cache for WordPress
 
 [![e2e-Tests](https://github.com/MilliPress/MilliCache/actions/workflows/playwright.yml/badge.svg)](https://github.com/MilliPress/MilliCache/actions/workflows/playwright.yml)
 
-**MilliCache is a fast & flexible full-page caching solution for WordPress**. 
-Unlike other caching plugins, it uses Redis as its backend to store cached pages. 
-By leveraging Redis's in-memory storage capabilities, MilliCache is exceptionally fast, reliable, and scalable. 
-Moreover, it allows for highly efficient and targeted cache invalidation, 
-greatly increasing both efficiency and flexibility. 
-This is especially important for the future of WordPress, 
+**MilliCache is a fast & flexible full-page caching solution for WordPress**.
+It uses in-memory key-value stores like Redis, Valkey, KeyDB, or Dragonfly as its backend to store cached pages.
+By leveraging in-memory storage capabilities, MilliCache is exceptionally fast, reliable, and scalable.
+Moreover, it allows for highly efficient and targeted cache invalidation,
+greatly increasing both efficiency and flexibility.
+This is especially important for the future of WordPress,
 as it enables more dynamic content and complex caching strategies — for example, with the use of the Block Editor.
 
 Optimized for both WordPress Multisite and Single Site setups, 
@@ -15,9 +15,9 @@ MilliCache provides a versatile and robust caching solution for all types of Wor
 
 > [!IMPORTANT]
 >
-> This plugin is currently under active development and not officially ready for production use.
-> Things may change without notice.
-> Please [report](https://github.com/MilliPress/MilliCache/issues/new) any problems you encounter.
+> This plugin is currently in Release Candidate stage and approaching stable release.
+> While suitable for testing in production-like environments, please exercise caution and
+> [report](https://github.com/MilliPress/MilliCache/issues/new) any problems you encounter.
 
 ---
 
@@ -50,38 +50,39 @@ MilliCache provides a versatile and robust caching solution for all types of Wor
 - **[Debugging](#debugging)**: Provides cache information in headers.
 - **Scalable**: Works with Redis clusters.
 - **Object Cache**: Works with Redis object cache plugins like [WP Redis](https://wordpress.org/plugins/wp-redis/) & [Redis Object Cache](https://wordpress.org/plugins/redis-cache/).
-- **Compatible**: Work with [Redis Server](https://redis.io/), [KeyDB](https://keydb.dev) & [Dragonfly](https://www.dragonflydb.io/).
+- **Flexible Storage**: Compatible with [Valkey](https://valkey.io/), [Redis Server](https://redis.io/), [KeyDB](https://keydb.dev) & [Dragonfly](https://www.dragonflydb.io/).
 
 ---
 
 ## Requirements
 
-- PHP 7.4 or higher
-- Redis server installed and running
+- PHP 7.4 or higher (PHP 8.x recommended for performance)
+- A compatible in-memory storage server, either installed locally or accessible via network:
+    - [Redis](https://redis.io/) (traditional option)
+    - [Valkey](https://valkey.io) (Redis fork with enhanced features)
+    - [KeyDB](https://keydb.dev) (Redis-compatible with multi-threading)
+    - [Dragonfly](https://www.dragonflydb.io/) (modern Redis alternative)
 
-### Installing Redis
+### Storage Server Configuration
 
-For installation instructions,
-refer to the [Redis Documentation](https://redis.io/docs/latest/operate/oss_and_stack/install/).
-
-### Redis Configuration
-
-Make sure your Redis server has enough memory allocated to store your cached pages.
+Make sure your storage server has enough memory allocated to store your cached pages.
 MilliCache compresses cached pages using gzip to reduce memory usage.
 However, you need to keep an eye on your cache size in the Dashboard to increase according to your hit rate.
-We also recommend disabling flushing the Redis cache to disk and the `allkeys-lru` eviction policy
+
+For Redis, Valkey, and KeyDB, we recommend disabling persistence to disk and using the `allkeys-lru` eviction policy
 to ensure the server can make more room for new cached pages by evicting old ones.
-Here is an example of the redis.conf file:
+Here is an example configuration:
+
 
 ```
-# Set maximum memory for Redis e.g. to 16 megabytes
+# Set maximum memory e.g. to 16 megabytes
 maxmemory 16m
 
 # Set eviction policy to remove less recently used keys first
 maxmemory-policy allkeys-lru
 ```
 
-Remember to restart the Redis server after making changes to the configuration file.
+Remember to restart your storage server after making changes to the configuration file.
 
 ---
 
@@ -126,17 +127,20 @@ define('MC_REDIS_PORT', 6379);
 
 ### General Configuration
 
-| Constant                         | Description                                          | Default                             |
-|----------------------------------|------------------------------------------------------|-------------------------------------|
-| `MC_CACHE_DEBUG`                 | Enable Debugging                                     | `false`                             |
-| `MC_CACHE_GZIP`                  | Enable Gzip Compression                              | `true`                              |
-| `MC_CACHE_TTL`                   | Default Cache TTL                                    | `DAY_IN_SECONDS`                    |
-| `MC_CACHE_MAX_TTL`               | Max TTL for Stale Cache Entries                      | `MONTH_IN_SECONDS`                  |
-| `MC_CACHE_IGNORE_COOKIES`        | Cookies that are ignored/stripped from the request   | `[]`                                |
-| `MC_CACHE_NOCACHE_COOKIES`       | Cookies which avoid caching                          | `['comment_author']`                |
-| `MC_CACHE_IGNORE_REQUEST_KEYS`   | Request keys that are ignored                        | `['utm_source', 'utm_medium', ...]` |
-| `MC_CACHE_SHOULD_CACHE_CALLBACK` | External callback to append custom cache conditions  | `''`                                |
-| `MC_CACHE_UNIQUE`                | Variables that make the request & cache entry unique | `[]`                                |
+| Constant                         | Description                                          | Default                |
+|----------------------------------|------------------------------------------------------|------------------------|
+| `MC_CACHE_DEBUG`                 | Enable Debugging                                     | `false`                |
+| `MC_CACHE_GZIP`                  | Enable Gzip Compression                              | `true`                 |
+| `MC_CACHE_TTL`                   | Default Cache TTL                                    | `DAY_IN_SECONDS`       |
+| `MC_CACHE_MAX_TTL`               | Max TTL for Stale Cache Entries                      | `MONTH_IN_SECONDS`     |
+| `MC_CACHE_IGNORE_COOKIES`        | Cookies that are ignored/stripped from the request   | `[]`                   |
+| `MC_CACHE_NOCACHE_COOKIES`       | Cookies which avoid caching                          | `['comment_author']`   |
+| `MC_CACHE_IGNORE_REQUEST_KEYS`   | Request keys that are ignored                        | `['_*', 'utm_*', ...]` |
+| `MC_CACHE_SHOULD_CACHE_CALLBACK` | External callback to append custom cache conditions  | `''`                   |
+| `MC_CACHE_UNIQUE`                | Variables that make the request & cache entry unique | `[]`                   |
+
+> [!INFO]
+> MilliCache supports wildcard patterns for cookie and request key configurations, allowing for more flexible cache control: `['cookie_*', 'coo*_*', 'request_*']`.
 
 ### Redis Connection Configuration
 
@@ -533,16 +537,6 @@ add_filter('millicache_clear_site_options', function( $options ) {
     return $options;
 });
 ```
-
----
-
-## Roadmap
-
-Planned features:
-
-- [x] Settings UI
-- [ ] Cache Preloading
-- [ ] CDN Integration
 
 ---
 
