@@ -12,7 +12,7 @@
 namespace MilliCache;
 
 use MilliCache\Admin\Admin;
-use MilliCache\Core\Redis;
+use MilliCache\Core\Storage;
 use MilliCache\Core\Settings;
 
 ! defined( 'ABSPATH' ) && exit;
@@ -45,9 +45,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var Redis The Cache Storage object.
+	 * @var Storage The Cache Storage object.
 	 */
-	private static Redis $storage;
+	private static Storage $storage;
 
 	/**
 	 * The MilliPress Settings instance.
@@ -308,21 +308,23 @@ final class Engine {
 	/**
 	 * Returns the MilliCache Storage instance.
 	 *
+	 * @return   Storage The MilliCache Storage instance.
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @return   Redis The MilliCache Storage instance.
+	 * @return   Storage The MilliCache Storage instance.
 	 */
-	public static function get_storage(): Redis {
+	public static function get_storage(): Storage
+	{
 		if ( ! isset( self::$storage ) ) {
 			/**
-			 * The MilliPress Redis class.
+			 * The MilliPress Storage class.
 			 */
-			if ( ! class_exists( 'MilliCache\Core\Redis' ) ) {
-				require_once __DIR__ . '/Redis.php';
+			if ( ! class_exists( 'MilliCache\Core\Storage') ) {
+				require_once __DIR__ . '/Core/Storage.php';
 			}
 
-			self::$storage = new Redis( (array) self::$settings['redis'] );
+			self::$storage = new Storage( (array) self::$settings['storage'] );
 		}
 
 		return self::$storage;

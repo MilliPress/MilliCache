@@ -319,8 +319,8 @@ final class MilliCache {
 	 * @return void
 	 */
 	public function cleanup_expired_flags() {
-		$redis = Engine::get_storage();
-		$redis->cleanup_expired_flags();
+		$storage = Engine::get_storage();
+		$storage->cleanup_expired_flags();
 	}
 
 	/**

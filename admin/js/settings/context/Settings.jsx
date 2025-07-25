@@ -21,7 +21,7 @@ export const SettingsProvider = ( { children } ) => {
 	const [ isSaving, setIsSaving ] = useState( false );
 	const [ error, setError ] = useState( null );
 	const [ hasChanges, setHasChanges ] = useState( false );
-	const [ hasRedisChanges, setHasRedisChanges ] = useState( false );
+	const [ hasStorageChanges, setHasStorageChanges ] = useState( false );
 	const [ activeTab, setActiveTab ] = useState('status');
 	const [ isRetrying, setIsRetrying ] = useState( false );
 	const statusIntervalRef = useRef( null );
@@ -185,8 +185,8 @@ export const SettingsProvider = ( { children } ) => {
 				JSON.stringify( initialSettings )
 			);
 
-			if ( module === 'redis' ) {
-				setHasRedisChanges( true );
+			if ( module === 'storage' ) {
+				setHasStorageChanges( true );
 			}
 
 			return updatedSettings;
@@ -214,13 +214,13 @@ export const SettingsProvider = ( { children } ) => {
 			showSnackbar( __( 'Settings saved successfully.', 'millicache' ) );
 			setHasChanges( false );
 
-			if ( hasRedisChanges ) {
+			if ( hasStorageChanges ) {
 				const previousStatus = status;
 
 				await delay( 500 );
 				showSnackbar(
 					__(
-						'Redis settings updated. Testing connection…',
+						'Storage settings updated. Testing connection…',
 						'millicache'
 					)
 				);
@@ -229,33 +229,33 @@ export const SettingsProvider = ( { children } ) => {
 				const newStatus = await fetchStatus();
 
 				if (
-					previousStatus.redis?.connected &&
-					! newStatus.redis?.connected
+					previousStatus.storage?.connected &&
+					! newStatus.storage?.connected
 				) {
 					await delay( 50 );
 					showSnackbar(
 						__(
-							'Redis connection lost. Please check your settings.',
+							'Storage connection lost. Please check your settings.',
 							'millicache'
 						)
 					);
 				} else if (
-					! previousStatus.redis?.connected &&
-					newStatus.redis?.connected
+					! previousStatus.storage?.connected &&
+					newStatus.storage?.connected
 				) {
 					showSnackbar(
 						__(
-							'Redis connection established successfully.',
+							'Storage connection established successfully.',
 							'millicache'
 						)
 					);
 				}
 
-				if ( newStatus.redis?.error ) {
-					showSnackbar( newStatus.redis?.error, [], 6000, true );
+				if ( newStatus.storage?.error ) {
+					showSnackbar( newStatus.storage?.error, [], 6000, true );
 				}
 
-				setHasRedisChanges( false );
+				setHasStorageChanges( false );
 			}
 		} catch ( error ) {
 			const errorMessage = error.message || __( 'Failed to save settings.', 'millicache' );

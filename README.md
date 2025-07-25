@@ -39,7 +39,7 @@ MilliCache provides a versatile and robust caching solution for all types of Wor
 
 ## Features
 
-- **Lightning Fast**: In-memory full-page caching using Redis.
+- **Lightning Fast**: In-memory full-page caching using Redis or an alternative.
 - **Settings UI**: Easy configuration and cache management through the WordPress admin.
 - **[Cache Flagging](#cache-flags)**: High efficiency by supporting complex cache logic and selective clearing.
 - **[Expired Cache Handling](#clearing-cache)**: Regenerates cache in the background.
@@ -48,9 +48,9 @@ MilliCache provides a versatile and robust caching solution for all types of Wor
 - **Gzip Compression**: Compresses cache to reduce memory usage.
 - **[WP-CLI Commands](#wp-cli-commands)**: Manage cache via command line.
 - **[Debugging](#debugging)**: Provides cache information in headers.
-- **Scalable**: Works with Redis clusters.
+- **Scalable**: Works with server clusters.
 - **Object Cache**: Works with Redis object cache plugins like [WP Redis](https://wordpress.org/plugins/wp-redis/) & [Redis Object Cache](https://wordpress.org/plugins/redis-cache/).
-- **Flexible Storage**: Compatible with [Valkey](https://valkey.io/), [Redis Server](https://redis.io/), [KeyDB](https://keydb.dev) & [Dragonfly](https://www.dragonflydb.io/).
+- **Flexible Storage**: Compatible with [Redis Server](https://redis.io/), [Valkey](https://valkey.io/), [KeyDB](https://keydb.dev) & [Dragonfly](https://www.dragonflydb.io/).
 
 ---
 
@@ -121,8 +121,8 @@ You can combine both methods, **the constants overwrite the settings** with high
 
 ```php
 # Optional: Set Settings with Constants
-define('MC_REDIS_HOST', '127.0.0.1');
-define('MC_REDIS_PORT', 6379);
+define('MC_STORAGE_HOST', '127.0.0.1');
+define('MC_STORAGE_PORT', 6379);
 ```
 
 ### General Configuration
@@ -142,16 +142,16 @@ define('MC_REDIS_PORT', 6379);
 > [!INFO]
 > MilliCache supports wildcard patterns for cookie and request key configurations, allowing for more flexible cache control: `['cookie_*', 'coo*_*', 'request_*']`.
 
-### Redis Connection Configuration
+### Storage Server Connection Configuration
 
 | Constant              | Description                       | Default            |
 |-----------------------|-----------------------------------|--------------------|
-| `MC_REDIS_HOST`       | Redis Host                        | `127.0.0.1`        |
-| `MC_REDIS_PORT`       | Redis Port                        | `6379`             |
-| `MC_REDIS_PASSWORD`   | Redis Password                    | `''`               |
-| `MC_REDIS_DB`         | Redis Database                    | `0`                |
-| `MC_REDIS_PERSISTENT` | Redis Persistent Connection       | `true`             |
-| `MC_REDIS_PREFIX`     | Redis Key Prefix                  | `mll`              |
+| `MC_STORAGE_HOST`       | Storage Server Host                        | `127.0.0.1`        |
+| `MC_STORAGE_PORT`       | Storage Server Port                        | `6379`             |
+| `MC_STORAGE_PASSWORD`   | Storage Server Password                    | `''`               |
+| `MC_STORAGE_DB`         | Storage Server Database                    | `0`                |
+| `MC_STORAGE_PERSISTENT` | Storage Server Persistent Connection       | `true`             |
+| `MC_STORAGE_PREFIX`     | Storage Server Key Prefix                  | `mll`              |
 
 ---
 

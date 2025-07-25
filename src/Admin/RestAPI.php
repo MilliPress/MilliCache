@@ -121,7 +121,7 @@ class RestAPI {
 	}
 
 	/**
-	 * Get the status of MilliCache, including Redis connection status.
+	 * Get the status of MilliCache, including storage server connection status.
 	 *
 	 * @since   1.0.0
 	 * @access  public
@@ -140,7 +140,7 @@ class RestAPI {
 						'plugin_name' => $this->plugin_name,
 						'version' => $this->version,
 						'cache' => Engine::get_status( $request->get_param( 'network' ) === 'true' ),
-						'redis' => Engine::get_storage()->get_status(),
+						'storage' => Engine::get_storage()->get_status(),
 						'dropin' => Admin::validate_advanced_cache_file(),
 						'settings' => array(
 							'has_defaults' => Settings::has_default_settings(),

@@ -1,6 +1,6 @@
 <?php
 /**
- * The file that defines the Redis class.
+ * The file that defines the Storage class.
  *
  * @link       https://www.millipress.com
  * @since      1.0.0
@@ -21,14 +21,14 @@ use MilliCache\Deps\Predis\PredisException;
 ! defined( 'ABSPATH' ) && exit;
 
 /**
- * Handles Redis operations for the MilliCache plugin.
+ * The Storage class for interacting with in-memory cache servers.
  *
  * @since      1.0.0
  * @package    MilliCache
  * @subpackage MilliCache/includes
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-final class Redis {
+final class Storage {
 
 	/**
 	 * The Predis Client object.
@@ -36,57 +36,57 @@ final class Redis {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var Client $redis    The Predis Client object.
+	 * @var Client $client    The Predis Client object.
 	 */
-	private Client $redis;
+	private Client $client;
 
 	/**
-	 * The Redis host.
+	 * The storage server host.
 	 *
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var      string    $host    The Redis host.
+	 * @var      string    $host    The storage server host.
 	 */
 	private string $host;
 
 	/**
-	 * The Redis port.
+	 * The storage server port.
 	 *
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var      int    $port    The Redis port.
+	 * @var      int    $port    The storage server port.
 	 */
 	private int $port;
 
 	/**
-	 * The Redis Server password.
+	 * The storage server password.
 	 *
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var      string    $enc_password   The Redis auth.
+	 * @var      string    $enc_password   The storage server auth.
 	 */
 	private string $enc_password;
 
 	/**
-	 * The Redis database.
+	 * The storage server database.
 	 *
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var      int    $db    The Redis database.
+	 * @var      int    $db    The storage server database.
 	 */
 	private int $db;
 
 	/**
-	 * The Redis prefix.
+	 * The cache prefix.
 	 *
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @var      string    $prefix    The Redis prefix.
+	 * @var      string    $prefix    The cache prefix.
 	 */
 	private string $prefix;
 
@@ -103,7 +103,7 @@ final class Redis {
 	/**
 	 * Initialize the class and set its properties.
 	 *
-	 * @param array<mixed> $settings The settings for the Redis connection.
+	 * @param array<mixed> $settings The settings for the storage server connection.
 	 *
 	 * @return void
 	 * @since    1.0.0
@@ -113,41 +113,41 @@ final class Redis {
 		$this->config( $settings );
 
 		if ( ! $this->connect() ) {
-			error_log( 'Unable to connect to Redis.' );
+			error_log( 'Unable to connect to the storage server.' );
 		}
 	}
 
 	/**
-	 * Check if Redis is available.
+	 * Check if the storage server is available.
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @return bool Whether Redis is available.
+	 * @return bool Whether the storage server is available.
 	 */
 	public static function is_available(): bool {
 		return class_exists( '\MilliCache\Deps\Predis\Autoloader' );
 	}
 
 	/**
-	 * Check if Redis is connected.
+	 * Check if the storage server is connected.
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @return bool Whether Redis is connected.
+	 * @return bool Whether the storage server is connected.
 	 */
 	public function is_connected(): bool {
-		return isset( $this->redis ) && $this->redis->isConnected();
+		return isset( $this->client ) && $this->client->isConnected();
 	}
 
 	/**
-	 * Configure the Redis connection.
+	 * Configure the storage server connection.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @param array<mixed> $settings The settings for the Redis connection.
+	 * @param array<mixed> $settings The settings for the storage server connection.
 	 *
 	 * @return void
 	 *
@@ -164,7 +164,7 @@ final class Redis {
 	}
 
 	/**
-	 * Connect to Redis.
+	 * Connect to the storage server.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -177,7 +177,7 @@ final class Redis {
 		}
 
 		try {
-			// If Redis is already connected, return.
+			// If the storage server is already connected, return.
 			if ( $this->is_connected() ) {
 				return true;
 			}
@@ -185,8 +185,8 @@ final class Redis {
 			// Register the autoloader.
 			Autoloader::register();
 
-			// Initialize Redis.
-			$this->redis = new Client(
+			// Initialize the storage server.
+			$this->client = new Client(
 				array(
 					'scheme' => 'tcp',
 					'host' => $this->host,
@@ -199,7 +199,7 @@ final class Redis {
 
 			return true;
 		} catch ( ConnectionException $e ) {
-			error_log( 'Unable to connect to Redis: ' . $e->getMessage() );
+			error_log( 'Unable to connect to the storage server: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -218,11 +218,11 @@ final class Redis {
 	 */
 	public function perform_cache( string $hash, array $data, array $flags = array(), bool $cache = true ): bool {
 		try {
-			if ( ! isset( $this->redis ) ) {
+			if ( ! isset( $this->client ) ) {
 				return false;
 			}
 
-			$this->redis->transaction(
+			$this->client->transaction(
 				function ( $tx ) use ( $cache, $hash, $data, $flags ) {
 					if ( $cache ) {
 						// Set cache entry.
@@ -239,7 +239,7 @@ final class Redis {
 
 			return true;
 		} catch ( PredisException $e ) {
-			error_log( 'Unable to perform cache in Redis: ' . $e->getMessage() );
+			error_log( 'Unable to perform cache in the storage server: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -261,13 +261,13 @@ final class Redis {
 			// Get the cache entry and lock status.
 			$key = $this->get_cache_key( $hash );
 
-			$this->redis->transaction(
+			$this->client->transaction(
 				function ( $tx ) use ( $key, &$cache, &$lock_status ) {
 					// Get cache entry.
-					$cache = $this->redis->hgetall( $key );
+					$cache = $this->client->hgetall( $key );
 
 					// Get lock status.
-					$lock_status = $this->redis->get( $key . '-lock' );
+					$lock_status = $this->client->get( $key . '-lock' );
 				}
 			);
 
@@ -290,7 +290,7 @@ final class Redis {
 				$lock_status ?? '',
 			) : null;
 		} catch ( PredisException $e ) {
-			error_log( 'Unable to get cache from Redis: ' . $e->getMessage() );
+			error_log( 'Unable to get cache from the storage server: ' . $e->getMessage() );
 			return null;
 		}
 	}
@@ -312,7 +312,7 @@ final class Redis {
 			$key = $this->get_cache_key( $hash );
 
 			/**
-			 * Fires before a page cache is stored in Redis.
+			 * Fires before a page cache is stored in the storage server.
 			 *
 			 * @since 1.0.0
 			 *
@@ -323,7 +323,7 @@ final class Redis {
 			 */
 			do_action( 'millicache_before_page_cache_stored', $hash, $key, $flags, $data );
 
-			$this->redis->transaction(
+			$this->client->transaction(
 				function ( $tx ) use ( $key, $flags, $data ) {
 
 					// Store the data.
@@ -346,7 +346,7 @@ final class Redis {
 			);
 
 			/**
-			 * Fires after a page cache is stored in Redis.
+			 * Fires after a page cache is stored in the storage server.
 			 *
 			 * @since 1.0.0
 			 *
@@ -359,7 +359,7 @@ final class Redis {
 
 			return true;
 		} catch ( PredisException $e ) {
-			error_log( 'Unable to set cache in Redis: ' . $e->getMessage() );
+			error_log( 'Unable to set cache in the storage server: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -378,7 +378,7 @@ final class Redis {
 			$key = $this->get_cache_key( $hash );
 
 			// Get all flags of the key.
-			$flags = $this->redis->hkeys( $key );
+			$flags = $this->client->hkeys( $key );
 
 			// Check if the flags are an array.
 			if ( ! is_array( $flags ) ) {
@@ -386,7 +386,7 @@ final class Redis {
 			}
 
 			/**
-			 * Fires before a page cache is deleted in Redis.
+			 * Fires before a page cache is deleted in the storage server.
 			 *
 			 * @param string $hash The cache URL hash.
 			 * @param string $key The cache key.
@@ -394,7 +394,7 @@ final class Redis {
 			 */
 			do_action( 'millicache_before_page_cache_deleted', $hash, $key, $flags );
 
-			$this->redis->transaction(
+			$this->client->transaction(
 				function ( $tx ) use ( $key, $flags ) {
 
 					// Delete flags and remove the key from the sets associated with the flags.
@@ -417,7 +417,7 @@ final class Redis {
 			);
 
 			/**
-			 * Fires after a page cache is deleted in Redis.
+			 * Fires after a page cache is deleted in the storage server.
 			 *
 			 * @since 1.0.0
 			 *
@@ -429,7 +429,7 @@ final class Redis {
 
 			return true;
 		} catch ( PredisException $e ) {
-			error_log( 'Unable to delete cache in Redis: ' . $e->getMessage() );
+			error_log( 'Unable to delete cache in the storage server: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -445,7 +445,7 @@ final class Redis {
 	 */
 	public function lock( string $hash ): bool {
 		try {
-			$status = $this->redis->set(
+			$status = $this->client->set(
 				$this->get_cache_key( $hash . '-lock' ),
 				true,
 				'EX',
@@ -455,7 +455,7 @@ final class Redis {
 
 			return (bool) $status;
 		} catch ( PredisException $e ) {
-			error_log( 'Unable to set lock in Redis: ' . $e->getMessage() );
+			error_log( 'Unable to set lock in the storage server: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -471,9 +471,9 @@ final class Redis {
 	 */
 	public function unlock( string $hash ): bool {
 		try {
-			return (bool) $this->redis->del( $this->get_cache_key( $hash . '-lock' ) );
+			return (bool) $this->client->del( $this->get_cache_key( $hash . '-lock' ) );
 		} catch ( PredisException $e ) {
-			error_log( 'Unable to unlock in Redis: ' . $e->getMessage() );
+			error_log( 'Unable to unlock in the storage server: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -489,7 +489,7 @@ final class Redis {
 	 * @return void
 	 */
 	public function clear_cache_by_flags( array $sets, int $ttl ): void {
-		// Delete the Redis entries for the deleted flags.
+		// Delete the stored entries for the deleted flags.
 		if ( isset( $sets['mll:deleted-flags'] ) ) {
 			foreach ( array_unique( $sets['mll:deleted-flags'] ) as $flag ) {
 				foreach ( $this->get_cache_keys_by_flag( $flag ) as $key ) {
@@ -498,7 +498,7 @@ final class Redis {
 			}
 		}
 
-		// Expire the Redis entries for the expired flags.
+		// Expire the stored entries for the expired flags.
 		if ( isset( $sets['mll:expired-flags'] ) ) {
 			foreach ( array_unique( $sets['mll:expired-flags'] ) as $flag ) {
 				foreach ( $this->get_cache_keys_by_flag( $flag ) as $key ) {
@@ -526,7 +526,7 @@ final class Redis {
 	 */
 	public function get_cache_keys_by_flag( string $flag ): array {
 		try {
-			if ( ! isset( $this->redis ) ) {
+			if ( ! isset( $this->client ) ) {
 				return array();
 			}
 
@@ -537,7 +537,7 @@ final class Redis {
 
 				// The flag contains wildcard, use SCAN to get all keys.
 				$keys = array();
-				foreach ( new Predis\Collection\Iterator\Keyspace( $this->redis, $pattern ) as $key ) {
+				foreach ( new Predis\Collection\Iterator\Keyspace( $this->client, $pattern ) as $key ) {
 					$keys[] = $key;
 				}
 
@@ -548,13 +548,13 @@ final class Redis {
 
 				foreach ( $keys as $key ) {
 					if ( is_string( $key ) ) {
-						$key_members = $this->redis->smembers( $key );
+						$key_members = $this->client->smembers( $key );
 						$members = array_merge( $members, $key_members );
 					}
 				}
 			} else {
 				// The flag does not contain wildcard, directly call sMembers.
-				$members = $this->redis->smembers( $this->get_flag_key( $flag ) );
+				$members = $this->client->smembers( $this->get_flag_key( $flag ) );
 			}
 
 			// Remove prefix from keys.
@@ -565,7 +565,7 @@ final class Redis {
 				array_unique( $members )
 			);
 		} catch ( PredisException $e ) {
-			error_log( 'Unable to get entries with flag from Redis: ' . $e->getMessage() );
+			error_log( 'Unable to get entries with flag from the storage server: ' . $e->getMessage() );
 			return array();
 		}
 	}
@@ -581,28 +581,28 @@ final class Redis {
 	public function cleanup_expired_flags(): bool {
 		try {
 			// Get all flags.
-			$flags = $this->redis->keys( $this->prefix . ':f:*' );
+			$flags = $this->client->keys( $this->prefix . ':f:*' );
 
 			foreach ( $flags as $flag ) {
 				// Get all keys in the set associated with the flag.
-				$keys = $this->redis->smembers( $flag );
+				$keys = $this->client->smembers( $flag );
 
 				foreach ( $keys as $key ) {
 					// If the key does not exist in Redis, remove it from the set.
-					if ( ! $this->redis->exists( $key ) ) {
-						$this->redis->srem( $flag, $key );
+					if ( ! $this->client->exists( $key ) ) {
+						$this->client->srem( $flag, $key );
 					}
 				}
 
 				// If the set of the flag is empty, delete the flag.
-				if ( 0 === $this->redis->scard( $flag ) ) {
-					$this->redis->del( $flag );
+				if ( 0 === $this->client->scard( $flag ) ) {
+					$this->client->del( $flag );
 				}
 			}
 
 			return true;
 		} catch ( PredisException $e ) {
-			error_log( 'Unable to cleanup expired cache keys in Redis: ' . $e->getMessage() );
+			error_log( 'Unable to cleanup expired cache keys in the storage server: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -659,7 +659,7 @@ final class Redis {
 			if ( ! empty( $flag ) ) {
 				$keys = $this->get_cache_keys_by_flag( $flag );
 			} else {
-				foreach ( new Predis\Collection\Iterator\Keyspace( $this->redis, $this->prefix . ':c:*' ) as $key ) {
+				foreach ( new Predis\Collection\Iterator\Keyspace( $this->client, $this->prefix . ':c:*' ) as $key ) {
 					$keys[] = $key;
 				}
 			}
@@ -671,7 +671,7 @@ final class Redis {
 			$total_size = array_sum(
 				array_map(
 					function ( $key ) use ( $flag ) {
-						return $this->redis->executeRaw( array( 'MEMORY', 'USAGE', ! empty( $flag ) ? $this->get_cache_key( $key ) : $key ) );
+						return $this->client->executeRaw( array( 'MEMORY', 'USAGE', ! empty( $flag ) ? $this->get_cache_key( $key ) : $key ) );
 					},
 					$keys
 				)
@@ -682,18 +682,18 @@ final class Redis {
 				'size' => (int) round( $total_size / 1024 ),
 			);
 		} catch ( PredisException $e ) {
-			error_log( 'Unable to get cache size from Redis: ' . $e->getMessage() );
+			error_log( 'Unable to get cache size from the storage server: ' . $e->getMessage() );
 			return false;
 		}
 	}
 
 	/**
-	 * Get meaningful Redis config and info.
+	 * Get meaningful Storage Server config and info.
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @return array<mixed> The Redis status.
+	 * @return array<mixed> The Storage Server status.
 	 */
 	public function get_status(): array {
 		$status = array(
@@ -710,12 +710,12 @@ final class Redis {
 
 		if ( ! $status['connected'] ) {
 			try {
-				$this->redis->ping();
+				$this->client->ping();
 			} catch ( PredisException $e ) {
 				$status['error'] = $e->getMessage();
 			}
 		} else {
-			// Get Redis config.
+			// Get the storage server config.
 			$config_keys = array(
 				'databases',
 				'maxmemory',
@@ -723,10 +723,10 @@ final class Redis {
 			);
 
 			foreach ( $config_keys as $key ) {
-				$status['config'] = array_merge( $status['config'], (array) $this->redis->config( 'GET', $key ) );
+				$status['config'] = array_merge( $status['config'], (array) $this->client->config( 'GET', $key ) );
 			}
 
-			// Get Redis info.
+			// Get the storage server info.
 			$info_keys = array(
 				'Memory' => array(
 					'used_memory',
@@ -743,7 +743,7 @@ final class Redis {
 			);
 
 			foreach ( $info_keys as $section => $keys ) {
-				$info = $this->redis->info( $section );
+				$info = $this->client->info( $section );
 
 				if ( ! is_array( $info ) ) {
 					continue;

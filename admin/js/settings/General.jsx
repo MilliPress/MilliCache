@@ -31,12 +31,12 @@ const GeneralSettings = () => {
 				</PanelRow>
 			</PanelBody>
 			<PanelBody
-				title={ __( 'Redis Settings', 'millicache' ) }
-				className={ `redis-settings-${
-					status?.redis?.connected ? 'connected' : 'disconnected'
+				title={ __( 'Storage Server', 'millicache' ) }
+				className={ `storage-settings-${
+					status?.storage?.connected ? 'connected' : 'disconnected'
 				}` }
-				icon={ ! status?.redis?.connected ? plugins : connection }
-				initialOpen={ ! status?.redis?.connected }
+				icon={ ! status?.storage?.connected ? plugins : connection }
+				initialOpen={ ! status?.storage?.connected }
 			>
 				<Flex direction="column" gap="4">
 					<Flex justify="start">
@@ -45,12 +45,12 @@ const GeneralSettings = () => {
 								__next40pxDefaultSize
 								label={ __( 'Redis Host', 'millicache' ) }
 								value={
-									settings.redis.host ??
-									status.redis?.config.host
+									settings.storage.host ??
+									status.storage?.config.host
 								}
-								disabled={ ! ( 'host' in settings.redis ) }
+								disabled={ ! ( 'host' in settings.storage ) }
 								onChange={ ( value ) =>
-									updateSetting( 'redis', 'host', value )
+									updateSetting( 'storage', 'host', value )
 								}
 							/>
 						</FlexItem>
@@ -59,14 +59,14 @@ const GeneralSettings = () => {
 								__next40pxDefaultSize
 								label={ __( 'Redis Port', 'millicache' ) }
 								value={
-									settings.redis.port ??
-									status.redis?.config.port
+									settings.storage.port ??
+									status.storage?.config.port
 								}
-								disabled={ ! ( 'port' in settings.redis ) }
+								disabled={ ! ( 'port' in settings.storage ) }
 								min="1024"
 								max="65535"
 								onChange={ ( value ) =>
-									updateSetting( 'redis', 'port', value )
+									updateSetting( 'storage', 'port', value )
 								}
 							/>
 						</FlexItem>
@@ -79,11 +79,11 @@ const GeneralSettings = () => {
 								label={ __( 'Redis Password', 'millicache' ) }
 								value={ settings.redis.enc_password ?? '' }
 								disabled={
-									! ( 'enc_password' in settings.redis )
+									! ( 'enc_password' in settings.storage )
 								}
 								onChange={ ( value ) =>
 									updateSetting(
-										'redis',
+										'storage',
 										'enc_password',
 										value
 									)
@@ -95,14 +95,14 @@ const GeneralSettings = () => {
 								__next40pxDefaultSize
 								label={ __( 'Redis Database', 'millicache' ) }
 								value={
-									settings.redis.db ??
-									status.redis?.config.database
+									settings.storage.db ??
+									status.storage?.config.database
 								}
-								disabled={ ! ( 'db' in settings.redis ) }
-								max={ status?.redis?.config.databases ?? 16 }
+								disabled={ ! ( 'db' in settings.storage ) }
+								max={ status?.storage?.config.databases -1 ?? 15 }
 								min="0"
 								onChange={ ( value ) =>
-									updateSetting( 'redis', 'db', value )
+									updateSetting( 'storage', 'db', value )
 								}
 							/>
 						</FlexItem>
@@ -115,12 +115,12 @@ const GeneralSettings = () => {
 								'millicache'
 							) }
 							checked={
-								settings.redis.persistent ??
-								status.redis?.config.persistent
+								settings.storage.persistent ??
+								status.storage?.config.persistent
 							}
-							disabled={ ! ( 'persistent' in settings.redis ) }
+							disabled={ ! ( 'persistent' in settings.storage ) }
 							onChange={ ( value ) =>
-								updateSetting( 'redis', 'persistent', value )
+								updateSetting( 'storage', 'persistent', value )
 							}
 						/>
 					</FlexItem>
@@ -128,7 +128,7 @@ const GeneralSettings = () => {
 			</PanelBody>
 			<PanelBody
 				title={ __( 'Cache Settings', 'millicache' ) }
-				initialOpen={ status?.redis?.connected }
+				initialOpen={ status?.storage?.connected }
 			>
 				<Flex direction="column" gap="4">
 					<Flex justify="start" align={ 'start' }>

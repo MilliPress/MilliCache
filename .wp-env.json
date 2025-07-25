@@ -2,7 +2,7 @@
   "core": "WordPress/WordPress",
   "port": 8888,
   "config": {
-    "MC_REDIS_HOST": "redis",
+    "MC_STORAGE_HOST": "redis",
     "MC_CACHE_DEBUG": true,
     "WP_CACHE": true,
     "WP_DEBUG": true,
@@ -18,7 +18,7 @@
     "tests": {
       "config": {
         "MC_CACHE_TTL": 5,
-        "MC_REDIS_DB": 1,
+        "MC_STORAGE_DB": 1,
         "PERFLAB_DISABLE_OBJECT_CACHE_DROPIN": false
       },
       "plugins": [

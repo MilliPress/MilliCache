@@ -362,15 +362,15 @@ class Admin {
 	 * @access  public
 	 *
 	 * @param string $flag The flag to search for. Wildcards are allowed.
-	 * @param bool   $reload Whether to reload the cache size from the Redis server.
+	 * @param bool   $reload Whether to reload the cache size from the storage server.
 	 * @return array{index: int, size: int, size_human: string} The index and memory size of the cache.
 	 */
 	public static function get_cache_size( string $flag = '', bool $reload = false ): array {
 		$size = get_transient( 'millicache_size_' . $flag );
 
 		if ( ! is_array( $size ) || $reload ) {
-			$redis = Engine::get_storage();
-			$size = $redis->get_cache_size( $flag );
+			$storage = Engine::get_storage();
+			$size = $storage->get_cache_size( $flag );
 
 			if ( $size ) {
 				set_transient( 'millicache_size_' . $flag, $size, DAY_IN_SECONDS );

@@ -89,7 +89,7 @@ const Header = () => {
 							disabled={
 								isSaving ||
 								isLoading ||
-								! status.redis?.connected ||
+								! status.storage?.connected ||
 								status.cache?.index < 1
 							}
 						>

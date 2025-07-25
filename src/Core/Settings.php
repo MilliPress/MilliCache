@@ -112,7 +112,7 @@ class Settings {
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @param string|null $module The settings module to retrieve (e.g., 'caching', 'redis').
+	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'storage').
 	 *
 	 * @return array<array<bool|float|int|string|null|array<mixed>>> The default settings.
 	 */
@@ -120,7 +120,7 @@ class Settings {
 		$defaults = apply_filters(
 			'millicache_settings_defaults',
 			array(
-				'redis' => array(
+				'storage' => array(
 					'host' => '127.0.0.1',
 					'port' => 6379,
 					'enc_password' => '',
@@ -191,7 +191,7 @@ class Settings {
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'redis').
+	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'storage').
 	 * @param bool $skip_constants Whether to skip constants defined in wp-config.php.
 	 *
 	 * @return array<array<mixed>> The settings array.
@@ -228,7 +228,7 @@ class Settings {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @param string|null $module The settings module to retrieve (e.g., 'caching', 'redis').
+	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'storage').
 	 *
 	 * @return array<array<mixed>> The updated settings.
 	 */
@@ -272,7 +272,7 @@ class Settings {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @param string|null $module The settings module to retrieve (e.g., 'caching', 'redis').
+	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'storage').
 	 *
 	 * @return array<array<mixed>> The settings from the config file.
 	 */
@@ -297,7 +297,7 @@ class Settings {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @param string|null $module The settings module to retrieve (e.g., 'caching', 'redis').
+	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'storage').
 	 *
 	 * @return array<array<mixed>> The settings from the database.
 	 */
@@ -363,7 +363,7 @@ class Settings {
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @param string|null $module The settings module to back up (e.g., 'caching', 'redis').
+	 * @param string|null $module The settings module to back up (e.g., 'cache', 'storage').
 	 *
 	 * @return void
 	 */
@@ -394,7 +394,7 @@ class Settings {
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @param string|null $module The settings module to restore (e.g., 'caching', 'redis').
+	 * @param string|null $module The settings module to restore (e.g., 'cache', 'storage').
 	 *
 	 * @return bool True if the settings were restored, false otherwise.
 	 */
@@ -417,7 +417,7 @@ class Settings {
 	 * @since    1.0.0
 	 * @access   public
 	 *
-	 * @param string|null $module The settings module to check (e.g., 'caching', 'redis').
+	 * @param string|null $module The settings module to check (e.g., 'cache', 'storage').
 	 *
 	 * @return bool True if the settings are the default settings, false otherwise.
 	 */

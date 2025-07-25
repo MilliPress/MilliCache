@@ -7,11 +7,11 @@
 
 	.components-panel__body {
 
-		&.redis-settings-connected svg.components-panel__icon {
+		&.storage-settings-connected svg.components-panel__icon {
 			fill: #4ab866;
 		}
 
-		&.redis-settings-disconnected svg.components-panel__icon {
+		&.storage-settings-disconnected svg.components-panel__icon {
 			fill: #cc1818;
 		}
 	}

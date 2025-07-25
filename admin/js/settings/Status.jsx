@@ -6,13 +6,13 @@ const StatusTab = () => {
 	const { error, status, isLoading } = useSettings();
 
 	const connectionInfo = {
-		[ __( 'Status', 'millicache' ) ]: status.redis?.connected
+		[ __( 'Status', 'millicache' ) ]: status.storage?.connected
 			? __( 'Connected', 'millicache' )
 			: __( 'Disconnected', 'millicache' ),
-		[ __( 'Host', 'millicache' ) ]: status.redis?.config.host ?? 'N/A',
-		[ __( 'Port', 'millicache' ) ]: status.redis?.config.port ?? 'N/A',
+		[ __( 'Host', 'millicache' ) ]: status.storage?.config.host ?? 'N/A',
+		[ __( 'Port', 'millicache' ) ]: status.storage?.config.port ?? 'N/A',
 		[ __( 'Database', 'millicache' ) ]:
-			status.redis?.config.database ?? 'N/A',
+			status.storage?.config.database ?? 'N/A',
 	};
 
 	const cacheInfo = {
@@ -36,17 +36,17 @@ const StatusTab = () => {
 						: '' ),
 	};
 
-	const redisInfo = {
+	const storageInfo = {
 		[ __( 'Version', 'millicache' ) ]:
 			status.redis?.info?.Server?.redis_version ?? 'N/A',
 		[ __( 'Databases Available', 'millicache' ) ]:
-			status.redis?.config?.databases ?? 'N/A',
+			status.storage?.config?.databases ?? 'N/A',
 		[ __( 'Used Memory', 'millicache' ) ]:
-			status.redis?.info?.Memory?.used_memory_human ?? 'N/A',
+			status.storage?.info?.Memory?.used_memory_human ?? 'N/A',
 		[ __( 'Max Memory', 'millicache' ) ]:
-			status.redis?.info?.Memory?.maxmemory_human ?? 'N/A',
+			status.storage?.info?.Memory?.maxmemory_human ?? 'N/A',
 		[ __( 'Max Memory Policy', 'millicache' ) ]:
-			status.redis?.info?.Memory?.maxmemory_policy ?? 'N/A',
+			status.storage?.info?.Memory?.maxmemory_policy ?? 'N/A',
 	};
 
 	return (
@@ -91,10 +91,10 @@ const StatusTab = () => {
 						</tbody>
 					</table>
 
-					<h2>{ __( 'Redis', 'millicache' ) }</h2>
+					<h2>{ __( 'Storage Server', 'millicache' ) }</h2>
 					<table className="widefat striped fixed" cellSpacing="0">
 						<tbody>
-							{ Object.entries( redisInfo ).map(
+							{ Object.entries( storageInfo ).map(
 								( [ key, value ] ) => (
 									<tr key={ key }>
 										<td>
