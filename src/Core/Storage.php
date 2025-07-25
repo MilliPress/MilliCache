@@ -738,6 +738,9 @@ final class Storage {
 				),
 				'Server' => array(
 					'redis_version',
+					'valkey_version',
+					'keydb_version',
+					'dragonfly_version',
 					'tcp_port',
 				),
 			);
@@ -753,6 +756,21 @@ final class Storage {
 					if ( isset( $info[ $section ][ $key ] ) ) {
 						$status['info'][ $section ][ $key ] = $info[ $section ][ $key ];
 					}
+				}
+			}
+
+			// Add the server type and version.
+			$types = array(
+				'valkey_version' => 'Valkey',
+				'keydb_version' => 'KeyDB',
+				'dragonfly_version' => 'Dragonfly',
+				'redis_version' => 'Redis',
+			);
+
+			foreach ( $types as $key => $type ) {
+				if ( isset( $info['Server'][ $key ] ) ) {
+					$status['info']['Server']['version'] = "$type {$info[ 'Server' ][ $key ]}";
+					break;
 				}
 			}
 		}

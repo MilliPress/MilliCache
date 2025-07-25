@@ -38,7 +38,7 @@ const StatusTab = () => {
 
 	const storageInfo = {
 		[ __( 'Version', 'millicache' ) ]:
-			status.redis?.info?.Server?.redis_version ?? 'N/A',
+			status.storage?.info?.Server?.version ?? 'N/A',
 		[ __( 'Databases Available', 'millicache' ) ]:
 			status.storage?.config?.databases ?? 'N/A',
 		[ __( 'Used Memory', 'millicache' ) ]:
