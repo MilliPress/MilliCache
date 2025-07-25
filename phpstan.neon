@@ -3,7 +3,7 @@ parameters:
   paths:
     - millicache.php
     - advanced-cache.php
-    - admin/
+    - assets/
     - src/
   excludePaths:
     - src/Deps/

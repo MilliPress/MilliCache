@@ -17,8 +17,8 @@
     <arg name="extensions" value="php"/>
 
     <!-- Set files & folders-->
-    <file>admin</file>
     <file>src</file>
+    <file>assets</file>
     <file>millicache.php</file>
     <file>advanced-cache.php</file>
     <exclude-pattern>*/index.php</exclude-pattern>
