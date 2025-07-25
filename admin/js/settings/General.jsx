@@ -16,6 +16,7 @@ import {
 import { __ } from '@wordpress/i18n';
 import { connection, plugins } from '@wordpress/icons';
 import { useSettings } from './context/Settings.jsx';
+import { LabelWithTooltip } from './partials/Components';
 
 const GeneralSettings = () => {
 	const { status, settings, updateSetting } = useSettings();
@@ -43,7 +44,12 @@ const GeneralSettings = () => {
 						<FlexItem isBlock="true">
 							<InputControl
 								__next40pxDefaultSize
-								label={ __( 'Redis Host', 'millicache' ) }
+								label={
+									<LabelWithTooltip
+										label={ __( 'Server Host', 'millicache' ) }
+										tooltip={ __( 'The hostname or IP address of your Redis, Valkey, KeyDB, or other compatible server. Typically "localhost" or "127.0.0.1" for local servers.', 'millicache' ) }
+									/>
+								}
 								value={
 									settings.storage.host ??
 									status.storage?.config.host
@@ -57,7 +63,13 @@ const GeneralSettings = () => {
 						<FlexItem>
 							<NumberControl
 								__next40pxDefaultSize
-								label={ __( 'Redis Port', 'millicache' ) }
+								label={
+									<LabelWithTooltip
+										label={ __( 'Server Port', 'millicache' ) }
+										tooltip={ __( 'The port your storage server listens on. Default is 6379 for most installations.', 'millicache' ) }
+									/>
+								}
+								style={ { width: '120px' } }
 								value={
 									settings.storage.port ??
 									status.storage?.config.port
@@ -76,8 +88,13 @@ const GeneralSettings = () => {
 							<InputControl
 								__next40pxDefaultSize
 								type="password"
-								label={ __( 'Redis Password', 'millicache' ) }
-								value={ settings.redis.enc_password ?? '' }
+								label={
+									<LabelWithTooltip
+										label={ __( 'Authentication Password', 'millicache' ) }
+										tooltip={ __( 'Password used to authenticate with your Redis, Valkey, or other compatible server. Leave empty if your server does not require authentication.', 'millicache' ) }
+									/>
+								}
+								value={ settings.storage.enc_password ?? '' }
 								disabled={
 									! ( 'enc_password' in settings.storage )
 								}
@@ -93,7 +110,13 @@ const GeneralSettings = () => {
 						<FlexItem>
 							<NumberControl
 								__next40pxDefaultSize
-								label={ __( 'Redis Database', 'millicache' ) }
+								label={
+									<LabelWithTooltip
+										label={ __( 'Database ID', 'millicache' ) }
+										tooltip={ __( 'The database to use within your storage server (typically 0-15, with 0 being the default).', 'millicache' ) }
+									/>
+								}
+								style={ { width: '120px' } }
 								value={
 									settings.storage.db ??
 									status.storage?.config.database
@@ -110,10 +133,12 @@ const GeneralSettings = () => {
 					<FlexItem style={ { flexGrow: 0 } }>
 						<ToggleControl
 							__nextHasNoMarginBottom
-							label={ __(
-								'Persistent Redis Connection',
-								'millicache'
-							) }
+							label={
+								<LabelWithTooltip
+									label={ __( 'Persistent Storage Connection', 'millicache' ) }
+									tooltip={ __( 'When enabled, maintains a persistent connection to the server instead of creating a new connection for each request. Improves performance but uses more server resources.', 'millicache' ) }
+								/>
+							}
 							checked={
 								settings.storage.persistent ??
 								status.storage?.config.persistent
@@ -135,14 +160,12 @@ const GeneralSettings = () => {
 						<FlexItem isBlock="true">
 							<UnitControl
 								__next40pxDefaultSize
-								label={ __(
-									'TTL (Cache Expiry)',
-									'millicache'
-								) }
-								help={ __(
-									'The duration the cache will be stored for.',
-									'millicache'
-								) }
+								label={
+									<LabelWithTooltip
+										label={ __( 'TTL (Cache Expiry)', 'millicache' ) }
+										tooltip={ __( 'Time-to-live for cached items. Determines how long content remains in cache before being refreshed.', 'millicache' ) }
+									/>
+								}
 								disabled={ ! ( 'ttl' in settings.cache ) }
 								value={ ( () => {
 									const ttl =
@@ -220,11 +243,12 @@ const GeneralSettings = () => {
 						<FlexItem isBlock="true">
 							<UnitControl
 								__next40pxDefaultSize
-								label={ __( 'Max TTL', 'millicache' ) }
-								help={ __(
-									'The maximum time stale cache will be kept for background regeneration.',
-									'millicache'
-								) }
+								label={
+									<LabelWithTooltip
+										label={ __( 'Max TTL', 'millicache' ) }
+										tooltip={ __( 'Maximum time stale cache can be kept for background regeneration. Allows serving cached content while new content is being generated, reducing user wait times.', 'millicache' ) }
+									/>
+								}
 								disabled={ ! ( 'max_ttl' in settings.cache ) }
 								value={ ( () => {
 									const ttl =
@@ -312,7 +336,12 @@ const GeneralSettings = () => {
 					</Flex>
 					<ToggleControl
 						__nextHasNoMarginBottom
-						label={ __( 'Enable Gzip Compression', 'millicache' ) }
+						label={
+							<LabelWithTooltip
+								label={ __( 'Enable Gzip Compression', 'millicache' ) }
+								tooltip={ __( 'Compresses cached data to reduce storage space usage. Slightly increases CPU usage but significantly reduces memory consumption.', 'millicache' ) }
+							/>
+						}
 						checked={ settings.cache.gzip ?? status.cache?.gzip }
 						disabled={ ! ( 'gzip' in settings.cache ) }
 						onChange={ ( value ) =>
@@ -321,7 +350,12 @@ const GeneralSettings = () => {
 					/>
 					<ToggleControl
 						__nextHasNoMarginBottom
-						label={ __( 'Enable Debugging', 'millicache' ) }
+						label={
+							<LabelWithTooltip
+								label={ __( 'Enable Debugging', 'millicache' ) }
+								tooltip={ __( 'Adds detailed debug information to response headers such as the cache flags and times.', 'millicache' ) }
+							/>
+						}
 						checked={ settings.cache.debug ?? status.cache?.debug }
 						disabled={ ! ( 'debug' in settings.cache ) }
 						onChange={ ( value ) =>
@@ -331,7 +365,12 @@ const GeneralSettings = () => {
 					<FormTokenField
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
-						label={ __( 'Ignored Cookies', 'millicache' ) }
+						label={
+							<LabelWithTooltip
+								label={ __( 'Ignored Cookies', 'millicache' ) }
+								tooltip={ __( 'Cookies that are ignored when creating cache keys. Example: "dark_mode" means all users share the same cache regardless of the preference. * = wildcard.' ) }
+							/>
+						}
 						value={
 							settings.cache.ignore_cookies
 								? settings.cache.ignore_cookies
@@ -346,7 +385,12 @@ const GeneralSettings = () => {
 					<FormTokenField
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
-						label={ __( 'No-Cache Cookies', 'millicache' ) }
+						label={
+							<LabelWithTooltip
+								label={ __( 'No-Cache Cookies', 'millicache' ) }
+								tooltip={ __( 'Cookies that prevent caching. Example: "session_*" will skip caching if a cookie starting with "session_" is set. * = wildcard.' ) }
+							/>
+						}
 						value={
 							settings.cache.nocache_cookies
 								? settings.cache.nocache_cookies
@@ -361,7 +405,12 @@ const GeneralSettings = () => {
 					<FormTokenField
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
-						label={ __( 'Ignored Request Keys', 'millicache' ) }
+						label={
+							<LabelWithTooltip
+								label={ __( 'Ignored Request Keys', 'millicache' ) }
+								tooltip={ __( 'URL parameters that are ignored when creating cache keys. Example: "utm_*" means analytics parameters such as "utm_source" are ignored when creating cache keys. * = wildcard.' ) }
+							/>
+						}
 						value={
 							settings.cache.ignore_request_keys
 								? settings.cache.ignore_request_keys
