@@ -393,7 +393,7 @@ final class MilliCache {
 	}
 
 	/**
-	 * Schedule expiry on transition of published posts.
+	 * Clear URL cache on transition of newly published posts.
 	 *
 	 * @since 1.0.0
 	 * @access public
@@ -405,26 +405,13 @@ final class MilliCache {
 	 * @return void
 	 */
 	public function transition_post_status( string $new_status, string $old_status, \WP_Post $post ) {
-		if ( 'publish' === $new_status || 'publish' === $old_status ) {
-			$this->engine->clear_cache_by_post_ids( $post->ID );
-		}
-
 		if ( 'publish' === $new_status && 'publish' !== $old_status ) {
+			// Clear URL cache for any existing entry.
 			$this->engine->clear_cache_by_urls( (string) get_permalink( $post->ID ) );
-		}
-	}
 
-	/**
-	 * Cleanup expired flags.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @return void
-	 */
-	public function cleanup_expired_flags() {
-		$storage = Engine::get_storage();
-		$storage->cleanup_expired_flags();
+			// Clear the cache for related archives, author, taxonomies, etc.
+			$this->engine->clear_cache_by_flags( $this->get_post_related_flags( $post ) );
+		}
 	}
 
 	/**
@@ -540,5 +527,18 @@ final class MilliCache {
 				$this->engine->clear_cache_by_site_ids();
 			}
 		}
+	}
+
+	/**
+	 * Cleanup expired flags.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return void
+	 */
+	public function cleanup_expired_flags() {
+		$storage = Engine::get_storage();
+		$storage->cleanup_expired_flags();
 	}
 }
