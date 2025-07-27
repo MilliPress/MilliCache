@@ -137,7 +137,7 @@ final class MilliCache {
 		$this->loader->add_action( 'template_redirect', $this, 'set_cache_flags', 100 );
 
 		// Specific cache clearing hooks.
-		$this->loader->add_action( 'clean_post_cache', $this, 'clean_post_cache' );
+		$this->loader->add_action( 'clean_post_cache', $this, 'clear_post_cache', 10 );
 		$this->loader->add_action( 'transition_post_status', $this, 'transition_post_status', 10, 3 );
 
 		// Register options that clear the full site cache.
@@ -297,26 +297,98 @@ final class MilliCache {
 	}
 
 	/**
+	 * Get related flags for a post.
+	 *
+	 * This method generates cache flags IDs related to a specific post, including
+	 * singular views, archives, author archives, taxonomy term archives, and date archives.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param \WP_Post $post The post-object.
+	 *
+	 * @return array<string> An array of related cache flags for the post.
+	 */
+	public function get_post_related_flags( \WP_Post $post ): array {
+		$flags = array();
+
+		$post_id   = $post->ID;
+		$post_type = $post->post_type;
+
+		if ( $post_id && $post_type ) {
+			// Singular post.
+			$flags[] = "post:$post_id";
+
+			// Post-Type archive.
+			$flags[] = "archive:$post_type";
+
+			// Author archive.
+			if ( $post->post_author ) {
+				$flags[] = 'archive:author:' . (int) $post->post_author;
+			}
+
+			// Taxonomy term archives.
+			$taxonomies = get_object_taxonomies( $post_type );
+			foreach ( $taxonomies as $taxonomy ) {
+				$terms = get_the_terms( $post, $taxonomy );
+				if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
+					foreach ( $terms as $term ) {
+						$flags[] = "archive:{$taxonomy}:{$term->term_id}";
+					}
+				}
+			}
+
+			// Date archives.
+			$timestamp = strtotime( $post->post_date );
+			if ( $timestamp ) {
+				$year  = gmdate( 'Y', $timestamp );
+				$month = gmdate( 'm', $timestamp );
+				$day   = gmdate( 'd', $timestamp );
+
+				$flags[] = "archive:$year";
+				$flags[] = "archive:$year:$month";
+				$flags[] = "archive:$year:$month:$day";
+			}
+		}
+
+		/**
+		 * Filter to add custom related flags for a post.
+		 *
+		 * @param array    $flags The generated cache flags.
+		 * @param \WP_Post  $post  The post-object.
+		 */
+		return array_unique( apply_filters( 'millicache_post_related_flags', $flags, $post ) );
+	}
+
+	/**
 	 * Clear the cache for a post.
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param int $post_id The post-ID.
+	 * @param \WP_Post|int $post $post The post-ID or object.
+	 *
 	 * @return void
 	 */
-	public function clean_post_cache( int $post_id ): void {
-		$post = get_post( $post_id );
+	public function clear_post_cache( $post ): void {
+		if ( is_numeric( $post ) ) {
+			$post = get_post( $post );
+		}
 
-		if ( $post && 'publish' === $post->post_status ) {
+		if ( ! $post instanceof \WP_Post || 'publish' !== $post->post_status ) {
+			return;
+		}
+
+		$flags = $this->get_post_related_flags( $post );
+
+		if ( $flags ) {
 			$prefix = $this->engine->get_flag_prefix();
-			$this->engine->clear_cache_by_flags(
-				array(
-					$prefix . "post:$post->ID",
-					$prefix . "author:$post->post_author",
-					$prefix . "archive:$post->post_type",
-				)
-			);
+			foreach ( $flags as &$flag ) {
+				$flag = $prefix . $flag;
+			}
+			unset( $flag );
+
+			$this->engine->clear_cache_by_flags( $flags );
 		}
 	}
 
