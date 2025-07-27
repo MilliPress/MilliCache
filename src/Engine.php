@@ -721,17 +721,15 @@ final class Engine {
 		// Fix for requests with no host.
 		$parsed = parse_url( 'http://null' . $request_uri );
 
-		// Set query vars.
+		// Set the path and lowercase it for normalization.
+		$path = strtolower( $parsed['path'] ?? '' );
+
+		// Get and clean the query string.
 		$query = $parsed['query'] ?? '';
-
-		// Set the request path.
-		$request_uri = $parsed['path'] ?? '';
-
-		// Remove ignored query vars.
 		$query = self::remove_query_args( $query, self::$ignore_request_keys );
 
 		// Return the cleaned request uri.
-		return $query ? $request_uri . '?' . $query : $request_uri;
+		return $query ? $path . '?' . $query : $path;
 	}
 
 	/**
@@ -843,7 +841,7 @@ final class Engine {
 	}
 
 	/**
-	 * Get an md5 URL hash for domain.com/path?query.
+	 * Get a md5 URL hash for domain.com/path?query.
 	 *
 	 * @since 1.0.0
 	 * @access public
@@ -853,15 +851,18 @@ final class Engine {
 	 */
 	public static function get_url_hash( string $url = null ): string {
 		if ( ! $url ) {
-			$url = self::get_server_var( 'HTTP_HOST' ) . self::parse_request_uri( self::get_server_var( 'REQUEST_URI' ) );
+			$host = strtolower( self::get_server_var( 'HTTP_HOST' ) );
+			$path = self::parse_request_uri( self::get_server_var( 'REQUEST_URI' ) );
 		} else {
 			$parsed = parse_url( $url );
-			$url = ( $parsed['host'] ?? '' ) . self::parse_request_uri( $parsed['path'] ?? '' . ( $parsed['query'] ?? '' ) );
+			$host  = strtolower( $parsed['host'] ?? '' );
+			$path  = self::parse_request_uri(
+				( $parsed['path'] ?? '' ) . ( isset( $parsed['query'] ) ? '?' . $parsed['query'] : '' )
+			);
 		}
 
-		return md5( $url );
+		return md5( $host . $path );
 	}
-
 
 	/**
 	 * Clears items from the cache during shutdown.
