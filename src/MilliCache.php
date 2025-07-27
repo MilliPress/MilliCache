@@ -222,31 +222,63 @@ final class MilliCache {
 	 * @return void
 	 */
 	public function set_cache_flags() {
+		// Singular post/page/custom post type.
 		if ( is_singular() ) {
 			$post_id = get_queried_object_id();
-			$this->engine->add_flag( "post:$post_id" );
+			if ( $post_id ) {
+				$this->engine->add_flag( "post:$post_id" );
+			}
 		}
 
-		if ( is_front_page() || is_home() ) {
+		// Home and Front Page.
+		if ( is_front_page() && is_home() ) {
 			$this->engine->add_flag( 'home' );
+			$this->engine->add_flag( 'archive:post' );
+		} elseif ( is_front_page() ) {
+			$this->engine->add_flag( 'home' );
+		} elseif ( is_home() ) {
+			$this->engine->add_flag( 'archive:post' );
 		}
 
-		if ( is_feed() ) {
-			$this->engine->add_flag( 'feed' );
-		}
-
+		// Archives.
 		if ( is_archive() ) {
 			if ( is_post_type_archive() ) {
-				$post_type = get_query_var( 'post_type' );
-				if ( is_string( $post_type ) ) {
+				$post_types = get_query_var( 'post_type' );
+				$post_types = ! is_array( $post_types ) ? array( $post_types ) : $post_types;
+				foreach ( $post_types as $post_type ) {
 					$this->engine->add_flag( "archive:$post_type" );
+				}
+			} elseif ( is_category() || is_tag() || is_tax() ) {
+				$term = get_queried_object();
+				if ( $term && isset( $term->taxonomy, $term->term_id ) ) {
+					$this->engine->add_flag( "archive:{$term->taxonomy}:{$term->term_id}" );
 				}
 			} elseif ( is_author() ) {
 				$author_id = get_query_var( 'author' );
-				if ( is_string( $author_id ) || is_int( $author_id ) ) {
-					$this->engine->add_flag( "author:$author_id" );
+				$author_id = is_numeric( $author_id ) ? (int) $author_id : 0;
+				if ( $author_id > 0 ) {
+					$this->engine->add_flag( "archive:author:$author_id" );
+				}
+			} elseif ( is_date() ) {
+				$flag = '';
+
+				foreach ( array( 'year', 'monthnum', 'day' ) as $key ) {
+					$var = get_query_var( $key );
+					if ( is_numeric( $var ) && $var > 0 ) {
+						$flag .= ":$var";
+					}
+				}
+
+				if ( ! empty( $flag ) ) {
+					$flag = 'archive' . $flag;
+					$this->engine->add_flag( $flag );
 				}
 			}
+		}
+
+		// Feeds (e.g., /feed/).
+		if ( is_feed() ) {
+			$this->engine->add_flag( 'feed' );
 		}
 
 		/**
