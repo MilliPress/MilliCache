@@ -518,7 +518,7 @@ final class MilliCache {
 
 		if ( in_array( $option, $options, true ) ) {
 			if ( 'page_on_front' === $option || 'page_for_posts' === $option ) {
-				$this->engine->clear_cache_by_flags( 'home:' . get_current_blog_id() );
+				$this->engine->clear_cache_by_flags( array( 'home', 'archive:post' ) );
 
 				if ( is_numeric( $old_value ) && is_numeric( $value ) ) {
 					$this->engine->clear_cache_by_post_ids( array( (int) $old_value, (int) $value ) );
