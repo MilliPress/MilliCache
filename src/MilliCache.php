@@ -305,11 +305,15 @@ final class MilliCache {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param \WP_Post $post The post-object.
+	 * @param \WP_Post|null $post The post-object.
 	 *
 	 * @return array<string> An array of related cache flags for the post.
 	 */
-	public function get_post_related_flags( \WP_Post $post ): array {
+	public static function get_post_related_flags( ?\WP_Post $post ): array {
+		if ( ! $post ) {
+			return array();
+		}
+
 		$flags = array();
 
 		$post_id   = $post->ID;
@@ -379,17 +383,7 @@ final class MilliCache {
 			return;
 		}
 
-		$flags = $this->get_post_related_flags( $post );
-
-		if ( $flags ) {
-			$prefix = $this->engine->get_flag_prefix();
-			foreach ( $flags as &$flag ) {
-				$flag = $prefix . $flag;
-			}
-			unset( $flag );
-
-			$this->engine->clear_cache_by_flags( $flags );
-		}
+		$this->engine->clear_cache_by_flags( $this->get_post_related_flags( $post ) );
 	}
 
 	/**
