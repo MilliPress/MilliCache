@@ -878,7 +878,7 @@ final class Engine {
 			'mll:deleted-flags' => self::$flags_delete,
 		);
 
-		self::$storage->clear_cache_by_flags( $sets, self::$ttl );
+		self::$storage->clear_cache_by_flags( $sets, self::$ttl, false );
 	}
 
 	/**
@@ -894,9 +894,6 @@ final class Engine {
 	public static function clear_cache_by_targets( $targets, bool $expire = false ): void {
 		// Convert to array.
 		$targets = is_string( $targets ) ? array( $targets ) : $targets;
-
-		// Current site only?
-		$current_site_only = self::is_multisite() && ! is_network_admin();
 
 		// Clear the full site cache.
 		if ( empty( $targets ) ) {
@@ -915,7 +912,7 @@ final class Engine {
 				self::clear_cache_by_post_ids( (int) $target );
 			} else {
 				// Clear by Flag. Limit to the current site if not network admin.
-				self::clear_cache_by_flags( $current_site_only ? self::get_flag_prefix() . $target : $target );
+				self::clear_cache_by_flags( $target, false, self::is_multisite() && ! is_network_admin() );
 			}
 		}
 	}
@@ -965,11 +962,11 @@ final class Engine {
 			array_merge(
 				array_map(
 					function ( $post_id ) {
-						return self::get_flag_prefix() . "post:$post_id";
+						return "post:$post_id";
 					},
 					$post_ids
 				),
-				array( self::get_flag_prefix() . 'feed' )
+				array( 'feed' )
 			),
 			$expire
 		);
@@ -993,10 +990,17 @@ final class Engine {
 	 *
 	 * @param string|array<string> $flags A string or array of flags to expire.
 	 * @param bool                 $expire Expire cache if set to true, or delete by default.
+	 * @param bool                 $add_prefix Add the flag prefix to the flags.
+	 * @return void
 	 */
-	public static function clear_cache_by_flags( $flags, bool $expire = false ): void {
+	public static function clear_cache_by_flags( $flags, bool $expire = false, bool $add_prefix = true ): void {
 		// Convert to array.
 		$flags = is_string( $flags ) ? array( $flags ) : $flags;
+
+		// Prefix flags.
+		if ( $add_prefix ) {
+			$flags = self::prefix_flags( $flags );
+		}
 
 		// Add flags to expire or to delete the collection.
 		$expire ? array_push( self::$flags_expire, ...$flags ) : array_push( self::$flags_delete, ...$flags );
@@ -1034,7 +1038,8 @@ final class Engine {
 				},
 				$site_ids
 			),
-			$expire
+			$expire,
+			false
 		);
 
 		/**
@@ -1162,6 +1167,26 @@ final class Engine {
 		}
 
 		return $prefix;
+	}
+
+	/**
+	 * Prefix the flags with the current site and network ID.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param array<string> $flags The flags to prefix.
+	 *
+	 * @return array<string> The prefixed flags.
+	 */
+	public static function prefix_flags( $flags = array() ): array {
+		// Prefix the flags with the current site and network ID.
+		return array_map(
+			function ( $flag ) {
+				return self::get_flag_prefix() . $flag;
+			},
+			$flags
+		);
 	}
 
 	/**

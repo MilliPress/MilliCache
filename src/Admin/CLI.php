@@ -188,7 +188,7 @@ class CLI {
 		if ( '' !== $assoc_args['flags'] ) {
 			$flags = explode( ',', $assoc_args['flags'] );
 			foreach ( $flags as $flag ) {
-				$engine::clear_cache_by_flags( $flag, $expire );
+				$engine::clear_cache_by_flags( $flag, $expire, false );
 			}
 			\WP_CLI::success( esc_html__( 'Cache cleared for flags.', 'millicache' ) );
 		}
