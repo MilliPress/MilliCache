@@ -53,6 +53,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 				formData.append( '_url', window.location.href );
 				formData.append( '_wpnonce', button.dataset.nonce );
 				formData.append( '_is_network_admin', millicache.is_network_admin );
+				formData.append('_request_flags', JSON.stringify( millicache.request_flags ) );
 
 				const response = await fetch( millicache.ajaxurl, {
 					method: 'POST',

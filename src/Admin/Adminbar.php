@@ -13,6 +13,7 @@ namespace MilliCache\Admin;
 
 use MilliCache\Core\Loader;
 use MilliCache\Engine;
+use MilliCache\MilliCache;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -82,14 +83,13 @@ class Adminbar {
 	 */
 	public function enqueue_adminbar_assets() {
 		if ( Admin::enqueue_assets( 'adminbar' ) ) {
-			$inline_script = 'const millicache = ' . json_encode(
-				array(
-					'ajaxurl' => admin_url( 'admin-ajax.php' ),
-					'is_network_admin' => is_network_admin(),
-				)
-			) . ';';
+			$context = array(
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+				'request_flags' => MilliCache::get_request_flags(),
+				'is_network_admin' => is_network_admin(),
+			);
 
-			wp_add_inline_script( 'millicache-adminbar', $inline_script, 'before' );
+			wp_add_inline_script( 'millicache-adminbar', 'const millicache = ' . json_encode( $context ) . ';', 'before' );
 		}
 	}
 
@@ -124,8 +124,8 @@ class Adminbar {
 					'id'     => 'millicache_current',
 					'href'   => wp_nonce_url( add_query_arg( '_millicache', 'flush_current' ), '_millicache__flush_nonce' ),
 					'parent' => 'millicache',
-					'title'  => __( 'Clear this page cache', 'millicache' ),
-					'meta'   => array( 'title' => esc_html__( 'Deletes the cache of the current page', 'millicache' ) ),
+					'title'  => __( 'Clear current view cache', 'millicache' ),
+					'meta'   => array( 'title' => esc_html__( 'Deletes the cache related to the current page', 'millicache' ) ),
 				)
 			);
 
@@ -209,7 +209,7 @@ class Adminbar {
 
 		// Clear the cache.
 		$action = $this->get_request_value( '_millicache' );
-		$success = $this->process_clear_cache( $action, $this->get_request_value( '_url' ) );
+		$success = $this->process_clear_cache( $action, (array) json_decode( $this->get_request_value( '_request_flags' ), true) );
 
 		// Send response.
 		if ( $success ) {
@@ -232,10 +232,10 @@ class Adminbar {
 	 * @access   private
 	 *
 	 * @param   string|null $action The action to perform.
-	 * @param   string|null $url The URL to clear the cache for.
+	 * @param   array       $flags The Flags to clear.
 	 * @return  bool
 	 */
-	private function process_clear_cache( $action = 'flush', $url = '' ) {
+	private function process_clear_cache( ?string $action = 'flush', array $flags = array() ): bool {
 		if ( 'flush' === $action ) {
 			if ( $this->get_request_value( '_is_network_admin' ) === 'true' ) {
 				Engine::clear_cache_by_network_id();
@@ -247,13 +247,11 @@ class Adminbar {
 
 			return true;
 		} elseif ( 'flush_current' === $action ) {
-			if ( is_singular() ) {
-				Engine::clear_cache_by_post_ids( (int) get_the_ID() );
-			} elseif ( is_home() || is_front_page() ) {
-				Engine::clear_cache_by_flags( 'home:' . get_current_blog_id() );
-			} else {
-				Engine::clear_cache_by_flags( 'url:' . Engine::get_url_hash( $url ) );
+			if ( ! $flags ) {
+				$flags = MilliCache::get_request_flags();
 			}
+
+			Engine::clear_cache_by_flags( $flags );
 
 			return true;
 		}
