@@ -214,6 +214,82 @@ final class MilliCache {
 	}
 
 	/**
+	 * Get related flags for the current request.
+	 *
+	 * This method generates cache flags IDs based on the current context,
+	 * such as singular posts, home/front page, archives, etc.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return array<string> An array of cache flags for the current context.
+	 */
+	public static function get_request_flags(): array {
+		$flags = array();
+
+		// Singular post/page/custom post type.
+		if ( is_singular() ) {
+			$post_id = get_queried_object_id();
+			if ( $post_id ) {
+				$flags[] = "post:$post_id";
+			}
+		}
+
+		// Home and Front Page.
+		if ( is_front_page() && is_home() ) {
+			$flags[] = 'home';
+			$flags[] = 'archive:post';
+		} elseif ( is_front_page() ) {
+			$flags[] = 'home';
+		} elseif ( is_home() ) {
+			$flags[] = 'archive:post';
+		}
+
+		// Archives.
+		if ( is_archive() ) {
+			if ( is_post_type_archive() ) {
+				$post_types = get_query_var( 'post_type' );
+				foreach ( (array) $post_types as $post_type ) {
+					if ( is_string( $post_type ) && '' !== $post_type ) {
+						$flags[] = "archive:$post_type";
+					}
+				}
+			} elseif ( is_category() || is_tag() || is_tax() ) {
+				$term = get_queried_object();
+				if ( $term && isset( $term->taxonomy, $term->term_id ) ) {
+					$flags[] = "archive:{$term->taxonomy}:{$term->term_id}";
+				}
+			} elseif ( is_author() ) {
+				$author_id = get_query_var( 'author' );
+				$author_id = is_numeric( $author_id ) ? (int) $author_id : 0;
+				if ( $author_id > 0 ) {
+					$flags[] = "archive:author:$author_id";
+				}
+			} elseif ( is_date() ) {
+				$date_parts = array();
+
+				foreach ( array( 'year', 'monthnum', 'day' ) as $key ) {
+					$part = get_query_var( $key );
+					if ( is_numeric( $part ) && $part > 0 ) {
+						$date_parts[] = str_pad( (string) $part, 2, '0', STR_PAD_LEFT );
+					}
+				}
+
+				if ( ! empty( $date_parts ) ) {
+					$flags[] = 'archive:' . implode( ':', $date_parts );
+				}
+			}
+		}
+
+		// Feeds (e.g., /feed/).
+		if ( is_feed() ) {
+			$flags[] = 'feed';
+		}
+
+		return $flags;
+	}
+
+	/**
 	 * Flag the cache during template_redirect.
 	 *
 	 * @since 1.0.0
@@ -222,63 +298,8 @@ final class MilliCache {
 	 * @return void
 	 */
 	public function set_cache_flags() {
-		// Singular post/page/custom post type.
-		if ( is_singular() ) {
-			$post_id = get_queried_object_id();
-			if ( $post_id ) {
-				$this->engine->add_flag( "post:$post_id" );
-			}
-		}
-
-		// Home and Front Page.
-		if ( is_front_page() && is_home() ) {
-			$this->engine->add_flag( 'home' );
-			$this->engine->add_flag( 'archive:post' );
-		} elseif ( is_front_page() ) {
-			$this->engine->add_flag( 'home' );
-		} elseif ( is_home() ) {
-			$this->engine->add_flag( 'archive:post' );
-		}
-
-		// Archives.
-		if ( is_archive() ) {
-			if ( is_post_type_archive() ) {
-				$post_types = get_query_var( 'post_type' );
-				$post_types = ! is_array( $post_types ) ? array( $post_types ) : $post_types;
-				foreach ( $post_types as $post_type ) {
-					$this->engine->add_flag( "archive:$post_type" );
-				}
-			} elseif ( is_category() || is_tag() || is_tax() ) {
-				$term = get_queried_object();
-				if ( $term && isset( $term->taxonomy, $term->term_id ) ) {
-					$this->engine->add_flag( "archive:{$term->taxonomy}:{$term->term_id}" );
-				}
-			} elseif ( is_author() ) {
-				$author_id = get_query_var( 'author' );
-				$author_id = is_numeric( $author_id ) ? (int) $author_id : 0;
-				if ( $author_id > 0 ) {
-					$this->engine->add_flag( "archive:author:$author_id" );
-				}
-			} elseif ( is_date() ) {
-				$flag = '';
-
-				foreach ( array( 'year', 'monthnum', 'day' ) as $key ) {
-					$var = get_query_var( $key );
-					if ( is_numeric( $var ) && $var > 0 ) {
-						$flag .= ":$var";
-					}
-				}
-
-				if ( ! empty( $flag ) ) {
-					$flag = 'archive' . $flag;
-					$this->engine->add_flag( $flag );
-				}
-			}
-		}
-
-		// Feeds (e.g., /feed/).
-		if ( is_feed() ) {
-			$this->engine->add_flag( 'feed' );
+		foreach ( $this->get_request_flags() as $flag ) {
+			$this->engine->add_flag( $flag );
 		}
 
 		/**
