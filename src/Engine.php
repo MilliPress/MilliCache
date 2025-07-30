@@ -565,7 +565,6 @@ final class Engine {
 			defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST, // Skip caching for XML-RPC requests.
 			preg_match( '/\.[a-z0-9]+($|\?)/i', self::get_server_var( 'REQUEST_URI' ) ), // Skip files.
 			php_sapi_name() === 'cli' || ( defined( 'WP_CLI' ) && true === WP_CLI ), // Skip caching for CLI requests.
-			http_response_code() >= 500, // Don't cache 5xx errors.
 			strtolower( self::get_server_var( 'REQUEST_METHOD' ) ) === 'post', // Skip caching for POST requests.
 			self::$ttl < 1, // Skip caching if TTL (Time To Live) is not set.
 		);
@@ -657,6 +656,11 @@ final class Engine {
 			'updated' => time(),
 		);
 
+		// Don't cache 5xx errors.
+		if ( $data['status'] >= 500 ) {
+			$cache = false;
+		}
+
 		// Response: If a cookie is being set that is NOT in our ignore list, disable caching for this page.
 		foreach ( headers_list() as $header ) {
 			list($key, $value) = explode( ':', $header, 2 );
@@ -702,6 +706,8 @@ final class Engine {
 		if ( $cache || self::$fcgi_regenerate ) {
 			$flags = array_unique( array_merge( self::$flags, array( 'url:' . self::get_url_hash() ) ) );
 			self::$storage->perform_cache( self::$request_hash, $data, $flags, $cache );
+		} else {
+			self::set_header( 'Status', 'bypass' );
 		}
 
 		// Return output, but not for the background task.
