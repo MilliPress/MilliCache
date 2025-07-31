@@ -488,7 +488,7 @@ final class Storage {
 	 * @param int                  $ttl The time-to-live for the cache.
 	 * @return void
 	 */
-	public function clear_cache_by_flags( array $sets, int $ttl ): void {
+	public function clear_cache_by_sets( array $sets, int $ttl ): void {
 		// Delete the stored entries for the deleted flags.
 		if ( isset( $sets['mll:deleted-flags'] ) ) {
 			foreach ( array_unique( $sets['mll:deleted-flags'] ) as $flag ) {

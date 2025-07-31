@@ -194,7 +194,7 @@ class Settings {
 	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'storage').
 	 * @param bool        $skip_constants Whether to skip constants defined in wp-config.php.
 	 *
-	 * @return array<array> The settings array.
+	 * @return array<array<mixed>> The settings array.
 	 */
 	public function get_settings( ?string $module = null, bool $skip_constants = false ): array {
 		// Step 1: Get default settings.

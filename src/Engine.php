@@ -864,7 +864,7 @@ final class Engine {
 			'mll:deleted-flags' => self::$flags_delete,
 		);
 
-		self::$storage->clear_cache_by_flags( $sets, self::$ttl, false );
+		self::$storage->clear_cache_by_sets( $sets, self::$ttl );
 	}
 
 	/**
