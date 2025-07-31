@@ -539,20 +539,19 @@ final class Engine {
 			}
 		}
 
-		// Skip running MilliCache if any of the following conditions are met.
-		$skip_conditions = array(
-			defined( 'WP_CACHE' ) && ! WP_CACHE, // Skip caching if deactivated via constant.
-			defined( 'REST_REQUEST' ) && REST_REQUEST, // Skip caching for Rest API requests.
-			defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST, // Skip caching for XML-RPC requests.
-			preg_match( '/\.[a-z0-9]+($|\?)/i', self::get_server_var( 'REQUEST_URI' ) ), // Skip files.
-			php_sapi_name() === 'cli' || ( defined( 'WP_CLI' ) && true === WP_CLI ), // Skip caching for CLI requests.
-			strtolower( self::get_server_var( 'REQUEST_METHOD' ) ) === 'post', // Skip caching for POST requests.
-			self::$ttl < 1, // Skip caching if TTL (Time To Live) is not set.
+		// Run MilliCache if all conditions are met.
+		$conditions = array(
+			defined( 'WP_CACHE' ) && WP_CACHE, // Caching is enabled.
+			! ( defined( 'REST_REQUEST' ) && REST_REQUEST ), // No REST request.
+			! ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ), // No XML-RPC request.
+			! preg_match( '/\.[a-z0-9]+($|\?)/i', self::get_server_var( 'REQUEST_URI' ) ), // No files.
+			php_sapi_name() !== 'cli' && ( ! defined( 'WP_CLI' ) || WP_CLI !== true ), // No CLI request.
+			strtolower( self::get_server_var( 'REQUEST_METHOD' ) ) === 'get', // Only GET requests.
+			self::$ttl > 0, // TTL is set.
 		);
 
-		// If any skip condition is true, return false early.
-		foreach ( $skip_conditions as $condition ) {
-			if ( $condition ) {
+		foreach ( $conditions as $condition ) {
+			if ( ! $condition ) {
 				self::set_header( 'Status', 'bypass' );
 				return false;
 			}
