@@ -194,7 +194,7 @@ class Adminbar {
 	}
 
 	/**
-	 * Process a clear cache AJAX requests.
+	 * Process a clear-cache AJAX requests.
 	 *
 	 * @since    1.0.0
 	 * @access   public
@@ -209,7 +209,13 @@ class Adminbar {
 
 		// Clear the cache.
 		$action = $this->get_request_value( '_millicache' );
-		$success = $this->process_clear_cache( $action, (array) json_decode( $this->get_request_value( '_request_flags' ), true) );
+		$flags = array_values(
+			array_filter(
+				(array) json_decode( (string) $this->get_request_value( '_request_flags' ), true ),
+				'is_string'
+			)
+		);
+		$success = $this->process_clear_cache( $action, $flags );
 
 		// Send response.
 		if ( $success ) {
@@ -231,8 +237,8 @@ class Adminbar {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @param   string|null $action The action to perform.
-	 * @param   array       $flags The Flags to clear.
+	 * @param   string|null   $action The action to perform.
+	 * @param   array<string> $flags The Flags to clear.
 	 * @return  bool
 	 */
 	private function process_clear_cache( ?string $action = 'flush', array $flags = array() ): bool {
