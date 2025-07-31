@@ -130,16 +130,6 @@ final class Engine {
 	private static array $ignore_request_keys;
 
 	/**
-	 * External callback to append cache conditions.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var string Callback to append cache conditions.
-	 */
-	private static string $skip_millicache_callback;
-
-	/**
 	 * Gzip compression.
 	 *
 	 * @since 1.0.0
@@ -535,16 +525,7 @@ final class Engine {
 	 * @access   private
 	 */
 	private static function could_cache_request(): bool {
-		// Check for a custom callback to determine if MilliCache should be skipped.
-		if ( ! empty( self::$skip_millicache_callback ) && is_callable( self::$skip_millicache_callback ) ) {
-			$callback_result = call_user_func( self::$skip_millicache_callback );
-			if ( is_bool( $callback_result ) && ! $callback_result ) {
-				self::set_header( 'Status', 'bypass' );
-				return false;
-			}
-		}
-
-		// Skip MilliCache if specific cookies are present.
+		// Run MilliCache if there are no $nocache_cookies.
 		$nocache_cookies = self::$nocache_cookies;
 		$nocache_cookies[] = ( defined( 'LOGGED_IN_COOKIE' ) ? LOGGED_IN_COOKIE : 'wordpress_logged_in' ) . '*';
 		$nocache_cookies[] = 'wp-*pass*';
