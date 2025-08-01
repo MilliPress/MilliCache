@@ -608,6 +608,25 @@ final class Storage {
 	}
 
 	/**
+	 * Generates a key with prefix, but removes it if already present.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @param string $key  The key.
+	 * @param string $type The type prefix (e.g. 'c' or 'f').
+	 * @return string The full key with the prefix.
+	 */
+	public function get_key( string $key, string $type = '' ): string {
+		$prefix = $this->prefix . ':' . ( '' !== $type ? $type . ':' : '' );
+		if ( strpos( $key, $prefix ) === 0 ) {
+			return substr( $key, strlen( $prefix ) );
+		} else {
+			return sprintf( '%s%s', $prefix, $key );
+		}
+	}
+
+	/**
 	 * Get and convert the cache key.
 	 *
 	 * @since 1.0.0
@@ -617,12 +636,7 @@ final class Storage {
 	 * @return string The cache key.
 	 */
 	private function get_cache_key( string $hash ): string {
-		$prefix = $this->prefix . ':c:';
-		if ( strpos( $hash, $prefix ) === 0 ) {
-			return substr( $hash, strlen( $prefix ) );
-		} else {
-			return sprintf( '%s%s', $prefix, $hash );
-		}
+		return $this->get_key( $hash, 'c' );
 	}
 
 	/**
@@ -635,12 +649,7 @@ final class Storage {
 	 * @return string The flag key.
 	 */
 	private function get_flag_key( string $flag ): string {
-		$prefix = $this->prefix . ':f:';
-		if ( strpos( $flag, $prefix ) === 0 ) {
-			return substr( $flag, strlen( $prefix ) );
-		} else {
-			return sprintf( '%s%s', $prefix, $flag );
-		}
+		return $this->get_key( $flag, 'f' );
 	}
 
 	/**
