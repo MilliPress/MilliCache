@@ -435,6 +435,62 @@ final class Storage {
 	}
 
 	/**
+	 * Add one or more members to a set (deduplicated).
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param string $key The key of the set.
+	 * @param mixed  $members The member(s) to add to the set.
+	 * @return int The number of members that were added to the set, not including all the members already present in the set.
+	 */
+	public function set_add( string $key, $members ): int {
+		try {
+			return $this->client->sadd( $this->get_key( $key ), (array) $members );
+		} catch ( PredisException $e ) {
+			error_log( 'Storage::set_add failed: ' . $e->getMessage() );
+			return 0;
+		}
+	}
+
+	/**
+	 * Remove one or more members from a set.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param string $key The key of the set.
+	 * @param int    $count The number of members to remove.
+	 * @return array|string[] The removed members.
+	 */
+	public function set_pop( string $key, int $count = 1 ): array {
+		try {
+			return (array) $this->client->spop( $this->get_key( $key ), $count );
+		} catch ( PredisException $e ) {
+			error_log( 'Storage::set_pop failed: ' . $e->getMessage() );
+			return array();
+		}
+	}
+
+	/**
+	 * Get the count of members in a set.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param string $key The key of the set.
+	 * @return int The number of members in the set.
+	 */
+	public function set_count( string $key ): int {
+		try {
+			return $this->client->scard( $this->get_key( $key ) );
+		} catch ( PredisException $e ) {
+			error_log( 'Storage::set_count failed: ' . $e->getMessage() );
+			return 0;
+		}
+	}
+
+	/**
 	 * Set lock for a cache entry.
 	 *
 	 * @since 1.0.0
