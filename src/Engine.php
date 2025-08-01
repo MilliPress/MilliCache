@@ -545,6 +545,7 @@ final class Engine {
 			! ( defined( 'REST_REQUEST' ) && REST_REQUEST ), // No REST request.
 			! ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ), // No XML-RPC request.
 			! preg_match( '/\.[a-z0-9]+($|\?)/i', self::get_server_var( 'REQUEST_URI' ) ), // No files.
+			! strpos( self::get_server_var( 'REQUEST_URI' ), 'wp-json' ), // No WP-API requests.
 			php_sapi_name() !== 'cli' && ( ! defined( 'WP_CLI' ) || WP_CLI !== true ), // No CLI request.
 			strtolower( self::get_server_var( 'REQUEST_METHOD' ) ) === 'get', // Only GET requests.
 			self::$ttl > 0, // TTL is set.
