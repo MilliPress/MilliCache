@@ -114,6 +114,8 @@ class Admin {
 	 * @return   void
 	 */
 	private function define_admin_hooks() {
+		$this->loader->add_action( 'admin_menu', $this, 'add_admin_menu' );
+
 		// Scripts & Styles.
 		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_admin_assets' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_settings_assets' );
@@ -129,6 +131,26 @@ class Admin {
 		$this->loader->add_filter( 'dashboard_glance_items', $this, 'add_dashboard_glance_cache_size', 999 );
 		$this->loader->add_action( 'millicache_before_page_cache_stored', $this, 'delete_dashboard_glance_cache_size' );
 		$this->loader->add_action( 'millicache_after_page_cache_deleted', $this, 'delete_dashboard_glance_cache_size' );
+	}
+
+	/**
+	 * Add the admin menu item for the plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @return   void
+	 */
+	public function add_admin_menu(): void {
+		add_options_page(
+			__( 'MilliCache', 'millicache' ),
+			__( 'MilliCache', 'millicache' ),
+			'manage_options',
+			'millicache',
+			function () {
+				echo '<div class="wrap" id="millicache-settings"></div>';
+			},
+		);
 	}
 
 	/**

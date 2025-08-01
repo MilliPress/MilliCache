@@ -47,7 +47,6 @@ class Settings {
 
 		if ( function_exists( 'add_action' ) ) {
 			add_action( 'init', array( $this, 'register_settings' ) );
-			add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 
 			// Settings storage.
 			add_filter( 'option_' . self::$option_name, array( $this, 'filter_settings_by_constants' ) );
@@ -60,26 +59,6 @@ class Settings {
 			add_filter( 'pre_update_option_' . self::$option_name, array( $this, 'encrypt_sensitive_settings_data' ), 0 );
 			add_filter( 'option_' . self::$option_name, array( $this, 'decrypt_sensitive_settings_data' ), 0 );
 		}
-	}
-
-	/**
-	 * Add the admin menu item for the plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   public
-	 *
-	 * @return   void
-	 */
-	public function add_admin_menu(): void {
-		add_options_page(
-			__( 'MilliCache', 'millicache' ),
-			__( 'MilliCache', 'millicache' ),
-			'manage_options',
-			'millicache',
-			function () {
-				echo '<div class="wrap" id="millicache-settings"></div>';
-			},
-		);
 	}
 
 	/**
