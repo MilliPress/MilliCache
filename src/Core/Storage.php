@@ -491,7 +491,7 @@ final class Storage {
 	}
 
 	/**
-	 * Set lock for a cache entry.
+	 * Set a lock for a cache entry.
 	 *
 	 * @since 1.0.0
 	 * @access public
@@ -517,13 +517,13 @@ final class Storage {
 	}
 
 	/**
-	 * Set lock for a cache entry.
+	 * Unlock a storage entry.
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 *
 	 * @param string $hash The cache hash.
-	 * @return bool Whether the lock operation was successful.
+	 * @return bool True if the lock was released.
 	 */
 	public function unlock( string $hash ): bool {
 		try {
