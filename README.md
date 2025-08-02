@@ -490,9 +490,9 @@ If the current request should be cached.
 
 ```php
 add_filter(`millicache_should_cache_request`, function( $should_cache ) {
-    // E.g. do not cache 404 pages
+    // E.g. do cache 404 pages
     if ( is_404() ) {
-        return false;
+        return true;
     }
 
     return $should_cache;

@@ -574,9 +574,10 @@ final class Engine {
 		$should_cache = true;
 
 		$wp_skip_conditions = array(
-			defined( 'DOING_CRON' ) && DOING_CRON,
-			defined( 'DOING_AJAX' ) && DOING_AJAX,
-			defined( 'DONOTCACHEPAGE' ) && DONOTCACHEPAGE,
+			200 !== http_response_code(),                               // Only cache 200 OK responses.
+			defined( 'DOING_CRON' ) && DOING_CRON,         // Do not cache cron requests.
+			defined( 'DOING_AJAX' ) && DOING_AJAX,         // Do not cache AJAX requests.
+			defined( 'DONOTCACHEPAGE' ) && DONOTCACHEPAGE, // Do not cache if DONOTCACHEPAGE is defined.
 		);
 
 		foreach ( $wp_skip_conditions as $condition ) {
