@@ -686,7 +686,15 @@ final class Engine {
 
 		// Maybe cache the output.
 		if ( $cache || self::$fcgi_regenerate ) {
+			// Get the flags for this request.
 			$flags = array_unique( array_merge( self::$flags, array( 'url:' . self::get_url_hash() ) ) );
+
+			// If no flags are set, use the fallback site flag.
+			if ( count( $flags ) <= 1 ) {
+				$flags[] = self::get_flag_key( 'flag' );
+			}
+
+			// Store the cache.
 			self::$storage->perform_cache( self::$request_hash, $data, $flags, $cache );
 		} else {
 			self::set_header( 'Status', 'bypass' );
