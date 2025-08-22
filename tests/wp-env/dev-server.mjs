@@ -94,7 +94,7 @@ const startServer = async () => {
         disableMultisiteInConfig(wpConfigPath);
 
         // Define which services to run based on environment
-        const servicesToRun = process.env.CI ? 'redis' : 'redis';
+        const servicesToRun = process.env.CI ? 'redis' : 'redis keydb dragonfly';
         console.log(`Starting Docker Containers with services: ${servicesToRun}`);
         await run('docker', ['compose', ...mergeConfig.split(' '), 'up', '--force-recreate', '-d', ...servicesToRun.split(' ')]);
 
@@ -164,7 +164,7 @@ const destroyServer = async () => {
         console.log('Destroying the server');
         await run('docker', ['compose', ...mergeConfig.split(' '), 'down', '-v']);
         await run('npx', ['wp-env', 'destroy', '--yes']);
-        await run('docker', ['rmi', 'redis']);
+        await run('docker', ['rmi', 'redis', 'eqalpha/keydb', 'docker.dragonflydb.io/dragonflydb/dragonfly']);
         console.log('MilliCache Dev Server has been destroyed!');
     } catch (error) {
         console.error(`An error occurred during the destroy process: ${error.message}`);
