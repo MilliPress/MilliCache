@@ -117,7 +117,7 @@ const startServer = async () => {
             console.log('Multisite is not initialized. Initializing Multisite...');
 
             // Check if the MULTISITE constant is already set
-            let hasConstant = false;
+            let hasConstant;
             try {
                 await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'has', 'MULTISITE', '--quiet']);
                 hasConstant = true;
@@ -125,7 +125,7 @@ const startServer = async () => {
                 hasConstant = false;
             }
 
-            if (hasConstant) {
+            if (hasConstant || process.env.CI) {
                 await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet', '--skip-config']);
                 await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'set', 'MULTISITE', 'true', '--raw', '--quiet']);
             } else {
