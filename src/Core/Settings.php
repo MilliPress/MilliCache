@@ -604,6 +604,9 @@ class Settings {
 		$nonce = mb_substr( $decoded, 0, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES, '8bit' );
 		$ciphertext = mb_substr( $decoded, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES, null, '8bit' );
 
-		return sodium_crypto_secretbox_open( $ciphertext, $nonce, $key );
+		$decrypted = sodium_crypto_secretbox_open( $ciphertext, $nonce, $key );
+
+		// Return the decrypted value or empty string if decryption failed.
+		return $decrypted ? $decrypted : '';
 	}
 }
