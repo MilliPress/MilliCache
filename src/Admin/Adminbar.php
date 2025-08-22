@@ -67,11 +67,6 @@ class Adminbar {
 
 		// Menu items.
 		$this->loader->add_action( 'admin_bar_menu', $this, 'add_adminbar_menu', 999 );
-
-		// Clear cache.
-		$this->loader->add_action( 'admin_init', $this, 'process_clear_cache_request' );
-		$this->loader->add_action( 'template_redirect', $this, 'process_clear_cache_request' );
-		$this->loader->add_action( 'wp_ajax_millicache_adminbar_clear_cache', $this, 'ajax_process_clear_cache_request' );
 	}
 
 	/**
@@ -82,10 +77,9 @@ class Adminbar {
 	 * @access   public
 	 */
 	public function enqueue_adminbar_assets() {
-		if ( Admin::enqueue_assets( 'adminbar' ) ) {
+		if ( Admin::enqueue_assets( 'adminbar', array( 'wp-api-fetch' ) ) ) {
 			$context = array(
-				'ajaxurl' => admin_url( 'admin-ajax.php' ),
-				'request_flags' => MilliCache::get_request_flags(),
+				'rest_url' => esc_url_raw( rest_url( 'millicache/v1/cache' ) ),
 				'is_network_admin' => is_network_admin(),
 			);
 
@@ -94,7 +88,7 @@ class Adminbar {
 	}
 
 	/**
-	 * Add the cache flush button to the admin bar.
+	 * Add the clear cache menu to the admin bar.
 	 *
 	 * @since    1.0.0
 	 * @access   public
@@ -107,175 +101,95 @@ class Adminbar {
 			return;
 		}
 
+		// Root Menu.
 		$wp_admin_bar->add_menu(
 			array(
 				'id'     => 'millicache',
-				'href'   => wp_nonce_url( add_query_arg( '_millicache', 'flush' ), '_millicache__flush_nonce' ),
+				'href'   => add_query_arg( '_millicache', 'clear' ),
 				'parent' => 'top-secondary',
 				'title'  => '<span class="ab-icon dashicons"></span><span class="ab-label">' . __( 'Cache', 'millicache' ) . '</span>',
-				'meta'   => array( 'title' => esc_html__( 'Flush the site cache', 'millicache' ) ),
+				'meta'   => array( 'title' => esc_html__( 'Clear Website Cache', 'millicache' ) ),
 			)
 		);
 
-		// todo: Add buttons to the admin bar, when on a post edit screen of public post types.
-		if ( ! is_admin() ) {
-			$wp_admin_bar->add_menu(
-				array(
-					'id'     => 'millicache_current',
-					'href'   => wp_nonce_url( add_query_arg( '_millicache', 'flush_current' ), '_millicache__flush_nonce' ),
-					'parent' => 'millicache',
-					'title'  => __( 'Clear current view cache', 'millicache' ),
-					'meta'   => array( 'title' => esc_html__( 'Deletes the cache related to the current page', 'millicache' ) ),
-				)
-			);
+		// Context-specific "Clear Current".
+		$targets = array();
+		$title   = '';
 
-			$wp_admin_bar->add_menu(
-				array(
-					'id'     => 'millicache_site',
-					'href'   => wp_nonce_url( add_query_arg( '_millicache', 'flush' ), '_millicache__flush_nonce' ),
-					'parent' => 'millicache',
-					'title'  => __( 'Clear full website cache', 'millicache' ),
-					'meta'   => array( 'title' => esc_html__( 'Deletes the full website cache', 'millicache' ) ),
-				)
-			);
-		}
-	}
+		if ( is_admin() ) {
+			$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 
-	/**
-	 * Validate a clear cache request.
-	 *
-	 * @since    1.0.0
-	 * @access   public
-	 *
-	 * @return   bool
-	 */
-	public function validate_clear_cache_request(): bool {
-		// Sanitize the input.
-		$action = $this->get_request_value( '_millicache' );
-		$nonce = $this->get_request_value( '_wpnonce' );
+			if ( $screen && 'post' === $screen->base ) {
+				$post = get_post();
 
-		// Validate nonce here as needed.
-		if ( ! in_array( $action, array( 'flush', 'flush_current' ), true ) ) {
-			return false;
-		}
+				if ( $post && 'publish' === $post->post_status ) {
+					$post_type_object = get_post_type_object( $post->post_type );
 
-		if ( ! $nonce || ! wp_verify_nonce( sanitize_key( $nonce ), '_millicache__flush_nonce' ) ) {
-			return false;
-		}
-
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return false;
-		}
-
-		return true;
-	}
-
-	/**
-	 * Process a clear cache request.
-	 *
-	 * @since    1.0.0
-	 * @access   public
-	 *
-	 * @return   void
-	 */
-	public function process_clear_cache_request() {
-		// Validate request.
-		if ( ! $this->validate_clear_cache_request() || wp_doing_ajax() ) {
-			return;
-		}
-
-		// Clear cache.
-		$this->process_clear_cache( $this->get_request_value( '_millicache' ) );
-
-		// Reload page.
-		wp_safe_redirect( remove_query_arg( '_millicache', wp_get_referer() ) );
-
-		exit();
-	}
-
-	/**
-	 * Process a clear-cache AJAX requests.
-	 *
-	 * @since    1.0.0
-	 * @access   public
-	 *
-	 * @return   void
-	 */
-	public function ajax_process_clear_cache_request() {
-		// Validate request.
-		if ( ! $this->validate_clear_cache_request() || ! wp_doing_ajax() ) {
-			return;
-		}
-
-		// Clear the cache.
-		$action = $this->get_request_value( '_millicache' );
-		$flags = array_values(
-			array_filter(
-				(array) json_decode( (string) $this->get_request_value( '_request_flags' ), true ),
-				'is_string'
-			)
-		);
-		$success = $this->process_clear_cache( $action, $flags );
-
-		// Send response.
-		if ( $success ) {
-			wp_send_json_success(
-				sprintf(
-					/* translators: %s: The type of cache being flushed ('full site' or 'current page'). */
-					__( 'Cache for %s flushed successfully.', 'millicache' ),
-					'flush' === $action ? __( 'full site', 'millicache' ) : __( 'current page', 'millicache' )
-				)
-			);
+					if ( $post_type_object && $post_type_object->public ) {
+						$targets = MilliCache::get_post_related_flags( $post );
+						$title   = sprintf(
+							/* translators: %s: Post type name */
+							__( 'Clear %s Cache', 'millicache' ),
+							$post_type_object->labels->singular_name
+						);
+					}
+				}
+			}
 		} else {
-			wp_send_json_error( __( 'Cache could not be flushed.', 'millicache' ) );
-		}
-	}
-
-	/**
-	 * Process cache clearing by context.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @param   string|null   $action The action to perform.
-	 * @param   array<string> $flags The Flags to clear.
-	 * @return  bool
-	 */
-	private function process_clear_cache( ?string $action = 'flush', array $flags = array() ): bool {
-		if ( 'flush' === $action ) {
-			if ( $this->get_request_value( '_is_network_admin' ) === 'true' ) {
-				Engine::clear_cache_by_network_id();
-				Admin::add_notice( __( 'The network cache has been cleared.', 'millicache' ), 'success' );
-			} else {
-				Engine::clear_cache_by_site_ids();
-				Admin::add_notice( __( 'The site cache has been cleared.', 'millicache' ), 'success' );
-			}
-
-			return true;
-		} elseif ( 'flush_current' === $action ) {
-			if ( ! $flags ) {
-				$flags = MilliCache::get_request_flags();
-			}
-
-			Engine::clear_cache_by_flags( $flags );
-
-			return true;
+			$targets = MilliCache::get_request_flags();
+			$title   = __( 'Clear Current View Cache', 'millicache' );
 		}
 
-		return false;
-	}
+		// Add the menu item if we have targets.
+		if ( ! empty( $targets ) ) {
+			$wp_admin_bar->add_menu(
+				array(
+					'parent' => 'millicache',
+					'id'     => 'millicache_clear_current',
+					'href'   => add_query_arg(
+						array(
+							'_millicache' => 'clear_targets',
+							'_targets'    => implode( ',', $targets ),
+						)
+					),
+					'title'  => $title,
+				)
+			);
+		}
 
-	/**
-	 * Retrieves a value from either $_GET or $_POST superglobals with a fallback to null.
-	 *
-	 * This function ensures the value is sanitized using `sanitize_text_field` and `wp_unslash`.
-	 * It checks both $_POST and $_GET for the specified key.
-	 *
-	 * @param string $key The key for the value to be retrieved.
-	 * @return string|null The sanitized value if found, or null otherwise.
-	 */
-	public static function get_request_value( $key ) {
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification is handled earlier.
-		return sanitize_text_field( wp_unslash( $_POST[ $key ] ?? $_GET[ $key ] ?? null ) );
+		// Always add site/network clear.
+		$wp_admin_bar->add_menu(
+			array(
+				'parent' => 'millicache',
+				'id'     => 'millicache-clear',
+				'href'   => add_query_arg( '_millicache', 'clear' ),
+				'title'  => sprintf(
+				 /* translators: %s: "Network" or "Website" */
+					__( 'Clear %s Cache', 'millicache' ),
+					is_network_admin() ? __( 'Network', 'millicache' ) : __( 'Website', 'millicache' )
+				),
+			)
+		);
+
+		// Add a secondary group.
+		$wp_admin_bar->add_group(
+			array(
+				'parent' => 'millicache',
+				'id'     => 'millicache-secondary',
+				'meta'   => array(
+					'class' => 'ab-sub-secondary',
+				),
+			)
+		);
+
+		// Add the "Settings" menu with cache size.
+		$wp_admin_bar->add_menu(
+			array(
+				'parent' => 'millicache-secondary',
+				'id'     => 'millicache-settings',
+				'href'   => admin_url( 'options-general.php?page=millicache' ),
+				'title'  => Admin::get_cache_size_summary_string(),
+			)
+		);
 	}
 }
