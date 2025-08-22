@@ -23,7 +23,7 @@ const ClearCacheModal = ( { isModalOpen, onRequestClose } ) => {
 
 	const handleAction = async () => {
 		try {
-			await triggerAction( 'clear_cache_by_targets', {
+			await triggerAction( 'clear_targets', {
 				targets: inputValue,
 			} );
 			handleModalClose();
@@ -65,7 +65,7 @@ const ClearCacheModal = ( { isModalOpen, onRequestClose } ) => {
 						<Button isPrimary onClick={ handleAction }>
 							{ inputValue.length === 0
 								? __( 'Clear Website Cache', 'millicache' )
-								: __( 'Clear Targeted Cache', 'millicache' ) }
+								: __( 'Clear Cache of Targets', 'millicache' ) }
 						</Button>
 					</FlexItem>
 				</Flex>

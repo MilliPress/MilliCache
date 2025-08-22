@@ -75,7 +75,7 @@ class RestAPI {
 	}
 
 	/**
-	 * Register all the hooks related to the admin area functionality
+	 * Register all the hooks related to the REST API functionality
 	 * of the plugin.
 	 *
 	 * @since    1.0.0
@@ -84,6 +84,7 @@ class RestAPI {
 	 * @return   void
 	 */
 	private function register_hooks() {
+		// Register REST API routes.
 		$this->loader->add_action( 'rest_api_init', $this, 'register_routes' );
 	}
 
@@ -95,6 +96,18 @@ class RestAPI {
 	 * @access   public
 	 */
 	public function register_routes() {
+		register_rest_route(
+			'millicache/v1',
+			'/cache',
+			array(
+				'methods' => \WP_REST_Server::CREATABLE,
+				'callback' => array( $this, 'perform_cache_action' ),
+				'permission_callback' => function () {
+					return current_user_can( 'manage_options' );
+				},
+			)
+		);
+
 		register_rest_route(
 			'millicache/v1',
 			'/status',
@@ -118,6 +131,135 @@ class RestAPI {
 				},
 			)
 		);
+	}
+
+	/**
+	 * Unified handler for all cache actions.
+	 *
+	 * @since   1.0.0
+	 * @access  public
+	 *
+	 * @param \WP_REST_Request $request The REST API request object.
+	 * @phpstan-param \WP_REST_Request<array<string, mixed>> $request
+	 *
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function perform_cache_action( \WP_REST_Request $request ) {
+		$action = $request->get_param( 'action' );
+		$allowed_actions = apply_filters(
+			'millicache_rest_allowed_cache_actions',
+			array(
+				'clear',          // Clear all cache.
+				'clear_current',  // Clear the current view cache.
+				'clear_targets',  // Clear by targets (post IDs, URLs, flags).
+			)
+		);
+
+		if ( ! is_string( $action ) || ! in_array( $action, $allowed_actions, true ) ) {
+			return new \WP_Error(
+				'invalid_action',
+				__( 'Invalid cache action.', 'millicache' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		try {
+			switch ( $action ) {
+				case 'clear':
+					$is_network_admin = (bool) $request->get_param( 'is_network_admin' );
+
+					if ( $is_network_admin ) {
+						Engine::clear_cache_by_network_id();
+						$message = __( 'The network cache has been cleared.', 'millicache' );
+					} else {
+						Engine::clear_cache_by_site_ids();
+						$message = __( 'The site cache has been cleared.', 'millicache' );
+					}
+
+					break;
+
+				case 'clear_current':
+					$flags = array();
+					$request_flags = $request->get_param( 'request_flags' );
+
+					if ( null !== $request_flags ) {
+						if ( is_string( $request_flags ) ) {
+							$flags = array_values(
+								array_filter(
+									(array) json_decode( $request_flags, true ),
+									'is_string'
+								)
+							);
+						} elseif ( is_array( $request_flags ) ) {
+							$flags = array_values(
+								array_filter(
+									$request_flags,
+									'is_string'
+								)
+							);
+						}
+					}
+
+					if ( empty( $flags ) ) {
+						return new \WP_Error(
+							'no_flags',
+							__( 'No flags provided to clear cache.', 'millicache' ),
+							array( 'status' => 400 )
+						);
+					}
+
+					Engine::clear_cache_by_flags( $flags );
+
+					$message = __( 'The current page cache has been cleared.', 'millicache' );
+
+					break;
+
+				case 'clear_targets':
+					$targets = $request->get_param( 'targets' );
+
+					if ( ! is_string( $targets ) && ! is_array( $targets ) ) {
+						return new \WP_Error(
+							'invalid_targets',
+							__( 'Invalid targets parameter. Must be a string or an array.', 'millicache' ),
+							array( 'status' => 400 )
+						);
+					}
+
+					Engine::clear_cache_by_targets( $targets );
+
+					$message = empty( $targets ) ?
+						__( 'The site cache has been cleared.', 'millicache' ) :
+						__( 'Cache for the targets has been cleared.', 'millicache' );
+
+					break;
+			}
+
+			/**
+			 * Fires after a MilliCache cache action has been processed.
+			 *
+			 * @since 1.0.0
+			 *
+			 * @param string $action The action that was processed.
+			 * @param array  $params The parameters passed to the action.
+			 * @param \WP_REST_Request $request The REST API request object.
+			 */
+			do_action( 'millicache_rest_perform_cache_action', $action, $request->get_params(), $request );
+
+			return rest_ensure_response(
+				array(
+					'success'   => true,
+					'message'   => $message ?? '',
+					'action'    => $action,
+					'timestamp' => time(),
+				)
+			);
+		} catch ( \Exception $e ) {
+			return new \WP_Error(
+				'cache_action_failed',
+				__( 'Failed to perform cache action: ', 'millicache' ) . $e->getMessage(),
+				array( 'status' => 500 )
+			);
+		}
 	}
 
 	/**
@@ -176,35 +318,17 @@ class RestAPI {
 		$supported_actions = apply_filters(
 			'millicache_rest_supported_actions',
 			array(
-				'clear_cache_by_targets',
 				'reset_settings',
 				'restore_settings',
 			)
 		);
 
 		if ( ! is_string( $action ) || ! in_array( $action, $supported_actions, true ) ) {
-			return new \WP_Error( 'invalid_action', __( 'Invalid cache action.', 'millicache' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'invalid_action', __( 'Invalid action.', 'millicache' ), array( 'status' => 400 ) );
 		}
 
 		try {
 			switch ( $action ) {
-				case 'clear_cache_by_targets':
-					$targets = $request->get_param( 'targets' );
-
-					if ( ! is_string( $targets ) && ! is_array( $targets ) ) {
-						return new \WP_REST_Response(
-							array(
-								'success' => false,
-								'message' => 'Missing targets parameter to clear cache by targets.',
-							),
-							400
-						);
-					}
-
-					Engine::clear_cache_by_targets( $targets );
-					$message = __( 'Cache cleared successfully.', 'millicache' );
-					break;
-
 				case 'reset_settings':
 					// Backup before reset.
 					Settings::backup();
@@ -230,7 +354,7 @@ class RestAPI {
 					break;
 			}
 		} catch ( \Exception $e ) {
-			return new \WP_Error( 'cache_clear_failed', __( 'Failed to clear cache: ', 'millicache' ) . $e->getMessage(), array( 'status' => 500 ) );
+			return new \WP_Error( 'settings_action_failed', __( 'Failed to perform settings action: ', 'millicache' ) . $e->getMessage(), array( 'status' => 500 ) );
 		}
 
 		/**

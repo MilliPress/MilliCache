@@ -1175,7 +1175,7 @@ final class Engine {
 	 *
 	 * @return array<string> The prefixed flags.
 	 */
-	public static function prefix_flags( $flags = array() ): array {
+	public static function prefix_flags( array $flags = array() ): array {
 		// Prefix the flags with the current site and network ID.
 		return array_map(
 			function ( $flag ) {

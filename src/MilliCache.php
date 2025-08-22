@@ -137,7 +137,7 @@ final class MilliCache {
 		$this->loader->add_action( 'template_redirect', $this, 'set_cache_flags', 100 );
 
 		// Specific cache clearing hooks.
-		$this->loader->add_action( 'clean_post_cache', $this, 'clear_post_cache', 10 );
+		$this->loader->add_action( 'clean_post_cache', $this, 'clear_post_cache' );
 		$this->loader->add_action( 'transition_post_status', $this, 'transition_post_status', 10, 3 );
 
 		// Register options that clear the full site cache.

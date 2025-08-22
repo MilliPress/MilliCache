@@ -70,8 +70,9 @@ export const SettingsProvider = ( { children } ) => {
 	const triggerAction = async ( action, data = {} ) => {
 		setIsLoading( true );
 		try {
-			const response = await apiRequest( {
-				path: `/millicache/v1/action`,
+            const endpoint = action.startsWith('clear') ? 'cache' : 'action';
+            const response = await apiRequest( {
+				path: `/millicache/v1/${endpoint}`,
 				method: 'POST',
 				data: { action, ...data },
 			} );
@@ -195,29 +196,29 @@ export const SettingsProvider = ( { children } ) => {
 
 	// Save settings with WordPress error handling
 	const saveSettings = async () => {
-		if ( ! hasChanges ) {
+		if (!hasChanges) {
 			return;
 		}
 
 		try {
-			setIsSaving( true );
+			setIsSaving(true);
 
-			await apiRequest( {
+			await apiRequest({
 				path: '/wp/v2/settings',
 				method: 'POST',
 				data: {
 					millicache: settings,
 				},
-			} );
+			});
 
-			setInitialSettings( settings );
-			showSnackbar( __( 'Settings saved successfully.', 'millicache' ) );
-			setHasChanges( false );
+			setInitialSettings(settings);
+			showSnackbar(__('Settings saved successfully.', 'millicache'));
+			setHasChanges(false);
 
-			if ( hasStorageChanges ) {
-				const previousStatus = status;
+			if (hasStorageChanges) {
+				const previousStatus = { ...status }; // Make a copy to ensure it's stable
 
-				await delay( 500 );
+				await delay(500);
 				showSnackbar(
 					__(
 						'Storage settings updated. Testing connection…',
@@ -225,43 +226,46 @@ export const SettingsProvider = ( { children } ) => {
 					)
 				);
 
-				await delay( 3000 );
+				await delay(3000);
 				const newStatus = await fetchStatus();
 
-				if (
-					previousStatus.storage?.connected &&
-					! newStatus.storage?.connected
-				) {
-					await delay( 50 );
-					showSnackbar(
-						__(
-							'Storage connection lost. Please check your settings.',
-							'millicache'
-						)
-					);
-				} else if (
-					! previousStatus.storage?.connected &&
-					newStatus.storage?.connected
-				) {
-					showSnackbar(
-						__(
-							'Storage connection established successfully.',
-							'millicache'
-						)
-					);
+				// Add additional null/undefined checks here
+				if (newStatus && previousStatus) {
+					if (
+						previousStatus.storage?.connected &&
+						!newStatus.storage?.connected
+					) {
+						await delay(50);
+						showSnackbar(
+							__(
+								'Storage connection lost. Please check your settings.',
+								'millicache'
+							)
+						);
+					} else if (
+						!previousStatus.storage?.connected &&
+						newStatus.storage?.connected
+					) {
+						showSnackbar(
+							__(
+								'Storage connection established successfully.',
+								'millicache'
+							)
+						);
+					}
+
+					if (newStatus.storage?.error) {
+						showSnackbar(newStatus.storage.error, [], 6000, true);
+					}
 				}
 
-				if ( newStatus.storage?.error ) {
-					showSnackbar( newStatus.storage?.error, [], 6000, true );
-				}
-
-				setHasStorageChanges( false );
+				setHasStorageChanges(false);
 			}
-		} catch ( error ) {
-			const errorMessage = error.message || __( 'Failed to save settings.', 'millicache' );
-			showSnackbar( errorMessage, [], 6000, true );
+		} catch (error) {
+			const errorMessage = error.message || __('Failed to save settings.', 'millicache');
+			showSnackbar(errorMessage, [], 6000, true);
 		} finally {
-			setTimeout( () => setIsSaving( false ), 1200 );
+			setTimeout(() => setIsSaving(false), 1200);
 		}
 	};
 
