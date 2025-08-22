@@ -7,7 +7,7 @@ test.describe('Step 7: Network Caching & Flushing', () => {
 
     test ('Check network for active plugin', async ({ page }) => {
         for (let i = 1; i <= sites; i++) {
-            const response = await page.goto(`/site${i}/`);
+            const response = await page.goto(i === 1 ? '/' : `/site${i}/`);
             await validateHeader(response, 'status', ['miss', 'hit']);
         }
     });
@@ -55,7 +55,7 @@ test.describe('Step 7: Network Caching & Flushing', () => {
 
         // Validate all sites of the matrix
         for (let i = 1; i <= sites; i++) {
-            const response = await page.goto(`/site${i}/`);
+            const response = await page.goto(i === 1 ? '/' : `/site${i}/`);
             await validateHeader(response, 'status', 'miss');
         }
     });
