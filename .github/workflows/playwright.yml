@@ -53,6 +53,9 @@ jobs:
       - name: Install dependencies
         run: npm ci && composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
+      - name: Build styles and scripts
+        run: npm run build
+
       - name: Setup WordPress Environment
         run: npm run env:start
 
