@@ -155,11 +155,13 @@ final class Storage {
 	 */
 	private function config( array $settings ): void {
 		foreach ( $settings as $key => $value ) {
-			if ( is_string( $value ) && strpos( $value, 'ENC:' ) === 0 ) {
-				$value = Settings::decrypt_value( $value );
-			}
+			if ( property_exists( $this, $key ) ) {
+				if ( is_string( $value ) && strpos( $value, 'ENC:' ) === 0 ) {
+					$value = Settings::decrypt_value( $value );
+				}
 
-			$this->$key = $value;
+				$this->$key = $value;
+			}
 		}
 	}
 
