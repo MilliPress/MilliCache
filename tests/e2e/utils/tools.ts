@@ -46,6 +46,8 @@ export async function networkActivatePlugin(slug = 'millicache') {
         // Run the WP-CLI command to activate the plugin
         try {
             await runWpCliCommand(`plugin activate ${slug} -- --network`);
+            console.log(`Plugin ${slug} activated successfully.`);
+            await new Promise(resolve => setTimeout(resolve, 2500));
         } catch (error) {
             console.error(`Failed to activate plugin ${slug}:`, error);
         }
