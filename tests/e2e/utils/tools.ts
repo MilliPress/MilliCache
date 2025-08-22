@@ -77,30 +77,40 @@ export async function networkDeactivatePlugin(slug = 'millicache') {
  * @param expectedValue
  * @param strict
  */
-export async function validateHeader(response: { headers: () => any; }, name: string, expectedValue: string | string[] = null, strict: boolean = true ) {
+export async function validateHeader(response: { headers: () => any; url?: () => string }, name: string, expectedValue: string | string[] = null, strict: boolean = true ) {
     // Get all headers
     const headers = response.headers();
 
     // Get the specific header
     const headerValue = headers['x-millicache-' + name];
 
-    if (expectedValue !== null) {
-        if (Array.isArray(expectedValue)) {
-            // Check the header matches one of the expected values
-            if (strict) {
-                expect(expectedValue).toContain(headerValue);
-            } else {
-                for (const value of expectedValue) {
-                    expect(headerValue).toContain(value);
+    try {
+        if (expectedValue !== null) {
+            if (Array.isArray(expectedValue)) {
+                // Check the header matches one of the expected values
+                if (strict) {
+                    expect(expectedValue).toContain(headerValue);
+                } else {
+                    for (const value of expectedValue) {
+                        expect(headerValue).toContain(value);
+                    }
                 }
+            } else {
+                // Check the header matches the expected value
+                expect(headerValue).toBe(expectedValue);
             }
         } else {
-            // Check the header matches the expected value
-            expect(headerValue).toBe(expectedValue);
+            // Check if the header is defined
+            expect(headerValue).toBeDefined();
         }
-    } else {
-        // Check if the header is defined
-        expect(headerValue).toBeDefined();
+    } catch (error) {
+        // Log the URL where the validation failed
+        const url = response.url ? response.url() : 'URL not available';
+        console.error(`Header validation failed at URL: ${url}`);
+        console.error(`Expected header "x-millicache-${name}" ${expectedValue !== null ?
+            `to be ${Array.isArray(expectedValue) ? JSON.stringify(expectedValue) : `"${expectedValue}"`}` :
+            'to be defined'}, but got "${headerValue}"`);
+        throw error;
     }
 
     return headerValue;
@@ -138,8 +148,9 @@ export async function validateHeaderAfterReload(
                 return obj;
             }, {});
 
-        // Log the headers for debugging
-        console.log(`Expected header "${page.url()}" to be "${expectedValue}"`, millicacheHeaders);
+        // Log the URL where validation failed
+        console.log(`Header validation failed at URL: ${response.url()}`);
+        console.log(`Expected header "${headerName}" to be "${expectedValue}"`, millicacheHeaders);
 
         // Throw an error if the header value does not match the expected value
         throw new Error(
