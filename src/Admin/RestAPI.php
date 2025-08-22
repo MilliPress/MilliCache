@@ -86,6 +86,9 @@ class RestAPI {
 	private function register_hooks() {
 		// Register REST API routes.
 		$this->loader->add_action( 'rest_api_init', $this, 'register_routes' );
+
+		// Enforce nonce verification for all our endpoints.
+		$this->loader->add_filter( 'rest_authentication_errors', $this, 'verify_rest_nonce' );
 	}
 
 	/**
@@ -376,5 +379,44 @@ class RestAPI {
 				'timestamp' => time(),
 			)
 		);
+	}
+
+	/**
+	 * Verify the REST API nonce for our endpoints.
+	 *
+	 * @since   1.0.0
+	 * @access  public
+	 *
+	 * @param \WP_Error|null|true $result The authentication result.
+	 * @return \WP_Error|null|true The authentication result.
+	 */
+	public function verify_rest_nonce( $result ) {
+		// If authentication has already failed, return the error.
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		// Only verify nonce for our plugin's endpoints.
+		$request_uri = Engine::get_server_var( 'REQUEST_URI' );
+		if ( ! empty( $request_uri ) && str_contains( $request_uri, '/millicache/v1/' ) ) {
+
+			// Skip nonce check for non-request methods.
+			$method = Engine::get_server_var( 'REQUEST_METHOD' );
+			if ( 'GET' === $method || 'HEAD' === $method || 'OPTIONS' === $method ) {
+				return $result;
+			}
+
+			// Verify the nonce.
+			$nonce = Engine::get_server_var( 'HTTP_X_WP_NONCE' );
+			if ( empty( $nonce ) || ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
+				return new \WP_Error(
+					'invalid_nonce',
+					__( 'Invalid nonce.', 'millicache' ),
+					array( 'status' => 403 )
+				);
+			}
+		}
+
+		return $result;
 	}
 }
