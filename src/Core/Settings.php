@@ -214,29 +214,33 @@ class Settings {
 	private function get_settings_from_constants( ?string $module = null ): array {
 		$settings = $this->get_default_settings();
 
-		if ( $module ) {
-			// If a specific module is specified.
-			foreach ( $settings as $key => $value ) {
-				$constant = strtoupper( "MC_{$module}_{$key}" );
+		$assign_constant = function ( &$target, $key, $constant_prefix ) {
+			$constant = strtoupper( "{$constant_prefix}_{$key}" );
 
-				if ( defined( $constant ) ) {
-					$settings[ $key ] = constant( $constant );
+			if ( defined( $constant ) ) {
+				$target[ $key ] = constant( $constant );
+			} elseif ( strpos( $key, 'enc_' ) === 0 ) {
+				$enc_constant = str_replace( 'ENC_', '', $constant );
+
+				if ( defined( $enc_constant ) ) {
+					$target[ $key ] = constant( $enc_constant );
 				} else {
-					unset( $settings[ $key ] );
+					unset( $target[ $key ] );
 				}
+			} else {
+				unset( $target[ $key ] );
+			}
+		};
+
+		if ( $module ) {
+			foreach ( $settings as $key => $value ) {
+				$assign_constant( $settings, $key, "MC_{$module}" );
 			}
 		} else {
-			// If no specific module is specified, loop through all settings.
 			foreach ( $settings as $module_key => $module_settings ) {
 				if ( is_array( $module_settings ) ) {
 					foreach ( $module_settings as $key => $value ) {
-						$constant = strtoupper( "MC_{$module_key}_{$key}" );
-
-						if ( defined( $constant ) ) {
-							$settings[ $module_key ][ $key ] = constant( $constant );
-						} else {
-							unset( $settings[ $module_key ][ $key ] );
-						}
+						$assign_constant( $settings[ $module_key ], $key, "MC_{$module_key}" );
 					}
 				}
 			}
