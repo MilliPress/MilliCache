@@ -589,7 +589,7 @@ class Settings {
 	 */
 	public static function decrypt_value( string $encrypted_value ) {
 		if ( ! function_exists( 'sodium_crypto_secretbox_open' ) ) {
-			require_once ABSPATH . 'wp-includes/sodium-compat/autoload.php';
+			require_once ABSPATH . 'wp-includes/sodium_compat/autoload.php';
 		}
 
 		// Check if the value is already decrypted.
