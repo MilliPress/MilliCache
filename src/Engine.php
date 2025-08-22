@@ -900,7 +900,7 @@ final class Engine {
 		foreach ( $targets as $target ) {
 			if ( filter_var( $target, FILTER_VALIDATE_URL ) ) {
 				// Clear by URL.
-				if ( str_starts_with( $target, get_home_url() ) ) {
+				if ( strpos( $target, get_home_url() ) === 0 ) {
 					self::clear_cache_by_urls( $target, $expire );
 				}
 			} elseif ( is_numeric( $target ) ) {

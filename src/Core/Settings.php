@@ -564,7 +564,7 @@ class Settings {
 	 * @throws \SodiumException If the encryption fails.
 	 */
 	private function encrypt_value( string $value ): string {
-		if ( empty( $value ) || str_starts_with( $value, 'ENC:' ) ) {
+		if ( empty( $value ) || strpos( $value, 'ENC:' ) === 0 ) {
 			return $value;
 		}
 
