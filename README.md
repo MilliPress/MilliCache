@@ -19,10 +19,22 @@ MilliCache provides a versatile and robust caching solution for all types of Wor
 > While suitable for testing in production-like environments, please exercise caution and
 > [report](https://github.com/MilliPress/MilliCache/issues/new) any problems you encounter.
 
+## Recent Changes Since v1.0.0-rc.1
+
+### Improved Encrypted Constants Handling
+
+**Enhanced Configuration Flexibility**: The settings system now provides more flexible handling of encrypted constants in `wp-config.php`. Previously, encrypted constants required specific naming conventions, but now the system automatically handles both formats:
+
+- **Direct constant name**: `define('MC_STORAGE_PASSWORD', 'your-password');`
+- **With explicit encryption prefix**: `define('MC_STORAGE_ENC_PASSWORD', 'ENC:...');`
+
+This improvement makes it easier to configure sensitive settings like storage passwords without worrying about specific constant naming requirements.
+
 ---
 
 ## Table of Contents
 
+- [Recent Changes Since v1.0.0-rc.1](#recent-changes-since-v100-rc1)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -152,6 +164,26 @@ define('MC_STORAGE_PORT', 6379);
 | `MC_STORAGE_DB`         | Storage Server Database                    | `0`                |
 | `MC_STORAGE_PERSISTENT` | Storage Server Persistent Connection       | `true`             |
 | `MC_STORAGE_PREFIX`     | Storage Server Key Prefix                  | `mll`              |
+
+### Encrypted Constants
+
+MilliCache supports automatic encryption of sensitive configuration values. When you define sensitive constants (like passwords), the system can automatically encrypt them for secure storage:
+
+```php
+# Example: Storage password (automatically encrypted)
+define('MC_STORAGE_PASSWORD', 'my-secret-password');
+
+# Alternative: Explicitly encrypted value
+define('MC_STORAGE_ENC_PASSWORD', 'ENC:base64encodedvalue...');
+```
+
+**How it works:**
+- Values defined in constants are automatically encrypted when saved through the UI
+- The system looks for both the direct constant name and versions with `ENC_` prefix
+- Encrypted values are prefixed with `ENC:` and are base64-encoded
+- Decryption happens automatically when the settings are loaded
+
+This provides a secure way to store sensitive configuration data like database passwords or API keys in your `wp-config.php` file.
 
 ---
 
