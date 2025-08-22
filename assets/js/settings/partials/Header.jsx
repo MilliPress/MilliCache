@@ -147,7 +147,7 @@ const Header = () => {
 												iconPosition="left"
 												onClick={ () =>
 													triggerAction(
-														'reset_settings'
+														'reset'
 													)
 												}
 												disabled={
@@ -167,7 +167,7 @@ const Header = () => {
 													iconPosition="left"
 													onClick={ () =>
 														triggerAction(
-															'restore_settings'
+															'restore'
 														)
 													}
 												>

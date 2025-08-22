@@ -71,6 +71,7 @@ class RestAPI {
 		$this->loader = $loader;
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+
 		$this->register_hooks();
 	}
 
@@ -113,10 +114,10 @@ class RestAPI {
 
 		register_rest_route(
 			'millicache/v1',
-			'/status',
+			'/settings',
 			array(
-				'methods' => \WP_REST_Server::READABLE,
-				'callback' => array( $this, 'get_status' ),
+				'methods' => \WP_REST_Server::CREATABLE,
+				'callback' => array( $this, 'perform_settings_action' ),
 				'permission_callback' => function () {
 					return current_user_can( 'manage_options' );
 				},
@@ -125,10 +126,10 @@ class RestAPI {
 
 		register_rest_route(
 			'millicache/v1',
-			'/action',
+			'/status',
 			array(
-				'methods' => \WP_REST_Server::CREATABLE,
-				'callback' => array( $this, 'perform_action' ),
+				'methods' => \WP_REST_Server::READABLE,
+				'callback' => array( $this, 'get_status' ),
 				'permission_callback' => function () {
 					return current_user_can( 'manage_options' );
 				},
@@ -266,6 +267,82 @@ class RestAPI {
 	}
 
 	/**
+	 * Perform custom REST API actions for MilliCache plugin.
+	 *
+	 * @since   1.0.0
+	 * @access  public
+	 *
+	 * @param \WP_REST_Request $request The REST API request object.
+	 * @phpstan-param \WP_REST_Request<array<string, mixed>> $request
+	 *
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function perform_settings_action( \WP_REST_Request $request ) {
+		$action = $request->get_param( 'action' );
+		$supported_actions = apply_filters(
+			'millicache_rest_allowed_settings_actions',
+			array(
+				'reset',
+				'restore',
+			)
+		);
+
+		if ( ! is_string( $action ) || ! in_array( $action, $supported_actions, true ) ) {
+			return new \WP_Error( 'invalid_settings_action', __( 'Invalid settings action.', 'millicache' ), array( 'status' => 400 ) );
+		}
+
+		try {
+			switch ( $action ) {
+				case 'reset':
+					// Backup before reset.
+					Settings::backup();
+
+					// Reset settings.
+					delete_option( 'millicache' );
+
+					$message = __( 'Settings reset successfully.', 'millicache' );
+					break;
+
+				case 'restore':
+					$backup_settings = Settings::restore_backup();
+					if ( ! $backup_settings ) {
+						return new \WP_REST_Response(
+							array(
+								'success' => false,
+								'message' => __( 'No backup of settings found or backup has expired.', 'millicache' ),
+							),
+							400
+						);
+					}
+					$message = __( 'Settings successfully restored from backup.', 'millicache' );
+					break;
+			}
+		} catch ( \Exception $e ) {
+			return new \WP_Error( 'settings_action_failed', __( 'Failed to perform settings action: ', 'millicache' ) . $e->getMessage(), array( 'status' => 500 ) );
+		}
+
+		/**
+		 * Fires after a MilliCache REST API action has been processed.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param string $action The action that was processed.
+		 * @param array  $params The parameters passed to the action.
+		 * @param \WP_REST_Request $request The REST API request object.
+		 */
+		do_action( 'millicache_rest_perform_settings_action', $action, $request->get_params(), $request );
+
+		return rest_ensure_response(
+			array(
+				'success'   => true,
+				'message'   => $message ?? '',
+				'action'    => $action,
+				'timestamp' => time(),
+			)
+		);
+	}
+
+	/**
 	 * Get the status of MilliCache, including storage server connection status.
 	 *
 	 * @since   1.0.0
@@ -303,82 +380,6 @@ class RestAPI {
 				500
 			);
 		}
-	}
-
-	/**
-	 * Perform custom REST API actions for MilliCache plugin.
-	 *
-	 * @since   1.0.0
-	 * @access  public
-	 *
-	 * @param \WP_REST_Request $request The REST API request object.
-	 * @phpstan-param \WP_REST_Request<array<string, mixed>> $request
-	 *
-	 * @return \WP_REST_Response|\WP_Error
-	 */
-	public function perform_action( \WP_REST_Request $request ) {
-		$action = $request->get_param( 'action' );
-		$supported_actions = apply_filters(
-			'millicache_rest_supported_actions',
-			array(
-				'reset_settings',
-				'restore_settings',
-			)
-		);
-
-		if ( ! is_string( $action ) || ! in_array( $action, $supported_actions, true ) ) {
-			return new \WP_Error( 'invalid_action', __( 'Invalid action.', 'millicache' ), array( 'status' => 400 ) );
-		}
-
-		try {
-			switch ( $action ) {
-				case 'reset_settings':
-					// Backup before reset.
-					Settings::backup();
-
-					// Reset settings.
-					delete_option( 'millicache' );
-
-					$message = __( 'Settings reset successfully.', 'millicache' );
-					break;
-
-				case 'restore_settings':
-					$backup_settings = Settings::restore_backup();
-					if ( ! $backup_settings ) {
-						return new \WP_REST_Response(
-							array(
-								'success' => false,
-								'message' => __( 'No backup settings found or backup has expired.', 'millicache' ),
-							),
-							400
-						);
-					}
-					$message = __( 'Settings successfully restored from backup.', 'millicache' );
-					break;
-			}
-		} catch ( \Exception $e ) {
-			return new \WP_Error( 'settings_action_failed', __( 'Failed to perform settings action: ', 'millicache' ) . $e->getMessage(), array( 'status' => 500 ) );
-		}
-
-		/**
-		 * Fires after a MilliCache REST API action has been processed.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param string $action The action that was processed.
-		 * @param array  $params The parameters passed to the action.
-		 * @param \WP_REST_Request $request The REST API request object.
-		 */
-		do_action( 'millicache_rest_perform_action', $action, $request->get_params(), $request );
-
-		return rest_ensure_response(
-			array(
-				'success'   => true,
-				'message'   => $message ?? '',
-				'action'    => $action,
-				'timestamp' => time(),
-			)
-		);
 	}
 
 	/**

@@ -70,7 +70,7 @@ export const SettingsProvider = ( { children } ) => {
 	const triggerAction = async ( action, data = {} ) => {
 		setIsLoading( true );
 		try {
-            const endpoint = action.startsWith('clear') ? 'cache' : 'action';
+            const endpoint = action.startsWith('clear') ? 'cache' : 'settings';
             const response = await apiRequest( {
 				path: `/millicache/v1/${endpoint}`,
 				method: 'POST',
