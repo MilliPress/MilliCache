@@ -175,7 +175,7 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var bool If we can regenerate the request in background.
+	 * @var bool If we can regenerate the request in the background.
 	 */
 	private static bool $fcgi_regenerate = false;
 
@@ -547,7 +547,7 @@ final class Engine {
 			! preg_match( '/\.[a-z0-9]+($|\?)/i', self::get_server_var( 'REQUEST_URI' ) ), // No files.
 			! strpos( self::get_server_var( 'REQUEST_URI' ), 'wp-json' ), // No WP-API requests.
 			php_sapi_name() !== 'cli' && ( ! defined( 'WP_CLI' ) || WP_CLI !== true ), // No CLI request.
-			strtolower( self::get_server_var( 'REQUEST_METHOD' ) ) === 'get', // Only GET requests.
+			in_array( strtolower( self::get_server_var( 'REQUEST_METHOD' ) ), array( 'get', 'head' ) ), // Only GET and HEAD requests.
 			self::$ttl > 0, // TTL is set.
 		);
 
