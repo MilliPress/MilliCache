@@ -1,6 +1,6 @@
 import { test, expect } from './setup/e2e-wp-test';
 import { login, logout } from './utils/auth';
-import { flushCache, validateHeader } from './utils/tools';
+import { clearCache, validateHeader } from './utils/tools';
 
 test.describe('Step 3: Cache Clearing', () => {
     test('Clear cache', async ({ page, admin }) => {
@@ -42,7 +42,7 @@ test.describe('Step 3: Cache Clearing', () => {
     });
 
     test('Clear cache again', async ({ page }) => {
-        await flushCache();
+        await clearCache();
         const response = await page.goto('/');
         await validateHeader(response, 'status', 'miss');
     });

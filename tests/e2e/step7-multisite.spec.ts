@@ -1,5 +1,5 @@
 import { test } from './setup/e2e-wp-test';
-import { flushCache, validateHeader, getRandomAnchor } from './utils/tools';
+import { clearCache, validateHeader, getRandomAnchor } from './utils/tools';
 
 test.describe('Step 7: Network Caching & Flushing', () => {
     const sites = 5;
@@ -51,7 +51,7 @@ test.describe('Step 7: Network Caching & Flushing', () => {
 
     test('Flush network cache & validate sites', async ({ page }) => {
         // Flush the network cache
-        await flushCache();
+        await clearCache();
 
         // Validate all sites of the matrix
         for (let i = 1; i <= sites; i++) {

@@ -1,8 +1,8 @@
 import { test } from './setup/e2e-wp-test';
-import {runWpCliCommand, validateHeaderAfterReload, flushCache} from "./utils/tools";
+import {runWpCliCommand, validateHeaderAfterReload, clearCache} from "./utils/tools";
 
 test.beforeEach(async () => {
-    await flushCache('*');
+    await clearCache('*');
 });
 
 test.describe('Step 9: Plugins Compatibility', () => {

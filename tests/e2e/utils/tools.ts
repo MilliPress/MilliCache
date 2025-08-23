@@ -6,7 +6,7 @@ import { expect } from '@playwright/test';
  *
  * @param flags The cache flags to clear.
  */
-export async function flushCache(flags = '') {
+export async function clearCache(flags = '') {
     const stdout = await runWpCliCommand(`millicache clear -- --flags="${flags ? flags : '*'}"`);
     expect(stdout).toContain('Success');
 }
@@ -46,8 +46,6 @@ export async function networkActivatePlugin(slug = 'millicache') {
         // Run the WP-CLI command to activate the plugin
         try {
             await runWpCliCommand(`plugin activate ${slug} -- --network`);
-            console.log(`Plugin ${slug} activated successfully.`);
-            await new Promise(resolve => setTimeout(resolve, 2500));
         } catch (error) {
             console.error(`Failed to activate plugin ${slug}:`, error);
         }
@@ -109,7 +107,7 @@ export async function validateHeader(response: { headers: () => any; url?: () =>
         // Log the URL where the validation failed
         const url = response.url ? response.url() : 'URL not available';
         console.error(`Header validation failed at URL: ${url}`);
-        console.error(`Expected header "x-millicache-${name}" ${expectedValue !== null ?
+        console.error(`Expected header "${name}" ${expectedValue !== null ?
             `to be ${Array.isArray(expectedValue) ? JSON.stringify(expectedValue) : `"${expectedValue}"`}` :
             'to be defined'}, but got "${headerValue}"`);
         throw error;

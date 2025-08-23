@@ -1,5 +1,5 @@
 import { test } from './setup/e2e-wp-test';
-import { flushCache, validateHeader } from './utils/tools';
+import { clearCache, validateHeader } from './utils/tools';
 
 /**
  * Clear cache before running the tests.
@@ -14,7 +14,7 @@ test.describe('Step 5: Cache Flagging', () => {
         };
 
         // Flush the cache
-        await flushCache('1:*');
+        await clearCache('1:*');
 
         // Check pages for cache flags
         for (const [linkTitle, expectedFlags] of Object.entries(targets)) {

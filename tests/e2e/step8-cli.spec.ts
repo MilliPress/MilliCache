@@ -1,5 +1,5 @@
 import { test, expect } from './setup/e2e-wp-test';
-import { runWpCliCommand, validateHeader, flushCache } from './utils/tools';
+import { runWpCliCommand, validateHeader, clearCache } from './utils/tools';
 
 test.describe('Step 8: WP-CLI Commands', () => {
     test('WP-CLI: Check MilliCache is active', async () => {
@@ -11,7 +11,7 @@ test.describe('Step 8: WP-CLI Commands', () => {
         await page.goto('/');
 
         // Clear the cache
-        await flushCache();
+        await clearCache();
 
         // Go to the home page
         const response = await page.goto('/');
@@ -26,7 +26,7 @@ test.describe('Step 8: WP-CLI Commands', () => {
         await validateHeader(response2, 'status', 'hit');
 
         // Clear cache by flag, this tests other commands as well as they all use the same final function
-        await flushCache('1:home');
+        await clearCache('1:home');
 
         // Go to the home page
         const response3 = await page.goto('/');
@@ -43,7 +43,7 @@ test.describe('Step 8: WP-CLI Commands', () => {
         expect(stdout).not.toContain('Empty');
 
         // Clear cache of another site
-        await flushCache('2:*');
+        await clearCache('2:*');
 
         // Get stats by flag of site 1
         const stdout3 = await runWpCliCommand('millicache stats -- --flag=1:home');
@@ -52,7 +52,7 @@ test.describe('Step 8: WP-CLI Commands', () => {
         expect(stdout3).not.toContain('Empty');
 
         // Clear cache of network 1
-        await flushCache('1:*');
+        await clearCache('1:*');
 
         // Stats by flag of network 1
         const stdout5 = await runWpCliCommand('millicache stats -- --flag=1:*');

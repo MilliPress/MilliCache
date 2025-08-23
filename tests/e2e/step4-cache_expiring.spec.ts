@@ -1,10 +1,10 @@
 import { test } from './setup/e2e-wp-test';
-import { flushCache, validateHeaderAfterReload } from './utils/tools';
+import { clearCache, validateHeaderAfterReload } from './utils/tools';
 
 test.describe('Step 4: Cache Expiring', () => {
     test('Cache Expiring', async ({ page }) => {
         // Flush the cache
-        await flushCache();
+        await clearCache();
 
         // Go to the home page
         await page.goto('/sample-page');
