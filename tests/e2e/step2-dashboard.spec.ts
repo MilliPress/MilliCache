@@ -28,9 +28,43 @@ test.describe('Step 2: Dashboard Elements & Functionality', () => {
         await expect(element).toBeVisible();
     });
 
-    test('Adminbar button is available', async ({ page, admin }) => {
+    test('Adminbar menu is available', async ({ page, admin }) => {
         await admin.visitAdminPage('/');
         const element = page.locator('#wp-admin-bar-millicache');
         await expect(element).toBeVisible();
+    });
+
+    test('Settings page is available', async ({ page, admin }) => {
+        await admin.visitAdminPage('/options-general.php?page=millicache');
+
+        // React component is rendered.
+        const element = page.locator('#millicache-settings .components-panel');
+        await expect(element).toBeVisible();
+
+        // Open Settings Tab.
+        const settingsTab = page.locator('#tab-panel-0-settings');
+        await expect(settingsTab).toBeVisible();
+        await settingsTab.click();
+
+        // Get the element that has the text "Max TTL".
+        const maxTTL = page.locator('span:has-text("Max TTL")');
+        await expect(maxTTL).toBeVisible();
+
+        // Get the maxTTL input field.
+        const maxTTLInput = maxTTL
+            .locator('xpath=ancestor::div[contains(@class, "components-unit-control-wrapper")]//input');
+        await expect(maxTTLInput).toBeVisible();
+
+        // Change the value of maxTTLInput.
+        await maxTTLInput.fill('2');
+        await expect(maxTTLInput).toHaveValue('2');
+
+        // Click the button that has the text "Save Changes".
+        const saveButton = page.locator('button:has-text("Save Settings")');
+        await expect(saveButton).toBeVisible();
+        await saveButton.click();
+
+        // Check if the value of maxTTLInput is still 2
+        await expect(maxTTLInput).toHaveValue('2');
     });
 });
