@@ -325,17 +325,12 @@ class Admin {
 	 * @return  void
 	 */
 	public static function add_dashboard_glance_cache_size(): void {
-		$size = self::get_cache_size( 'site:' . get_current_network_id() . ':' . get_current_blog_id() );
+		$size = self::get_cache_size( Engine::get_flag_prefix() . '*' );
 
 		printf(
 			'<li class="cache-count"><a title="%s" href="%s">%s</a></li>',
-			esc_attr__( 'Flush the site cache', 'millicache' ),
-			esc_url(
-				wp_nonce_url(
-					add_query_arg( '_millicache', 'flush' ),
-					'_millicache__flush_nonce'
-				)
-			),
+			esc_attr__( 'Cache Settings', 'millicache' ),
+			esc_url( admin_url( 'options-general.php?page=millicache' ) ),
 			esc_html( self::get_cache_size_summary_string( $size ) )
 		);
 	}
