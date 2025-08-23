@@ -325,13 +325,11 @@ class Admin {
 	 * @return  void
 	 */
 	public static function add_dashboard_glance_cache_size(): void {
-		$size = self::get_cache_size( Engine::get_flag_prefix() . '*' );
-
 		printf(
 			'<li class="cache-count"><a title="%s" href="%s">%s</a></li>',
 			esc_attr__( 'Cache Settings', 'millicache' ),
 			esc_url( admin_url( 'options-general.php?page=millicache' ) ),
-			esc_html( self::get_cache_size_summary_string( $size ) )
+			esc_html( self::get_cache_size_summary_string() )
 		);
 	}
 
@@ -355,10 +353,14 @@ class Admin {
 	 * @since   1.0.0
 	 * @access  public
 	 *
-	 * @param array{index: int, size: int, size_human: string} $size The size of the cache.
+	 * @param ?array{index: int, size: int, size_human: string} $size The size of the cache.
 	 * @return string The summary string.
 	 */
-	public static function get_cache_size_summary_string( array $size ): string {
+	public static function get_cache_size_summary_string( ?array $size = null ): string {
+		if ( ! $size ) {
+			$size = self::get_cache_size( Engine::get_flag_prefix( is_network_admin() ? '*' : null ) . '*' );
+		}
+
 		if ( $size['size'] > 0 ) {
 			return sprintf(
 				// translators: %1$s is the number of pages, %2$s is singular or plural "page", %3$s is the cache size, %4$s is the cache size unit.
