@@ -343,7 +343,7 @@ final class Storage {
 					}
 
 					// Set the max expiration time to avoid stale data.
-					$tx->expire( $key, Engine::$max_ttl );
+					$tx->expire( $key, Engine::$ttl + Engine::$grace );
 				}
 			);
 

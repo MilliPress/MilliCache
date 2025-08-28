@@ -109,7 +109,7 @@ class Settings {
 				),
 				'cache' => array(
 					'ttl' => DAY_IN_SECONDS,
-					'max_ttl' => MONTH_IN_SECONDS,
+					'grace' => MONTH_IN_SECONDS,
 					'unique' => array(),
 					'nocache_cookies' => array( 'comment_author_*' ),
 					'ignore_cookies' => array( '_*' ),

@@ -46,25 +46,25 @@ test.describe('Step 2: Dashboard Elements & Functionality', () => {
         await expect(settingsTab).toBeVisible();
         await settingsTab.click();
 
-        // Get the element that has the text "Max TTL".
-        const maxTTL = page.locator('span:has-text("Max TTL")');
-        await expect(maxTTL).toBeVisible();
+        // Get the element that has the text "Grace Period".
+        const grace = page.locator('span:has-text("Grace Period")');
+        await expect(grace).toBeVisible();
 
-        // Get the maxTTL input field.
-        const maxTTLInput = maxTTL
+        // Get the grace input field.
+        const graceInput = grace
             .locator('xpath=ancestor::div[contains(@class, "components-unit-control-wrapper")]//input');
-        await expect(maxTTLInput).toBeVisible();
+        await expect(graceInput).toBeVisible();
 
-        // Change the value of maxTTLInput.
-        await maxTTLInput.fill('2');
-        await expect(maxTTLInput).toHaveValue('2');
+        // Change the value of graceInput.
+        await graceInput.fill('2');
+        await expect(graceInput).toHaveValue('2');
 
         // Click the button that has the text "Save Changes".
         const saveButton = page.locator('button:has-text("Save Settings")');
         await expect(saveButton).toBeVisible();
         await saveButton.click();
 
-        // Check if the value of maxTTLInput is still 2
-        await expect(maxTTLInput).toHaveValue('2');
+        // Check if the value of graceInput is still 2
+        await expect(graceInput).toHaveValue('2');
     });
 });

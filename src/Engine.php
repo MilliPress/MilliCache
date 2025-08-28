@@ -77,17 +77,17 @@ final class Engine {
 	 *
 	 * @var int The time to live for the cache.
 	 */
-	private static int $ttl;
+	public static int $ttl;
 
 	/**
-	 * Max TTL.
+	 * Grace Period - Time after TTL expiration when stale content can still be served for background generation.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var int The maximum time to live for the cache.
+	 * @var int The time period a stale cache entry remains available.
 	 */
-	public static int $max_ttl;
+	public static int $grace;
 
 	/**
 	 * Variables that make the request unique.
@@ -435,7 +435,7 @@ final class Engine {
 			}
 
 			// This entry is very old, delete it.
-			if ( $cache['updated'] + self::$max_ttl < time() ) {
+			if ( $cache['updated'] + self::$ttl + self::$grace < time() ) {
 				self::get_storage()->delete_cache( self::$request_hash );
 				$serve_cache = false;
 			}
@@ -459,7 +459,7 @@ final class Engine {
 				}
 			}
 
-			// Uncompressed cache if gzipped.
+			// Uncompress cache if gzipped.
 			if ( $serve_cache && $cache['gzip'] ) {
 				if ( self::$gzip ) {
 					if ( self::$debug ) {
@@ -1304,7 +1304,7 @@ final class Engine {
 	public static function get_status( bool $network = false ): array {
 		$cache = array(
 			'ttl' => self::$ttl,
-			'max_ttl' => self::$max_ttl,
+			'grace' => self::$grace,
 			'gzip' => self::$gzip,
 			'debug' => self::$debug,
 			'ignore_cookies' => self::$ignore_cookies,

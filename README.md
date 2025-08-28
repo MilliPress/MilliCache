@@ -131,8 +131,8 @@ define('MC_STORAGE_PORT', 6379);
 |----------------------------------|------------------------------------------------------|------------------------|
 | `MC_CACHE_DEBUG`                 | Enable Debugging                                     | `false`                |
 | `MC_CACHE_GZIP`                  | Enable Gzip Compression                              | `true`                 |
-| `MC_CACHE_TTL`                   | Default Cache TTL                                    | `DAY_IN_SECONDS`       |
-| `MC_CACHE_MAX_TTL`               | Max TTL for Stale Cache Entries                      | `MONTH_IN_SECONDS`     |
+| `MC_CACHE_TTL`                   | Default Cache TTL (Time To Live)                     | `DAY_IN_SECONDS`       |
+| `MC_CACHE_GRACE`                 | Grace Period of stale cache for regenerating content | `MONTH_IN_SECONDS`     |
 | `MC_CACHE_IGNORE_COOKIES`        | Cookies that are ignored/stripped from the request   | `[]`                   |
 | `MC_CACHE_NOCACHE_COOKIES`       | Cookies which avoid caching                          | `['comment_author']`   |
 | `MC_CACHE_IGNORE_REQUEST_KEYS`   | Request keys that are ignored                        | `['_*', 'utm_*', ...]` |
@@ -144,14 +144,14 @@ define('MC_STORAGE_PORT', 6379);
 
 ### Storage Server Connection Configuration
 
-| Constant              | Description                       | Default            |
-|-----------------------|-----------------------------------|--------------------|
-| `MC_STORAGE_HOST`       | Storage Server Host                        | `127.0.0.1`        |
-| `MC_STORAGE_PORT`       | Storage Server Port                        | `6379`             |
-| `MC_STORAGE_PASSWORD`   | Storage Server Password                    | `''`               |
-| `MC_STORAGE_DB`         | Storage Server Database                    | `0`                |
-| `MC_STORAGE_PERSISTENT` | Storage Server Persistent Connection       | `true`             |
-| `MC_STORAGE_PREFIX`     | Storage Server Key Prefix                  | `mll`              |
+| Constant              | Description                          | Default            |
+|-----------------------|--------------------------------------|--------------------|
+| `MC_STORAGE_HOST`       | Storage Server Host                  | `127.0.0.1`        |
+| `MC_STORAGE_PORT`       | Storage Server Port                  | `6379`             |
+| `MC_STORAGE_PASSWORD`   | Storage Server Password              | `''`               |
+| `MC_STORAGE_DB`         | Storage Server Database              | `0`                |
+| `MC_STORAGE_PERSISTENT` | Storage Server Persistent Connection | `true`             |
+| `MC_STORAGE_PREFIX`     | Storage Server Key Prefix            | `mll`              |
 
 ---
 
@@ -248,14 +248,16 @@ and improving performance.
 
 ## Clearing Cache
 
-By default, MilliCache expires (not deletes) cache entries when they reach their Time-To-Live (TTL).
-When a cache entry expires, 
-MilliCache serves the outdated copy to the visitor while regenerating the cache in the background. 
-This ensures users experience no delay during cache regeneration.
+By default, MilliCache uses two key time settings to control cache behavior:
 
-Cache entries expire whenever necessary. 
-For example, when a post is published or updated, the cache entry for the post and the front page is cleared. 
-When a site option is updated, all cache entries of the site are cleared, and so on. 
+1. **TTL (Time-To-Live)**: Period when cache is considered fresh
+2. **Grace Period**: Additional time after TTL expires when stale cache can still be served
+
+When a cache entry reaches its TTL, it becomes "stale" but isn't immediately deleted. Instead, MilliCache serves the stale copy to visitors while regenerating a fresh cache in the background. This ensures users experience no delay during cache regeneration.
+
+Cache entries expire whenever necessary.
+For example, when a post is published or updated, the cache entry for the post and the front page is cleared.
+When a site option is updated, all cache entries of the site are cleared, and so on.
 
 ### Using the Settings UI
 

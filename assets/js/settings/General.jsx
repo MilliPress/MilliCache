@@ -163,8 +163,8 @@ const GeneralSettings = () => {
 								label={
 									<LabelWithTooltip
 										label={ __( 'TTL (Cache Expiry)', 'millicache' ) }
-										tooltip={ __( 'Time-to-live for cached items. Determines how long content remains in cache before being refreshed.', 'millicache' ) }
-									/>
+                                        tooltip={ __( 'Time To Live - How long cache is considered fresh before becoming stale. Fresh cache is served directly without regeneration.', 'millicache' ) }
+                                    />
 								}
 								disabled={ ! ( 'ttl' in settings.cache ) }
 								value={ ( () => {
@@ -245,15 +245,15 @@ const GeneralSettings = () => {
 								__next40pxDefaultSize
 								label={
 									<LabelWithTooltip
-										label={ __( 'Max TTL', 'millicache' ) }
-										tooltip={ __( 'Maximum time stale cache can be kept for background regeneration. Allows serving cached content while new content is being generated, reducing user wait times.', 'millicache' ) }
-									/>
+										label={ __( 'Grace Period', 'millicache' ) }
+                                        tooltip={ __( 'Time after TTL expiration when stale cache can still be served while new content is generated in the background. Helps reduce user wait times. 0 = disable.', 'millicache' ) }
+                                    />
 								}
-								disabled={ ! ( 'max_ttl' in settings.cache ) }
+								disabled={ ! ( 'grace' in settings.cache ) }
 								value={ ( () => {
 									const ttl =
-										settings.cache.max_ttl ??
-										status.cache?.max_ttl;
+										settings.cache.grace ??
+										status.cache?.grace;
 									let value, unit;
 									if ( ttl % 2592000 === 0 ) {
 										value = ttl / 2592000;
@@ -304,7 +304,7 @@ const GeneralSettings = () => {
 									}
 									updateSetting(
 										'cache',
-										'max_ttl',
+										'grace',
 										ttlInSeconds
 									);
 								} }
