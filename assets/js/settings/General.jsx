@@ -361,26 +361,6 @@ const GeneralSettings = () => {
 							updateSetting( 'cache', 'debug', value )
 						}
 					/>
-					<FormTokenField
-						__next40pxDefaultSize
-						__nextHasNoMarginBottom
-						label={
-							<LabelWithTooltip
-								label={ __( 'Ignored Cookies', 'millicache' ) }
-								tooltip={ __( 'Cookies that are ignored when creating cache keys. Example: "dark_mode" means all users share the same cache regardless of the preference. * = wildcard.' ) }
-							/>
-						}
-						value={
-							settings.cache.ignore_cookies
-								? settings.cache.ignore_cookies
-								: status.cache?.ignore_cookies
-						}
-						disabled={ ! ( 'ignore_cookies' in settings.cache ) }
-						onChange={ ( tokens ) =>
-							updateSetting( 'cache', 'ignore_cookies', tokens )
-						}
-						suggestions={ [] }
-					/>
                     <FormTokenField
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
@@ -390,7 +370,7 @@ const GeneralSettings = () => {
                                 tooltip={ __( 'URL paths that are not cached. You can use * wildcards (e.g. "/shop/*") or regular expressions, which must be enclosed in / characters (e.g. "/^/products/[0-9]+$/").' ) }
                             />
                         }
-                        placeholder={__('Add path or pattern (e.g., /shop/*, /cart, /^/products/[0-9]+$/)', 'millicache')}
+                        placeholder={ __('Add path or pattern (e.g. "/shop/", "/blog/*", "/^/products/[0-9]+$/")', 'millicache') }
                         value={
                             settings.cache.nocache_paths
                                 ? settings.cache.nocache_paths
@@ -402,23 +382,45 @@ const GeneralSettings = () => {
                         }
                         suggestions={ [] }
                     />
+                    <FormTokenField
+                        __next40pxDefaultSize
+                        __nextHasNoMarginBottom
+                        label={
+                            <LabelWithTooltip
+                                label={ __( 'No-Cache Cookies', 'millicache' ) }
+                                tooltip={ __( 'Cookies that prevent caching. Example: "session_*" will skip caching if a cookie starting with "session_" is set. * = wildcard.' ) }
+                            />
+                        }
+                        placeholder={ __('Add cookie name or pattern (e.g. "session_*")', 'millicache') }
+                        value={
+                            settings.cache.nocache_cookies
+                                ? settings.cache.nocache_cookies
+                                : status.cache?.nocache_cookies
+                        }
+                        disabled={ ! ( 'nocache_cookies' in settings.cache ) }
+                        onChange={ ( tokens ) =>
+                            updateSetting( 'cache', 'nocache_cookies', tokens )
+                        }
+                        suggestions={ [] }
+                    />
 					<FormTokenField
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
 						label={
 							<LabelWithTooltip
-								label={ __( 'No-Cache Cookies', 'millicache' ) }
-								tooltip={ __( 'Cookies that prevent caching. Example: "session_*" will skip caching if a cookie starting with "session_" is set. * = wildcard.' ) }
+								label={ __( 'Ignored Cookies', 'millicache' ) }
+								tooltip={ __( 'Cookies that are ignored when creating cache keys. Example: "dark_mode" means all users share the same cache regardless of the preference. * = wildcard.' ) }
 							/>
 						}
+                        placeholder={ __('Add cookie name or pattern (e.g. "dark_mode")', 'millicache') }
 						value={
-							settings.cache.nocache_cookies
-								? settings.cache.nocache_cookies
-								: status.cache?.nocache_cookies
+							settings.cache.ignore_cookies
+								? settings.cache.ignore_cookies
+								: status.cache?.ignore_cookies
 						}
-						disabled={ ! ( 'nocache_cookies' in settings.cache ) }
+						disabled={ ! ( 'ignore_cookies' in settings.cache ) }
 						onChange={ ( tokens ) =>
-							updateSetting( 'cache', 'nocache_cookies', tokens )
+							updateSetting( 'cache', 'ignore_cookies', tokens )
 						}
 						suggestions={ [] }
 					/>
@@ -436,6 +438,7 @@ const GeneralSettings = () => {
 								? settings.cache.ignore_request_keys
 								: status.cache?.ignore_request_keys
 						}
+                        placeholder={ __('Add parameter name or pattern (e.g. "utm_*")', 'millicache') }
 						disabled={
 							! ( 'ignore_request_keys' in settings.cache )
 						}
