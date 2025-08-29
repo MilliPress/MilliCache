@@ -1241,19 +1241,24 @@ final class Engine {
 	}
 
 	/**
-	 * Checks if a string matches a pattern that may contain wildcards.
+	 * Checks if a string matches a pattern that may contain wildcards or regex.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
 	 * @param string $string The string to check.
-	 * @param string $pattern The pattern to match against. Can contain * wildcards.
+	 * @param string $pattern The pattern to match against. Can contain * wildcards or be a regex pattern enclosed in /.
 	 * @return bool True if the string matches the pattern, false otherwise.
 	 */
 	private static function pattern_match( string $string, string $pattern ): bool {
 		// For empty patterns or strings.
 		if ( '' === $pattern || '' === $string ) {
 			return $pattern === $string;
+		}
+
+		// Check if the pattern is a regex (enclosed in forward slashes).
+		if ( preg_match( '/^\/.*\/$/', $pattern ) ) {
+			return @preg_match( $pattern, $string ) !== false;
 		}
 
 		// If the pattern contains a wildcard *.
