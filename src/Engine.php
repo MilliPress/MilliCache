@@ -100,6 +100,16 @@ final class Engine {
 	private static array $unique;
 
 	/**
+	 * Paths that avoid caching.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var array<string> Do not cache paths.
+	 */
+	private static array $nocache_paths;
+
+	/**
 	 * Cookies that avoid caching.
 	 *
 	 * @since 1.0.0
@@ -533,6 +543,17 @@ final class Engine {
 		foreach ( $_COOKIE as $name => $value ) {
 			foreach ( $nocache_cookies as $pattern ) {
 				if ( self::pattern_match( strtolower( $name ), $pattern ) ) {
+					self::set_header( 'Status', 'bypass' );
+					return false;
+				}
+			}
+		}
+
+		// Check for nocache paths.
+		if ( ! empty( self::$nocache_paths ) ) {
+			$current_path = self::parse_request_uri( self::get_server_var( 'REQUEST_URI' ) );
+			foreach ( self::$nocache_paths as $nocache_path ) {
+				if ( self::pattern_match( $current_path, $nocache_path ) ) {
 					self::set_header( 'Status', 'bypass' );
 					return false;
 				}
@@ -1312,6 +1333,7 @@ final class Engine {
 			'grace' => self::$grace,
 			'gzip' => self::$gzip,
 			'debug' => self::$debug,
+			'nocache_paths' => self::$nocache_paths,
 			'ignore_cookies' => self::$ignore_cookies,
 			'nocache_cookies' => self::$nocache_cookies,
 			'ignore_request_keys' => self::$ignore_request_keys,

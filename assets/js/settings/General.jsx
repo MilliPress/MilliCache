@@ -308,7 +308,6 @@ const GeneralSettings = () => {
 										ttlInSeconds
 									);
 								} }
-								min="1"
 								units={ [
 									{
 										value: 'h',
@@ -382,6 +381,27 @@ const GeneralSettings = () => {
 						}
 						suggestions={ [] }
 					/>
+                    <FormTokenField
+                        __next40pxDefaultSize
+                        __nextHasNoMarginBottom
+                        label={
+                            <LabelWithTooltip
+                                label={ __( 'No-Cache Paths', 'millicache' ) }
+                                tooltip={ __( 'URL paths that are not cached. You can use * wildcards (e.g. "/shop/*") or regular expressions, which must be enclosed in / characters (e.g. "/^/products/[0-9]+$/").' ) }
+                            />
+                        }
+                        placeholder={__('Add path or pattern (e.g., /shop/*, /cart, /^/products/[0-9]+$/)', 'millicache')}
+                        value={
+                            settings.cache.nocache_paths
+                                ? settings.cache.nocache_paths
+                                : status.cache?.nocache_paths
+                        }
+                        disabled={ ! ( 'nocache_paths' in settings.cache ) }
+                        onChange={ ( tokens ) =>
+                            updateSetting( 'cache', 'nocache_paths', tokens )
+                        }
+                        suggestions={ [] }
+                    />
 					<FormTokenField
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom

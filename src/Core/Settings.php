@@ -111,6 +111,7 @@ class Settings {
 					'ttl' => DAY_IN_SECONDS,
 					'grace' => MONTH_IN_SECONDS,
 					'unique' => array(),
+					'nocache_paths' => array(),
 					'nocache_cookies' => array( 'comment_author_*' ),
 					'ignore_cookies' => array( '_*' ),
 					'ignore_request_keys' => array( '_*', 'utm_*' ),
