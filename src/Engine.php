@@ -1257,8 +1257,8 @@ final class Engine {
 		}
 
 		// Check if the pattern is a regex (enclosed in forward slashes).
-		if ( preg_match( '/^\/.*\/$/', $pattern ) ) {
-			return @preg_match( $pattern, $string ) !== false;
+		if ( strlen( $pattern ) > 2 && '/' === $pattern[0] && '/' === $pattern[ strlen( $pattern ) - 1 ] ) {
+			return (bool) @preg_match( $pattern, $string );
 		}
 
 		// If the pattern contains a wildcard *.
