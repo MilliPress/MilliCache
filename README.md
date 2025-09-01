@@ -139,7 +139,7 @@ define('MC_STORAGE_PORT', 6379);
 | `MC_CACHE_SHOULD_CACHE_CALLBACK` | External callback to append custom cache conditions  | `''`                   |
 | `MC_CACHE_UNIQUE`                | Variables that make the request & cache entry unique | `[]`                   |
 
-> [!INFO]
+> [!NOTE]
 > MilliCache supports wildcard patterns for cookie and request key configurations, allowing for more flexible cache control: `['cookie_*', 'coo*_*', 'request_*']`.
 
 ### Storage Server Connection Configuration
@@ -554,7 +554,7 @@ To play with MilliCache or to run the tests, you need to have Docker and Node.js
 
 The following commands will start the WordPress environment with MilliCache Plugin installed under `http://localhost:8888`.
 
-> [!INFO]
+> [!NOTE]
 >
 > Another WordPress environment will be available under `http://localhost:8889` for the Playwright tests.
 > Please note that this instance is configured for testing, e.g., with 5-second Cache-TTL.
