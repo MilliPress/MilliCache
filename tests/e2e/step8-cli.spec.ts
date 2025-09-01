@@ -35,7 +35,7 @@ test.describe('Step 8: WP-CLI Commands', () => {
         await validateHeader(response3, 'status', 'miss');
     });
 
-    test('WP-CLI: MilliCache Stats', async () => {
+    test('WP-CLI: MilliCache Stats', async ({ page }) => {
         // General cache stats
         const stdout = await runWpCliCommand('millicache stats');
 
@@ -44,6 +44,9 @@ test.describe('Step 8: WP-CLI Commands', () => {
 
         // Clear cache of another site
         await clearCache('2:*');
+
+        // Open site 1 front-page to make sure it is cached
+        await page.goto('/');
 
         // Get stats by flag of site 1
         const stdout3 = await runWpCliCommand('millicache stats -- --flag=1:home');
