@@ -190,11 +190,11 @@ you can use the flag `post:123` with [WP-CLI commands](#wp-cli-commands) or Mill
 > [!IMPORTANT]
 > Flag prefixes are only added in multisite and multinetwork installations. Here's how the same flag appears in different WordPress setups:
 >
-> | Installation Type | Example Flag Format             | Example                                |
-> |-------------------|---------------------------------|----------------------------------------|
-> | Single site       | `flag:value`                    | `post:123`, `home`, `site`             |
-> | Multisite         | `site_id:flag:value`            | `1:post:123`, `2:home`, `3:site`       |
-> | Multinetwork      | `network_id:site_id:flag:value` | `1:2:post:123`, `1:3:home`, `2:1:site` |
+> | Installation Type | Example Flag Format             | Examples                                      |
+> |-------------------|---------------------------------|-----------------------------------------------|
+> | Single site       | `flag:value`                    | `post:123`, `home`, `custom_flag`             |
+> | Multisite         | `site_id:flag:value`            | `1:post:123`, `2:home`, `3:custom_flag`       |
+> | Multinetwork      | `network_id:site_id:flag:value` | `1:2:post:123`, `1:3:home`, `2:1:custom_flag` |
 >
 > When using WP-CLI or API functions, you must include these prefixes appropriately for multisite/multinetwork environments.
 
