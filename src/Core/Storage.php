@@ -325,24 +325,35 @@ final class Storage {
 			 */
 			do_action( 'millicache_before_page_cache_stored', $hash, $key, $flags, $data );
 
+			// Serialize the data and calculate its size.
+			$serialized_data = serialize( $data );
+			$fields = array(
+				'data' => $serialized_data,
+				'size' => strlen( $serialized_data ),
+			);
+
+			// Prepare flag keys and add them to fields.
+			$flag_keys = array_map(
+				function ( $flag ) use ( &$fields ) {
+					$flag_key = $this->get_flag_key( $flag );
+					$fields[ $flag_key ] = 1;
+					return $flag_key;
+				},
+				$flags
+			);
+
+			// Execute the transaction.
 			$this->client->transaction(
-				function ( $tx ) use ( $key, $flags, $data ) {
+				function ( $tx ) use ( $key, $flag_keys, $fields ) {
+					// Store the fields.
+					$tx->hmset( $key, $fields );
 
-					// Store the data.
-					$tx->hset( $key, 'data', serialize( $data ) );
-
-					// Store the flags and add the key to the sets associated with the flags.
-					foreach ( $flags as $flag ) {
-						$flag = $this->get_flag_key( $flag );
-
-						// Add the key to the set of the flag.
-						$tx->hset( $key, $flag, '' );
-
-						// Add the flag to the set of the key.
-						$tx->sadd( $flag, array( $key ) );
+					// Add key to flag sets.
+					foreach ( $flag_keys as $flag_key ) {
+						$tx->sadd( $flag_key, array( $key ) );
 					}
 
-					// Set the max expiration time to avoid stale data.
+					// Set the max expiration time.
 					$tx->expire( $key, Engine::$ttl + Engine::$grace );
 				}
 			);
