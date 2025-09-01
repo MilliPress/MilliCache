@@ -187,7 +187,8 @@ you can use the flag `post:123` with [WP-CLI commands](#wp-cli-commands) or Mill
 
 ### Built-in Flags
 
-> **Important:** Flag prefixes are only added in multisite and multinetwork installations. Here's how the same flag appears in different WordPress setups:
+> [!IMPORTANT]
+> Flag prefixes are only added in multisite and multinetwork installations. Here's how the same flag appears in different WordPress setups:
 >
 > | Installation Type | Example Flag Format             | Example                                |
 > |-------------------|---------------------------------|----------------------------------------|
