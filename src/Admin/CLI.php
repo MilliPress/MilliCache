@@ -204,7 +204,7 @@ class CLI {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp millicache stats --flag=site:1:*
+	 *     wp millicache stats --flag=1:*
 	 *
 	 * @when after_wp_load
 	 *
