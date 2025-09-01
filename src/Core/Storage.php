@@ -768,32 +768,42 @@ final class Storage {
 	 */
 	public function get_cache_size( string $flag = '' ) {
 		try {
-			$keys = array();
+			$keys = empty( $flag )
+				? $this->get_cache_keys( $this->get_cache_key( '*' ) )
+				: $this->get_cache_keys_by_flag( $flag );
 
-			if ( ! empty( $flag ) ) {
-				$keys = $this->get_cache_keys_by_flag( $flag );
-			} else {
-				foreach ( new Predis\Collection\Iterator\Keyspace( $this->client, $this->prefix . ':c:*' ) as $key ) {
-					$keys[] = $key;
+			if ( empty( $keys ) ) {
+				return array(
+					'index' => 0,
+					'size' => 0,
+				);
+			}
+
+			$sizes = $this->client->pipeline(
+				function ( $pipe ) use ( $keys, $flag ) {
+					foreach ( $keys as $key ) {
+						$pipe->hget( ! empty( $flag ) ? $this->get_cache_key( $key ) : $key, 'size' );
+					}
 				}
+			);
+
+			if ( ! is_array( $sizes ) ) {
+				return array(
+					'index' => count( $keys ),
+					'size' => 0,
+				);
 			}
 
-			if ( ! is_array( $keys ) ) {
-				return false;
-			}
-
-			$total_size = array_sum(
-				array_map(
-					function ( $key ) use ( $flag ) {
-						return $this->client->executeRaw( array( 'MEMORY', 'USAGE', ! empty( $flag ) ? $this->get_cache_key( $key ) : $key ) );
-					},
-					$keys
-				)
+			$valid_sizes = array_filter(
+				$sizes,
+				function ( $size ) {
+					return is_numeric( $size );
+				}
 			);
 
 			return array(
-				'index' => (int) count( $keys ),
-				'size' => (int) round( $total_size / 1024 ),
+				'index' => count( $valid_sizes ),
+				'size' => (int) round( array_sum( $valid_sizes ) / 1024 ),
 			);
 		} catch ( PredisException $e ) {
 			error_log( 'Unable to get cache size from the storage server: ' . $e->getMessage() );
