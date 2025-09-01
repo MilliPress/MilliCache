@@ -1192,15 +1192,21 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param array<string> $flags The flags to prefix.
+	 * @param array<string>|string $flags The flags to prefix.
+	 * @param int|string|null      $site_id The site ID.
+	 * @param int|string|null      $network_id The network ID.
 	 *
 	 * @return array<string> The prefixed flags.
 	 */
-	public static function prefix_flags( array $flags = array() ): array {
+	public static function prefix_flags( $flags = array(), $site_id = null, $network_id = null ): array {
+		if ( is_string( $flags ) ) {
+			$flags = array( $flags );
+		}
+
 		// Prefix the flags with the current site and network ID.
 		return array_map(
-			function ( $flag ) {
-				return self::get_flag_prefix() . $flag;
+			function ( $flag ) use ( $site_id, $network_id ) {
+				return self::get_flag_prefix( $site_id, $network_id ) . $flag;
 			},
 			$flags
 		);
