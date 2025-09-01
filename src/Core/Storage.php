@@ -593,7 +593,7 @@ final class Storage {
 	 * @param string $pattern The pattern to match keys against.
 	 * @return array<string> The cache keys that match the pattern.
 	 */
-	private function get_cache_keys( string $pattern ): array {
+	private function get_cache_keys_by_pattern( string $pattern ): array {
 		try {
 			if ( ! isset( $this->client ) ) {
 				return array();
@@ -676,7 +676,7 @@ final class Storage {
 	public function cleanup_expired_flags(): bool {
 		try {
 			// Get all flags.
-			$flags = $this->client->keys( $this->prefix . ':f:*' );
+			$flags = $this->client->keys( $this->get_flag_key( '*' ) );
 
 			foreach ( $flags as $flag ) {
 				// Get all keys in the set associated with the flag.
@@ -759,7 +759,7 @@ final class Storage {
 	public function get_cache_size( string $flag = '' ) {
 		try {
 			$keys = empty( $flag )
-				? $this->get_cache_keys( $this->get_cache_key( '*' ) )
+				? $this->get_cache_keys_by_pattern( $this->get_cache_key( '*' ) )
 				: $this->get_cache_keys_by_flag( $flag );
 
 			if ( empty( $keys ) ) {
