@@ -133,25 +133,26 @@ define('MC_STORAGE_PORT', 6379);
 | `MC_CACHE_GZIP`                  | Enable Gzip Compression                              | `true`                 |
 | `MC_CACHE_TTL`                   | Default Cache TTL (Time To Live)                     | `DAY_IN_SECONDS`       |
 | `MC_CACHE_GRACE`                 | Grace Period of stale cache for regenerating content | `MONTH_IN_SECONDS`     |
-| `MC_CACHE_IGNORE_COOKIES`        | Cookies that are ignored/stripped from the request   | `[]`                   |
+| `MC_CACHE_NOCACHE_PATHS`         | Paths which are not cached                           | `[]`                   |
 | `MC_CACHE_NOCACHE_COOKIES`       | Cookies which avoid caching                          | `['comment_author']`   |
+| `MC_CACHE_IGNORE_COOKIES`        | Cookies that are ignored/stripped from the request   | `[]`                   |
 | `MC_CACHE_IGNORE_REQUEST_KEYS`   | Request keys that are ignored                        | `['_*', 'utm_*', ...]` |
 | `MC_CACHE_SHOULD_CACHE_CALLBACK` | External callback to append custom cache conditions  | `''`                   |
 | `MC_CACHE_UNIQUE`                | Variables that make the request & cache entry unique | `[]`                   |
 
 > [!NOTE]
-> MilliCache supports wildcard patterns for cookie and request key configurations, allowing for more flexible cache control: `['cookie_*', 'coo*_*', 'request_*']`.
+> MilliCache supports wildcard patterns and Regex for path, cookie and request key configurations, allowing for more flexible cache control: `['cookie_*', 'coo*_*', /^/(product|category)/.*/]`.
 
 ### Storage Server Connection Configuration
 
-| Constant              | Description                          | Default            |
-|-----------------------|--------------------------------------|--------------------|
-| `MC_STORAGE_HOST`       | Storage Server Host                  | `127.0.0.1`        |
-| `MC_STORAGE_PORT`       | Storage Server Port                  | `6379`             |
-| `MC_STORAGE_PASSWORD`   | Storage Server Password              | `''`               |
-| `MC_STORAGE_DB`         | Storage Server Database              | `0`                |
-| `MC_STORAGE_PERSISTENT` | Storage Server Persistent Connection | `true`             |
-| `MC_STORAGE_PREFIX`     | Storage Server Key Prefix            | `mll`              |
+| Constant              | Description                          | Default     |
+|-----------------------|--------------------------------------|-------------|
+| `MC_STORAGE_HOST`       | Storage Server Host                  | `127.0.0.1` |
+| `MC_STORAGE_PORT`       | Storage Server Port                  | `6379`      |
+| `MC_STORAGE_PASSWORD`   | Storage Server Password              | `''`        |
+| `MC_STORAGE_DB`         | Storage Server Database              | `0`         |
+| `MC_STORAGE_PERSISTENT` | Storage Server Persistent Connection | `true`      |
+| `MC_STORAGE_PREFIX`     | Storage Server Key Prefix            | `mll`       |
 
 ---
 
