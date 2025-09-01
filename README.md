@@ -200,13 +200,19 @@ you can use the flag `post:123` with [WP-CLI commands](#wp-cli-commands) or Mill
 
 The basic built-in flags are:
 
-| Flag          | Description                                                |
-|---------------|------------------------------------------------------------|
-| `home`        | Added to home & blog pages                                 |
-| `post:?`      | Added to all posts, pages & CPT (Post ID)                  |
-| `feed`        | Added to all feed pages                                    |
-| `archive:?`   | Added to all post type archive pages (Post Type)           |
-| `author:?`    | Added to all author pages (Author ID)                      |
+| Flag                           | Description                                                     |
+|--------------------------------|-----------------------------------------------------------------|
+| `home`                         | Added to home & blog pages                                      |
+| `post:{post_id}`               | Added to all posts, pages & CPT (Post ID)                       |
+| `archive:{post_type}`          | Added to all post type archive pages (Post Type)                |
+| `archive:{taxonomy}:{tax_id}`  | Added to taxonomy archives (e.g. category or tag archives)      |
+| `archive:author:{author_id}`   | Added to author archive pages (Author ID)                       |
+| `archive:{year}`               | Added to date archive pages for a specific year                 |
+| `archive:{year}:{month}`       | Added to date archive pages for a specific month                |
+| `archive:{year}:{month}:{day}` | Added to date archive pages for a specific day                  |
+| `feed`                         | Added to all feed pages                                         |
+
+Flags dynamically adapt based on the content and current page context, ensuring maximum control and flexibility when managing the cache.
 
 ### Adding Custom Cache Flags:
 
@@ -216,8 +222,8 @@ For instance, if you want to group all posts containing a particular Gutenberg b
 
 1. **Add a Custom Flag:**
    ```php
-   add_filter('millicache_custom_flags', function($flags) {
-       if (has_block('my-custom/block')) {
+   add_filter('millicache_custom_flags', function( $flags ) {
+       if ( has_block('my-custom/block') ) {
            $flags[] = 'block:my-custom/block';
        }
        return $flags;
