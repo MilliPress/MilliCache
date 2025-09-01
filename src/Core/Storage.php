@@ -574,6 +574,40 @@ final class Storage {
 	}
 
 	/**
+	 * SCAN cache keys that match a specific pattern.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @param string $pattern The pattern to match keys against.
+	 * @return array<string> The cache keys that match the pattern.
+	 */
+	private function get_cache_keys( string $pattern ): array {
+		try {
+			if ( ! isset( $this->client ) ) {
+				return array();
+			}
+
+			$keys = array();
+			foreach ( new Predis\Collection\Iterator\Keyspace( $this->client, $pattern ) as $key ) {
+				if ( is_string( $key ) ) {
+					$keys[] = $key;
+				}
+			}
+
+			// Check if the keys are an array.
+			if ( ! is_array( $keys ) ) {
+				return array();
+			}
+
+			return $keys;
+		} catch ( PredisException $e ) {
+			error_log( 'Unable to get keys by pattern from the storage server: ' . $e->getMessage() );
+			return array();
+		}
+	}
+
+	/**
 	 * Get cache keys by a given flag.
 	 *
 	 * @since 1.0.0
