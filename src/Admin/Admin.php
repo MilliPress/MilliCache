@@ -348,6 +348,38 @@ class Admin {
 	}
 
 	/**
+	 * Get the size of the cache.
+	 *
+	 * @since   1.0.0
+	 * @access  public
+	 *
+	 * @param string $flag The flag to search for. Wildcards are allowed.
+	 * @param bool   $reload Whether to reload the cache size from the storage server.
+	 * @return array{index: int, size: int, size_human: string} The index and memory size of the cache.
+	 */
+	public static function get_cache_size( string $flag = '', bool $reload = false ): array {
+		$size = get_site_transient( "millicache_size_$flag" );
+
+		if ( ! is_array( $size ) || $reload ) {
+			$storage = Engine::get_storage();
+			$size = $storage->get_cache_size( $flag );
+
+			if ( $size ) {
+				set_site_transient( "millicache_size_$flag", $size, 12 * HOUR_IN_SECONDS );
+			}
+		}
+
+		return array(
+			'index' => $size['index'] ?? 0,
+			'size' => $size['size'] ?? 0,
+			'size_human' => (string) size_format(
+				$size['size'] ?? 0,
+				( $size['size'] ?? 0 ) > 1024 ? 2 : 0
+			),
+		);
+	}
+
+	/**
 	 * Get a summary string for the cache size.
 	 *
 	 * @since   1.0.0
@@ -372,38 +404,6 @@ class Admin {
 		} else {
 			return __( 'Empty cache', 'millicache' );
 		}
-	}
-
-	/**
-	 * Get the size of the cache.
-	 *
-	 * @since   1.0.0
-	 * @access  public
-	 *
-	 * @param string $flag The flag to search for. Wildcards are allowed.
-	 * @param bool   $reload Whether to reload the cache size from the storage server.
-	 * @return array{index: int, size: int, size_human: string} The index and memory size of the cache.
-	 */
-	public static function get_cache_size( string $flag = '', bool $reload = false ): array {
-		$size = get_transient( 'millicache_size_' . $flag );
-
-		if ( ! is_array( $size ) || $reload ) {
-			$storage = Engine::get_storage();
-			$size = $storage->get_cache_size( $flag );
-
-			if ( $size ) {
-				set_transient( 'millicache_size_' . $flag, $size, DAY_IN_SECONDS );
-			}
-		}
-
-		return array(
-			'index' => $size['index'] ?? 0,
-			'size' => $size['size'] ?? 0,
-			'size_human' => (string) size_format(
-				$size['size'] ?? 0,
-				( $size['size'] ?? 0 ) > 1024 ? 2 : 0
-			),
-		);
 	}
 
 	/**
