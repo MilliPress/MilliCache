@@ -341,10 +341,14 @@ class Admin {
 	 *
 	 * @return   void
 	 */
-	public static function delete_dashboard_glance_cache_size(): void {
-		$site_id = get_current_network_id();
-		$blog_id = get_current_blog_id();
-		delete_transient( "millicache_size_site:$site_id:$blog_id" );
+	public static function delete_cache_size_transient(): void {
+		// Delete single-site cache size transient.
+		delete_site_transient( 'millicache_size_' . Engine::get_flag_prefix() . '*' );
+
+		if ( is_multisite() ) {
+			// Delete network-wide cache size transient.
+			delete_site_transient( 'millicache_size_' . Engine::get_flag_prefix( '*' ) . '*' );
+		}
 	}
 
 	/**
