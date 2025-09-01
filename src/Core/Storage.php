@@ -675,25 +675,29 @@ final class Storage {
 	 */
 	public function cleanup_expired_flags(): bool {
 		try {
-			// Get all flags.
-			$flags = $this->client->keys( $this->get_flag_key( '*' ) );
+			$this->client->pipeline(
+				function ( $pipe ) {
+					// Get all flag keys matching the prefix.
+					$flags = $this->client->keys( $this->get_flag_key( '*' ) );
 
-			foreach ( $flags as $flag ) {
-				// Get all keys in the set associated with the flag.
-				$keys = $this->client->smembers( $flag );
+					foreach ( $flags as $flag ) {
+						// Get all members of the flag's set.
+						$keys = $this->client->smembers( $flag );
 
-				foreach ( $keys as $key ) {
-					// If the key does not exist in Redis, remove it from the set.
-					if ( ! $this->client->exists( $key ) ) {
-						$this->client->srem( $flag, $key );
+						foreach ( $keys as $key ) {
+							// Remove non-existent keys from the set.
+							if ( ! $this->client->exists( $key ) ) {
+								$pipe->srem( $flag, $key );
+							}
+						}
+
+						// If the flag's set is empty, delete the flag.
+						if ( ! $this->client->scard( $flag ) ) {
+							$pipe->del( $flag );
+						}
 					}
 				}
-
-				// If the set of the flag is empty, delete the flag.
-				if ( 0 === $this->client->scard( $flag ) ) {
-					$this->client->del( $flag );
-				}
-			}
+			);
 
 			return true;
 		} catch ( PredisException $e ) {
