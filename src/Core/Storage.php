@@ -633,21 +633,14 @@ final class Storage {
 				return array();
 			}
 
-			// Check if the flag contains any wildcard characters.
-			if ( preg_match( '/[*?]/', $flag ) ) {
-				// The flag contains wildcard, use SCAN to get all keys.
-				$keys = $this->get_cache_keys( $this->get_flag_key( $flag ) );
-
-				if ( empty( $keys ) ) {
-					return array();
-				}
-
-				$members = array_merge(
+			// Get all keys in the set associated with the flag with wildcard support.
+			$members = preg_match( '/[*?]/', $flag )
+				? array_merge(
 					array(),
 					...array_filter(
 						(array) $this->client->pipeline(
-							function ( $pipe ) use ( $keys ) {
-								foreach ( $keys as $key ) {
+							function ( $pipe ) use ( $flag ) {
+								foreach ( $this->get_cache_keys_by_pattern( $this->get_flag_key( $flag ) ) as $key ) {
 									if ( is_string( $key ) ) {
 										$pipe->smembers( $key );
 									}
@@ -656,11 +649,8 @@ final class Storage {
 						),
 						'is_array'
 					)
-				);
-			} else {
-				// The flag does not contain wildcard, directly call sMembers.
-				$members = $this->client->smembers( $this->get_flag_key( $flag ) );
-			}
+				)
+				: $this->client->smembers( $this->get_flag_key( $flag ) );
 
 			// Remove prefix from keys.
 			return array_map(

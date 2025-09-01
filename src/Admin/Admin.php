@@ -129,8 +129,8 @@ class Admin {
 
 		// Cache Size.
 		$this->loader->add_filter( 'dashboard_glance_items', $this, 'add_dashboard_glance_cache_size', 999 );
-		$this->loader->add_action( 'millicache_before_page_cache_stored', $this, 'delete_dashboard_glance_cache_size' );
-		$this->loader->add_action( 'millicache_after_page_cache_deleted', $this, 'delete_dashboard_glance_cache_size' );
+		$this->loader->add_action( 'millicache_before_page_cache_stored', $this, 'delete_cache_size_transient' );
+		$this->loader->add_action( 'millicache_after_page_cache_deleted', $this, 'delete_cache_size_transient' );
 	}
 
 	/**
