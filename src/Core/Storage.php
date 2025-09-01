@@ -624,26 +624,28 @@ final class Storage {
 
 			// Check if the flag contains any wildcard characters.
 			if ( preg_match( '/[*?]/', $flag ) ) {
-				$pattern = $this->get_flag_key( $flag );
-				$members = array();
-
 				// The flag contains wildcard, use SCAN to get all keys.
-				$keys = array();
-				foreach ( new Predis\Collection\Iterator\Keyspace( $this->client, $pattern ) as $key ) {
-					$keys[] = $key;
-				}
+				$keys = $this->get_cache_keys( $this->get_flag_key( $flag ) );
 
-				// Check if the keys are an array.
-				if ( ! is_array( $keys ) ) {
+				if ( empty( $keys ) ) {
 					return array();
 				}
 
-				foreach ( $keys as $key ) {
-					if ( is_string( $key ) ) {
-						$key_members = $this->client->smembers( $key );
-						$members = array_merge( $members, $key_members );
-					}
-				}
+				$members = array_merge(
+					array(),
+					...array_filter(
+						(array) $this->client->pipeline(
+							function ( $pipe ) use ( $keys ) {
+								foreach ( $keys as $key ) {
+									if ( is_string( $key ) ) {
+										$pipe->smembers( $key );
+									}
+								}
+							}
+						),
+						'is_array'
+					)
+				);
 			} else {
 				// The flag does not contain wildcard, directly call sMembers.
 				$members = $this->client->smembers( $this->get_flag_key( $flag ) );
