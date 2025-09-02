@@ -82,11 +82,12 @@ jobs:
           rm -rf dist && mkdir dist
           
           # 1) start from tracked files filtered by .gitattributes export-ignore
-          git archive --format=tar HEAD | tar -x -C dist
+          git archive --format=tar --worktree-attributes HEAD | tar -x -C dist
           
           # 2) add generated artifacts not tracked in git
           [ -d build ]  && rsync -a build/  dist/build/
           [ -d vendor ] && rsync -a vendor/ dist/vendor/
+          rm -rf dist/node_modules
 
       # Create orphan dist commit, tag, push tag
       - name: Create orphan dist commit and final tag
