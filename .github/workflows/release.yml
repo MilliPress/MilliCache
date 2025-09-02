@@ -23,8 +23,8 @@ permissions:
 
 jobs:
   call-workflow-e2e-test:
-  name: Run Playwright e2e-Tests
-  uses: ./.github/workflows/tests.yml
+   name: Run Playwright e2e-Tests
+   uses: ./.github/workflows/playwright.yml
 
   release:
     name: Build & tag dist
