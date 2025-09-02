@@ -92,7 +92,7 @@ jobs:
           [ -d vendor ] && rsync -a vendor/ dist/vendor/
           
           # 3) Output folder and file list of the assembled dist tree
-          echo "Dist tree:" && find dist -type f -printf '%P\n' | sort
+          echo "Dist tree:" && find dist -maxdepth 1 -mindepth 1 -printf '%P\n' | sort
 
       # Create orphan dist commit, tag, push tag
       - name: Create orphan dist commit and final tag
@@ -105,8 +105,9 @@ jobs:
 
           # Only keep the files from the dist directory
           git rm -rf . >/dev/null 2>&1 || true
-          rsync -a dist/ .  # Copy ONLY dist files to the orphan branch
-          
+          rsync -a dist/ . --remove-source-files
+          rm -rf dist/
+  
           # Add these files and commit
           git add -A
           git commit -m "Dist build for ${VER}"
@@ -118,7 +119,7 @@ jobs:
       - name: Create ZIP asset
         run: |
           zip -rq "millicache-${{ steps.meta.outputs.VER }}.zip" .
-        working-directory: ./dist
+        working-directory: .
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
