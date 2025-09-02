@@ -1,9 +1,10 @@
 .*                  export-ignore
+*.config.*          export-ignore
 package*            export-ignore
 php*.*              export-ignore
 playwright.*        export-ignore
 mozart.*            export-ignore
+composer.lock       export-ignore
+/assets             export-ignore
 /tests              export-ignore
 /node_modules       export-ignore
-/admin/css          export-ignore
-/admin/js           export-ignore

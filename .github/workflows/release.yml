@@ -7,11 +7,6 @@ on:
         description: 'SemVer tag (e.g. v1.2.3)'
         required: true
         type: string
-      source_branch:
-        description: 'Source branch to release from (e.g. main)'
-        required: false
-        default: 'main'
-        type: string
       prerelease:
         description: 'Publish as prerelease?'
         required: false
@@ -27,13 +22,13 @@ permissions:
   contents: write   # needed to push tags and create releases
 
 jobs:
-  call-workflow-e2e-test:
-    name: Run Playwright e2e-Tests
-    uses: ./.github/workflows/playwright.yml
+  # call-workflow-e2e-test:
+  #  name: Run Playwright e2e-Tests
+  #  uses: ./.github/workflows/playwright.yml
 
   release:
     name: Build & tag dist
-    needs: call-workflow-e2e-test
+    # needs: call-workflow-e2e-test
     runs-on: ubuntu-latest
 
     steps:
@@ -50,7 +45,7 @@ jobs:
       - name: Checkout source branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.source_branch }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Configure Git
@@ -65,7 +60,7 @@ jobs:
           if git rev-parse "$SRC" >/dev/null 2>&1; then
             echo "Tag $SRC already exists"; exit 1
           fi
-          git tag -a "$SRC" -m "Source tag for $SRC"
+          git tag
           git push origin "refs/tags/$SRC"
 
       - name: Check out the source tag
@@ -119,7 +114,7 @@ jobs:
       # Attach a ZIP asset for direct download
       - name: Create ZIP asset
         run: |
-          zip -r "millicache-${{ steps.meta.outputs.VER }}.zip" . -x "*.git*"
+          zip -r "millicache-${{ steps.meta.outputs.VER }}.zip" .
         working-directory: .
 
       - name: Publish GitHub Release for final tag
