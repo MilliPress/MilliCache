@@ -100,7 +100,11 @@ jobs:
           # Remove tracked AND untracked/ignored files from the worktree
           git rm -rf . >/dev/null 2>&1 || true
           git clean -fdx -e dist
-          cp -R dist/* .
+
+          # copy dist → working tree, including dotfiles, excluding node_modules (double safety)
+          shopt -s dotglob
+          rsync -a --delete --exclude='node_modules' dist/ .
+      
           rm -rf dist
 
           git add -A
@@ -114,7 +118,7 @@ jobs:
       - name: Create ZIP asset
         run: |
           zip -rq "millicache-${{ steps.meta.outputs.VER }}.zip" .
-        working-directory: ./dist
+        working-directory: .
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
