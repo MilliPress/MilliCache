@@ -1,6 +1,7 @@
 name: E2E- & Performance-Tests
 
 on:
+  workflow_call:
   pull_request:
     branches: [ main ]
   push:
