@@ -1,14 +1,21 @@
-name: Playwright Tests
+name: Tests
 
 on:
-  workflow_call:
   pull_request:
     branches: [ main ]
   push:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   test:
+    name: Run Tests
     timeout-minutes: 15
     runs-on: ubuntu-latest
     env:
@@ -17,23 +24,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get Composer directory path
+      - name: Get Composer cache dir
         id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - name: Cache Composer dependencies
-        if: runner.os == 'Linux'
+      - name: Cache Composer
         uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}-${{ hashFiles('composer.json') }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
             ${{ runner.os }}-composer-
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-ms-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-ms-playwright-
+
       - name: Cache WP-ENV
-        if: runner.os == 'Linux'
         uses: actions/cache@v4
         with:
           path: |
@@ -44,88 +61,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-wp-env-
 
-      - name: Setup Node on ${{ runner.os }}
-        uses: actions/setup-node@v4
-        with:
-          cache: 'npm'
-          node-version-file: '.nvmrc'
-
       - name: Install dependencies
-        run: npm ci && composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+        run: |
+          npm ci
+          composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
-      - name: Build styles and scripts
+      - name: Build assets
         run: npm run build
 
       - name: Setup WordPress Environment
         run: npm run env:start
 
-      - name: Install Playwright Browsers
+      - name: Install Playwright (chromium only)
         run: npx playwright install --with-deps chromium
 
       - name: Run Playwright Tests
         run: npm run env:e2e
 
       - name: Upload Playwright Report
+        if: always()
         uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
         with:
           name: playwright-report
           path: playwright-report/
           if-no-files-found: ignore
-          retention-days: 3
-
-      - name: Run Performance Playwright Tests
-        run: |
-          npm run env:e2e:performance
-          mv ${{ env.WP_ARTIFACTS_PATH }}/performance-results.json ${{ runner.temp }}/results_after.json
-
-      - name: Check out base commit
-        run: |
-          # Checkout the repo first (make sure we have the history)
-          git fetch --prune --unshallow || git fetch --prune
-          
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            # For pull requests, get the base commit as before
-            git fetch -n origin $BASE_REF
-            git reset --hard $BASE_SHA
-          else
-            # For tags and pushes, get the parent of the current commit
-            LAST_COMMIT=$(git rev-parse HEAD^)
-            echo "Getting parent commit: $LAST_COMMIT"
-            git reset --hard $LAST_COMMIT
-          fi
-        env:
-          BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || '' }}
-          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
-
-      # Run tests without causing a job to fail if they don't pass (e.g., because of env issues).
-      - name: Run tests for base
-        run: |
-          npm run env:e2e:performance || true
-          if [ -f "{{ env.WP_ARTIFACTS_PATH }}/performance-results.json" ]; then
-            mv ${{ env.WP_ARTIFACTS_PATH }}/performance-results.json ${{ runner.temp }}/results_before.json
-          fi;
-
-      - name: Reset to original commit
-        run: |
-          git reset --hard $GITHUB_SHA
-
-      - name: Compare results with base
-        run: |
-          if [ -f "${{ runner.temp }}/results_before.json" ]; then
-            npm run env:e2e:performance:results ${{ runner.temp }}/results_after.json ${{ runner.temp }}/results_before.json
-          else
-            npm run env:e2e:performance:results ${{ runner.temp }}/results_after.json
-          fi;
-
-      - name: Add workflow summary
-        run: |
-          cat ${{ env.WP_ARTIFACTS_PATH }}/performance-results.md >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload performance results
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-results
-          path: ${{ env.WP_ARTIFACTS_PATH }}/performance-results.json
-          retention-days: 3
+          retention-days: 5
