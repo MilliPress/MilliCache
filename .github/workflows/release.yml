@@ -60,7 +60,7 @@ jobs:
           if git rev-parse "$SRC" >/dev/null 2>&1; then
             echo "Tag $SRC already exists"; exit 1
           fi
-          git tag
+          git tag "$SRC"
           git push origin "refs/tags/$SRC"
 
       - name: Check out the source tag
