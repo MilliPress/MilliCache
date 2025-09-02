@@ -103,6 +103,7 @@ jobs:
           VER="${{ steps.meta.outputs.VER }}"
           git switch --orphan "dist/${VER}"
           git rm -rf . >/dev/null 2>&1 || true
+          git clean -fdx
           cp -R dist/* .
           rm -rf dist
 
