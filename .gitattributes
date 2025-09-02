@@ -1,0 +1,9 @@
+.*                  export-ignore
+package*            export-ignore
+php*.*              export-ignore
+playwright.*        export-ignore
+mozart.*            export-ignore
+/tests              export-ignore
+/node_modules       export-ignore
+/admin/css          export-ignore
+/admin/js           export-ignore

@@ -1,22 +1,30 @@
-name: Create & Publish Release
+name: Build & Publish Release
 
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Version tag (e.g. v1.2.3)'
+      version:
+        description: 'SemVer tag (e.g. v1.2.3)'
         required: true
         type: string
+      source_branch:
+        description: 'Source branch to release from (e.g. main)'
+        required: false
+        default: 'main'
+        type: string
       prerelease:
-        description: 'Is this a prerelease?'
+        description: 'Publish as prerelease?'
         required: false
         default: false
         type: boolean
       draft:
-        description: 'Is this a draft release?'
+        description: 'Publish as draft?'
         required: false
         default: false
         type: boolean
+
+permissions:
+  contents: write   # needed to push tags and create releases
 
 jobs:
   call-workflow-e2e-test:
@@ -24,55 +32,103 @@ jobs:
     uses: ./.github/workflows/playwright.yml
 
   release:
-    name: Release new tagged version
+    name: Build & tag dist
     needs: call-workflow-e2e-test
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Derive tags
+        id: meta
+        run: |
+          VER="${{ inputs.version }}"
+          if ! [[ "$VER" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9\.-]+)?$ ]]; then
+            echo "Version must look like v1.2.3"; exit 1
+          fi
+          echo "VER=$VER" >> $GITHUB_OUTPUT
+          echo "SRC_TAG=${VER}-src" >> $GITHUB_OUTPUT
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+      - name: Checkout source branch
+        uses: actions/checkout@v4
         with:
-          version: 10
+          ref: ${{ inputs.source_branch }}
+          fetch-depth: 0
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Configure Git
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create & push source tag (VER-src)
+        run: |
+          SRC="${{ steps.meta.outputs.SRC_TAG }}"
+          # ensure tag doesn't exist
+          if git rev-parse "$SRC" >/dev/null 2>&1; then
+            echo "Tag $SRC already exists"; exit 1
+          fi
+          git tag -a "$SRC" -m "Source tag for $SRC"
+          git push origin "refs/tags/$SRC"
+
+      - name: Check out the source tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.meta.outputs.SRC_TAG }}
+          fetch-depth: 0
+
+      # Setup
+      - name: Use Node.js from .nvmrc
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci && composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader --classmap-authoritative
+      # Build
+      - name: Install JS deps
+        run: npm ci
 
       - name: Build styles and scripts
         run: npm run build
 
-      - name: Build Release Zip
-        uses: thedoctor0/zip-release@master
-        with:
-          path: '.'
-          filename: 'millicache.zip'
-          exclusions: '*.git* .* composer.* package* php*.* playwright.* yarn.* mozart.* /tests/* /node_modules/* /admin/css/* /admin/js/*'
+      - name: Install PHP deps (no-dev) for bundling
+        run: composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader --classmap-authoritative
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Assemble Dist Tree
+      - name: Assemble clean dist tree (via .gitattributes)
+        run: |
+          rm -rf dist && mkdir dist
+          # Export tracked files respecting .gitattributes
+          git archive --format=tar HEAD | tar -x -C dist
+          
+          # Copy over build and vendor
+          for dir in build vendor; do
+            [ -d "$dir" ] && rsync -a "$dir/" "dist/$dir/"
+          done
+
+      - name: Create orphan dist commit and final tag
+        run: |
+          VER="${{ steps.meta.outputs.VER }}"
+          git switch --orphan "dist/${VER}"
+          git rm -rf . >/dev/null 2>&1 || true
+          cp -R dist/* .
+          rm -rf dist
+
+          git add -A
+          git commit -m "Dist build for ${VER}"
+          git tag -a "${VER}" -m "Release ${VER}"
+          git push origin "refs/tags/${VER}"
+
+      # Attach a ZIP asset for direct download
+      - name: Create ZIP asset
+        run: |
+          zip -r "millicache-${{ steps.meta.outputs.VER }}.zip" . -x "*.git*"
+        working-directory: .
+
+      - name: Publish GitHub Release for final tag
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag }}
-          release_name: ${{ inputs.tag }}
-          body: Bump to ${{ inputs.tag }}
+          tag_name: ${{ steps.meta.outputs.VER }}
           draft: ${{ inputs.draft }}
           prerelease: ${{ inputs.prerelease }}
-
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
+          files: |
+            millicache-${{ steps.meta.outputs.VER }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./millicache.zip
-          asset_name: millicache.zip
-          asset_content_type: application/zip
