@@ -99,7 +99,7 @@ jobs:
       
           # Remove tracked AND untracked/ignored files from the worktree
           git rm -rf . >/dev/null 2>&1 || true
-          git clean -fdx
+          git clean -fdx -e dist
           cp -R dist/* .
           rm -rf dist
 
