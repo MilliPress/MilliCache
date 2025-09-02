@@ -82,12 +82,11 @@ jobs:
           rm -rf dist && mkdir dist
           
           # 1) start from tracked files filtered by .gitattributes export-ignore
-          git archive --format=tar --worktree-attributes HEAD | tar -x -C dist
+          git archive --format=tar HEAD | tar -x -C dist
           
           # 2) add generated artifacts not tracked in git
           [ -d build ]  && rsync -a build/  dist/build/
           [ -d vendor ] && rsync -a vendor/ dist/vendor/
-          rm -rf dist/node_modules
 
       # Create orphan dist commit, tag, push tag
       - name: Create orphan dist commit and final tag
@@ -100,15 +99,10 @@ jobs:
       
           # Remove tracked AND untracked/ignored files from the worktree
           git rm -rf . >/dev/null 2>&1 || true
-          git clean -xfd 
+          git clean -fdx
+          cp -R dist/* .
+          rm -rf dist
 
-          # Remove node_modules and .git before syncing
-          rm -rf node_modules .git
-      
-          # Copy dist contents into the now-empty worktree
-          rsync -a --delete dist/ .
-
-          # Stage only what’s in the clean tree and commit
           git add -A
           git commit -m "Dist build for ${VER}"
       
