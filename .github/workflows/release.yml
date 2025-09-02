@@ -19,7 +19,7 @@ on:
         type: boolean
 
 permissions:
-  contents: write   # needed to push tags and create releases
+  contents: write
 
 jobs:
   # call-workflow-e2e-test:
@@ -32,15 +32,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Derive tags
+      - name: Derive version & sanity checks
         id: meta
         run: |
+          set -euo pipefail
           VER="${{ inputs.version }}"
           if ! [[ "$VER" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9\.-]+)?$ ]]; then
-            echo "Version must look like v1.2.3"; exit 1
+            echo "Version must look like v1.2.3 or v1.2.3-rc.2"; exit 1
           fi
           echo "VER=$VER" >> $GITHUB_OUTPUT
-          echo "SRC_TAG=${VER}-src" >> $GITHUB_OUTPUT
 
       - name: Checkout source branch
         uses: actions/checkout@v4
@@ -52,59 +52,49 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Create & push source tag (VER-src)
-        run: |
-          SRC="${{ steps.meta.outputs.SRC_TAG }}"
-          # ensure tag doesn't exist
-          if git rev-parse "$SRC" >/dev/null 2>&1; then
-            echo "Tag $SRC already exists"; exit 1
+          # Fail early if tag already exists on remote
+          git fetch --tags --force
+          if git ls-remote --tags origin | grep -q "refs/tags/${{ steps.meta.outputs.VER }}$"; then
+            echo "Tag ${{ steps.meta.outputs.VER }} already exists on origin"; exit 1
           fi
-          git tag "$SRC"
-          git push origin "refs/tags/$SRC"
 
-      - name: Check out the source tag
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.meta.outputs.SRC_TAG }}
-          fetch-depth: 0
-
-      # Setup
+      # Build (Node)
       - name: Use Node.js from .nvmrc
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
 
-      # Build
       - name: Install JS deps
         run: npm ci
 
       - name: Build styles and scripts
         run: npm run build
 
+      # Build (PHP deps)
       - name: Install PHP deps (no-dev) for bundling
         run: composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader --classmap-authoritative
 
       # Assemble Dist Tree
-      - name: Assemble clean dist tree (via .gitattributes)
+      - name: Assemble clean dist tree
         run: |
+          set -euo pipefail
           rm -rf dist && mkdir dist
-          # Export tracked files respecting .gitattributes
+          # 1) start from tracked files filtered by .gitattributes export-ignore
           git archive --format=tar HEAD | tar -x -C dist
-          
-          # Copy over build and vendor
-          for dir in build vendor; do
-            [ -d "$dir" ] && rsync -a "$dir/" "dist/$dir/"
-          done
+          # 2) add generated artifacts not tracked in git
+          [ -d build ]  && rsync -a build/  dist/build/
+          [ -d vendor ] && rsync -a vendor/ dist/vendor/
 
+      # Create orphan dist commit, tag, push tag
       - name: Create orphan dist commit and final tag
         run: |
+          set -euo pipefail
           VER="${{ steps.meta.outputs.VER }}"
           git switch --orphan "dist/${VER}"
           git rm -rf . >/dev/null 2>&1 || true
           git clean -fdx
-          cp -R dist/* .
+          cp -R dist/. .
           rm -rf dist
 
           git add -A
@@ -115,10 +105,10 @@ jobs:
       # Attach a ZIP asset for direct download
       - name: Create ZIP asset
         run: |
-          zip -r "millicache-${{ steps.meta.outputs.VER }}.zip" .
-        working-directory: .
+          zip -rq "millicache-${{ steps.meta.outputs.VER }}.zip" .
+        working-directory: ./dist
 
-      - name: Publish GitHub Release for final tag
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.VER }}
