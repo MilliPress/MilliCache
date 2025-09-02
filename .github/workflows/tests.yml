@@ -1,4 +1,4 @@
-name: Playwright + Performance
+name: E2E- & Performance-Tests
 
 on:
   pull_request:
