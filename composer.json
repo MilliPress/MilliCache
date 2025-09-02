@@ -1,0 +1,90 @@
+{
+    "name": "millipress/millicache",
+    "description": "The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any alternative.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Philipp Wellmer",
+            "email": "hello@millipress.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "predis/predis": "^2.2",
+        "wp-coding-standards/wpcs": "^3.0",
+        "phpcompatibility/phpcompatibility-wp": "*",
+        "php-stubs/wp-cli-stubs": "^2.10",
+        "phpstan/phpstan": "@stable",
+        "phpstan/extension-installer": "^1.3",
+        "phpstan/phpstan-deprecation-rules": "^1.1",
+        "szepeviktor/phpstan-wordpress": "^1.3",
+        "swissspidy/phpstan-no-private": "^0.2.0",
+        "roave/security-advisories": "dev-latest",
+        "coenjacobs/mozart": "^0.7.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "MilliCache\\": "src/"
+        }
+    },
+    "suggest": {
+        "ext-zlib": "Allows MilliCache to compress the cache with zlib."
+    },
+    "scripts": {
+        "test": "composer fix && composer lint && composer phpstan",
+        "phpstan": "phpstan analyse -c phpstan.neon --memory-limit 1G",
+        "lint": "phpcs --standard=phpcs.xml -s",
+        "fix": "phpcbf --standard=phpcs.xml",
+        "post-install-cmd": [
+            "@mozart-if-present",
+            "composer dump-autoload"
+        ],
+        "post-update-cmd": [
+            "@mozart-if-present",
+            "composer dump-autoload"
+        ],
+        "mozart-if-present": [
+            "bash -c \"if [ -f 'vendor/bin/mozart' ]; then vendor/bin/mozart compose; fi\""
+        ],
+        "cghooks": [
+            "vendor/bin/cghooks"
+        ]
+    },
+    "config": {
+        "vendor-dir": "vendor",
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "extra": {
+        "mozart": {
+            "dep_namespace": "MilliCache\\Deps\\",
+            "dep_directory": "/src/Deps/",
+            "classmap_directory": "/classes/",
+            "classmap_prefix": "MilliCache_",
+            "packages": [
+                "predis/predis"
+            ]
+        },
+        "hooks": {
+            "config": {
+                "stop-on-failure": ["pre-push"]
+            },
+            "pre-commit": [
+                "echo committing as $(git config user.name)",
+                "composer test"
+            ],
+            "pre-push": [
+                "composer validate --no-check-all --no-check-publish",
+                "composer test"
+            ],
+            "post-merge": [
+                "composer install"
+            ]
+        }
+    }
+}
