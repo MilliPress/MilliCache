@@ -100,7 +100,7 @@ jobs:
       
           # Remove tracked AND untracked/ignored files from the worktree
           git rm -rf . >/dev/null 2>&1 || true
-          git clean -xfd
+          git clean -xfd 
 
           # Remove node_modules and .git before syncing
           rm -rf node_modules .git
