@@ -71,6 +71,9 @@ jobs:
       - name: Build styles and scripts
         run: npm run build
 
+      - name: Clean up node_modules
+        run: rm -rf node_modules
+
       # Build (PHP deps)
       - name: Install PHP deps (no-dev) for bundling
         run: composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader --classmap-authoritative
@@ -87,6 +90,9 @@ jobs:
           # 2) add generated artifacts not tracked in git
           [ -d build ]  && rsync -a build/  dist/build/
           [ -d vendor ] && rsync -a vendor/ dist/vendor/
+          
+          # 3) Output folder and file list of the assembled dist tree
+          echo "Dist tree:" && find dist -type f -printf '%P\n' | sort
 
       # Create orphan dist commit, tag, push tag
       - name: Create orphan dist commit and final tag
@@ -96,29 +102,23 @@ jobs:
           
           # Create an orphan branch (empty index/history)
           git switch --orphan "dist/${VER}"
-      
-          # Remove tracked AND untracked/ignored files from the worktree
+
+          # Only keep the files from the dist directory
           git rm -rf . >/dev/null 2>&1 || true
-          git clean -fdx -e dist
-
-          # copy dist → working tree, including dotfiles, excluding node_modules (double safety)
-          shopt -s dotglob
-          rsync -a --delete --exclude='node_modules' dist/ .
-      
-          rm -rf dist
-
+          rsync -a dist/ .  # Copy ONLY dist files to the orphan branch
+          
+          # Add these files and commit
           git add -A
           git commit -m "Dist build for ${VER}"
-      
-          # Annotated release tag on the dist commit
+          
+          # Create and push an annotated tag
           git tag -a "${VER}" -m "Release ${VER}"
           git push origin "refs/tags/${VER}"
 
-      # Attach a ZIP asset for direct download
       - name: Create ZIP asset
         run: |
           zip -rq "millicache-${{ steps.meta.outputs.VER }}.zip" .
-        working-directory: .
+        working-directory: ./dist
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
