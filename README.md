@@ -137,7 +137,6 @@ define('MC_STORAGE_PORT', 6379);
 | `MC_CACHE_NOCACHE_COOKIES`       | Cookies which avoid caching                          | `['comment_author']`   |
 | `MC_CACHE_IGNORE_COOKIES`        | Cookies that are ignored/stripped from the request   | `[]`                   |
 | `MC_CACHE_IGNORE_REQUEST_KEYS`   | Request keys that are ignored                        | `['_*', 'utm_*', ...]` |
-| `MC_CACHE_SHOULD_CACHE_CALLBACK` | External callback to append custom cache conditions  | `''`                   |
 | `MC_CACHE_UNIQUE`                | Variables that make the request & cache entry unique | `[]`                   |
 
 > [!NOTE]
