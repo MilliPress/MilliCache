@@ -150,8 +150,25 @@ class RestAPI {
 	 */
 	public function perform_cache_action( \WP_REST_Request $request ) {
 		$action = $request->get_param( 'action' );
+
+		/**
+		 * Filters allowed REST cache actions.
+		 *
+		 * This filter lets you modify the list of permitted cache actions
+		 * for the MilliCache REST API endpoints.
+		 *
+		 * Default actions:
+		 *  - 'clear' Clear all cache.
+		 *  - 'clear_current' Clear the current view cache.
+		 *  - 'clear_targets' Clear by targets (post IDs, URLs, flags).
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param string[] $allowed_actions Array of allowed REST cache action slugs.
+		 * @return string[] Modified array of allowed REST cache actions.
+		 */
 		$allowed_actions = apply_filters(
-			'millicache_rest_allowed_cache_actions',
+			'millicache_rest_cache_allowed_actions',
 			array(
 				'clear',          // Clear all cache.
 				'clear_current',  // Clear the current view cache.
@@ -247,7 +264,7 @@ class RestAPI {
 			 * @param array  $params The parameters passed to the action.
 			 * @param \WP_REST_Request $request The REST API request object.
 			 */
-			do_action( 'millicache_rest_perform_cache_action', $action, $request->get_params(), $request );
+			do_action( 'millicache_rest_cache_action_performed', $action, $request->get_params(), $request );
 
 			return rest_ensure_response(
 				array(
@@ -279,8 +296,24 @@ class RestAPI {
 	 */
 	public function perform_settings_action( \WP_REST_Request $request ) {
 		$action = $request->get_param( 'action' );
+
+		/**
+		 * Filters the allowed settings actions in the MilliCache REST API.
+		 *
+		 * This filter controls which actions can be triggered via the REST endpoint
+		 * for plugin settings (e.g., resetting or restoring options).
+		 *
+		 * Default actions:
+		 *  - 'reset' Reset the settings to their default values.
+		 *  - 'restore' Restore previously saved settings (e.g., from backup).
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param string[] $allowed_actions Array of allowed REST settings action slugs.
+		 * @return string[] Modified list of allowed actions.
+		 */
 		$supported_actions = apply_filters(
-			'millicache_rest_allowed_settings_actions',
+			'millicache_rest_settings_allowed_actions',
 			array(
 				'reset',
 				'restore',
@@ -330,7 +363,7 @@ class RestAPI {
 		 * @param array  $params The parameters passed to the action.
 		 * @param \WP_REST_Request $request The REST API request object.
 		 */
-		do_action( 'millicache_rest_perform_settings_action', $action, $request->get_params(), $request );
+		do_action( 'millicache_rest_settings_action_performed', $action, $request->get_params(), $request );
 
 		return rest_ensure_response(
 			array(
@@ -356,8 +389,15 @@ class RestAPI {
 	public function get_status( \WP_REST_Request $request ): \WP_REST_Response {
 		try {
 			return new \WP_REST_Response(
+				/**
+				 * Filters the response payload of the MilliCache REST status endpoint at `/wp-json/millicache/v1/status`.
+				 *
+				 * @since 1.0.0
+				 *
+				 * @param array $status The MilliCache status summary.
+				 */
 				apply_filters(
-					'millicache_rest_status',
+					'millicache_rest_status_response',
 					array(
 						'plugin_name' => $this->plugin_name,
 						'version' => $this->version,

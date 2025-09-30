@@ -15,7 +15,7 @@ MilliCache provides a versatile and robust caching solution for all types of Wor
 
 > [!IMPORTANT]
 >
-> This plugin is currently in Release Candidate stage and approaching stable release.
+> This plugin is currently in the Release Candidate stage and approaching a stable release.
 > While suitable for testing in production-like environments, please exercise caution and
 > [report](https://github.com/MilliPress/MilliCache/issues/new) any problems you encounter.
 
@@ -32,7 +32,6 @@ MilliCache provides a versatile and robust caching solution for all types of Wor
 - [WP-CLI Commands](#wp-cli-commands)
 - [Debugging](#debugging)
 - [Hooks & Filters](#hooks--filters)
-- [Roadmap](#roadmap)
 - [Testing](#testing)
 
 ---
@@ -144,8 +143,8 @@ define('MC_STORAGE_PORT', 6379);
 
 ### Storage Server Connection Configuration
 
-| Constant              | Description                          | Default     |
-|-----------------------|--------------------------------------|-------------|
+| Constant                | Description                          | Default     |
+|-------------------------|--------------------------------------|-------------|
 | `MC_STORAGE_HOST`       | Storage Server Host                  | `127.0.0.1` |
 | `MC_STORAGE_PORT`       | Storage Server Port                  | `6379`      |
 | `MC_STORAGE_PASSWORD`   | Storage Server Password              | `''`        |
@@ -177,12 +176,14 @@ In this case, all entries might share a flag like `post:123`.
 
 **Cache flags allow you to:**
 
-- **Group related cache entries** under a common identifier.
+- **Identify cache entries**
 - **Assign multiple flags** to a cache entry for flexible grouping.
-- **Clear all related cache entries** at once by targeting a specific flag.
+- **Group entries logically** under a common identifier.
+- **Target cache entries for clearing** at once by targeting a specific flag. 
+- **Provide extension points** for custom flags from themes/plugins.
 
 For example, to clear all cache entries related to a specific post,
-you can use the flag `post:123` with [WP-CLI commands](#wp-cli-commands) or MilliCache's [clearing functions](#clearing-cache).
+you can use the flag `post:123` with [WP-CLI commands](#wp-cli-commands), the [Settings UI](#using-the-settings-ui) or MilliCache's [clearing functions](#clearing-cache).
 
 ### Built-in Flags
 
@@ -273,8 +274,8 @@ The MilliCache Settings UI provides a user-friendly way to clear cache:
 1. Navigate to `Settings -> MilliCache` in your WordPress admin
 2. In the "Cache Management" section:
    - Use "Clear All Cache" to remove all cached entries
-   - Use "Clear By Flag" to selectively clear cache by specific flags
-   - View the current cache statistics (size, entries count)
+   - Use "Clear By Flag" to selectively clear the cache by specific flags
+   - View the current cache statistics (size, entry count)
 
 This interface makes it easy to manage cache without writing code or running CLI commands.
 
@@ -423,7 +424,7 @@ Decide whether to expire or delete cache entries based on your requirements and 
   Example usage:
 
   ```php
-  // Clear cache for multiple types of targets at once
+  // Clear cache for multiple types of targets, such as post-IDs, flags, or URLs.
   \MilliCache\Engine::clear_cache_by_targets([
       'home',                             // Treated as a flag
       'post:123',                         // Treated as a flag
@@ -442,6 +443,14 @@ Decide whether to expire or delete cache entries based on your requirements and 
 ---
 
 ## WP-CLI Commands
+
+> [!NOTE]
+>
+> WP-CLI is not context-aware of the current site in a multisite installation.
+> Therefore, when using flags in a multisite setup, 
+> you must explicitly include the site ID as a prefix (e.g., `1:home` for site ID 1).
+> If you're running multiple networks and issuing site-specific commands, 
+> you must also include the network ID (e.g., `1:2:home` for network ID 1 and site ID 2).
 
 ### Get Stats
 
@@ -508,23 +517,55 @@ add_filter(`millicache_should_cache_request`, function( $should_cache ) {
 });
 ```
 
-### `millicache_custom_flags`
+### `millicache_flags_for_request`
 
-Add custom flags to the cache entries.
+Filter to **add additional cache flags** when creating a cache entry for the current request.
+These flags are stored alongside the cache and determine when and how it can be targeted & invalidated.
+This hook runs with WordPress fully loaded, so you may use conditional logic based on user roles, templates, queries, etc.
 
 ```php
-add_filter('millicache_custom_flags', function( $flags ) {
-    $flags[] = 'my-custom-tag';
+add_filter('millicache_flags_for_request', function( $flags ) {
+    // Add a flag if a specific block is used.
+    if ( is_singular() ) {
+		$post = get_post();
+
+		if ( has_block( 'plugin/slider', $post ) ) {
+			$flags[] = 'has_slider';
+		}
+	}
+
     return $flags;
 });
 ```
 
-### `millicache_clear_site_hooks`
+### `millicache_flags_related_to_post`
 
-Filter the hooks that clear the full cache.
+Filters the list of cache flags that are considered related to a specific post.
+This hook is used during invalidation (e.g., when a post is updated or deleted) to determine which cache entries should be cleared.
+The returned flags are not saved, only used for lookups during cache clearing operations.
 
 ```php
-add_filter('millicache_clear_site_hooks', function( $hooks ) {
+add_filter('millicache_flags_related_to_post', function( $flags, $post ) {
+    // If the post is of the type 'my_cpt'
+    if ( $post->post_type === 'my_cpt' ) {
+        // All entries with the 'cpt:my_cpt' flag are related and should be cleared
+        $flags[] = 'cpt:' . get_post_type();
+    }
+
+    return $flags;
+});
+```
+
+### `millicache_settings_clear_site_hooks`
+
+Filters the list of action hooks that trigger a **full site cache clear**.
+When one of these hooks is fired anywhere in your codebase,
+MilliCache will automatically clear the cache for the current site.
+
+The array key is the **hook name**, and the value is the **priority** at which MilliCache should attach its clearing logic.
+
+```php
+add_filter('millicache_settings_clear_site_hooks', function( $hooks ) {
     
     // Add a custom hook with priority that clears the cache
     $hooks['my_custom_hook'] = 10;
@@ -533,18 +574,30 @@ add_filter('millicache_clear_site_hooks', function( $hooks ) {
 });
 ```
 
-### `millicache_clear_site_options`
+Example: `do_action( 'my_custom_hook' );`
 
-Filter the site options that will clear the full cache whenever changed.
+### `millicache_settings_clear_site_options`
+
+Filters the list of ***site options*** that trigger a ***full site cache clear*** when their value changes.
+
+This is useful for ensuring that updates to critical settings — such as theme options, layout toggles, or feature flags — automatically invalidate the cache.
+
+Each option name in the array refers to a ***top-level option*** stored via `update_option()` or the Settings API.
 
 ```php
-add_filter('millicache_clear_site_options', function( $options ) {
+add_filter('millicache_settings_clear_site_options', function( $options ) {
     
     // Add a site option that clears the cache
     $options[] = 'my_custom_option';
     
     return $options;
 });
+```
+
+Example:
+```php
+update_option( 'my_custom_option', 'new_value' );
+// → MilliCache detects this change and clears the full cache for the current site
 ```
 
 ---

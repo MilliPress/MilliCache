@@ -103,11 +103,12 @@ final class Storage {
 	/**
 	 * Initialize the class and set its properties.
 	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
 	 * @param array<mixed> $settings The settings for the storage server connection.
 	 *
 	 * @return void
-	 * @since    1.0.0
-	 * @access   public
 	 */
 	public function __construct( array $settings ) {
 		$this->config( $settings );
@@ -323,7 +324,7 @@ final class Storage {
 			 * @param array  $flags The flags associated with the cache.
 			 * @param mixed  $data The data to cache.
 			 */
-			do_action( 'millicache_before_page_cache_stored', $hash, $key, $flags, $data );
+			do_action( 'millicache_cache_storing', $hash, $key, $flags, $data );
 
 			// Serialize the data and calculate its size.
 			$serialized_data = serialize( $data );
@@ -368,7 +369,7 @@ final class Storage {
 			 * @param array  $flags The flags associated with the cache.
 			 * @param mixed  $data The data to cache.
 			 */
-			do_action( 'millicache_after_page_cache_stored', $hash, $key, $flags, $data );
+			do_action( 'millicache_cache_stored', $hash, $key, $flags, $data );
 
 			return true;
 		} catch ( PredisException $e ) {
@@ -405,7 +406,7 @@ final class Storage {
 			 * @param string $key The cache key.
 			 * @param array  $flags The flags associated with the cache.
 			 */
-			do_action( 'millicache_before_page_cache_deleted', $hash, $key, $flags );
+			do_action( 'millicache_cache_deleting', $hash, $key, $flags );
 
 			$this->client->transaction(
 				function ( $tx ) use ( $key, $flags ) {
@@ -438,7 +439,7 @@ final class Storage {
 			 * @param string $key The cache key.
 			 * @param array  $flags The flags associated with the cache.
 			 */
-			do_action( 'millicache_after_page_cache_deleted', $hash, $key, $flags );
+			do_action( 'millicache_cache_deleted', $hash, $key, $flags );
 
 			return true;
 		} catch ( PredisException $e ) {
@@ -624,7 +625,7 @@ final class Storage {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param string $flag The cache flag. Supports wildcards.
+	 * @param string $flag The cache flag. Wildcards supported.
 	 * @return array<string> The cache keys associated with the flag.
 	 */
 	public function get_cache_keys_by_flag( string $flag ): array {

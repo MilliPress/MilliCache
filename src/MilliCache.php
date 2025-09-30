@@ -303,13 +303,17 @@ final class MilliCache {
 		}
 
 		/**
-		 * Filter for custom cache flags.
+		 * Filter to add additional cache flags for the current request.
+		 *
+		 * These flags are stored alongside the cache and determine when and how it can be targeted & invalidated.
+		 * This hook runs with WordPress fully loaded, so you may use conditional logic based on user roles, templates, queries, etc.
 		 * Note: Don't use this too excessively, as it will increase the cache size.
 		 *
 		 * @since 1.0.0
+		 *
 		 * @param array $custom_flags The custom flags.
 		 */
-		$custom_flags = apply_filters( 'millicache_custom_flags', array() );
+		$custom_flags = apply_filters( 'millicache_flags_for_request', array() );
 		if ( is_array( $custom_flags ) && ! empty( $custom_flags ) ) {
 			foreach ( $custom_flags as $flag ) {
 				$this->engine->add_flag( $flag );
@@ -377,12 +381,17 @@ final class MilliCache {
 		}
 
 		/**
-		 * Filter to add custom related flags for a post.
+		 * Filters the list of cache flags that are considered related to a specific post.
+		 *
+		 * This hook is used during invalidation (e.g., when a post is updated or deleted) to determine which cache entries should be cleared.
+		 * The returned flags are not saved, only used for lookups during cache clearing operations.
+		 *
+		 * @since 1.0.0
 		 *
 		 * @param array    $flags The generated cache flags.
-		 * @param \WP_Post  $post  The post-object.
+		 * @param \WP_Post  $post The post-object.
 		 */
-		return array_unique( apply_filters( 'millicache_post_related_flags', $flags, $post ) );
+		return array_unique( apply_filters( 'millicache_flags_related_to_post', $flags, $post ) );
 	}
 
 	/**
@@ -444,10 +453,11 @@ final class MilliCache {
 		 *
 		 * @since 1.0.0
 		 *
+		 * @hook millicache_settings_clear_site_hooks - Filter for hooks that clear site cache.
 		 * @param array<string, int> $hooks The hooks and priority that clear the full cache.
 		 */
 		return apply_filters(
-			'millicache_clear_site_hooks',
+			'millicache_settings_clear_site_hooks',
 			array(
 				'save_post_wp_template_part' => 10,
 				'save_post_wp_global_styles' => 10,
@@ -480,7 +490,7 @@ final class MilliCache {
 		 * @param array $hooks The hooks and priority that clear the full cache.
 		 */
 		$options = apply_filters(
-			'millicache_clear_site_options',
+			'millicache_settings_clear_site_options',
 			array(
 				// wp-admin/options-general.php.
 				'blogname',

@@ -96,6 +96,14 @@ class Settings {
 	 * @return array<array<bool|float|int|string|null|array<mixed>>> The default settings.
 	 */
 	public function get_default_settings( ?string $module = null ): array {
+
+		/**
+		 * Filters the default settings for the plugin.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param array $defaults MilliCache default settings.
+		 */
 		$defaults = apply_filters(
 			'millicache_settings_defaults',
 			array(

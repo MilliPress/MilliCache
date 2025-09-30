@@ -609,7 +609,7 @@ final class Engine {
 		}
 
 		/**
-		 * Filter whether to cache this request.
+		 * Filters whether to cache this request.
 		 * Return true to proceed with caching, or false to skip caching.
 		 *
 		 * @since 1.0.0
@@ -989,14 +989,14 @@ final class Engine {
 		);
 
 		/**
-		 * Clear cache by post-ids action.
+		 * Fires after cache cleared by post-IDs.
 		 *
 		 * @since 1.0.0
 		 *
-		 * @param array $post_ids The post-IDs to expire.
+		 * @param array $post_ids The post-IDs to clear.
 		 * @param bool  $expire Expire cache if set to true, or delete by default.
 		 */
-		do_action( 'millicache_cleared_by_post_ids', $post_ids, $expire );
+		do_action( 'millicache_cache_cleared_by_posts', $post_ids, $expire );
 	}
 
 	/**
@@ -1023,13 +1023,14 @@ final class Engine {
 		$expire ? array_push( self::$flags_expire, ...$flags ) : array_push( self::$flags_delete, ...$flags );
 
 		/**
-		 * Clear cache by flags action.
+		 * Fires after cache cleared by flags.
 		 *
 		 * @since 1.0.0
-		 * @param array $flags The flags to expire.
+		 *
+		 * @param array $flags The flags to clear.
 		 * @param bool  $expire Expire cache if set to true, or delete by default.
 		 */
-		do_action( 'millicache_cleared_by_flags', $flags, $expire );
+		do_action( 'millicache_cache_cleared_by_flags', $flags, $expire );
 	}
 
 	/**
@@ -1060,15 +1061,15 @@ final class Engine {
 		);
 
 		/**
-		 * Clear cache by site ids action.
+		 * Fires after cache cleared by site-IDs.
 		 *
 		 * @since 1.0.0
 		 *
-		 * @param array     $site_ids The site IDs to expire.
+		 * @param array     $site_ids   The site IDs to expire.
 		 * @param int|null  $network_id The network ID.
-		 * @param bool      $expire Expire cache if set to true, or delete by default.
+		 * @param bool      $expire     Expire cache if set to true, or delete by default.
 		 */
-		do_action( 'millicache_cleared_by_site_ids', $site_ids, $network_id, $expire );
+		do_action( 'millicache_cache_cleared_by_sites', $site_ids, $network_id, $expire );
 	}
 
 	/**
@@ -1088,7 +1089,14 @@ final class Engine {
 			self::clear_cache_by_site_ids( $site_id, $network_id, $expire );
 		}
 
-		// Clear cache action.
+		/**
+		 * Fires after cache cleared by network-ID.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param int|null $network_id The network ID.
+		 * @param bool     $expire Expire cache if set to true, or delete by default.
+		 */
 		do_action( 'millicache_cleared_by_network_id', $network_id, $expire );
 	}
 
@@ -1106,8 +1114,14 @@ final class Engine {
 			self::clear_cache_by_network_id( $network_id, $expire );
 		}
 
-		// Clear cache action.
-		do_action( 'millicache_cleared', $expire );
+		/**
+		 * Fires after all cache cleared.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param bool $expire Expire cache if set to true, or delete by default.
+		 */
+		do_action( 'millicache_cache_cleared', $expire );
 	}
 
 	/**
