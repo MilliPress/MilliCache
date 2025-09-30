@@ -566,4 +566,24 @@ final class MilliCache {
 		$storage = Engine::get_storage();
 		$storage->cleanup_expired_flags();
 	}
+
+	/**
+	 * Get the capability required for cache clearing.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return string The capability required to clear the cache.
+	 */
+	public static function get_clear_cache_capability(): string {
+
+		/**
+		 * Filters the capability required to clear the cache.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param string $capability The capability required to clear the cache. Default 'publish_pages'.
+		 */
+		return apply_filters( 'millicache_clear_cache_capability', 'publish_pages' );
+	}
 }

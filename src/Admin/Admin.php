@@ -13,6 +13,7 @@ namespace MilliCache\Admin;
 
 use MilliCache\Core\Loader;
 use MilliCache\Engine;
+use MilliCache\MilliCache;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -326,10 +327,18 @@ class Admin {
 	 */
 	public static function add_dashboard_glance_cache_size(): void {
 		printf(
-			'<li class="cache-count"><a title="%s" href="%s">%s</a></li>',
-			esc_attr__( 'Cache Settings', 'millicache' ),
-			esc_url( admin_url( 'options-general.php?page=millicache' ) ),
-			esc_html( self::get_cache_size_summary_string() )
+			'<li class="cache-count">%s</li>',
+			current_user_can( 'manage_options' )
+				? sprintf(
+					'<a title="%s" href="%s">%s</a>',
+					esc_attr__( 'Cache Settings', 'millicache' ),
+					esc_url( admin_url( 'options-general.php?page=millicache' ) ),
+					esc_html( self::get_cache_size_summary_string() )
+				)
+				: sprintf(
+					'<span>%s</span>',
+					esc_html( self::get_cache_size_summary_string() )
+				)
 		);
 	}
 

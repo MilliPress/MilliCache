@@ -14,6 +14,7 @@ namespace MilliCache\Admin;
 use MilliCache\Core\Loader;
 use MilliCache\Core\Settings;
 use MilliCache\Engine;
+use MilliCache\MilliCache;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -107,7 +108,7 @@ class RestAPI {
 				'methods' => \WP_REST_Server::CREATABLE,
 				'callback' => array( $this, 'perform_cache_action' ),
 				'permission_callback' => function () {
-					return current_user_can( 'manage_options' );
+					return current_user_can( MilliCache::get_clear_cache_capability() );
 				},
 			)
 		);

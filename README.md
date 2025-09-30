@@ -32,6 +32,7 @@ MilliCache provides a versatile and robust caching solution for all types of Wor
 - [WP-CLI Commands](#wp-cli-commands)
 - [Debugging](#debugging)
 - [Hooks & Filters](#hooks--filters)
+- [User Capability Management](#user-capability-management)
 - [Testing](#testing)
 
 ---
@@ -599,6 +600,37 @@ Example:
 update_option( 'my_custom_option', 'new_value' );
 // → MilliCache detects this change and clears the full cache for the current site
 ```
+
+### User Capability Management
+
+MilliCache provides a filter hook to customize which user capability is required for cache clearing operations. 
+This allows you to control who can clear cache based on your site's specific needs, 
+while settings access remains restricted to administrators for security.
+
+#### `millicache_clear_cache_capability`
+
+Controls the capability required to clear cache via admin bar and REST API endpoints.
+
+```php
+add_filter('millicache_clear_cache_capability', function( $capability ) {
+    // Allow authors to clear cache (default: 'publish_pages' for editors)
+    return 'publish_posts';
+});
+```
+
+**Default:** `'publish_pages'` (Editor role and above)
+
+**Applied to:**
+- Admin bar cache clearing menu
+- REST API `/wp-json/millicache/v1/cache` endpoint
+
+#### Settings Access
+
+Settings access is always restricted to the `'manage_options'` capability (Administrator role and above) for security reasons. 
+This ensures that only administrators can:
+- Access the MilliCache settings page in WordPress admin
+- Use the REST API `/wp-json/millicache/v1/settings` endpoint
+- Use the REST API `/wp-json/millicache/v1/status` endpoint
 
 ---
 

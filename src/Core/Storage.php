@@ -789,7 +789,7 @@ final class Storage {
 				);
 			}
 
-			$valid_sizes = array_filter($sizes, 'is_numeric');
+			$valid_sizes = array_filter( $sizes, 'is_numeric' );
 
 			return array(
 				'index' => count( $valid_sizes ),

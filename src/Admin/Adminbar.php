@@ -97,7 +97,7 @@ class Adminbar {
 	 * @return void
 	 */
 	public function add_adminbar_menu( \WP_Admin_Bar $wp_admin_bar ) {
-		if ( ! is_admin_bar_showing() || ! current_user_can( 'manage_options' ) ) {
+		if ( ! is_admin_bar_showing() || ! current_user_can( MilliCache::get_clear_cache_capability() ) ) {
 			return;
 		}
 
@@ -171,25 +171,27 @@ class Adminbar {
 			)
 		);
 
-		// Add a secondary group.
-		$wp_admin_bar->add_group(
-			array(
-				'parent' => 'millicache',
-				'id'     => 'millicache-secondary',
-				'meta'   => array(
-					'class' => 'ab-sub-secondary',
-				),
-			)
-		);
+		if ( current_user_can( 'manage_options' ) ) {
+			// Add a secondary group.
+			$wp_admin_bar->add_group(
+				array(
+					'parent' => 'millicache',
+					'id'     => 'millicache-secondary',
+					'meta'   => array(
+						'class' => 'ab-sub-secondary',
+					),
+				)
+			);
 
-		// Add the "Settings" menu with cache size.
-		$wp_admin_bar->add_menu(
-			array(
-				'parent' => 'millicache-secondary',
-				'id'     => 'millicache-settings',
-				'href'   => admin_url( 'options-general.php?page=millicache' ),
-				'title'  => Admin::get_cache_size_summary_string(),
-			)
-		);
+			// Add the "Settings" menu with cache size.
+			$wp_admin_bar->add_menu(
+				array(
+					'parent' => 'millicache-secondary',
+					'id' => 'millicache-settings',
+					'href' => admin_url( 'options-general.php?page=millicache' ),
+					'title' => Admin::get_cache_size_summary_string(),
+				)
+			);
+		}
 	}
 }
