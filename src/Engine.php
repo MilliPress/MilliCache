@@ -367,7 +367,7 @@ final class Engine {
 					self::start_buffer();
 				}
 			},
-			-100
+			100
 		);
 	}
 
