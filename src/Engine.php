@@ -544,6 +544,7 @@ final class Engine {
 			foreach ( $nocache_cookies as $pattern ) {
 				if ( self::pattern_match( strtolower( $name ), $pattern ) ) {
 					self::set_header( 'Status', 'bypass' );
+					self::set_reason( "Matches no-cache cookie pattern '$pattern'" );
 					return false;
 				}
 			}
@@ -555,6 +556,7 @@ final class Engine {
 			foreach ( self::$nocache_paths as $nocache_path ) {
 				if ( self::pattern_match( $current_path, $nocache_path ) ) {
 					self::set_header( 'Status', 'bypass' );
+					self::set_reason( "Matches no-cache path pattern '$nocache_path'" );
 					return false;
 				}
 			}
@@ -562,19 +564,20 @@ final class Engine {
 
 		// Run MilliCache if all conditions are met.
 		$conditions = array(
-			defined( 'WP_CACHE' ) && WP_CACHE, // Caching is enabled.
-			! ( defined( 'REST_REQUEST' ) && REST_REQUEST ), // No REST request.
-			! ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ), // No XML-RPC request.
-			! preg_match( '/\.[a-z0-9]+($|\?)/i', self::get_server_var( 'REQUEST_URI' ) ), // No files.
-			! strpos( self::get_server_var( 'REQUEST_URI' ), 'wp-json' ), // No WP-API requests.
-			php_sapi_name() !== 'cli' && ( ! defined( 'WP_CLI' ) || WP_CLI !== true ), // No CLI request.
-			in_array( strtolower( self::get_server_var( 'REQUEST_METHOD' ) ), array( 'get', 'head' ) ), // Only GET and HEAD requests.
-			self::$ttl > 0, // TTL is set.
+			'WP_CACHE not enabled' => fn() => defined( 'WP_CACHE' ) && WP_CACHE,
+			'REST request' => fn() => ! defined( 'REST_REQUEST' ) || ! REST_REQUEST,
+			'XML-RPC request' => fn() => ! defined( 'XMLRPC_REQUEST' ) || ! XMLRPC_REQUEST,
+			'File request' => fn() => ! preg_match( '/\.[a-z0-9]+($|\?)/i', self::get_server_var( 'REQUEST_URI' ) ),
+			'WP-JSON request' => fn() => strpos( self::get_server_var( 'REQUEST_URI' ), 'wp-json' ) === false,
+			'CLI request' => fn() => php_sapi_name() !== 'cli' && ( ! defined( 'WP_CLI' ) || WP_CLI !== true ),
+			'Non-GET/HEAD request' => fn() => in_array( strtolower( self::get_server_var( 'REQUEST_METHOD' ) ), array( 'get', 'head' ) ),
+			'TTL not set' => fn() => self::$ttl > 0,
 		);
 
-		foreach ( $conditions as $condition ) {
-			if ( ! $condition ) {
+		foreach ( $conditions as $reason => $validator ) {
+			if ( ! $validator() ) {
 				self::set_header( 'Status', 'bypass' );
+				self::set_reason( $reason );
 				return false;
 			}
 		}
@@ -595,15 +598,16 @@ final class Engine {
 		$should_cache = true;
 
 		$wp_skip_conditions = array(
-			200 !== http_response_code(),                               // Only cache 200 OK responses.
-			defined( 'DOING_CRON' ) && DOING_CRON,         // Do not cache cron requests.
-			defined( 'DOING_AJAX' ) && DOING_AJAX,         // Do not cache AJAX requests.
-			defined( 'DONOTCACHEPAGE' ) && DONOTCACHEPAGE, // Do not cache if DONOTCACHEPAGE is defined.
+			'Non-200 response' => fn() => http_response_code() === 200,
+			'Cron request' => fn() => ! defined( 'DOING_CRON' ) || ! DOING_CRON,
+			'AJAX request' => fn() => ! defined( 'DOING_AJAX' ) || ! DOING_AJAX,
+			'DONOTCACHEPAGE constant' => fn() => ! defined( 'DONOTCACHEPAGE' ) || ! DONOTCACHEPAGE,
 		);
 
-		foreach ( $wp_skip_conditions as $condition ) {
-			if ( $condition ) {
+		foreach ( $wp_skip_conditions as $reason => $validator ) {
+			if ( ! $validator() ) {
 				$should_cache = false;
+				self::set_reason( $reason );
 				break;
 			}
 		}
@@ -614,10 +618,12 @@ final class Engine {
 		 *
 		 * @since 1.0.0
 		 *
-		 * @param bool $should_cache Whether the request should be cached.
+		 * @param bool   $should_cache Whether the request should be cached.
+		 * @param string $reason The reason for the cache decision.
 		 */
-		if ( ! apply_filters( 'millicache_should_cache_request', $should_cache ) ) {
+		if ( ! apply_filters( 'millicache_should_cache_request', $should_cache, $reason = '' ) ) {
 			self::set_header( 'Status', 'bypass' );
+			self::set_reason( $reason );
 			return false;
 		}
 
@@ -648,6 +654,7 @@ final class Engine {
 	private static function output_buffer( string $output ): ?string {
 		// Let's start optimistically.
 		$cache = true;
+		$reason = '';
 
 		// Prepare the data to store.
 		$data = array(
@@ -662,6 +669,7 @@ final class Engine {
 		// Don't cache 5xx errors.
 		if ( $data['status'] >= 500 ) {
 			$cache = false;
+			$reason = 'Server error response';
 		}
 
 		// Response: If a cookie is being set that is NOT in our ignore list, disable caching for this page.
@@ -690,6 +698,7 @@ final class Engine {
 
 					if ( ! $is_ignored ) {
 						$cache = false;
+						$reason = "Setting cookie: $cookie_key";
 						break 2;
 					}
 				}
@@ -719,6 +728,7 @@ final class Engine {
 			self::$storage->perform_cache( self::$request_hash, $data, $flags, $cache );
 		} else {
 			self::set_header( 'Status', 'bypass' );
+			self::set_reason( $reason );
 		}
 
 		// Return output, but not for the background task.
