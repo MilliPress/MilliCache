@@ -36,8 +36,7 @@
         "wp-content/plugins/wp-fastest-cache": "https://downloads.wordpress.org/plugin/wp-fastest-cache.zip",
         "wp-content/plugins/wp-super-cache": "https://downloads.wordpress.org/plugin/wp-super-cache.zip",
 
-        "wp-content/plugins/woocommerce": "https://downloads.wordpress.org/plugin/woocommerce.zip",
-        "wp-content/plugins/buddypress": "https://downloads.wordpress.org/plugin/buddypress.zip"
+        "wp-content/plugins/woocommerce": "https://downloads.wordpress.org/plugin/woocommerce.zip"
       }
     }
   }
