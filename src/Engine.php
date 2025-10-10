@@ -1270,6 +1270,21 @@ final class Engine {
 	}
 
 	/**
+	 * Set HTTP reason header for debugging.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @param string $value The reason header value.
+	 * @return void
+	 */
+	private static function set_reason( string $value ): void {
+		if ( self::$debug && ! empty( $value ) ) {
+			self::set_header( 'Reason', $value );
+		}
+	}
+
+	/**
 	 * Whether we can regenerate the request in the background.
 	 *
 	 * @since 1.0.0
