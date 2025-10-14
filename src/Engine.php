@@ -80,6 +80,16 @@ final class Engine {
 	public static int $ttl;
 
 	/**
+	 * Whether TTL has been manually set via set_ttl().
+	 *
+	 * @since 1.1.0
+	 * @access private
+	 *
+	 * @var bool If TTL was manually overridden.
+	 */
+	private static bool $ttl_overridden = false;
+
+	/**
 	 * Grace Period - Time after TTL expiration when stale content can still be served for background generation.
 	 *
 	 * @since 1.0.0
@@ -88,6 +98,16 @@ final class Engine {
 	 * @var int The time period a stale cache entry remains available.
 	 */
 	public static int $grace;
+
+	/**
+	 * Whether grace period has been manually set via set_grace().
+	 *
+	 * @since 1.1.0
+	 * @access private
+	 *
+	 * @var bool If grace was manually overridden.
+	 */
+	private static bool $grace_overridden = false;
 
 	/**
 	 * Variables that make the request unique.
@@ -438,6 +458,10 @@ final class Engine {
 		if ( is_array( $cache ) && ! empty( $cache ) ) {
 			$serve_cache = true;
 
+			// Use custom TTL/grace if stored, otherwise use current settings
+			$effective_ttl = $cache['custom_ttl'] ?? self::$ttl;
+			$effective_grace = $cache['custom_grace'] ?? self::$grace;
+
 			if ( self::$debug ) {
 				// RFC 1123 date format.
 				self::set_header( 'Time', gmdate( 'D, d M Y H:i:s \G\M\T', $cache['updated'] ) );
@@ -445,13 +469,13 @@ final class Engine {
 			}
 
 			// This entry is very old, delete it.
-			if ( $cache['updated'] + self::$ttl + self::$grace < time() ) {
+			if ( $cache['updated'] + $effective_ttl + $effective_grace < time() ) {
 				self::get_storage()->delete_cache( self::$request_hash );
 				$serve_cache = false;
 			}
 
 			// Is the cache stale?
-			$stale = $cache['updated'] + self::$ttl < time();
+			$stale = $cache['updated'] + $effective_ttl < time();
 
 			// Cache is outdated or set to expire.
 			if ( $stale && $serve_cache ) {
@@ -488,7 +512,7 @@ final class Engine {
 				self::set_header( 'Status', self::$fcgi_regenerate ? 'stale' : 'hit' );
 
 				if ( self::$debug ) {
-					$time_left = self::$ttl - ( time() - $cache['updated'] );
+					$time_left = $effective_ttl - ( time() - $cache['updated'] );
 					self::set_header(
 						'Expires',
 						sprintf(
@@ -665,6 +689,14 @@ final class Engine {
 			'debug' => self::$debug ? self::$debug_data : null,
 			'updated' => time(),
 		);
+
+		// Only store custom TTL/grace if explicitly set by rules
+		if ( self::$ttl_overridden ) {
+			$data['custom_ttl'] = self::$ttl;
+		}
+		if ( self::$grace_overridden ) {
+			$data['custom_grace'] = self::$grace;
+		}
 
 		// Don't cache 5xx errors.
 		if ( $data['status'] >= 500 ) {
