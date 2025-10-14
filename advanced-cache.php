@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $engine_path = dirname( is_link( __FILE__ ) ? (string) readlink( __FILE__ ) : __FILE__ );
-$engine_file = realpath( $engine_path . '/includes/Engine.php' );
+$engine_file = realpath( $engine_path . '/src/Engine.php' );
 
 if ( file_exists( (string) $engine_file ) ) {
 	require_once $engine_file;

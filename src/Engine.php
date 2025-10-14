@@ -295,7 +295,7 @@ final class Engine {
 			 * The MilliPress Settings class.
 			 */
 			if ( ! class_exists( 'MilliCache\Core\Settings' ) ) {
-				require_once __DIR__ . '/Settings.php';
+				require_once __DIR__ . '/Core/Settings.php';
 			}
 
 			self::$settings_instance = new Settings();
