@@ -85,6 +85,15 @@ register_deactivation_hook( MILLICACHE_FILE, 'deactivate_millicache' );
 function run_millicache() {
 	$plugin = new MilliCache\MilliCache();
 	$plugin->run();
+
+	/**
+	 * Fires when MilliCache is fully loaded and ready.
+	 *
+	 * Use this hook to register custom rules, conditions, and actions.
+	 *
+	 * @since 1.1.0
+	 */
+	do_action( 'millicache_loaded' );
 }
 
 run_millicache();

@@ -9,7 +9,6 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
  */
 
 namespace MilliCache;
@@ -31,7 +30,6 @@ use MilliCache\Core\Loader;
  *
  * @since      1.0.0
  * @package    MilliCache
- * @subpackage MilliCache/includes
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class MilliCache {

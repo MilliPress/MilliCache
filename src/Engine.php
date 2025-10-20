@@ -6,7 +6,6 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
  */
 
 namespace MilliCache;
@@ -24,7 +23,6 @@ use MilliCache\Core\Settings;
  *
  * @since      1.0.0
  * @package    MilliCache
- * @subpackage MilliCache/includes
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class Engine {
@@ -100,7 +98,7 @@ final class Engine {
 	public static int $grace;
 
 	/**
-	 * Whether grace period has been manually set via set_grace().
+	 * Whether a grace period has been manually set via set_grace().
 	 *
 	 * @since 1.1.0
 	 * @access private
@@ -222,6 +220,16 @@ final class Engine {
 	 * @var array<string> Flags.
 	 */
 	private static array $flags = array();
+
+	/**
+	 * Cache decision override from rules.
+	 *
+	 * @since 1.1.0
+	 * @access private
+	 *
+	 * @var array<string, string>|null Cache decision with 'decision' and 'reason' keys.
+	 */
+	private static ?array $cache_decision = null;
 
 	/**
 	 * Flags to expire.
@@ -458,9 +466,10 @@ final class Engine {
 		if ( is_array( $cache ) && ! empty( $cache ) ) {
 			$serve_cache = true;
 
-			// Use custom TTL/grace if stored, otherwise use current settings
-			$effective_ttl = $cache['custom_ttl'] ?? self::$ttl;
-			$effective_grace = $cache['custom_grace'] ?? self::$grace;
+			// Use custom TTL/grace if stored, otherwise use current settings.
+			$effective_ttl = (int) ( $cache['custom_ttl'] ?? self::$ttl );
+			$effective_grace = (int) ( $cache['custom_grace'] ?? self::$grace );
+			$cache_updated = (int) ( $cache['updated'] ?? 0 );
 
 			if ( self::$debug ) {
 				// RFC 1123 date format.
@@ -469,13 +478,13 @@ final class Engine {
 			}
 
 			// This entry is very old, delete it.
-			if ( $cache['updated'] + $effective_ttl + $effective_grace < time() ) {
+			if ( $cache_updated + $effective_ttl + $effective_grace < time() ) {
 				self::get_storage()->delete_cache( self::$request_hash );
 				$serve_cache = false;
 			}
 
 			// Is the cache stale?
-			$stale = $cache['updated'] + $effective_ttl < time();
+			$stale = $cache_updated + $effective_ttl < time();
 
 			// Cache is outdated or set to expire.
 			if ( $stale && $serve_cache ) {
@@ -592,9 +601,9 @@ final class Engine {
 			'REST request' => fn() => ! defined( 'REST_REQUEST' ) || ! REST_REQUEST,
 			'XML-RPC request' => fn() => ! defined( 'XMLRPC_REQUEST' ) || ! XMLRPC_REQUEST,
 			'File request' => fn() => ! preg_match( '/\.[a-z0-9]+($|\?)/i', self::get_server_var( 'REQUEST_URI' ) ),
-			'WP-JSON request' => fn() => strpos( self::get_server_var( 'REQUEST_URI' ), 'wp-json' ) === false,
-			'CLI request' => fn() => php_sapi_name() !== 'cli' && ( ! defined( 'WP_CLI' ) || WP_CLI !== true ),
 			'Non-GET/HEAD request' => fn() => in_array( strtolower( self::get_server_var( 'REQUEST_METHOD' ) ), array( 'get', 'head' ) ),
+			'CLI request' => fn() => php_sapi_name() !== 'cli' && ( ! defined( 'WP_CLI' ) || WP_CLI !== true ),
+			'WP-JSON request' => fn() => strpos( self::get_server_var( 'REQUEST_URI' ), 'wp-json' ) === false,
 			'TTL not set' => fn() => self::$ttl > 0,
 		);
 
@@ -619,6 +628,19 @@ final class Engine {
 	 * @return bool True to cache, false to skip caching.
 	 */
 	private static function should_cache_request(): bool {
+		// Check if rules have made a cache decision.
+		$decision = self::get_cache_decision();
+
+		if ( $decision ) {
+			if ( ! $decision['decision'] ) {
+				self::set_header( 'Status', 'bypass' );
+				self::set_reason( $decision['reason'] ?? 'Rule action' );
+			}
+
+			return (bool) $decision['decision'];
+		}
+
+		// Otherwise, check if the request should be cached.
 		$should_cache = true;
 
 		$wp_skip_conditions = array(
@@ -690,10 +712,11 @@ final class Engine {
 			'updated' => time(),
 		);
 
-		// Only store custom TTL/grace if explicitly set by rules
+		// Only store custom TTL/grace if explicitly set by rules.
 		if ( self::$ttl_overridden ) {
 			$data['custom_ttl'] = self::$ttl;
 		}
+
 		if ( self::$grace_overridden ) {
 			$data['custom_grace'] = self::$grace;
 		}
@@ -1294,6 +1317,78 @@ final class Engine {
 	 */
 	public static function add_flag( string $flag ): void {
 		self::$flags[] = self::get_flag_prefix() . $flag;
+	}
+
+	/**
+	 * Remove a flag from the current request.
+	 *
+	 * @since 1.1.0
+	 * @access public
+	 *
+	 * @param string $flag The flag to remove.
+	 */
+	public static function remove_flag( string $flag ): void {
+		$prefixed_flag = self::get_flag_prefix() . $flag;
+		$key           = array_search( $prefixed_flag, self::$flags, true );
+
+		if ( false !== $key ) {
+			unset( self::$flags[ $key ] );
+			self::$flags = array_values( self::$flags ); // Re-index array.
+		}
+	}
+
+	/**
+	 * Set TTL for the current request.
+	 *
+	 * @since 1.1.0
+	 * @access public
+	 *
+	 * @param int $seconds TTL in seconds.
+	 */
+	public static function set_ttl( int $seconds ): void {
+		self::$ttl = $seconds;
+		self::$ttl_overridden = true;
+	}
+
+	/**
+	 * Set grace period for the current request.
+	 *
+	 * @since 1.1.0
+	 * @access public
+	 *
+	 * @param int $seconds Grace period in seconds.
+	 */
+	public static function set_grace( int $seconds ): void {
+		self::$grace = $seconds;
+		self::$grace_overridden = true;
+	}
+
+	/**
+	 * Override cache decision from rules.
+	 *
+	 * @since 1.1.0
+	 * @access public
+	 *
+	 * @param bool   $should_cache Whether to cache this request.
+	 * @param string $reason       Reason for the decision.
+	 */
+	public static function set_cache_decision( bool $should_cache, string $reason = '' ): void {
+		self::$cache_decision = array(
+			'decision' => $should_cache,
+			'reason'   => $reason,
+		);
+	}
+
+	/**
+	 * Get the cache decision if set by rules.
+	 *
+	 * @since 1.1.0
+	 * @access public
+	 *
+	 * @return array<string, string>|null Array with 'decision' and 'reason', or null if not set.
+	 */
+	public static function get_cache_decision(): ?array {
+		return self::$cache_decision;
 	}
 
 	/**

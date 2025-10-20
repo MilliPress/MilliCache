@@ -6,7 +6,7 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Admin
  */
 
 namespace MilliCache\Admin;
@@ -20,7 +20,7 @@ use MilliCache\Engine;
  * The WordPress CLI functionality of the plugin.
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Admin
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 class CLI {

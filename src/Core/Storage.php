@@ -6,7 +6,7 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Core
  */
 
 namespace MilliCache\Core;
@@ -25,7 +25,7 @@ use MilliCache\Deps\Predis\PredisException;
  *
  * @since      1.0.0
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Core
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class Storage {

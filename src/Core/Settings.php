@@ -3,7 +3,7 @@
  * Handles the settings storage for MilliCache.
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Core
  * @author     Philipp Wellmer <hello@millicache.com>
  */
 
@@ -17,7 +17,7 @@ use MilliCache\Engine;
  * Handles the settings storage for MilliCache.
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Core
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 class Settings {
@@ -127,6 +127,7 @@ class Settings {
 					'debug' => false,
 					'gzip' => true,
 				),
+				'rules' => array(),
 			)
 		);
 

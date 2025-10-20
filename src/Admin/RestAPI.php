@@ -6,7 +6,7 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Admin
  */
 
 namespace MilliCache\Admin;
@@ -22,7 +22,7 @@ use MilliCache\MilliCache;
  * Handles the custom REST API functionality for MilliCache plugin.
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Admin
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 class RestAPI {
