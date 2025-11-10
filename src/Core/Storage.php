@@ -267,10 +267,10 @@ final class Storage {
 			$this->client->transaction(
 				function ( $tx ) use ( $key, &$cache, &$lock_status ) {
 					// Get cache entry.
-					$cache = $this->client->hgetall( $key );
+					$cache = $tx->hgetall( $key );
 
 					// Get lock status.
-					$lock_status = $this->client->get( $key . '-lock' );
+					$lock_status = $tx->get( $key . '-lock' );
 				}
 			);
 
