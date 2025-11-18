@@ -10,7 +10,8 @@
         }
     ],
     "require": {
-        "php": ">=7.4"
+        "php": ">=7.4",
+        "millipress/millirules": "dev-main"
     },
     "require-dev": {
         "predis/predis": "^2.2",
