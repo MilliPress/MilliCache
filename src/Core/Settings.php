@@ -120,7 +120,7 @@ class Settings {
 					'grace' => MONTH_IN_SECONDS,
 					'unique' => array(),
 					'nocache_paths' => array(),
-					'nocache_cookies' => array( 'comment_author_*' ),
+					'nocache_cookies' => array( 'wp-*pass*', 'comment_author_*' ),
 					'ignore_cookies' => array( '_*' ),
 					'ignore_request_keys' => array( '_*', 'utm_*' ),
 					'skip_millicache_callback' => '',
