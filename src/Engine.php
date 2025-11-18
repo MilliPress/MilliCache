@@ -11,8 +11,12 @@
 namespace MilliCache;
 
 use MilliCache\Admin\Admin;
-use MilliCache\Core\Storage;
 use MilliCache\Core\Settings;
+use MilliCache\Core\Storage;
+use MilliCache\Rules\PHP;
+use MilliCache\Rules\WP;
+use MilliRules\MilliRules;
+use MilliRules\Rules;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -80,7 +84,7 @@ final class Engine {
 	/**
 	 * Whether TTL has been manually set via set_ttl().
 	 *
-	 * @since 1.1.0
+	 * @since 1.0.0
 	 * @access private
 	 *
 	 * @var bool If TTL was manually overridden.
@@ -100,7 +104,7 @@ final class Engine {
 	/**
 	 * Whether a grace period has been manually set via set_grace().
 	 *
-	 * @since 1.1.0
+	 * @since 1.0.0
 	 * @access private
 	 *
 	 * @var bool If grace was manually overridden.
@@ -121,21 +125,21 @@ final class Engine {
 	 * Paths that avoid caching.
 	 *
 	 * @since 1.0.0
-	 * @access private
+	 * @access public
 	 *
 	 * @var array<string> Do not cache paths.
 	 */
-	private static array $nocache_paths;
+	public static array $nocache_paths;
 
 	/**
 	 * Cookies that avoid caching.
 	 *
 	 * @since 1.0.0
-	 * @access private
+	 * @access public
 	 *
 	 * @var array<string> Do not cache cookies.
 	 */
-	private static array $nocache_cookies;
+	public static array $nocache_cookies;
 
 	/**
 	 * Cookies that are ignored.
@@ -224,10 +228,10 @@ final class Engine {
 	/**
 	 * Cache decision override from rules.
 	 *
-	 * @since 1.1.0
+	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array<string, string>|null Cache decision with 'decision' and 'reason' keys.
+	 * @var array{decision: bool, reason: string}|null Cache decision with 'decision' and 'reason' keys.
 	 */
 	private static ?array $cache_decision = null;
 
@@ -252,25 +256,14 @@ final class Engine {
 	private static array $flags_delete = array();
 
 	/**
-	 * Start the cache engine.
+	 * Whether autoloader has been initialized.
 	 *
-	 * @since    1.0.0
-	 * @access   public
+	 * @since 1.0.0
+	 * @access private
 	 *
-	 * @return   void
+	 * @var bool
 	 */
-	public static function start() {
-		self::get_settings();
-		self::config();
-		self::get_storage();
-		self::warmup();
-
-		if ( self::could_cache_request() ) {
-			self::run();
-		}
-
-		self::$started = true;
-	}
+	private static bool $autoloader_initialized = false;
 
 	/**
 	 * If not running, start the cache engine.
@@ -287,6 +280,52 @@ final class Engine {
 	}
 
 	/**
+	 * Start the cache engine.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @return   void
+	 */
+	public static function start() {
+		self::init_autoloader();
+
+		self::get_settings();
+		self::load_config();
+		self::register_rules();
+		self::get_storage();
+		self::warmup();
+
+		// Execute PHP rules.
+		MilliRules::execute_rules( array( 'PHP' ) );
+
+		// Proceed if the request is cachable.
+		if ( self::check_cache_decision() ) {
+			self::run();
+		}
+
+		self::$started = true;
+	}
+
+	/**
+	 * Get the Settings.
+	 *
+	 * @since     1.0.0
+	 * @access    public
+	 *
+	 * @param string|null $module The MilliPress Settings module.
+	 * @return array<mixed> The MilliPress Settings.
+	 */
+	public static function get_settings( string $module = null ): array {
+		if ( ! isset( self::$settings ) && class_exists( 'MilliCache\Core\Settings' ) ) {
+			self::$settings_instance = new Settings();
+			self::$settings = self::$settings_instance->get_settings( $module );
+		}
+
+		return self::$settings;
+	}
+
+	/**
 	 * Load & overwrite configuration from wp-config.php.
 	 *
 	 * @since    1.0.0
@@ -294,7 +333,7 @@ final class Engine {
 	 *
 	 * @return   void
 	 */
-	private static function config() {
+	private static function load_config() {
 		// Load the cache configuration.
 		foreach ( (array) self::$settings['cache'] as $prop => $value ) {
 			if ( property_exists( __CLASS__, $prop ) || isset( self::$$prop ) ) {
@@ -313,24 +352,39 @@ final class Engine {
 	}
 
 	/**
-	 * Get the Settings.
+	 * Initialize MilliRules and register MilliCache rules.
 	 *
-	 * @return array<mixed> The MilliPress Settings.
+	 * Initializes the MilliRules package system with PHP package for early execution,
+	 * registers namespaces and defers WP package loading until WordPress is ready.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @return void
 	 */
-	public static function get_settings(): array {
-		if ( ! isset( self::$settings ) ) {
-			/**
-			 * The MilliPress Settings class.
-			 */
-			if ( ! class_exists( 'MilliCache\Core\Settings' ) ) {
-				require_once __DIR__ . '/Core/Settings.php';
-			}
+	private static function register_rules(): void {
+		// Initialize MilliRules with the PHP package for early execution.
+		MilliRules::init( array( 'PHP' ) );
 
-			self::$settings_instance = new Settings();
-			self::$settings = self::$settings_instance->get_settings();
-		}
+		// Register action namespaces for auto-resolution.
+		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\PHP', 'PHP' );
+		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\WP', 'WP' );
 
-		return self::$settings;
+		// Register MilliCache PHP rules (execute before WordPress loads).
+		PHP::register();
+
+		// Defer WP package and rules until WordPress is ready.
+		add_action(
+			'plugins_loaded',
+			function () {
+				// Load MilliRules WP package.
+				MilliRules::load_packages( array( 'WP' ) );
+
+				// Register MilliCache WP rules.
+				WP::register();
+			},
+			1
+		);
 	}
 
 	/**
@@ -342,14 +396,7 @@ final class Engine {
 	 * @return   Storage The MilliCache Storage instance.
 	 */
 	public static function get_storage(): Storage {
-		if ( ! isset( self::$storage ) ) {
-			/**
-			 * The MilliPress Storage class.
-			 */
-			if ( ! class_exists( 'MilliCache\Core\Storage' ) ) {
-				require_once __DIR__ . '/Core/Storage.php';
-			}
-
+		if ( ! isset( self::$storage ) && class_exists( 'MilliCache\Core\Storage' ) ) {
 			self::$storage = new Storage( (array) self::$settings['storage'] );
 		}
 
@@ -381,17 +428,18 @@ final class Engine {
 	 * @return   void
 	 */
 	private static function run() {
-		// Generate a unique request hash.
+		// Generate the unique request hash.
 		self::generate_request_hash();
 
-		// Get the cache.
+		// Get and return cached content.
 		self::get_cache();
 
-		// Start the output buffer.
+		// Start the output buffer, if needed.
 		add_action(
 			'template_redirect',
 			function () {
-				if ( self::should_cache_request() ) {
+				// Start the buffer if WP rules pass.
+				if ( self::check_cache_decision() ) {
 					self::start_buffer();
 				}
 			},
@@ -557,123 +605,6 @@ final class Engine {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Determines if this request is cacheable (runs before WordPress loads).
-	 * Only uses server variables and constants available early in the request.
-	 *
-	 * @return   bool   True if the request is cacheable, false otherwise.
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	private static function could_cache_request(): bool {
-		// Run MilliCache if there are no $nocache_cookies.
-		$nocache_cookies = self::$nocache_cookies;
-		$nocache_cookies[] = ( defined( 'LOGGED_IN_COOKIE' ) ? LOGGED_IN_COOKIE : 'wordpress_logged_in' ) . '*';
-		$nocache_cookies[] = 'wp-*pass*';
-
-		foreach ( $_COOKIE as $name => $value ) {
-			foreach ( $nocache_cookies as $pattern ) {
-				if ( self::pattern_match( strtolower( $name ), $pattern ) ) {
-					self::set_header( 'Status', 'bypass' );
-					self::set_reason( "Matches no-cache cookie pattern '$pattern'" );
-					return false;
-				}
-			}
-		}
-
-		// Check for nocache paths.
-		if ( ! empty( self::$nocache_paths ) ) {
-			$current_path = self::parse_request_uri( self::get_server_var( 'REQUEST_URI' ) );
-			foreach ( self::$nocache_paths as $nocache_path ) {
-				if ( self::pattern_match( $current_path, $nocache_path ) ) {
-					self::set_header( 'Status', 'bypass' );
-					self::set_reason( "Matches no-cache path pattern '$nocache_path'" );
-					return false;
-				}
-			}
-		}
-
-		// Run MilliCache if all conditions are met.
-		$conditions = array(
-			'WP_CACHE not enabled' => fn() => defined( 'WP_CACHE' ) && WP_CACHE,
-			'REST request' => fn() => ! defined( 'REST_REQUEST' ) || ! REST_REQUEST,
-			'XML-RPC request' => fn() => ! defined( 'XMLRPC_REQUEST' ) || ! XMLRPC_REQUEST,
-			'File request' => fn() => ! preg_match( '/\.[a-z0-9]+($|\?)/i', self::get_server_var( 'REQUEST_URI' ) ),
-			'Non-GET/HEAD request' => fn() => in_array( strtolower( self::get_server_var( 'REQUEST_METHOD' ) ), array( 'get', 'head' ) ),
-			'CLI request' => fn() => php_sapi_name() !== 'cli' && ( ! defined( 'WP_CLI' ) || WP_CLI !== true ),
-			'WP-JSON request' => fn() => strpos( self::get_server_var( 'REQUEST_URI' ), 'wp-json' ) === false,
-			'TTL not set' => fn() => self::$ttl > 0,
-		);
-
-		foreach ( $conditions as $reason => $validator ) {
-			if ( ! $validator() ) {
-				self::set_header( 'Status', 'bypass' );
-				self::set_reason( $reason );
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	/**
-	 * Checks if the current request should be cached based on WordPress-specific conditions.
-	 * Runs after WordPress is fully loaded.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @return bool True to cache, false to skip caching.
-	 */
-	private static function should_cache_request(): bool {
-		// Check if rules have made a cache decision.
-		$decision = self::get_cache_decision();
-
-		if ( $decision ) {
-			if ( ! $decision['decision'] ) {
-				self::set_header( 'Status', 'bypass' );
-				self::set_reason( $decision['reason'] ?? 'Rule action' );
-			}
-
-			return (bool) $decision['decision'];
-		}
-
-		// Otherwise, check if the request should be cached.
-		$should_cache = true;
-
-		$wp_skip_conditions = array(
-			'Non-200 response' => fn() => http_response_code() === 200,
-			'Cron request' => fn() => ! defined( 'DOING_CRON' ) || ! DOING_CRON,
-			'AJAX request' => fn() => ! defined( 'DOING_AJAX' ) || ! DOING_AJAX,
-			'DONOTCACHEPAGE constant' => fn() => ! defined( 'DONOTCACHEPAGE' ) || ! DONOTCACHEPAGE,
-		);
-
-		foreach ( $wp_skip_conditions as $reason => $validator ) {
-			if ( ! $validator() ) {
-				$should_cache = false;
-				self::set_reason( $reason );
-				break;
-			}
-		}
-
-		/**
-		 * Filters whether to cache this request.
-		 * Return true to proceed with caching, or false to skip caching.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param bool   $should_cache Whether the request should be cached.
-		 * @param string $reason The reason for the cache decision.
-		 */
-		if ( ! apply_filters( 'millicache_should_cache_request', $should_cache, $reason = '' ) ) {
-			self::set_header( 'Status', 'bypass' );
-			self::set_reason( $reason );
-			return false;
-		}
-
-		return true;
 	}
 
 	/**
@@ -1322,7 +1253,7 @@ final class Engine {
 	/**
 	 * Remove a flag from the current request.
 	 *
-	 * @since 1.1.0
+	 * @since 1.0.0
 	 * @access public
 	 *
 	 * @param string $flag The flag to remove.
@@ -1340,7 +1271,7 @@ final class Engine {
 	/**
 	 * Set TTL for the current request.
 	 *
-	 * @since 1.1.0
+	 * @since 1.0.0
 	 * @access public
 	 *
 	 * @param int $seconds TTL in seconds.
@@ -1353,7 +1284,7 @@ final class Engine {
 	/**
 	 * Set grace period for the current request.
 	 *
-	 * @since 1.1.0
+	 * @since 1.0.0
 	 * @access public
 	 *
 	 * @param int $seconds Grace period in seconds.
@@ -1366,7 +1297,7 @@ final class Engine {
 	/**
 	 * Override cache decision from rules.
 	 *
-	 * @since 1.1.0
+	 * @since 1.0.0
 	 * @access public
 	 *
 	 * @param bool   $should_cache Whether to cache this request.
@@ -1382,13 +1313,33 @@ final class Engine {
 	/**
 	 * Get the cache decision if set by rules.
 	 *
-	 * @since 1.1.0
+	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @return array<string, string>|null Array with 'decision' and 'reason', or null if not set.
+	 * @return array{decision: bool, reason: string}|null Array with 'decision' and 'reason', or null if not set.
 	 */
 	public static function get_cache_decision(): ?array {
 		return self::$cache_decision;
+	}
+
+	/**
+	 * Check cache decision and set appropriate headers.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @return bool True if caching should proceed, false to bypass.
+	 */
+	private static function check_cache_decision(): bool {
+		$decision = self::get_cache_decision();
+
+		if ( $decision && ! $decision['decision'] ) {
+			self::set_header( 'Status', 'bypass' );
+			self::set_reason( $decision['reason'] );
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -1512,5 +1463,42 @@ final class Engine {
 		);
 
 		return array_merge( $cache, Admin::get_cache_size( $network ? self::get_flag_key( 'site', '*' ) : self::get_flag_key( '*' ), true ) );
+	}
+
+	/**
+	 * Initialize autoloader for MilliCache classes.
+	 *
+	 * Only loads Composer autoloader once, and only when needed.
+	 * Includes fallback PSR-4 autoloader if Composer is not available.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @return void
+	 */
+	private static function init_autoloader(): void {
+		if ( self::$autoloader_initialized ) {
+			return;
+		}
+
+		// Attempt to load Composer autoloader.
+		$autoloader = dirname( __DIR__ ) . '/vendor/autoload.php';
+		if ( file_exists( $autoloader ) ) {
+			require_once $autoloader;
+		} else {
+			// Fallback: Register a simple PSR-4 autoloader.
+			spl_autoload_register(
+				function ( $class ) {
+					if ( strpos( $class, 'MilliCache\\' ) === 0 ) {
+						$file = __DIR__ . '/' . str_replace( array( 'MilliCache\\', '\\' ), array( '', '/' ), $class ) . '.php';
+						if ( file_exists( $file ) ) {
+							require_once $file;
+						}
+					}
+				}
+			);
+		}
+
+		self::$autoloader_initialized = true;
 	}
 }
