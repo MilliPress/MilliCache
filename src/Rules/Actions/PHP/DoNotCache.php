@@ -9,9 +9,11 @@
  * @since 1.0.0
  */
 
-namespace MilliCache\Rules\Actions;
+namespace MilliCache\Rules\Actions\PHP;
 
 use MilliCache\Engine;
+use MilliRules\Actions\BaseAction;
+use MilliRules\Context;
 
 /**
  * Class DoNotCacheAction
@@ -21,14 +23,6 @@ use MilliCache\Engine;
  * @since 1.0.0
  */
 class DoNotCache extends BaseAction {
-	/**
-	 * Whether this is a trigger action.
-	 *
-	 * @since 1.0.0
-	 * @var bool
-	 */
-	protected bool $is_trigger = false;
-
 	/**
 	 * Get the action type.
 	 *
@@ -45,11 +39,11 @@ class DoNotCache extends BaseAction {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string, mixed> $context The execution context.
+	 * @param Context $context The execution context.
 	 * @return void
 	 */
-	public function execute( array $context ): void {
-		$reason = $this->config['reason'] ?? 'Rule action: do_not_cache';
+	public function execute( Context $context ): void {
+		$reason = $this->config['value'] ?? 'Rule action: do_not_cache';
 
 		// Resolve placeholders in reason.
 		if ( is_string( $reason ) ) {

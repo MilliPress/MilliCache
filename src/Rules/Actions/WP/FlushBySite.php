@@ -9,9 +9,11 @@
  * @since 1.0.0
  */
 
-namespace MilliCache\Rules\Actions;
+namespace MilliCache\Rules\Actions\WP;
 
 use MilliCache\Engine;
+use MilliRules\Actions\BaseAction;
+use MilliRules\Context;
 
 /**
  * Class FlushBySiteAction
@@ -22,15 +24,6 @@ use MilliCache\Engine;
  * @since 1.0.0
  */
 class FlushBySite extends BaseAction {
-	/**
-	 * Whether this is a trigger action.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @var bool
-	 */
-	protected bool $is_trigger = false;
-
 	/**
 	 * Get the action type.
 	 *
@@ -47,10 +40,10 @@ class FlushBySite extends BaseAction {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string, mixed> $context The execution context.
+	 * @param Context $context The execution context.
 	 * @return void
 	 */
-	public function execute( array $context ): void {
+	public function execute( Context $context ): void {
 		$site_id = $this->config['site_id'] ?? null;
 
 		// Resolve placeholders in site_id if it's a string.

@@ -1,34 +1,28 @@
 <?php
 /**
- * Add Flag Action
+ * Remove Flag Action
  *
- * Adds a cache flag.
+ * Removes a cache flag.
  *
  * @package MilliCache
  * @subpackage Rules\Actions
  * @since 1.0.0
  */
 
-namespace MilliCache\Rules\Actions;
+namespace MilliCache\Rules\Actions\WP;
 
 use MilliCache\Engine;
+use MilliRules\Actions\BaseAction;
+use MilliRules\Context;
 
 /**
- * Class AddFlagAction
+ * Class RemoveFlagAction
  *
- * Adds a flag to the cached page for later bulk invalidation (trigger action).
+ * Removes a flag from the cached page (trigger action).
  *
  * @since 1.0.0
  */
-class AddFlag extends BaseAction {
-	/**
-	 * Whether this is a trigger action.
-	 *
-	 * @since 1.0.0
-	 * @var bool
-	 */
-	protected bool $is_trigger = true;
-
+class RemoveFlag extends BaseAction {
 	/**
 	 * Get the action type.
 	 *
@@ -37,7 +31,7 @@ class AddFlag extends BaseAction {
 	 * @return string The action type identifier.
 	 */
 	public function get_type(): string {
-		return 'add_flag';
+		return 'remove_flag';
 	}
 
 	/**
@@ -45,10 +39,10 @@ class AddFlag extends BaseAction {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string, mixed> $context The execution context.
+	 * @param Context $context The execution context.
 	 * @return void
 	 */
-	public function execute( array $context ): void {
+	public function execute( Context $context ): void {
 		$flag = $this->value;
 
 		// Resolve placeholders.
@@ -60,9 +54,9 @@ class AddFlag extends BaseAction {
 			return;
 		}
 
-		// Call Engine to add the flag.
+		// Call Engine to remove the flag.
 		if ( class_exists( '\\MilliCache\\Engine' ) ) {
-			Engine::add_flag( $flag );
+			Engine::remove_flag( $flag );
 		}
 	}
 }

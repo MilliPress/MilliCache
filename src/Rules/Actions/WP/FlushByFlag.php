@@ -9,9 +9,11 @@
  * @since 1.0.0
  */
 
-namespace MilliCache\Rules\Actions;
+namespace MilliCache\Rules\Actions\WP;
 
 use MilliCache\Engine;
+use MilliRules\Actions\BaseAction;
+use MilliRules\Context;
 
 /**
  * Class FlushByFlagAction
@@ -21,14 +23,6 @@ use MilliCache\Engine;
  * @since 1.0.0
  */
 class FlushByFlag extends BaseAction {
-	/**
-	 * Whether this is a trigger action.
-	 *
-	 * @since 1.0.0
-	 * @var bool
-	 */
-	protected bool $is_trigger = false;
-
 	/**
 	 * Get the action type.
 	 *
@@ -45,10 +39,10 @@ class FlushByFlag extends BaseAction {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string, mixed> $context The execution context.
+	 * @param Context $context The execution context.
 	 * @return void
 	 */
-	public function execute( array $context ): void {
+	public function execute( Context $context ): void {
 		$flags = $this->value;
 
 		// Resolve placeholders.
