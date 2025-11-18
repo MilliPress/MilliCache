@@ -8,6 +8,7 @@ parameters:
   excludePaths:
     - src/Deps/
   scanFiles:
+    - stubs/ActionBuilder.php
     - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
   fileExtensions:
     - php
