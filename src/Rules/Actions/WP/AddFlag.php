@@ -43,7 +43,7 @@ class AddFlag extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$flag = $this->value;
+		$flag = $this->args[0] ?? null;
 
 		// Resolve placeholders.
 		if ( is_string( $flag ) ) {

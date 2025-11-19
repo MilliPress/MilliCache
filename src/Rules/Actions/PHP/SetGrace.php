@@ -43,7 +43,7 @@ class SetGrace extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$grace = $this->value;
+		$grace = $this->args[0];
 
 		if ( ! is_numeric( $grace ) || $grace < 0 ) {
 			return;

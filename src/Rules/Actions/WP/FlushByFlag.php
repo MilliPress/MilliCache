@@ -43,7 +43,7 @@ class FlushByFlag extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$flags = $this->value;
+		$flags = $this->args[0] ?? null;
 
 		// Resolve placeholders.
 		if ( is_string( $flags ) ) {

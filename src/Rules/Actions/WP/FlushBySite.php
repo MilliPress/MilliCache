@@ -44,7 +44,7 @@ class FlushBySite extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$site_id = $this->config['site_id'] ?? null;
+		$site_id = $this->args[0] ?? null;
 
 		// Resolve placeholders in site_id if it's a string.
 		if ( is_string( $site_id ) ) {

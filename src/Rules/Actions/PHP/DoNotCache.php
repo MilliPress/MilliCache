@@ -43,7 +43,7 @@ class DoNotCache extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$reason = $this->config['value'] ?? 'Rule action: do_not_cache';
+		$reason = $this->args[0] ?? 'Rule action: do_not_cache';
 
 		// Resolve placeholders in reason.
 		if ( is_string( $reason ) ) {

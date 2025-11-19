@@ -43,7 +43,7 @@ class SetTtl extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$ttl = $this->value;
+		$ttl = $this->args[0];
 
 		if ( ! is_numeric( $ttl ) ) {
 			return;
