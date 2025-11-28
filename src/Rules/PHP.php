@@ -12,7 +12,9 @@
 namespace MilliCache\Rules;
 
 use MilliCache\Engine;
-use MilliRules\Rules;
+use MilliCache\Engine\Cache\Config;
+use MilliCache\Deps\MilliRules\Context;
+use MilliCache\Deps\MilliRules\Rules;
 
 /**
  * Class PHP
@@ -47,124 +49,185 @@ class PHP {
 	 * @return void
 	 */
 	public static function register(): void {
-		self::register_fundamental_checks();
-		self::register_nocache_cookies();
-		self::register_nocache_paths();
+		$config = Engine::get_config();
+
+		self::register_wp_cache_rule();
+		self::register_rest_request_rule();
+		self::register_xmlrpc_request_rule();
+		self::register_file_request_rule();
+		self::register_request_method_rule();
+		self::register_cli_request_rule();
+		self::register_wp_json_request_rule();
+		self::register_ttl_check_rule( $config );
+		self::register_nocache_cookies( $config );
+		self::register_nocache_paths( $config );
 	}
 
 	/**
-	 * Register fundamental cache checks.
-	 *
-	 * Validates all base requirements for caching:
-	 * - WP_CACHE constant enabled
-	 * - Not a REST request
-	 * - Not an XML-RPC request
-	 * - Not a file request (static assets)
-	 * - GET/HEAD request methods only
-	 * - Not CLI request
-	 * - Not WP-JSON request
-	 * - TTL is configured
-	 *
-	 * Uses order -10 to run before other PHP rules.
+	 * Register WP_CACHE constant check rule.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
-	private static function register_fundamental_checks(): void {
+	private static function register_wp_cache_rule(): void {
 		// Check WP_CACHE constant.
 		Rules::create( 'core-wp-cache', 'php' )
 			->order( -10 )
 			->when()
-				->constant( 'WP_CACHE', true, '!=' )
+			->constant( 'WP_CACHE', true, '!=' )
 			->then()
-				->do_not_cache( 'Core: WP_CACHE not enabled' )
+			->do_cache( false, 'Core: WP_CACHE not enabled' )
 			->register();
+	}
 
+	/**
+	 * Register REST request check rule.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	private static function register_rest_request_rule(): void {
 		// Check REST request.
 		Rules::create( 'core-rest-request', 'php' )
 			->order( -10 )
 			->when()
-				->constant( 'REST_REQUEST', true )
+			->constant( 'REST_REQUEST', true )
 			->then()
-				->do_not_cache( 'Core: REST request' )
+			->do_cache( false, 'Core: REST request' )
 			->register();
+	}
 
+	/**
+	 * Register XML-RPC request check rule.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	private static function register_xmlrpc_request_rule(): void {
 		// Check XML-RPC request.
 		Rules::create( 'core-xmlrpc-request', 'php' )
 			->order( -10 )
 			->when()
-				->constant( 'XMLRPC_REQUEST', true )
+			->constant( 'XMLRPC_REQUEST', true )
 			->then()
-				->do_not_cache( 'Core: XML-RPC request' )
+			->do_cache( false, 'Core: XML-RPC request' )
 			->register();
+	}
 
+	/**
+	 * Register file request (static assets) check rule.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	private static function register_file_request_rule(): void {
 		// Check file request (static assets).
 		Rules::create( 'core-file-request', 'php' )
 			->order( -10 )
 			->when()
-				->custom(
-					'is-file-request',
-					function ( $context ) {
-						$uri = $context['request']['uri'] ?? '';
+			->custom(
+				'is-file-request',
+				function ( Context $context ) {
+					$uri = $context->get( 'request.uri', '' );
 
-						if ( ! is_string( $uri ) || empty( $uri ) ) {
-							return false;
-						}
-
-						return (bool) preg_match( '/\.[a-z0-9]+($|\?)/i', $uri );
+					if ( ! is_string( $uri ) || empty( $uri ) ) {
+						return false;
 					}
-				)
-			->then()
-				->do_not_cache( 'Core: File request' )
-			->register();
 
+					return (bool) preg_match( '/\.[a-z0-9]+($|\?)/i', $uri );
+				}
+			)
+			->then()
+			->do_cache( false, 'Core: File request' )
+			->register();
+	}
+
+	/**
+	 * Register request method check rule.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	private static function register_request_method_rule(): void {
 		// Check the request method (only GET/HEAD).
 		Rules::create( 'core-request-method', 'php' )
 			->order( -10 )
 			->when_none()
-				->request_method( 'GET' )
-				->request_method( 'HEAD' )
+			->request_method( 'GET' )
+			->request_method( 'HEAD' )
 			->then()
-				->do_not_cache( 'Core: Non-GET/HEAD request' )
+			->do_cache( false, 'Core: Non-GET/HEAD request' )
 			->register();
+	}
 
+	/**
+	 * Register CLI request check rule.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	private static function register_cli_request_rule(): void {
 		// Check CLI request.
 		Rules::create( 'core-cli-request', 'php' )
 			->order( -10 )
 			->when()
-				->custom(
-					'cli-request',
-					function () {
-						return php_sapi_name() === 'cli';
-					}
-				)
-				->constant( 'WP_CLI', true )
+			->custom(
+				'cli-request',
+				function () {
+					return php_sapi_name() === 'cli';
+				}
+			)
+			->constant( 'WP_CLI', true )
 			->then()
-				->do_not_cache( 'Core: CLI request' )
+			->do_cache( false, 'Core: CLI request' )
 			->register();
+	}
 
+	/**
+	 * Register WP-JSON request check rule.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	private static function register_wp_json_request_rule(): void {
 		// Check WP-JSON request.
 		Rules::create( 'core-wp-json-request', 'php' )
 			->order( -10 )
 			->when()
-				->request_url( '*wp-json*' )
+			->request_url( '*wp-json*' )
 			->then()
-				->do_not_cache( 'Core: WP-JSON request' )
+			->do_cache( false, 'Core: WP-JSON request' )
 			->register();
+	}
 
+	/**
+	 * Register TTL check rule.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param Config $config Cache configuration.
+	 * @return void
+	 */
+	private static function register_ttl_check_rule( Config $config ): void {
 		// Check TTL is configured.
 		Rules::create( 'core-ttl-not-set', 'php' )
 			->order( -10 )
 			->when()
 			->custom(
 				'ttl-not-set',
-				function () {
-					return Engine::$ttl <= 0;
+				function () use ( $config ) {
+					return $config->ttl <= 0;
 				}
 			)
 			->then()
-				->do_not_cache( 'Core: TTL not set' )
+			->do_cache( false, 'Core: TTL not set' )
 			->register();
 	}
 
@@ -176,10 +239,11 @@ class PHP {
 	 *
 	 * @since 1.0.0
 	 *
+	 * @param Config $config Plugin configuration.
 	 * @return void
 	 */
-	private static function register_nocache_cookies(): void {
-		$nocache_cookies = Engine::$nocache_cookies;
+	private static function register_nocache_cookies( Config $config ): void {
+		$nocache_cookies = $config->nocache_cookies;
 
 		if ( empty( $nocache_cookies ) ) {
 			return;
@@ -197,7 +261,7 @@ class PHP {
 
 		// Set action and register.
 		$builder->then()
-			->do_not_cache( 'Core: Skip cache for no-cache cookies' )
+			->do_cache( false, 'Core: Skip cache for no-cache cookies' )
 			->register();
 	}
 
@@ -209,10 +273,11 @@ class PHP {
 	 *
 	 * @since 1.0.0
 	 *
+	 * @param Config $config Plugin configuration.
 	 * @return void
 	 */
-	private static function register_nocache_paths(): void {
-		$nocache_paths = Engine::$nocache_paths;
+	private static function register_nocache_paths( Config $config ): void {
+		$nocache_paths = $config->nocache_paths;
 
 		// If no paths to check, skip rule registration.
 		if ( empty( $nocache_paths ) ) {
@@ -231,7 +296,7 @@ class PHP {
 
 		// Set action and register.
 		$builder->then()
-			->do_not_cache( 'Core: Skip cache for no-cache paths' )
+			->do_cache( false, 'Core: Skip cache for no-cache paths' )
 			->register();
 	}
 }

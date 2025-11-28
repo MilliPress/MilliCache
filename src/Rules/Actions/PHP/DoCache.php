@@ -1,8 +1,8 @@
 <?php
 /**
- * Do Cache Action
+ * Cache Decision Action
  *
- * Marks the page for caching.
+ * Sets the cache decision for the current request.
  *
  * @package MilliCache
  * @subpackage Rules\Actions
@@ -12,13 +12,13 @@
 namespace MilliCache\Rules\Actions\PHP;
 
 use MilliCache\Engine;
-use MilliRules\Actions\BaseAction;
-use MilliRules\Context;
+use MilliCache\Deps\MilliRules\Actions\BaseAction;
+use MilliCache\Deps\MilliRules\Context;
 
 /**
- * Class DoCacheAction
+ * Class CacheDecision
  *
- * Explicitly allows the page to be cached (stop action).
+ * Explicitly sets whether the page should be cached or not (stop action).
  *
  * @since 1.0.0
  */
@@ -43,16 +43,17 @@ class DoCache extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$reason = $this->args[0] ?? 'Rule action: do_cache';
+		$should_cache = $this->args[0] ?? true;
+		$reason       = $this->args[1] ?? ( $should_cache ? 'Rule action: do_cache() -> (cache)' : 'Rule action: do_cache() -> (do not cache)' );
 
 		// Resolve placeholders in reason.
 		if ( is_string( $reason ) ) {
 			$reason = $this->resolve_value( $reason );
 		}
 
-		// Signal to Engine TO cache this request (override other checks).
+		// Signal to Engine cache decision.
 		if ( class_exists( '\\MilliCache\\Engine' ) && is_string( $reason ) ) {
-			Engine::set_cache_decision( true, $reason );
+			Engine::set_cache_decision( (bool) $should_cache, $reason );
 		}
 	}
 }

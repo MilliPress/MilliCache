@@ -12,8 +12,8 @@
 namespace MilliCache\Rules\Actions\PHP;
 
 use MilliCache\Engine;
-use MilliRules\Actions\BaseAction;
-use MilliRules\Context;
+use MilliCache\Deps\MilliRules\Actions\BaseAction;
+use MilliCache\Deps\MilliRules\Context;
 
 /**
  * Class SetGraceAction

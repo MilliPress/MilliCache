@@ -11,7 +11,7 @@
 
 namespace MilliCache\Rules;
 
-use MilliRules\Rules;
+use MilliCache\Deps\MilliRules\Rules;
 
 /**
  * Class WP
@@ -72,7 +72,7 @@ class WP {
 		$instance = new self();
 		$instance->register_response_code_rule();
 		$instance->register_donotcachepage_rule();
-		$instance->register_user_rule();
+		$instance->register_logged_in_rule();
 		$instance->register_cron_rule();
 		$instance->register_ajax_rule();
 	}
@@ -87,14 +87,14 @@ class WP {
 	 *
 	 * @return void
 	 */
-	private function register_user_rule() {
+	private function register_logged_in_rule() {
 		Rules::create( 'core-wp-logged-in' )
 			->on( $this->hook, $this->priority )
 			->order( $this->order )
 			->when()
 			->is_user_logged_in()
 			->then()
-			->do_not_cache( 'Core: Skip cache for logged-in users' )
+			->do_cache( false, 'Core: Skip cache for logged-in users' )
 			->register();
 	}
 
@@ -115,7 +115,7 @@ class WP {
 			->when()
 			->custom( 'core-wp-check-response-code', fn() => 200 !== http_response_code() )
 			->then()
-			->do_not_cache( 'Core: Skip cache for non-200 response codes' )
+			->do_cache( false, 'Core: Skip cache for non-200 response codes' )
 			->register();
 	}
 
@@ -136,7 +136,7 @@ class WP {
 			->when()
 			->constant( 'DONOTCACHEPAGE', true, 'IS' )
 			->then()
-			->do_not_cache( 'Core: Skip cache if DONOTCACHEPAGE constant is true' )
+			->do_cache( false, 'Core: Skip cache if DONOTCACHEPAGE constant is true' )
 			->register();
 	}
 
@@ -157,7 +157,7 @@ class WP {
 			->when()
 				->constant( 'DOING_CRON', true )
 			->then()
-				->do_not_cache( 'Core: Skip cache for cron requests' )
+				->do_cache( false, 'Core: Skip cache for cron requests' )
 			->register();
 	}
 
@@ -178,7 +178,7 @@ class WP {
 			->when()
 				->constant( 'DOING_AJAX', true, 'IS' )
 			->then()
-				->do_not_cache( 'Core: Skip cache for AJAX requests' )
+				->do_cache( false, 'Core: Skip cache for AJAX requests' )
 			->register();
 	}
 }
