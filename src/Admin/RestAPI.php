@@ -14,6 +14,7 @@ namespace MilliCache\Admin;
 use MilliCache\Core\Loader;
 use MilliCache\Core\Settings;
 use MilliCache\Engine;
+use MilliCache\Engine\Utilities\ServerVars;
 use MilliCache\MilliCache;
 
 ! defined( 'ABSPATH' ) && exit;
@@ -439,17 +440,17 @@ class RestAPI {
 		}
 
 		// Only verify nonce for our plugin's endpoints.
-		$request_uri = Engine::get_server_var( 'REQUEST_URI' );
+		$request_uri = ServerVars::get( 'REQUEST_URI' );
 		if ( ! empty( $request_uri ) && str_contains( $request_uri, '/millicache/v1/' ) ) {
 
 			// Skip nonce check for non-request methods.
-			$method = Engine::get_server_var( 'REQUEST_METHOD' );
+			$method = ServerVars::get( 'REQUEST_METHOD' );
 			if ( 'GET' === $method || 'HEAD' === $method || 'OPTIONS' === $method ) {
 				return $result;
 			}
 
 			// Verify the nonce.
-			$nonce = Engine::get_server_var( 'HTTP_X_WP_NONCE' );
+			$nonce = ServerVars::get( 'HTTP_X_WP_NONCE' );
 			if ( empty( $nonce ) || ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
 				return new \WP_Error(
 					'invalid_nonce',

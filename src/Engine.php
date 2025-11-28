@@ -13,10 +13,18 @@ namespace MilliCache;
 use MilliCache\Admin\Admin;
 use MilliCache\Core\Settings;
 use MilliCache\Core\Storage;
+use MilliCache\Engine\Cache\Config;
+use MilliCache\Engine\Cache\Entry;
+use MilliCache\Engine\Cache\Handler as CacheHandler;
+use MilliCache\Engine\Clearing\Handler as ClearingHandler;
+use MilliCache\Engine\FlagManager;
+use MilliCache\Engine\Multisite;
+use MilliCache\Engine\Request\Handler as RequestHandler;
+use MilliCache\Engine\Utilities\ServerVars;
 use MilliCache\Rules\PHP;
 use MilliCache\Rules\WP;
-use MilliRules\MilliRules;
-use MilliRules\Rules;
+use MilliCache\Deps\MilliRules\MilliRules;
+use MilliCache\Deps\MilliRules\Rules;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -52,17 +60,17 @@ final class Engine {
 	private static Storage $storage;
 
 	/**
-	 * The MilliPress Settings instance.
+	 * The Multisite helper instance.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var Settings The MilliPress Settings instance.
+	 * @var Multisite The Multisite helper instance.
 	 */
-	private static Settings $settings_instance;
+	private static Multisite $multisite;
 
 	/**
-	 * The MilliPress Settings.
+	 * The MilliCache Settings.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -70,16 +78,6 @@ final class Engine {
 	 * @var array<mixed> The MilliPress Settings.
 	 */
 	private static array $settings;
-
-	/**
-	 * TTL.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var int The time to live for the cache.
-	 */
-	public static int $ttl;
 
 	/**
 	 * Whether TTL has been manually set via set_ttl().
@@ -92,14 +90,14 @@ final class Engine {
 	private static bool $ttl_overridden = false;
 
 	/**
-	 * Grace Period - Time after TTL expiration when stale content can still be served for background generation.
+	 * Custom TTL override value.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var int The time period a stale cache entry remains available.
+	 * @var int|null Custom TTL value when overridden.
 	 */
-	public static int $grace;
+	private static ?int $ttl_override = null;
 
 	/**
 	 * Whether a grace period has been manually set via set_grace().
@@ -112,74 +110,14 @@ final class Engine {
 	private static bool $grace_overridden = false;
 
 	/**
-	 * Variables that make the request unique.
+	 * Custom grace override value.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array<string> Unique request variables.
+	 * @var int|null Custom grace value when overridden.
 	 */
-	private static array $unique;
-
-	/**
-	 * Paths that avoid caching.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @var array<string> Do not cache paths.
-	 */
-	public static array $nocache_paths;
-
-	/**
-	 * Cookies that avoid caching.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @var array<string> Do not cache cookies.
-	 */
-	public static array $nocache_cookies;
-
-	/**
-	 * Cookies that are ignored.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var array<string> Ignore cookies for cache hash.
-	 */
-	private static array $ignore_cookies;
-
-	/**
-	 * Request keys that are ignored.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var array<string> Ignored request keys.
-	 */
-	private static array $ignore_request_keys;
-
-	/**
-	 * Gzip compression.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var bool Gzip compression.
-	 */
-	private static bool $gzip;
-
-	/**
-	 * Debug mode.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var bool Debug mode.
-	 */
-	private static bool $debug;
+	private static ?int $grace_override = null;
 
 	/**
 	 * Request hash.
@@ -192,14 +130,64 @@ final class Engine {
 	private static string $request_hash;
 
 	/**
+	 * Request handler.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var RequestHandler|null The request handler instance.
+	 */
+	private static ?RequestHandler $request_handler = null;
+
+	/**
+	 * Cache handler.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var CacheHandler|null The cache handler instance.
+	 */
+	private static ?CacheHandler $cache_handler = null;
+
+	/**
+	 * Clearing handler.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var ClearingHandler|null The clearing handler instance.
+	 */
+	private static ?ClearingHandler $clearing_handler = null;
+
+	/**
+	 * Cache configuration.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var Config|null The cache configuration instance.
+	 */
+	private static ?Config $config = null;
+
+	/**
+	 * Flag manager.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var FlagManager|null The flag manager instance.
+	 */
+	private static ?FlagManager $flag_manager = null;
+
+	/**
 	 * Debug data.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array<string,mixed>|false Debug data.
+	 * @var array<string,mixed>|null Debug data.
 	 */
-	private static $debug_data = false;
+	private static ?array $debug_data = null;
 
 	/**
 	 * FastCGI Regenerate.
@@ -212,20 +200,6 @@ final class Engine {
 	private static bool $fcgi_regenerate = false;
 
 	/**
-	 * Flag requests and expire/delete them efficiently.
-	 */
-
-	/**
-	 * Request flags.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var array<string> Flags.
-	 */
-	private static array $flags = array();
-
-	/**
 	 * Cache decision override from rules.
 	 *
 	 * @since 1.0.0
@@ -234,26 +208,6 @@ final class Engine {
 	 * @var array{decision: bool, reason: string}|null Cache decision with 'decision' and 'reason' keys.
 	 */
 	private static ?array $cache_decision = null;
-
-	/**
-	 * Flags to expire.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var array<string> Expire flags.
-	 */
-	private static array $flags_expire = array();
-
-	/**
-	 * Flags to delete.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var array<string> Delete flags.
-	 */
-	private static array $flags_delete = array();
 
 	/**
 	 * Whether autoloader has been initialized.
@@ -290,8 +244,11 @@ final class Engine {
 	public static function start() {
 		self::init_autoloader();
 
+		// Initialize multisite helper.
+		self::$multisite = new Multisite();
+
 		self::get_settings();
-		self::load_config();
+		self::setup_test_cookie();
 		self::register_rules();
 		self::get_storage();
 		self::warmup();
@@ -313,42 +270,15 @@ final class Engine {
 	 * @since     1.0.0
 	 * @access    public
 	 *
-	 * @param string|null $module The MilliPress Settings module.
-	 * @return array<mixed> The MilliPress Settings.
+	 * @param string|null $module The MilliCache Settings module.
+	 * @return array<mixed> The MilliCache Settings.
 	 */
-	public static function get_settings( string $module = null ): array {
+	public static function get_settings( ?string $module = null ): array {
 		if ( ! isset( self::$settings ) && class_exists( 'MilliCache\Core\Settings' ) ) {
-			self::$settings_instance = new Settings();
-			self::$settings = self::$settings_instance->get_settings( $module );
+			self::$settings = ( new Settings() )->get_settings( $module );
 		}
 
 		return self::$settings;
-	}
-
-	/**
-	 * Load & overwrite configuration from wp-config.php.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   void
-	 */
-	private static function load_config() {
-		// Load the cache configuration.
-		foreach ( (array) self::$settings['cache'] as $prop => $value ) {
-			if ( property_exists( __CLASS__, $prop ) || isset( self::$$prop ) ) {
-				self::$$prop = $value;
-			}
-		}
-
-		// Ignore test cookie by default.
-		$test_cookie = defined( 'TEST_COOKIE' ) ? TEST_COOKIE : 'wordpress_test_cookie';
-		self::$ignore_cookies[] = $test_cookie;
-
-		// Always set the test-cookie for wp-login.php POST requests.
-		if ( strpos( self::get_server_var( 'REQUEST_URI' ), '/wp-login.php' ) === 0 && strtoupper( self::get_server_var( 'REQUEST_METHOD' ) ) == 'POST' ) {
-			$_COOKIE[ $test_cookie ] = 'WP Cookie check';
-		}
 	}
 
 	/**
@@ -404,6 +334,77 @@ final class Engine {
 	}
 
 	/**
+	 * Get cache configuration instance.
+	 *
+	 * Provides access to the immutable cache configuration object.
+	 * External code can use this to access all configuration properties.
+	 *
+	 * @since    1.0.0
+	 * @access   public
+	 *
+	 * @return   Config The cache configuration instance.
+	 */
+	public static function get_config(): Config {
+		if ( ! self::$config ) {
+			self::$config = self::init_config();
+		}
+
+		return self::$config;
+	}
+
+	/**
+	 * Get WordPress test cookie name.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @return   string The test cookie name.
+	 */
+	private static function get_test_cookie_name(): string {
+		return defined( 'TEST_COOKIE' ) ? TEST_COOKIE : 'wordpress_test_cookie';
+	}
+
+	/**
+	 * Initialize cache configuration.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @return   Config The initialized configuration.
+	 */
+	private static function init_config(): Config {
+		// Get cache settings.
+		$cache_settings = self::$settings['cache'] ?? array();
+		$settings = is_array( $cache_settings ) ? $cache_settings : array();
+
+		// Add WordPress test cookie to ignore list.
+		if ( ! isset( $settings['ignore_cookies'] ) || ! is_array( $settings['ignore_cookies'] ) ) {
+			$settings['ignore_cookies'] = array();
+		}
+		$settings['ignore_cookies'][] = self::get_test_cookie_name();
+
+		return Config::from_settings( $settings );
+	}
+
+	/**
+	 * Setup WordPress test cookie for login requests.
+	 *
+	 * WordPress uses a test cookie to verify browser cookie support.
+	 * This sets the cookie for wp-login.php POST requests.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @return   void
+	 */
+	private static function setup_test_cookie(): void {
+		if ( strpos( ServerVars::get( 'REQUEST_URI' ), '/wp-login.php' ) === 0
+			&& strtoupper( ServerVars::get( 'REQUEST_METHOD' ) ) === 'POST' ) {
+			$_COOKIE[ self::get_test_cookie_name() ] = 'WP Cookie check';
+		}
+	}
+
+	/**
 	 * Warm up the cache engine.
 	 *
 	 * @since    1.0.0
@@ -412,11 +413,88 @@ final class Engine {
 	 * @return   void
 	 */
 	private static function warmup() {
+		// Initialize invalidation handler.
+		self::get_clearing_handler();
+
 		// Register the shutdown function to expire/delete cache flags.
 		register_shutdown_function( array( __CLASS__, 'clear_cache_on_shutdown' ) );
 
 		// Always set the initial header.
 		self::set_header( 'Status', 'miss' );
+	}
+
+	/**
+	 * Get clearing handler instance.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @return   ClearingHandler The clearing handler instance.
+	 */
+	private static function get_clearing_handler(): ClearingHandler {
+		if ( ! self::$clearing_handler ) {
+			$config = self::get_config();
+
+			self::$clearing_handler = new ClearingHandler(
+				self::$storage,
+				self::get_request_handler(),
+				self::$multisite,
+				$config->ttl
+			);
+		}
+
+		return self::$clearing_handler;
+	}
+
+	/**
+	 * Get request handler instance.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @return   RequestHandler The request handler instance.
+	 */
+	private static function get_request_handler(): RequestHandler {
+		if ( ! self::$request_handler ) {
+			self::$request_handler = new RequestHandler( self::get_config() );
+		}
+
+		return self::$request_handler;
+	}
+
+	/**
+	 * Get cache handler instance.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @return   CacheHandler The cache handler instance.
+	 */
+	private static function get_cache_handler(): CacheHandler {
+		if ( ! self::$cache_handler ) {
+			self::$cache_handler = new CacheHandler(
+				self::get_config(),
+				self::$storage
+			);
+		}
+
+		return self::$cache_handler;
+	}
+
+	/**
+	 * Get flag manager instance.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @return   FlagManager The flag manager instance.
+	 */
+	private static function get_flag_manager(): FlagManager {
+		if ( ! self::$flag_manager ) {
+			self::$flag_manager = new FlagManager( self::$multisite );
+		}
+
+		return self::$flag_manager;
 	}
 
 	/**
@@ -443,7 +521,7 @@ final class Engine {
 					self::start_buffer();
 				}
 			},
-			100
+			200
 		);
 	}
 
@@ -455,33 +533,13 @@ final class Engine {
 	 *
 	 * @return   void
 	 */
-	private static function generate_request_hash() {
-		// Clean up request variables.
-		self::clean_request();
+	private static function generate_request_hash(): void {
+		// Process request (clean and generate hash).
+		self::$request_hash = self::get_request_handler()->process();
 
-		$request_hash = array(
-			'request' => self::parse_request_uri( self::get_server_var( 'REQUEST_URI' ) ),
-			'host' => self::get_server_var( 'HTTP_HOST' ),
-			'https' => self::get_server_var( 'HTTPS' ),
-			'method' => self::get_server_var( 'REQUEST_METHOD' ),
-			'unique' => self::$unique,
-			'cookies' => self::parse_cookies( $_COOKIE ),
-		);
-
-		// Make sure requests with Authorization: headers are unique.
-		if ( ! empty( $_SERVER['HTTP_AUTHORIZATION'] ) ) {
-			$request_hash['unique']['mc-auth-header'] = self::get_server_var( 'HTTP_AUTHORIZATION' );
-		}
-
-		if ( self::$debug ) {
-			self::$debug_data = array( 'request_hash' => $request_hash );
-		}
-
-		// Convert to an actual hash.
-		self::$request_hash = md5( serialize( $request_hash ) );
-		unset( $request_hash );
-
-		if ( self::$debug ) {
+		// Store debug data if enabled.
+		if ( self::get_config()->debug ) {
+			self::$debug_data = self::get_request_handler()->get_debug_data();
 			self::set_header( 'Key', self::$request_hash );
 		}
 	}
@@ -495,116 +553,46 @@ final class Engine {
 	 * @return   void
 	 */
 	private static function get_cache() {
-		if ( ! self::$storage->is_available() ) {
+		// Get and validate cache.
+		$result = self::get_cache_handler()->get_and_validate(
+			self::$request_hash,
+			self::can_fcgi_regenerate()
+		);
+
+		// No cache to serve.
+		if ( ! $result['serve'] ) {
+			if ( $result['regenerate'] ) {
+				self::$fcgi_regenerate = true;
+			}
 			return;
 		}
 
-		// Look for an existing cache entry by request hash.
-		$result = self::$storage->get_cache( self::$request_hash );
+		// Set regenerate flag if needed.
+		self::$fcgi_regenerate = $result['regenerate'];
 
-		// No cache found.
-		if ( ! $result ) {
-			return;
+		// Get the cache entry (guaranteed to exist if serve is true).
+		$entry = $result['entry'];
+		assert( $entry instanceof Entry );
+
+		// Debug headers.
+		if ( self::get_config()->debug ) {
+			self::set_header( 'Time', gmdate( 'D, d M Y H:i:s \G\M\T', $entry->updated ) );
+			self::set_header( 'Flags', implode( ' ', $result['result']->flags ) );
+
+			if ( $entry->gzip ) {
+				self::set_header( 'Gzip', 'true' );
+			}
+
+			$validator = self::get_cache_handler()->get_validator();
+			$time_left = $validator->time_to_expiry( $entry );
+			self::set_header( 'Expires', $validator->format_time_remaining( $time_left ) );
 		}
 
-		// Unpack the result.
-		list( $cache, $flags, $locked ) = $result;
+		// Set status header.
+		self::set_header( 'Status', self::$fcgi_regenerate ? 'stale' : 'hit' );
 
-		// Something is in the cache.
-		if ( is_array( $cache ) && ! empty( $cache ) ) {
-			$serve_cache = true;
-
-			// Use custom TTL/grace if stored, otherwise use current settings.
-			$effective_ttl = (int) ( $cache['custom_ttl'] ?? self::$ttl );
-			$effective_grace = (int) ( $cache['custom_grace'] ?? self::$grace );
-			$cache_updated = (int) ( $cache['updated'] ?? 0 );
-
-			if ( self::$debug ) {
-				// RFC 1123 date format.
-				self::set_header( 'Time', gmdate( 'D, d M Y H:i:s \G\M\T', $cache['updated'] ) );
-				self::set_header( 'Flags', implode( ' ', $flags ) );
-			}
-
-			// This entry is very old, delete it.
-			if ( $cache_updated + $effective_ttl + $effective_grace < time() ) {
-				self::get_storage()->delete_cache( self::$request_hash );
-				$serve_cache = false;
-			}
-
-			// Is the cache stale?
-			$stale = $cache_updated + $effective_ttl < time();
-
-			// Cache is outdated or set to expire.
-			if ( $stale && $serve_cache ) {
-				// If it's not locked, lock it for regeneration.
-				if ( ! $locked ) {
-					if ( self::$storage->lock( self::$request_hash ) ) {
-						if ( self::can_fcgi_regenerate() ) {
-							// Serve a stale copy and regenerate the cache in the background.
-							$serve_cache = true;
-							self::$fcgi_regenerate = true;
-						} else {
-							$serve_cache = false;
-						}
-					}
-				}
-			}
-
-			// Uncompress cache if gzipped.
-			if ( $serve_cache && $cache['gzip'] ) {
-				if ( self::$gzip ) {
-					if ( self::$debug ) {
-						self::set_header( 'Gzip', 'true' );
-					}
-
-					$cache['output'] = gzuncompress( $cache['output'] );
-				} else {
-					$serve_cache = false;
-				}
-			}
-
-			// Output the cache if we can.
-			if ( $serve_cache ) {
-				// Set the status header.
-				self::set_header( 'Status', self::$fcgi_regenerate ? 'stale' : 'hit' );
-
-				if ( self::$debug ) {
-					$time_left = $effective_ttl - ( time() - $cache['updated'] );
-					self::set_header(
-						'Expires',
-						sprintf(
-							'%dd %02dh %02dm %02ds',
-							intdiv( $time_left, 86400 ),
-							intdiv( $time_left % 86400, 3600 ),
-							intdiv( $time_left % 3600, 60 ),
-							$time_left % 60
-						)
-					);
-				}
-
-				// Output cached status code.
-				if ( ! empty( $cache['status'] ) ) {
-					http_response_code( $cache['status'] );
-				}
-
-				// Output cached headers.
-				if ( is_array( $cache['headers'] ) && ! empty( $cache['headers'] ) ) {
-					foreach ( $cache['headers'] as $header ) {
-						header( $header );
-					}
-				}
-
-				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- We need to output the cache.
-				echo $cache['output'];
-
-				// If we can regenerate in the background, do it.
-				if ( self::$fcgi_regenerate ) {
-					fastcgi_finish_request();
-				} else {
-					exit;
-				}
-			}
-		}
+		// Output the cache.
+		self::get_cache_handler()->get_reader()->output( $entry, self::$fcgi_regenerate );
 	}
 
 	/**
@@ -629,252 +617,43 @@ final class Engine {
 	 * @return   string The output buffer.
 	 */
 	private static function output_buffer( string $output ): ?string {
-		// Let's start optimistically.
-		$cache = true;
-		$reason = '';
+		// Get the flags for this request.
+		$flags = self::get_flag_manager()->get_all();
+		$flags[] = 'url:' . self::get_request_handler()->get_url_hash();
+		$flags = array_unique( $flags );
 
-		// Prepare the data to store.
-		$data = array(
-			'output' => $output,
-			'headers' => array(),
-			'status' => http_response_code(),
-			'gzip' => self::$gzip && function_exists( 'gzcompress' ),
-			'debug' => self::$debug ? self::$debug_data : null,
-			'updated' => time(),
+		// If no flags are set, use the fallback site flag.
+		if ( count( $flags ) <= 1 ) {
+			$flags[] = self::get_flag_key( 'flag' );
+		}
+
+		// Determine custom TTL/grace if overridden.
+		$custom_ttl   = self::$ttl_overridden ? self::$ttl_override : null;
+		$custom_grace = self::$grace_overridden ? self::$grace_override : null;
+		$debug        = self::get_config()->debug ? self::$debug_data : null;
+
+		// Cache the output.
+		$result = self::get_cache_handler()->cache_output(
+			self::$request_hash,
+			$output,
+			$flags,
+			$custom_ttl,
+			$custom_grace,
+			$debug
 		);
 
-		// Only store custom TTL/grace if explicitly set by rules.
-		if ( self::$ttl_overridden ) {
-			$data['custom_ttl'] = self::$ttl;
-		}
-
-		if ( self::$grace_overridden ) {
-			$data['custom_grace'] = self::$grace;
-		}
-
-		// Don't cache 5xx errors.
-		if ( $data['status'] >= 500 ) {
-			$cache = false;
-			$reason = 'Server error response';
-		}
-
-		// Response: If a cookie is being set that is NOT in our ignore list, disable caching for this page.
-		foreach ( headers_list() as $header ) {
-			list($key, $value) = explode( ':', $header, 2 );
-			$key = strtolower( $key );
-			$value = trim( $value );
-
-			// Check for cookies.
-			if ( 'set-cookie' == $key ) {
-				$cookie = explode( ';', $value, 2 );
-				$cookie = trim( $cookie[0] );
-				$cookie = wp_parse_args( $cookie );
-
-				// If there is a cookie that is not in the ignore list, disable caching.
-				foreach ( $cookie as $cookie_key => $cookie_value ) {
-					$cookie_key = strtolower( $cookie_key );
-					$is_ignored = false;
-
-					foreach ( self::$ignore_cookies as $pattern ) {
-						if ( self::pattern_match( $cookie_key, $pattern ) ) {
-							$is_ignored = true;
-							break;
-						}
-					}
-
-					if ( ! $is_ignored ) {
-						$cache = false;
-						$reason = "Setting cookie: $cookie_key";
-						break 2;
-					}
-				}
-
-				// Ignore our own headers, add all the others.
-			} elseif ( strpos( $key, 'x-millicache' ) === false ) {
-				$data['headers'][] = $header;
-			}
-		}
-
-		// Compress the output.
-		if ( $data['gzip'] ) {
-			$data['output'] = gzcompress( $data['output'] );
-		}
-
-		// Maybe cache the output.
-		if ( $cache || self::$fcgi_regenerate ) {
-			// Get the flags for this request.
-			$flags = array_unique( array_merge( self::$flags, array( 'url:' . self::get_url_hash() ) ) );
-
-			// If no flags are set, use the fallback site flag.
-			if ( count( $flags ) <= 1 ) {
-				$flags[] = self::get_flag_key( 'flag' );
-			}
-
-			// Store the cache.
-			self::$storage->perform_cache( self::$request_hash, $data, $flags, $cache );
-		} else {
+		// Set headers based on result.
+		if ( ! $result['cached'] && ! self::$fcgi_regenerate ) {
 			self::set_header( 'Status', 'bypass' );
-			self::set_reason( $reason );
+		}
+
+		// Add reason header if a reason message exists.
+		if ( ! empty( $result['reason'] ) ) {
+			self::set_reason( $result['reason'] );
 		}
 
 		// Return output, but not for the background task.
 		return self::$fcgi_regenerate ? null : $output;
-	}
-
-	/**
-	 * Take a request uri and remove ignored request keys.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @param string $request_uri The request uri.
-	 * @return string The cleaned request uri.
-	 */
-	private static function parse_request_uri( string $request_uri ): string {
-		// Fix for requests with no host.
-		$parsed = parse_url( 'http://null' . $request_uri );
-
-		// Set the path and lowercase it for normalization.
-		$path = strtolower( $parsed['path'] ?? '' );
-
-		// Get and clean the query string.
-		$query = $parsed['query'] ?? '';
-		$query = self::remove_query_args( $query, self::$ignore_request_keys );
-
-		// Return the cleaned request uri.
-		return $query ? $path . '?' . $query : $path;
-	}
-
-	/**
-	 * Remove query arguments from a query string.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @param string        $query_string The input query string, such as foo=bar&baz=qux.
-	 * @param array<string> $args An array of keys to remove.
-	 * @return string The resulting query string.
-	 */
-	private static function remove_query_args( string $query_string, array $args ): string {
-		// Decode HTML entities to convert &amp; to &.
-		$query_string = html_entity_decode( $query_string );
-
-		// Split the query string into an array.
-		$query = explode( '&', $query_string );
-
-		// Remove the query arguments.
-		$query = array_filter(
-			$query,
-			function ( $value ) use ( $args ) {
-				// Extract parameter name (everything before = or the entire string if no =).
-				$param_name = strpos( $value, '=' ) !== false ?
-					substr( $value, 0, strpos( $value, '=' ) ) :
-					$value;
-
-				foreach ( $args as $pattern ) {
-					if ( self::pattern_match( $param_name, $pattern ) ) {
-						return false;
-					}
-				}
-
-				return true;
-			}
-		);
-
-		// Sort the query arguments to avoid cache duplication.
-		sort( $query );
-
-		// Return the resulting query string.
-		return implode( '&', $query );
-	}
-
-	/**
-	 * Parse cookies and remove ignored cookies.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @param array<string> $cookies The input cookies.
-	 * @return array<string> The resulting cookies.
-	 */
-	private static function parse_cookies( array $cookies ): array {
-		return array_filter(
-			$cookies,
-			function ( $key ) {
-				// Starts with any pattern in the ignore list.
-				foreach ( self::$ignore_cookies as $pattern ) {
-					if ( self::pattern_match( strtolower( $key ), $pattern ) ) {
-						return false;
-					}
-				}
-
-				return true;
-			},
-			ARRAY_FILTER_USE_KEY
-		);
-	}
-
-	/**
-	 * Clean up the request.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @return void
-	 */
-	private static function clean_request() {
-		// Unset the ETag and Last-Modified headers.
-		unset( $_SERVER['HTTP_IF_NONE_MATCH'], $_SERVER['HTTP_IF_MODIFIED_SINCE'] );
-
-		// Remove ignored request keys from the query string.
-		if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
-			$_SERVER['QUERY_STRING'] = self::remove_query_args(
-				(string) filter_var( self::get_server_var( 'QUERY_STRING' ), FILTER_SANITIZE_URL ),
-				self::$ignore_request_keys
-			);
-		}
-
-		// Remove ignored request keys from the request uri.
-		$request_uri = self::get_server_var( 'REQUEST_URI' );
-		if ( $request_uri && strpos( $request_uri, '?' ) !== false ) {
-			list($path, $query) = explode( '?', $request_uri, 2 );
-			$query = self::remove_query_args( $query, self::$ignore_request_keys );
-			$_SERVER['REQUEST_URI'] = $path . ( ! empty( $query ) ? '?' . $query : '' );
-		}
-
-		// Remove ignored request keys from the super globals.
-		foreach ( $_GET as $key => $value ) {
-			foreach ( self::$ignore_request_keys as $pattern ) {
-				if ( self::pattern_match( $key, $pattern ) ) {
-					unset( $_GET[ $key ], $_REQUEST[ $key ] );
-					break;
-				}
-			}
-		}
-	}
-
-	/**
-	 * Get a md5 URL hash for domain.com/path?query.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param string|null $url The URL to hash.
-	 * @return string The URL hash.
-	 */
-	public static function get_url_hash( string $url = null ): string {
-		if ( ! $url ) {
-			$host = strtolower( self::get_server_var( 'HTTP_HOST' ) );
-			$path = self::parse_request_uri( self::get_server_var( 'REQUEST_URI' ) );
-		} else {
-			$parsed = parse_url( $url );
-			$host  = strtolower( $parsed['host'] ?? '' );
-			$path  = self::parse_request_uri(
-				( $parsed['path'] ?? '' ) . ( isset( $parsed['query'] ) ? '?' . $parsed['query'] : '' )
-			);
-		}
-
-		return md5( $host . $path );
 	}
 
 	/**
@@ -886,12 +665,7 @@ final class Engine {
 	 * @return void
 	 */
 	public static function clear_cache_on_shutdown() {
-		$sets = array(
-			'mll:expired-flags' => self::$flags_expire,
-			'mll:deleted-flags' => self::$flags_delete,
-		);
-
-		self::$storage->clear_cache_by_sets( $sets, self::$ttl );
+		self::get_clearing_handler()->flush_on_shutdown();
 	}
 
 	/**
@@ -905,29 +679,7 @@ final class Engine {
 	 * @return void
 	 */
 	public static function clear_cache_by_targets( $targets, bool $expire = false ): void {
-		// Convert to array.
-		$targets = is_string( $targets ) ? array( $targets ) : $targets;
-
-		// Clear the full site cache.
-		if ( empty( $targets ) ) {
-			self::clear_cache_by_site_ids();
-			return;
-		}
-
-		foreach ( $targets as $target ) {
-			if ( filter_var( $target, FILTER_VALIDATE_URL ) ) {
-				// Clear by URL.
-				if ( strpos( $target, get_home_url() ) === 0 ) {
-					self::clear_cache_by_urls( $target, $expire );
-				}
-			} elseif ( is_numeric( $target ) ) {
-				// Clear by Post ID.
-				self::clear_cache_by_post_ids( (int) $target );
-			} else {
-				// Clear by Flag. Limit to the current site if not network admin.
-				self::clear_cache_by_flags( $target, false, self::is_multisite() && ! is_network_admin() );
-			}
-		}
+		self::get_clearing_handler()->clear_by_targets( $targets, $expire );
 	}
 
 	/**
@@ -940,21 +692,7 @@ final class Engine {
 	 * @param bool                 $expire Expire cache if set to true, or delete by default.
 	 */
 	public static function clear_cache_by_urls( $urls, bool $expire = false ): void {
-		// Convert to array.
-		$urls = is_string( $urls ) ? array( $urls ) : $urls;
-
-		// Add flags.
-		$flags = array();
-		foreach ( $urls as $url ) {
-			// Add URL with a trailing slash.
-			$flags[] = 'url:' . self::get_url_hash( trailingslashit( $url ) );
-
-			// Add URL without a trailing slash.
-			$flags[] = 'url:' . self::get_url_hash( untrailingslashit( $url ) );
-		}
-
-		// Add flags to expire or delete a collection.
-		$expire ? array_push( self::$flags_expire, ...$flags ) : array_push( self::$flags_delete, ...$flags );
+		self::get_clearing_handler()->clear_by_urls( $urls, $expire );
 	}
 
 	/**
@@ -967,32 +705,7 @@ final class Engine {
 	 * @param bool           $expire Expire cache if set to true, or delete by default.
 	 */
 	public static function clear_cache_by_post_ids( $post_ids, bool $expire = false ): void {
-		// Convert to array.
-		$post_ids = ! is_array( $post_ids ) ? array( $post_ids ) : $post_ids;
-
-		// Add flags to expire or delete the collection.
-		self::clear_cache_by_flags(
-			array_merge(
-				array_map(
-					function ( $post_id ) {
-						return "post:$post_id";
-					},
-					$post_ids
-				),
-				array( 'feed' )
-			),
-			$expire
-		);
-
-		/**
-		 * Fires after cache cleared by post-IDs.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param array $post_ids The post-IDs to clear.
-		 * @param bool  $expire Expire cache if set to true, or delete by default.
-		 */
-		do_action( 'millicache_cache_cleared_by_posts', $post_ids, $expire );
+		self::get_clearing_handler()->clear_by_post_ids( $post_ids, $expire );
 	}
 
 	/**
@@ -1007,26 +720,7 @@ final class Engine {
 	 * @return void
 	 */
 	public static function clear_cache_by_flags( $flags, bool $expire = false, bool $add_prefix = true ): void {
-		// Convert to array.
-		$flags = is_string( $flags ) ? array( $flags ) : $flags;
-
-		// Prefix flags.
-		if ( $add_prefix ) {
-			$flags = self::prefix_flags( $flags );
-		}
-
-		// Add flags to expire or to delete the collection.
-		$expire ? array_push( self::$flags_expire, ...$flags ) : array_push( self::$flags_delete, ...$flags );
-
-		/**
-		 * Fires after cache cleared by flags.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param array $flags The flags to clear.
-		 * @param bool  $expire Expire cache if set to true, or delete by default.
-		 */
-		do_action( 'millicache_cache_cleared_by_flags', $flags, $expire );
+		self::get_clearing_handler()->clear_by_flags( $flags, $expire, $add_prefix );
 	}
 
 	/**
@@ -1040,32 +734,8 @@ final class Engine {
 	 * @param bool           $expire Expire cache if set to true, or delete by default.
 	 * @return void
 	 */
-	public static function clear_cache_by_site_ids( $site_ids = null, int $network_id = null, bool $expire = false ): void {
-		// Convert to array.
-		$site_ids = ! is_array( $site_ids ) ? array( $site_ids ) : $site_ids;
-
-		// Add flags to expire or delete a collection.
-		self::clear_cache_by_flags(
-			array_map(
-				function ( $site_id ) use ( $network_id ) {
-					return self::get_flag_prefix( $site_id, $network_id ) . '*';
-				},
-				$site_ids
-			),
-			$expire,
-			false
-		);
-
-		/**
-		 * Fires after cache cleared by site-IDs.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param array     $site_ids   The site IDs to expire.
-		 * @param int|null  $network_id The network ID.
-		 * @param bool      $expire     Expire cache if set to true, or delete by default.
-		 */
-		do_action( 'millicache_cache_cleared_by_sites', $site_ids, $network_id, $expire );
+	public static function clear_cache_by_site_ids( $site_ids = null, ?int $network_id = null, bool $expire = false ): void {
+		self::get_clearing_handler()->clear_by_site_ids( $site_ids, $network_id, $expire );
 	}
 
 	/**
@@ -1078,22 +748,8 @@ final class Engine {
 	 * @param bool     $expire Expire cache.
 	 * @return void
 	 */
-	public static function clear_cache_by_network_id( int $network_id = null, bool $expire = false ): void {
-		$site_ids = self::get_site_ids( $network_id ?? get_current_network_id() );
-
-		foreach ( $site_ids as $site_id ) {
-			self::clear_cache_by_site_ids( $site_id, $network_id, $expire );
-		}
-
-		/**
-		 * Fires after cache cleared by network-ID.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param int|null $network_id The network ID.
-		 * @param bool     $expire Expire cache if set to true, or delete by default.
-		 */
-		do_action( 'millicache_cleared_by_network_id', $network_id, $expire );
+	public static function clear_cache_by_network_id( ?int $network_id = null, bool $expire = false ): void {
+		self::get_clearing_handler()->clear_by_network_id( $network_id, $expire );
 	}
 
 	/**
@@ -1106,18 +762,7 @@ final class Engine {
 	 * @return void
 	 */
 	public static function clear_cache( bool $expire = false ): void {
-		foreach ( self::get_network_ids() as $network_id ) {
-			self::clear_cache_by_network_id( $network_id, $expire );
-		}
-
-		/**
-		 * Fires after all cache cleared.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param bool $expire Expire cache if set to true, or delete by default.
-		 */
-		do_action( 'millicache_cache_cleared', $expire );
+		self::get_clearing_handler()->clear_all( $expire );
 	}
 
 	/**
@@ -1129,7 +774,7 @@ final class Engine {
 	 * @return bool If the site is a Multisite network.
 	 */
 	public static function is_multisite(): bool {
-		return is_multisite();
+		return self::$multisite->is_enabled();
 	}
 
 	/**
@@ -1142,17 +787,7 @@ final class Engine {
 	 * @return array<int> The site IDs.
 	 */
 	public static function get_site_ids( int $network_id = 1 ): array {
-		if ( self::is_multisite() && function_exists( 'get_sites' ) ) {
-			return get_sites(
-				array(
-					'fields' => 'ids',
-					'number' => 0,
-					'network_id' => $network_id,
-				)
-			);
-		}
-
-		return array( 1 );
+		return self::$multisite->get_site_ids( $network_id );
 	}
 
 	/**
@@ -1164,11 +799,7 @@ final class Engine {
 	 * @return array<int>
 	 */
 	public static function get_network_ids(): array {
-		if ( self::is_multisite() && function_exists( 'get_networks' ) ) {
-			return (array) get_networks( array( 'fields' => 'ids' ) );
-		}
-
-		return array( 1 );
+		return self::$multisite->get_network_ids();
 	}
 
 	/**
@@ -1183,17 +814,7 @@ final class Engine {
 	 * @return string The flag prefix.
 	 */
 	public static function get_flag_prefix( $site_id = null, $network_id = null ): string {
-		$prefix = '';
-
-		if ( self::is_multisite() ) {
-			$prefix = ( is_int( $site_id ) || is_string( $site_id ) ? $site_id : get_current_blog_id() ) . ':';
-
-			if ( count( self::get_network_ids() ) > 1 ) {
-				$prefix = ( is_int( $network_id ) || is_string( $network_id ) ? $network_id : get_current_network_id() ) . ':' . $prefix;
-			}
-		}
-
-		return $prefix;
+		return self::get_flag_manager()->get_prefix( $site_id, $network_id );
 	}
 
 	/**
@@ -1209,17 +830,7 @@ final class Engine {
 	 * @return array<string> The prefixed flags.
 	 */
 	public static function prefix_flags( $flags = array(), $site_id = null, $network_id = null ): array {
-		if ( is_string( $flags ) ) {
-			$flags = array( $flags );
-		}
-
-		// Prefix the flags with the current site and network ID.
-		return array_map(
-			function ( $flag ) use ( $site_id, $network_id ) {
-				return self::get_flag_prefix( $site_id, $network_id ) . $flag;
-			},
-			$flags
-		);
+		return self::get_flag_manager()->prefix( $flags, $site_id, $network_id );
 	}
 
 	/**
@@ -1235,7 +846,7 @@ final class Engine {
 	 * @return string The flag key.
 	 */
 	public static function get_flag_key( string $flag, $site_id = null, $network_id = null ): string {
-		return self::get_flag_prefix( $site_id, $network_id ) . $flag;
+		return self::get_flag_manager()->get_key( $flag, $site_id, $network_id );
 	}
 
 	/**
@@ -1247,7 +858,7 @@ final class Engine {
 	 * @param string $flag Keep these short and unique, don't overuse.
 	 */
 	public static function add_flag( string $flag ): void {
-		self::$flags[] = self::get_flag_prefix() . $flag;
+		self::get_flag_manager()->add( $flag );
 	}
 
 	/**
@@ -1259,13 +870,7 @@ final class Engine {
 	 * @param string $flag The flag to remove.
 	 */
 	public static function remove_flag( string $flag ): void {
-		$prefixed_flag = self::get_flag_prefix() . $flag;
-		$key           = array_search( $prefixed_flag, self::$flags, true );
-
-		if ( false !== $key ) {
-			unset( self::$flags[ $key ] );
-			self::$flags = array_values( self::$flags ); // Re-index array.
-		}
+		self::get_flag_manager()->remove( $flag );
 	}
 
 	/**
@@ -1277,7 +882,7 @@ final class Engine {
 	 * @param int $seconds TTL in seconds.
 	 */
 	public static function set_ttl( int $seconds ): void {
-		self::$ttl = $seconds;
+		self::$ttl_override = $seconds;
 		self::$ttl_overridden = true;
 	}
 
@@ -1290,7 +895,7 @@ final class Engine {
 	 * @param int $seconds Grace period in seconds.
 	 */
 	public static function set_grace( int $seconds ): void {
-		self::$grace = $seconds;
+		self::$grace_override = $seconds;
 		self::$grace_overridden = true;
 	}
 
@@ -1367,7 +972,7 @@ final class Engine {
 	 * @return void
 	 */
 	private static function set_reason( string $value ): void {
-		if ( self::$debug && ! empty( $value ) ) {
+		if ( self::get_config()->debug && ! empty( $value ) ) {
 			self::set_header( 'Reason', $value );
 		}
 	}
@@ -1384,61 +989,6 @@ final class Engine {
 		return function_exists( 'fastcgi_finish_request' );
 	}
 
-	/**
-	 * Checks if a string matches a pattern that may contain wildcards or regex.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @param string $string The string to check.
-	 * @param string $pattern The pattern to match against. Can contain * wildcards or be a regex pattern enclosed in /.
-	 * @return bool True if the string matches the pattern, false otherwise.
-	 */
-	private static function pattern_match( string $string, string $pattern ): bool {
-		// For empty patterns or strings.
-		if ( '' === $pattern || '' === $string ) {
-			return $pattern === $string;
-		}
-
-		// Check if the pattern is a regex (enclosed in forward slashes).
-		if ( strlen( $pattern ) > 2 && '/' === $pattern[0] && '/' === $pattern[ strlen( $pattern ) - 1 ] ) {
-			return (bool) @preg_match( $pattern, $string );
-		}
-
-		// If the pattern contains a wildcard *.
-		if ( false !== strpos( $pattern, '*' ) ) {
-			// Just a wildcard means match anything.
-			if ( '*' === $pattern ) {
-				return true;
-			}
-
-			// Convert the wildcard pattern to regex.
-			$regex_pattern = preg_quote( $pattern, '/' );
-			$regex_pattern = str_replace( '\*', '.*', $regex_pattern );
-
-			return (bool) preg_match( '/^' . $regex_pattern . '$/i', $string );
-		}
-
-		// No wildcard, perform exact match.
-		return $pattern === $string;
-	}
-
-	/**
-	 * Get the value of a server variable.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param string $key The server variable key.
-	 * @return string The server variable value.
-	 */
-	public static function get_server_var( string $key ): string {
-		if ( isset( $_SERVER[ $key ] ) ) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- We are sanitizing & un-slashing here with PHP native functions.
-			return htmlspecialchars( stripslashes( $_SERVER[ $key ] ), ENT_QUOTES, 'UTF-8' );
-		}
-		return '';
-	}
 
 	/**
 	 * Get meaningful Cache config and info.
@@ -1451,15 +1001,17 @@ final class Engine {
 	 * @return array<mixed> The Cache status.
 	 */
 	public static function get_status( bool $network = false ): array {
+		$config = self::get_config();
+
 		$cache = array(
-			'ttl' => self::$ttl,
-			'grace' => self::$grace,
-			'gzip' => self::$gzip,
-			'debug' => self::$debug,
-			'nocache_paths' => self::$nocache_paths,
-			'ignore_cookies' => self::$ignore_cookies,
-			'nocache_cookies' => self::$nocache_cookies,
-			'ignore_request_keys' => self::$ignore_request_keys,
+			'ttl' => $config->ttl,
+			'grace' => $config->grace,
+			'gzip' => $config->gzip,
+			'debug' => $config->debug,
+			'nocache_paths' => $config->nocache_paths,
+			'ignore_cookies' => $config->ignore_cookies,
+			'nocache_cookies' => $config->nocache_cookies,
+			'ignore_request_keys' => $config->ignore_request_keys,
 		);
 
 		return array_merge( $cache, Admin::get_cache_size( $network ? self::get_flag_key( 'site', '*' ) : self::get_flag_key( '*' ), true ) );

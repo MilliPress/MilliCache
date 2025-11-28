@@ -10,6 +10,7 @@
 namespace MilliCache\Core;
 
 use MilliCache\Engine;
+use MilliCache\Engine\Utilities\ServerVars;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -43,7 +44,7 @@ class Settings {
 	 * @access   public
 	 */
 	public function __construct() {
-		self::$domain = (string) preg_replace( '/[^a-zA-Z0-9_\-]/', '_', Engine::get_server_var( 'HTTP_HOST' ) );
+		self::$domain = (string) preg_replace( '/[^a-zA-Z0-9_\-]/', '_', ServerVars::get( 'HTTP_HOST' ) );
 
 		if ( function_exists( 'add_action' ) ) {
 			add_action( 'init', array( $this, 'register_settings' ) );
@@ -360,7 +361,7 @@ class Settings {
 	 *
 	 * @return void
 	 */
-	public static function backup( string $module = null ): void {
+	public static function backup( ?string $module = null ): void {
 		$settings = new self();
 		$current_settings = $settings->get_settings( $module );
 
@@ -391,7 +392,7 @@ class Settings {
 	 *
 	 * @return bool True if the settings were restored, false otherwise.
 	 */
-	public static function restore_backup( string $module = null ): bool {
+	public static function restore_backup( ?string $module = null ): bool {
 		$backup = get_transient( 'millicache_settings_backup' );
 
 		if ( ! $backup ) {
@@ -414,7 +415,7 @@ class Settings {
 	 *
 	 * @return bool True if the settings are the default settings, false otherwise.
 	 */
-	public static function has_default_settings( string $module = null ): bool {
+	public static function has_default_settings( ?string $module = null ): bool {
 		$settings = new self();
 		return $settings->get_settings( $module, true ) === $settings->get_default_settings( $module );
 	}

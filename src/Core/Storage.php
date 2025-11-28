@@ -355,7 +355,8 @@ final class Storage {
 					}
 
 					// Set the max expiration time.
-					$tx->expire( $key, Engine::$ttl + Engine::$grace );
+					$config = Engine::get_config();
+					$tx->expire( $key, $config->ttl + $config->grace );
 				}
 			);
 
