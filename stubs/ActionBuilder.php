@@ -8,15 +8,14 @@
  * @package MilliCache
  */
 
-namespace MilliRules\Builders;
+namespace MilliCache\Deps\MilliRules\Builders;
 
 /**
  * ActionBuilder with MilliCache action stubs
  *
  * @method ActionBuilder add_flag(string $flag) Add a cache flag
  * @method ActionBuilder remove_flag(string $flag) Remove a cache flag
- * @method ActionBuilder do_cache(string $reason = '') Allow page to be cached
- * @method ActionBuilder do_not_cache(string $reason) Prevent page from being cached
+ * @method ActionBuilder do_cache(bool $do_cache, string $reason = '') Allow page to be cached
  * @method ActionBuilder set_ttl(int $ttl) Set cache TTL in seconds
  * @method ActionBuilder set_grace(int $grace) Set the cache grace period in seconds
  * @method ActionBuilder flush_by_flag(string|array $flags) Flush cache by flag(s)
