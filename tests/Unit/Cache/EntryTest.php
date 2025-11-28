@@ -63,7 +63,7 @@ describe( 'CacheEntry', function () {
 				'debug' => array( 'key' => 'value' ),
 			);
 
-			$entry = CacheEntry::from_array( $data );
+			$entry = Entry::from_array( $data );
 
 			expect( $entry->output )->toBe( '<html>Cached</html>' );
 			expect( $entry->headers )->toBe( array( 'X-Custom: value' ) );
@@ -84,7 +84,7 @@ describe( 'CacheEntry', function () {
 				'updated' => time(),
 			);
 
-			$entry = CacheEntry::from_array( $data );
+			$entry = Entry::from_array( $data );
 
 			expect( $entry->custom_ttl )->toBeNull();
 			expect( $entry->custom_grace )->toBeNull();
@@ -92,7 +92,7 @@ describe( 'CacheEntry', function () {
 		} );
 
 		it( 'provides defaults for completely empty array', function () {
-			$entry = CacheEntry::from_array( array() );
+			$entry = Entry::from_array( array() );
 
 			expect( $entry->output )->toBe( '' );
 			expect( $entry->headers )->toBeArray()->toBeEmpty();
@@ -289,7 +289,7 @@ describe( 'CacheEntry', function () {
 				'debug' => array( 'key' => 'value', 'nested' => array( 'data' => 'test' ) ),
 			);
 
-			$entry = CacheEntry::from_array( $original_data );
+			$entry = Entry::from_array( $original_data );
 			$converted_back = $entry->to_array();
 
 			expect( $converted_back )->toBe( $original_data );

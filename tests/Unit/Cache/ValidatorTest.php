@@ -4,22 +4,23 @@ use MilliCache\Engine\Cache\Validator;
 use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Entry;
 
-describe('Validator', function () {
-	beforeEach(function () {
-		$this->config = new Config(
-			3600, // TTL: 1 hour
-			600,  // Grace: 10 minutes
-			true,
-			false,
-			array(),
-			array(),
-			array(),
-			array(),
-			array()
-		);
+uses()->beforeEach(function () {
+	$this->config = new Config(
+		3600, // TTL: 1 hour
+		600,  // Grace: 10 minutes
+		true,
+		false,
+		array(),
+		array(),
+		array(),
+		array(),
+		array()
+	);
 
-		$this->validator = new Validator($this->config);
-	});
+	$this->validator = new Validator($this->config);
+});
+
+describe('Validator', function () {
 
 	describe('is_stale', function () {
 		it('returns false for fresh entries', function () {
@@ -118,12 +119,12 @@ describe('Validator', function () {
 				array(),
 				200,
 				false,
-				time() - 3700, // Updated 61 minutes ago
+				time() - 4000, // Updated 66 minutes ago
 				null,
 				300 // Custom grace: 5 minutes
 			);
 
-			// Should be too old (61 > 60 + 5)
+			// Should be too old (66 > 60 + 5)
 			expect($this->validator->is_too_old($entry))->toBeTrue();
 		});
 	});

@@ -3,22 +3,23 @@
 use MilliCache\Engine\Request\Parser;
 use MilliCache\Engine\Cache\Config;
 
-describe('Parser', function () {
-	beforeEach(function () {
-		$this->config = new Config(
-			3600,
-			600,
-			true,
-			false,
-			array(),
-			array(),
-			array('ga_*', 'utm_*', '_ga'),
-			array('utm_source', 'utm_campaign', 'fbclid'),
-			array()
-		);
+uses()->beforeEach(function () {
+	$this->config = new Config(
+		3600,
+		600,
+		true,
+		false,
+		array(),
+		array(),
+		array('ga_*', 'utm_*', '_ga'),
+		array('utm_source', 'utm_campaign', 'fbclid'),
+		array()
+	);
 
-		$this->parser = new Parser($this->config);
-	});
+	$this->parser = new Parser($this->config);
+});
+
+describe('Parser', function () {
 
 	describe('parse_request_uri', function () {
 		it('normalizes path to lowercase', function () {

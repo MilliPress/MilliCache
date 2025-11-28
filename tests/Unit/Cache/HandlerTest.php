@@ -8,27 +8,24 @@ use MilliCache\Engine\Cache\Writer;
 use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Entry;
 
+uses()->beforeEach(function () {
+	$this->config = new Config(
+		3600,
+		600,
+		true,
+		false,
+		array(),
+		array(),
+		array(),
+		array(),
+		array()
+	);
+
+	$this->storage = Mockery::mock(Storage::class);
+	$this->handler = new Handler($this->config, $this->storage);
+});
+
 describe('Handler', function () {
-	beforeEach(function () {
-		$this->config = new Config(
-			3600,
-			600,
-			true,
-			false,
-			array(),
-			array(),
-			array(),
-			array(),
-			array()
-		);
-
-		$this->storage = Mockery::mock(Storage::class);
-		$this->handler = new Handler($this->config, $this->storage);
-	});
-
-	afterEach(function () {
-		Mockery::close();
-	});
 
 	describe('constructor', function () {
 		it('creates handler with config and storage', function () {
@@ -79,7 +76,7 @@ describe('Handler', function () {
 
 			expect($result['serve'])->toBeTrue();
 			expect($result['regenerate'])->toBeFalse();
-			expect($result['entry'])->toBeInstanceOf(CacheEntry::class);
+			expect($result['entry'])->toBeInstanceOf(Entry::class);
 			expect($result['entry']->output)->toBe('<html>');
 		});
 

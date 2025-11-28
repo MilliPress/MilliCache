@@ -6,8 +6,8 @@ use MilliCache\Engine\Request\Cleaner;
 use MilliCache\Engine\Request\Hasher;
 use MilliCache\Engine\Cache\Config;
 
-describe('Handler', function () {
-	beforeEach(function () {
+uses()
+	->beforeEach(function () {
 		// Save original server state.
 		$this->original_server = $_SERVER;
 		$this->original_cookie = $_COOKIE;
@@ -37,15 +37,16 @@ describe('Handler', function () {
 		);
 
 		$this->handler = new Handler($this->config);
-	});
-
-	afterEach(function () {
+	})
+	->afterEach(function () {
 		// Restore original state.
 		$_SERVER = $this->original_server;
 		$_COOKIE = $this->original_cookie;
 		$_GET = $this->original_get;
 		$_REQUEST = $this->original_request;
 	});
+
+describe('Handler', function () {
 
 	describe('constructor', function () {
 		it('creates handler with config', function () {

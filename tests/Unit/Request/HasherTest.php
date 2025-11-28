@@ -4,8 +4,8 @@ use MilliCache\Engine\Request\Hasher;
 use MilliCache\Engine\Request\Parser;
 use MilliCache\Engine\Cache\Config;
 
-describe('Hasher', function () {
-	beforeEach(function () {
+uses()
+	->beforeEach(function () {
 		// Save original server state.
 		$this->original_server = $_SERVER;
 		$this->original_cookie = $_COOKIE;
@@ -31,13 +31,14 @@ describe('Hasher', function () {
 
 		$this->parser = new Parser($this->config);
 		$this->hasher = new Hasher($this->config, $this->parser);
-	});
-
-	afterEach(function () {
+	})
+	->afterEach(function () {
 		// Restore original state.
 		$_SERVER = $this->original_server;
 		$_COOKIE = $this->original_cookie;
 	});
+
+describe('Hasher', function () {
 
 	describe('generate', function () {
 		it('generates an MD5 hash', function () {

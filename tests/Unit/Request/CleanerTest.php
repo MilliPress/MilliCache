@@ -4,8 +4,8 @@ use MilliCache\Engine\Request\Cleaner;
 use MilliCache\Engine\Request\Parser;
 use MilliCache\Engine\Cache\Config;
 
-describe('Cleaner', function () {
-	beforeEach(function () {
+uses()
+	->beforeEach(function () {
 		// Save original server state.
 		$this->original_server = $_SERVER;
 		$this->original_get = $_GET;
@@ -25,14 +25,15 @@ describe('Cleaner', function () {
 
 		$this->parser = new Parser($this->config);
 		$this->cleaner = new Cleaner($this->config, $this->parser);
-	});
-
-	afterEach(function () {
+	})
+	->afterEach(function () {
 		// Restore original state.
 		$_SERVER = $this->original_server;
 		$_GET = $this->original_get;
 		$_REQUEST = $this->original_request;
 	});
+
+describe('Cleaner', function () {
 
 	describe('clean_request', function () {
 		it('removes ETag headers', function () {

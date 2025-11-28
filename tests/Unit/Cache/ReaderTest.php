@@ -7,28 +7,25 @@ use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Entry;
 use MilliCache\Engine\Cache\Result;
 
+uses()->beforeEach(function () {
+	$this->config = new Config(
+		3600,
+		600,
+		true,
+		false,
+		array(),
+		array(),
+		array(),
+		array(),
+		array()
+	);
+
+	$this->storage = Mockery::mock(Storage::class);
+	$this->validator = new Validator($this->config);
+	$this->reader = new Reader($this->config, $this->storage, $this->validator);
+});
+
 describe('Reader', function () {
-	beforeEach(function () {
-		$this->config = new Config(
-			3600,
-			600,
-			true,
-			false,
-			array(),
-			array(),
-			array(),
-			array(),
-			array()
-		);
-
-		$this->storage = Mockery::mock(Storage::class);
-		$this->validator = new Validator($this->config);
-		$this->reader = new Reader($this->config, $this->storage, $this->validator);
-	});
-
-	afterEach(function () {
-		Mockery::close();
-	});
 
 	describe('get', function () {
 		it('returns miss when storage is unavailable', function () {
@@ -74,7 +71,7 @@ describe('Reader', function () {
 			$result = $this->reader->get('test_hash');
 
 			expect($result->is_hit())->toBeTrue();
-			expect($result->entry)->toBeInstanceOf(CacheEntry::class);
+			expect($result->entry)->toBeInstanceOf(Entry::class);
 			expect($result->entry->output)->toBe('<html>');
 		});
 
@@ -101,7 +98,7 @@ describe('Reader', function () {
 
 	describe('should_serve', function () {
 		it('returns false for cache miss', function () {
-			$result = CacheResult::miss();
+			$result = Result::miss();
 			$decision = $this->reader->should_serve($result, 'hash', true);
 
 			expect($decision['serve'])->toBeFalse();
@@ -116,7 +113,7 @@ describe('Reader', function () {
 				false,
 				time() - 5000 // Very old
 			);
-			$result = CacheResult::hit($entry, array(), false);
+			$result = Result::hit($entry, array(), false);
 
 			$this->storage->shouldReceive('delete_cache')->with('hash')->once();
 
@@ -133,7 +130,7 @@ describe('Reader', function () {
 				false,
 				time() - 1800 // 30 minutes ago, fresh
 			);
-			$result = CacheResult::hit($entry, array(), false);
+			$result = Result::hit($entry, array(), false);
 
 			$decision = $this->reader->should_serve($result, 'hash', true);
 
@@ -149,7 +146,7 @@ describe('Reader', function () {
 				false,
 				time() - 3700 // Stale
 			);
-			$result = CacheResult::hit($entry, array(), true); // Locked
+			$result = Result::hit($entry, array(), true); // Locked
 
 			$decision = $this->reader->should_serve($result, 'hash', true);
 
@@ -165,7 +162,7 @@ describe('Reader', function () {
 				false,
 				time() - 3700 // Stale
 			);
-			$result = CacheResult::hit($entry, array(), false); // Not locked
+			$result = Result::hit($entry, array(), false); // Not locked
 
 			$this->storage->shouldReceive('lock')->with('hash')->andReturn(true);
 
@@ -183,7 +180,7 @@ describe('Reader', function () {
 				false,
 				time() - 3700 // Stale
 			);
-			$result = CacheResult::hit($entry, array(), false);
+			$result = Result::hit($entry, array(), false);
 
 			$this->storage->shouldReceive('lock')->with('hash')->andReturn(true);
 
@@ -200,7 +197,7 @@ describe('Reader', function () {
 				false,
 				time() - 3700 // Stale
 			);
-			$result = CacheResult::hit($entry, array(), false);
+			$result = Result::hit($entry, array(), false);
 
 			$this->storage->shouldReceive('lock')->with('hash')->andReturn(false);
 
@@ -292,16 +289,15 @@ describe('Reader', function () {
 
 			// Note: Cannot fully test exit behavior in unit tests
 			// This test validates the method signature and basic behavior
-			expect(function () use ($entry) {
-				ob_start();
-				try {
-					$this->reader->output($entry, false);
-				} catch (\Throwable $e) {
-					// Catch exit call
-				}
-				$output = ob_get_clean();
-				expect($output)->toBe('<html>Test</html>');
-			})->not->toThrow();
+			ob_start();
+			try {
+				$this->reader->output($entry, false);
+			} catch (\Throwable $e) {
+				// Catch exit call
+			}
+			$output = ob_get_clean();
+
+			expect($output)->toBe('<html>Test</html>');
 		});
 	});
 });

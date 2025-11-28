@@ -39,9 +39,9 @@ final class PatternMatcher {
 	 * @return bool True if the string matches the pattern, false otherwise.
 	 */
 	public static function match( string $string, string $pattern ): bool {
-		// For empty patterns or strings.
-		if ( '' === $pattern || '' === $string ) {
-			return $pattern === $string;
+		// For empty pattern, only match empty string.
+		if ( '' === $pattern ) {
+			return '' === $string;
 		}
 
 		// Check if the pattern is a regex (enclosed in forward slashes).

@@ -204,8 +204,8 @@ final class Reader {
 			return null;
 		}
 
-		// Decompress the output.
-		$decompressed = gzuncompress( $entry->output );
+		// Decompress the output. Suppress warnings for invalid data.
+		$decompressed = @gzuncompress( $entry->output );
 
 		if ( false === $decompressed ) {
 			return null;

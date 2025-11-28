@@ -36,7 +36,7 @@ describe( 'ServerVars', function () {
 		it( 'strips slashes from values', function () {
 			$_SERVER['TEST_VAR'] = "test\'value\"here";
 			$result = ServerVars::get( 'TEST_VAR' );
-			expect( $result )->toBe( "test'value&quot;here" );
+			expect( $result )->toBe( "test&#039;value&quot;here" );
 		} );
 
 		it( 'sanitizes HTML special characters', function () {

@@ -16,5 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Set up autoloading.
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Register custom expectations if needed.
-uses()->in( 'Unit' );
+// Close Mockery after each test to prevent memory leaks and test pollution.
+uses()
+	->afterEach( function () {
+		Mockery::close();
+	} )
+	->in( 'Unit' );

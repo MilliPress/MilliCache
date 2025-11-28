@@ -5,31 +5,27 @@ use MilliCache\Engine\Cache\Writer;
 use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Entry;
 
+uses()->beforeEach(function () {
+	$this->config = new Config(
+		3600,
+		600,
+		true, // Gzip enabled
+		false,
+		array(),
+		array(),
+		array('test_cookie'),
+		array(),
+		array()
+	);
+
+	$this->storage = Mockery::mock(Storage::class);
+	$this->writer = new Writer($this->config, $this->storage);
+
+	// Save original headers state
+	$this->original_headers = headers_list();
+});
+
 describe('Writer', function () {
-	beforeEach(function () {
-		$this->config = new Config(
-			3600,
-			600,
-			true, // Gzip enabled
-			false,
-			array(),
-			array(),
-			array('test_cookie'),
-			array(),
-			array()
-		);
-
-		$this->storage = Mockery::mock(Storage::class);
-		$this->writer = new Writer($this->config, $this->storage);
-
-		// Save original headers state
-		$this->original_headers = headers_list();
-	});
-
-	afterEach(function () {
-		Mockery::close();
-		// Note: Cannot fully reset headers in CLI environment
-	});
 
 	describe('should_cache', function () {
 		it('allows caching for 2xx status codes', function () {
@@ -77,7 +73,7 @@ describe('Writer', function () {
 				null
 			);
 
-			expect($entry)->toBeInstanceOf(CacheEntry::class);
+			expect($entry)->toBeInstanceOf(Entry::class);
 			expect($entry->output)->toBe('<html>');
 			expect($entry->headers)->toBe(array('Content-Type: text/html'));
 			expect($entry->status)->toBe(200);
@@ -196,7 +192,7 @@ describe('Writer', function () {
 			$result = $this->writer->compress($entry);
 
 			// Should return entry (compressed or with gzip disabled)
-			expect($result)->toBeInstanceOf(CacheEntry::class);
+			expect($result)->toBeInstanceOf(Entry::class);
 		});
 	});
 
@@ -251,9 +247,12 @@ describe('Writer', function () {
 						&& $data['custom_ttl'] === 7200
 						&& $data['custom_grace'] === 1200;
 				}), Mockery::any(), Mockery::any())
+				->once()
 				->andReturn(true);
 
-			$this->writer->store('hash', $entry, array(), true);
+			$result = $this->writer->store('hash', $entry, array(), true);
+
+			expect($result)->toBeTrue();
 		});
 
 		it('passes cacheable flag to storage', function () {
@@ -262,9 +261,12 @@ describe('Writer', function () {
 			$this->storage->shouldReceive('is_available')->andReturn(true);
 			$this->storage->shouldReceive('perform_cache')
 				->with(Mockery::any(), Mockery::any(), Mockery::any(), false)
+				->once()
 				->andReturn(true);
 
-			$this->writer->store('hash', $entry, array(), false);
+			$result = $this->writer->store('hash', $entry, array(), false);
+
+			expect($result)->toBeTrue();
 		});
 	});
 

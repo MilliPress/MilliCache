@@ -15,7 +15,7 @@ describe( 'CacheResult', function () {
 
 	describe( 'factory methods', function () {
 		it( 'creates cache miss', function () {
-			$result = CacheResult::miss();
+			$result = Result::miss();
 
 			expect( $result->entry )->toBeNull();
 			expect( $result->flags )->toBeArray()->toBeEmpty();
@@ -33,7 +33,7 @@ describe( 'CacheResult', function () {
 				updated: time()
 			);
 
-			$result = CacheResult::hit( $entry, array( 'post:123', 'home' ), false );
+			$result = Result::hit( $entry, array( 'post:123', 'home' ), false );
 
 			expect( $result->entry )->toBe( $entry );
 			expect( $result->flags )->toBe( array( 'post:123', 'home' ) );
@@ -51,7 +51,7 @@ describe( 'CacheResult', function () {
 				updated: time()
 			);
 
-			$result = CacheResult::hit( $entry, array(), true );
+			$result = Result::hit( $entry, array(), true );
 
 			expect( $result->locked )->toBeTrue();
 		} );
@@ -59,7 +59,7 @@ describe( 'CacheResult', function () {
 
 	describe( 'is_stale', function () {
 		it( 'returns false for cache miss', function () {
-			$result = CacheResult::miss();
+			$result = Result::miss();
 			expect( $result->is_stale( 3600 ) )->toBeFalse();
 		} );
 
@@ -72,7 +72,7 @@ describe( 'CacheResult', function () {
 				updated: time()
 			);
 
-			$result = CacheResult::hit( $entry );
+			$result = Result::hit( $entry );
 			expect( $result->is_stale( 3600 ) )->toBeFalse();
 		} );
 
@@ -85,14 +85,14 @@ describe( 'CacheResult', function () {
 				updated: time() - 7200
 			);
 
-			$result = CacheResult::hit( $entry );
+			$result = Result::hit( $entry );
 			expect( $result->is_stale( 3600 ) )->toBeTrue();
 		} );
 	} );
 
 	describe( 'is_too_old', function () {
 		it( 'returns false for cache miss', function () {
-			$result = CacheResult::miss();
+			$result = Result::miss();
 			expect( $result->is_too_old( 3600, 600 ) )->toBeFalse();
 		} );
 
@@ -105,7 +105,7 @@ describe( 'CacheResult', function () {
 				updated: time() - 5000
 			);
 
-			$result = CacheResult::hit( $entry );
+			$result = Result::hit( $entry );
 			expect( $result->is_too_old( 3600, 600 ) )->toBeTrue();
 		} );
 	} );

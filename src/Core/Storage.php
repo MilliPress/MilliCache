@@ -28,7 +28,7 @@ use MilliCache\Deps\Predis\PredisException;
  * @subpackage MilliCache/Core
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-final class Storage {
+class Storage {
 
 	/**
 	 * The Predis Client object.
