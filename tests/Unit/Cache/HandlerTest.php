@@ -137,7 +137,10 @@ describe('Handler', function () {
 				array($cache_data, array(), false)
 			);
 
+			// Suppress the expected PHP warning from gzuncompress
+			set_error_handler(function () {}, E_WARNING);
 			$result = $this->handler->get_and_validate('hash', true);
+			restore_error_handler();
 
 			expect($result['serve'])->toBeFalse();
 			expect($result['entry'])->toBeNull();
