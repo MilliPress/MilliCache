@@ -258,39 +258,34 @@ class Storage {
 	 */
 	public function get_cache( string $hash ): ?array {
 		try {
-			$cache = null;
-			$lock_status = '';
-
 			// Get the cache entry and lock status.
 			$key = $this->get_cache_key( $hash );
 
-			$this->client->transaction(
-				function ( $tx ) use ( $key, &$cache, &$lock_status ) {
+			$results = $this->client->transaction(
+				function ( $tx ) use ( $key ) {
 					// Get cache entry.
-					$cache = $tx->hgetall( $key );
+					$tx->hgetall( $key );
 
 					// Get lock status.
-					$lock_status = $tx->get( $key . '-lock' );
+					$tx->get( $key . '-lock' );
 				}
 			);
 
-			if ( ! $cache ) {
+			if ( ! is_array( $results ) || ! is_array( $results[0] ?? null ) ) {
 				return null;
 			}
 
-			// Sort out the flags.
-			$flags = array();
-			foreach ( array_keys( $cache ) as $key ) {
-				if ( strpos( (string) $key, $this->prefix . ':f:' ) === 0 ) {
-					$flags[] = $this->get_flag_key( (string) $key );
-				}
-			}
+			$cache = $results[0];
+			$lock_status = $results[1] ?? '';
+			$flags = array_filter(
+				array_keys( $cache ),
+				fn( $key ) => strpos( (string) $key, $this->prefix . ':f:' ) === 0
+			);
 
-			// Return the data, the flags and lock status.
 			return isset( $cache['data'] ) ? array(
 				(array) unserialize( $cache['data'] ),
-				$flags,
-				$lock_status ?? '',
+				array_map( array( $this, 'get_flag_key' ), $flags ),
+				$lock_status,
 			) : null;
 		} catch ( PredisException $e ) {
 			error_log( 'Unable to get cache from the storage server: ' . $e->getMessage() );
