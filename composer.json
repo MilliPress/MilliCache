@@ -43,7 +43,7 @@
     "scripts": {
         "test": "composer test:fix && composer test:lint && composer test:phpstan && composer test:unit",
         "test:unit": "pest --colors=always",
-        "test:coverage": "pest --coverage --min=80",
+        "test:coverage": "XDEBUG_MODE=coverage pest --coverage --min=80",
         "test:phpstan": "phpstan analyse -c phpstan.neon --memory-limit 1G",
         "test:lint": "phpcs --standard=phpcs.xml -s",
         "test:fix": "phpcbf --standard=phpcs.xml",
