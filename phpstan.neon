@@ -9,6 +9,7 @@ parameters:
     - src/Deps/
   scanFiles:
     - stubs/ActionBuilder.php
+    - stubs/ConditionBuilder.php
     - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
   fileExtensions:
     - php
