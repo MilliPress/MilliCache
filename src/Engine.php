@@ -6,6 +6,7 @@
  * @since      1.0.0
  *
  * @package    MilliCache
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache;
@@ -15,14 +16,15 @@ use MilliCache\Core\Settings;
 use MilliCache\Core\Storage;
 use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Entry;
-use MilliCache\Engine\Cache\Handler as CacheHandler;
-use MilliCache\Engine\Clearing\Handler as ClearingHandler;
+use MilliCache\Engine\Cache\Manager as CacheManager;
+use MilliCache\Engine\Clearing\Manager as ClearingManager;
 use MilliCache\Engine\FlagManager;
 use MilliCache\Engine\Multisite;
-use MilliCache\Engine\Request\Handler as RequestHandler;
+use MilliCache\Engine\Request\Manager as RequestManager;
 use MilliCache\Engine\Utilities\ServerVars;
-use MilliCache\Rules\PHP;
-use MilliCache\Rules\WP;
+use MilliCache\Rules\Bootstrap as BootstrapRules;
+use MilliCache\Rules\WordPress as WordPressRules;
+use MilliCache\Rules\RequestFlags;
 use MilliCache\Deps\MilliRules\MilliRules;
 use MilliCache\Deps\MilliRules\Rules;
 
@@ -135,9 +137,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var RequestHandler|null The request handler instance.
+	 * @var RequestManager|null The request handler instance.
 	 */
-	private static ?RequestHandler $request_handler = null;
+	private static ?RequestManager $request_manager = null;
 
 	/**
 	 * Cache handler.
@@ -145,9 +147,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var CacheHandler|null The cache handler instance.
+	 * @var CacheManager|null The cache handler instance.
 	 */
-	private static ?CacheHandler $cache_handler = null;
+	private static ?CacheManager $cache_manager = null;
 
 	/**
 	 * Clearing handler.
@@ -155,9 +157,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var ClearingHandler|null The clearing handler instance.
+	 * @var ClearingManager|null The clearing handler instance.
 	 */
-	private static ?ClearingHandler $clearing_handler = null;
+	private static ?ClearingManager $clearing_manager = null;
 
 	/**
 	 * Cache configuration.
@@ -300,8 +302,8 @@ final class Engine {
 		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\PHP', 'PHP' );
 		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\WP', 'WP' );
 
-		// Register MilliCache PHP rules (execute before WordPress loads).
-		PHP::register();
+		// Register Bootstrap rules, which execute before WordPress loads.
+		BootstrapRules::register();
 
 		// Defer WP package and rules until WordPress is ready.
 		add_action(
@@ -310,8 +312,11 @@ final class Engine {
 				// Load MilliRules WP package.
 				MilliRules::load_packages( array( 'WP' ) );
 
-				// Register MilliCache WP rules.
-				WP::register();
+				// Register WordPress rules.
+				WordPressRules::register();
+
+				// Register Request Flags rules.
+				RequestFlags::register();
 			},
 			1
 		);
@@ -414,7 +419,7 @@ final class Engine {
 	 */
 	private static function warmup() {
 		// Initialize invalidation handler.
-		self::get_clearing_handler();
+		self::get_clearing_manager();
 
 		// Register the shutdown function to expire/delete cache flags.
 		register_shutdown_function( array( __CLASS__, 'clear_cache_on_shutdown' ) );
@@ -429,21 +434,21 @@ final class Engine {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @return   ClearingHandler The clearing handler instance.
+	 * @return   ClearingManager The clearing handler instance.
 	 */
-	private static function get_clearing_handler(): ClearingHandler {
-		if ( ! self::$clearing_handler ) {
+	private static function get_clearing_manager(): ClearingManager {
+		if ( ! self::$clearing_manager ) {
 			$config = self::get_config();
 
-			self::$clearing_handler = new ClearingHandler(
+			self::$clearing_manager = new ClearingManager(
 				self::$storage,
-				self::get_request_handler(),
+				self::get_request_manager(),
 				self::$multisite,
 				$config->ttl
 			);
 		}
 
-		return self::$clearing_handler;
+		return self::$clearing_manager;
 	}
 
 	/**
@@ -452,14 +457,14 @@ final class Engine {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @return   RequestHandler The request handler instance.
+	 * @return   RequestManager The request handler instance.
 	 */
-	private static function get_request_handler(): RequestHandler {
-		if ( ! self::$request_handler ) {
-			self::$request_handler = new RequestHandler( self::get_config() );
+	private static function get_request_manager(): RequestManager {
+		if ( ! self::$request_manager ) {
+			self::$request_manager = new RequestManager( self::get_config() );
 		}
 
-		return self::$request_handler;
+		return self::$request_manager;
 	}
 
 	/**
@@ -468,17 +473,17 @@ final class Engine {
 	 * @since    1.0.0
 	 * @access   private
 	 *
-	 * @return   CacheHandler The cache handler instance.
+	 * @return   CacheManager The cache handler instance.
 	 */
-	private static function get_cache_handler(): CacheHandler {
-		if ( ! self::$cache_handler ) {
-			self::$cache_handler = new CacheHandler(
+	private static function get_cache_manager(): CacheManager {
+		if ( ! self::$cache_manager ) {
+			self::$cache_manager = new CacheManager(
 				self::get_config(),
 				self::$storage
 			);
 		}
 
-		return self::$cache_handler;
+		return self::$cache_manager;
 	}
 
 	/**
@@ -535,11 +540,11 @@ final class Engine {
 	 */
 	private static function generate_request_hash(): void {
 		// Process request (clean and generate hash).
-		self::$request_hash = self::get_request_handler()->process();
+		self::$request_hash = self::get_request_manager()->process();
 
 		// Store debug data if enabled.
 		if ( self::get_config()->debug ) {
-			self::$debug_data = self::get_request_handler()->get_debug_data();
+			self::$debug_data = self::get_request_manager()->get_debug_data();
 			self::set_header( 'Key', self::$request_hash );
 		}
 	}
@@ -554,7 +559,7 @@ final class Engine {
 	 */
 	private static function get_cache() {
 		// Get and validate cache.
-		$result = self::get_cache_handler()->get_and_validate(
+		$result = self::get_cache_manager()->get_and_validate(
 			self::$request_hash,
 			self::can_fcgi_regenerate()
 		);
@@ -583,7 +588,7 @@ final class Engine {
 				self::set_header( 'Gzip', 'true' );
 			}
 
-			$validator = self::get_cache_handler()->get_validator();
+			$validator = self::get_cache_manager()->get_validator();
 			$time_left = $validator->time_to_expiry( $entry );
 			self::set_header( 'Expires', $validator->format_time_remaining( $time_left ) );
 		}
@@ -592,7 +597,7 @@ final class Engine {
 		self::set_header( 'Status', self::$fcgi_regenerate ? 'stale' : 'hit' );
 
 		// Output the cache.
-		self::get_cache_handler()->get_reader()->output( $entry, self::$fcgi_regenerate );
+		self::get_cache_manager()->get_reader()->output( $entry, self::$fcgi_regenerate );
 	}
 
 	/**
@@ -619,7 +624,7 @@ final class Engine {
 	private static function output_buffer( string $output ): ?string {
 		// Get the flags for this request.
 		$flags = self::get_flag_manager()->get_all();
-		$flags[] = 'url:' . self::get_request_handler()->get_url_hash();
+		$flags[] = 'url:' . self::get_request_manager()->get_url_hash();
 		$flags = array_unique( $flags );
 
 		// If no flags are set, use the fallback site flag.
@@ -633,7 +638,7 @@ final class Engine {
 		$debug        = self::get_config()->debug ? self::$debug_data : null;
 
 		// Cache the output.
-		$result = self::get_cache_handler()->cache_output(
+		$result = self::get_cache_manager()->cache_output(
 			self::$request_hash,
 			$output,
 			$flags,
@@ -665,7 +670,7 @@ final class Engine {
 	 * @return void
 	 */
 	public static function clear_cache_on_shutdown() {
-		self::get_clearing_handler()->flush_on_shutdown();
+		self::get_clearing_manager()->flush();
 	}
 
 	/**
@@ -674,12 +679,12 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param string|array<string> $targets The targets (Flags, Post-IDs or URLs) to clear the cache for.
-	 * @param bool                 $expire Expire cache if set to true, or delete by default.
+	 * @param string|array<string|int> $targets The targets (Flags, Post-IDs or URLs) to clear the cache for.
+	 * @param bool                     $expire Expire cache if set to true, or delete by default.
 	 * @return void
 	 */
 	public static function clear_cache_by_targets( $targets, bool $expire = false ): void {
-		self::get_clearing_handler()->clear_by_targets( $targets, $expire );
+		self::get_clearing_manager()->clear_by_targets( $targets, $expire );
 	}
 
 	/**
@@ -692,7 +697,7 @@ final class Engine {
 	 * @param bool                 $expire Expire cache if set to true, or delete by default.
 	 */
 	public static function clear_cache_by_urls( $urls, bool $expire = false ): void {
-		self::get_clearing_handler()->clear_by_urls( $urls, $expire );
+		self::get_clearing_manager()->clear_by_urls( $urls, $expire );
 	}
 
 	/**
@@ -705,7 +710,7 @@ final class Engine {
 	 * @param bool           $expire Expire cache if set to true, or delete by default.
 	 */
 	public static function clear_cache_by_post_ids( $post_ids, bool $expire = false ): void {
-		self::get_clearing_handler()->clear_by_post_ids( $post_ids, $expire );
+		self::get_clearing_manager()->clear_by_post_ids( $post_ids, $expire );
 	}
 
 	/**
@@ -720,7 +725,7 @@ final class Engine {
 	 * @return void
 	 */
 	public static function clear_cache_by_flags( $flags, bool $expire = false, bool $add_prefix = true ): void {
-		self::get_clearing_handler()->clear_by_flags( $flags, $expire, $add_prefix );
+		self::get_clearing_manager()->clear_by_flags( $flags, $expire, $add_prefix );
 	}
 
 	/**
@@ -735,7 +740,7 @@ final class Engine {
 	 * @return void
 	 */
 	public static function clear_cache_by_site_ids( $site_ids = null, ?int $network_id = null, bool $expire = false ): void {
-		self::get_clearing_handler()->clear_by_site_ids( $site_ids, $network_id, $expire );
+		self::get_clearing_manager()->clear_by_site_ids( $site_ids, $network_id, $expire );
 	}
 
 	/**
@@ -749,7 +754,7 @@ final class Engine {
 	 * @return void
 	 */
 	public static function clear_cache_by_network_id( ?int $network_id = null, bool $expire = false ): void {
-		self::get_clearing_handler()->clear_by_network_id( $network_id, $expire );
+		self::get_clearing_manager()->clear_by_network_id( $network_id, $expire );
 	}
 
 	/**
@@ -762,7 +767,7 @@ final class Engine {
 	 * @return void
 	 */
 	public static function clear_cache( bool $expire = false ): void {
-		self::get_clearing_handler()->clear_all( $expire );
+		self::get_clearing_manager()->clear_all( $expire );
 	}
 
 	/**
@@ -874,6 +879,18 @@ final class Engine {
 	}
 
 	/**
+	 * Get all flags for the current request.
+	 *
+	 * @since 2.0.0
+	 * @access public
+	 *
+	 * @return array<string> Array of flag names.
+	 */
+	public static function get_flags(): array {
+		return self::get_flag_manager()->get_all();
+	}
+
+	/**
 	 * Set TTL for the current request.
 	 *
 	 * @since 1.0.0
@@ -882,8 +899,10 @@ final class Engine {
 	 * @param int $seconds TTL in seconds.
 	 */
 	public static function set_ttl( int $seconds ): void {
-		self::$ttl_override = $seconds;
-		self::$ttl_overridden = true;
+		if ( $seconds > 0 ) {
+			self::$ttl_override = $seconds;
+			self::$ttl_overridden = true;
+		}
 	}
 
 	/**
@@ -895,8 +914,10 @@ final class Engine {
 	 * @param int $seconds Grace period in seconds.
 	 */
 	public static function set_grace( int $seconds ): void {
-		self::$grace_override = $seconds;
-		self::$grace_overridden = true;
+		if ( $seconds >= 0 ) {
+			self::$grace_override = $seconds;
+			self::$grace_overridden = true;
+		}
 	}
 
 	/**
