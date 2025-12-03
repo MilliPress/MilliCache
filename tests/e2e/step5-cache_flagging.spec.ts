@@ -4,7 +4,7 @@ import { clearCache, validateHeader } from './utils/tools';
 /**
  * Clear cache before running the tests.
  */
-test.describe('Step 5: Cache Flagging', () => {
+test.describe('Step 5: Cache RequestFlags', () => {
     test('Check flags by context', async ({ page }) => {
         // Targets and their expected cache flags
         // Multisite prefix for flags is "{site_id}:".
