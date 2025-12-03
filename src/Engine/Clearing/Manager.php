@@ -6,6 +6,8 @@
  * @since      1.0.0
  *
  * @package    MilliCache
+ * @subpackage Engine/Clearing
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine\Clearing;
@@ -24,7 +26,7 @@ use MilliCache\Engine\Request\Manager as RequestManager;
  *
  * @since      1.0.0
  * @package    MilliCache
- * @subpackage MilliCache/Engine/Clearing
+ * @subpackage Engine/Clearing
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class Manager {

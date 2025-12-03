@@ -23,9 +23,10 @@ use MilliCache\Engine\Utilities\ServerVars;
  * High-level API for request handling that delegates to specialized
  * components for parsing, cleaning, and hash generation.
  *
- * @since      1.0.0
- * @package    MilliCache
- * @author     Philipp Wellmer <hello@millipress.com>
+ * @since       1.0.0
+ * @package     MilliCache
+ * @subpackage  Engine\Request
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 final class Manager {
 
