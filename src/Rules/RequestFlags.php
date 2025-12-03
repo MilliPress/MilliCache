@@ -5,8 +5,11 @@
  * Rules that add cache flags to the current request for later invalidation.
  * Replaces the imperative get_request_flags() method with declarative rules.
  *
+ * @link        https://www.millipress.com
+ * @since       1.0.0
+ *
  * @package     MilliCache
- * @subpackage  Core/Rules
+ * @subpackage  Rules
  * @author      Philipp Wellmer <hello@millipress.com>
  */
 
@@ -36,7 +39,10 @@ use MilliCache\Engine;
  * - archive:{year}:{month}:{day} - Date archive
  * - feed - RSS/Atom feeds
  *
- * @since 1.0.0
+ * @since       1.0.0
+ * @package     MilliCache
+ * @subpackage  Rules
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 class RequestFlags {
 	/**

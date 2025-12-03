@@ -4,8 +4,11 @@
  *
  * Rules that execute after WordPress loads, with full access to WordPress APIs.
  *
+ * @link        https://www.millipress.com
+ * @since       1.0.0
+ *
  * @package     MilliCache
- * @subpackage  Core/Rules
+ * @subpackage  Rules
  * @author      Philipp Wellmer <hello@millipress.com>
  */
 
@@ -29,7 +32,10 @@ use MilliCache\Deps\MilliRules\Rules;
  * User can create a rule with order 10 that enables caching for specific AJAX endpoints,
  * overriding the default no-cache behavior because higher order executes last.
  *
- * @since 1.0.0
+ * @since       1.0.0
+ * @package     MilliCache
+ * @subpackage  Rules
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 class WordPress {
 	/**
