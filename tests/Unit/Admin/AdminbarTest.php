@@ -128,12 +128,12 @@ describe( 'Adminbar', function () {
 
 			$millicache = Mockery::mock( 'alias:MilliCache\MilliCache' );
 			$millicache->shouldReceive( 'get_clear_cache_capability' )->andReturn( 'manage_options' );
-			$millicache->shouldReceive( 'get_request_flags' )->andReturn( array( 'flag1', 'flag2' ) );
 
-			// Mock Engine for Admin::get_cache_size_summary_string()
+			// Mock Engine for flags and cache size
 			$storage = Mockery::mock();
 			$storage->shouldReceive( 'get_cache_size' )->andReturn( array( 'index' => 10, 'size' => 5120 ) );
 			$engine = Mockery::mock( 'alias:MilliCache\Engine' );
+			$engine->shouldReceive( 'get_flags' )->andReturn( array( 'flag1', 'flag2' ) );
 			$engine->shouldReceive( 'get_storage' )->andReturn( $storage );
 			$engine->shouldReceive( 'get_flag_prefix' )->andReturn( '' );
 
@@ -183,12 +183,12 @@ describe( 'Adminbar', function () {
 
 			$millicache = Mockery::mock( 'alias:MilliCache\MilliCache' );
 			$millicache->shouldReceive( 'get_clear_cache_capability' )->andReturn( 'manage_options' );
-			$millicache->shouldReceive( 'get_request_flags' )->andReturn( array() );
 
-			// Mock Engine for Admin::get_cache_size_summary_string()
+			// Mock Engine for flags and cache size
 			$storage = Mockery::mock();
 			$storage->shouldReceive( 'get_cache_size' )->andReturn( array( 'index' => 10, 'size' => 10240 ) );
 			$engine = Mockery::mock( 'alias:MilliCache\Engine' );
+			$engine->shouldReceive( 'get_flags' )->andReturn( array() );
 			$engine->shouldReceive( 'get_storage' )->andReturn( $storage );
 			$engine->shouldReceive( 'get_flag_prefix' )->andReturn( '' );
 

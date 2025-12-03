@@ -10,7 +10,7 @@
 
 use MilliCache\Engine\Clearing\Resolver;
 use MilliCache\Engine\Multisite;
-use MilliCache\Engine\Request\Handler as RequestHandler;
+use MilliCache\Engine\Request\Manager as RequestManager;
 use MilliCache\Engine\Cache\Config;
 
 // Mock WordPress functions.
@@ -39,7 +39,7 @@ if ( ! function_exists( 'is_multisite' ) ) {
 }
 
 uses()->beforeEach( function () {
-	// Create Config for RequestHandler (final class).
+	// Create Config for RequestManager (final class).
 	$config = new Config(
 		3600,
 		600,
@@ -53,7 +53,7 @@ uses()->beforeEach( function () {
 	);
 
 	// Use real instances (final classes, control via WordPress functions).
-	$this->request_handler = new RequestHandler( $config );
+	$this->request_handler = new RequestManager( $config );
 	$this->multisite = new Multisite();
 } );
 
@@ -153,7 +153,7 @@ describe( 'Clearing Resolver', function () {
 			expect( count( $flags ) )->toBe( 2 );
 		} );
 
-		it( 'uses RequestHandler for hashing', function () {
+		it( 'uses RequestManager for hashing', function () {
 			$this->request_handler->shouldReceive( 'get_url_hash' )
 				->twice()
 				->andReturn( 'hash123' );
