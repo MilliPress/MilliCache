@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5142914bbff386c6888147e9e50044d3",
+    "content-hash": "76f87cfc579f63d26ffc579d19f04dd6",
     "packages": [],
     "packages-dev": [
         {
@@ -489,16 +489,16 @@
         },
         {
             "name": "millipress/millirules",
-            "version": "v0.2.1",
+            "version": "v0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/MilliPress/MilliRules.git",
-                "reference": "7b06053c1e6a2e6723622566f4c87a698761d0b0"
+                "reference": "abfff73aa3c5ad0f6401f9a46af0bc79fce89df1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/MilliPress/MilliRules/zipball/7b06053c1e6a2e6723622566f4c87a698761d0b0",
-                "reference": "7b06053c1e6a2e6723622566f4c87a698761d0b0",
+                "url": "https://api.github.com/repos/MilliPress/MilliRules/zipball/abfff73aa3c5ad0f6401f9a46af0bc79fce89df1",
+                "reference": "abfff73aa3c5ad0f6401f9a46af0bc79fce89df1",
                 "shasum": ""
             },
             "require": {
@@ -530,9 +530,9 @@
             "description": "A flexible, framework-agnostic rule evaluation engine for PHP 7.4+",
             "support": {
                 "issues": "https://github.com/MilliPress/MilliRules/issues",
-                "source": "https://github.com/MilliPress/MilliRules/tree/v0.2.1"
+                "source": "https://github.com/MilliPress/MilliRules/tree/v0.4.0"
             },
-            "time": "2025-11-28T21:28:12+00:00"
+            "time": "2025-12-03T15:50:10+00:00"
         },
         {
             "name": "mockery/mockery",
@@ -2733,12 +2733,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "3f393e137e490ecb2ac77989a692129c31192de7"
+                "reference": "fe1c8ca582c84d6e7cef4588af1753d697bcca03"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/3f393e137e490ecb2ac77989a692129c31192de7",
-                "reference": "3f393e137e490ecb2ac77989a692129c31192de7",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/fe1c8ca582c84d6e7cef4588af1753d697bcca03",
+                "reference": "fe1c8ca582c84d6e7cef4588af1753d697bcca03",
                 "shasum": ""
             },
             "conflict": {
@@ -2750,6 +2750,7 @@
                 "aimeos/ai-admin-graphql": ">=2022.04.1,<2022.10.10|>=2023.04.1,<2023.10.6|>=2024.04.1,<2024.07.2",
                 "aimeos/ai-admin-jsonadm": "<2020.10.13|>=2021.04.1,<2021.10.6|>=2022.04.1,<2022.10.3|>=2023.04.1,<2023.10.4|==2024.04.1",
                 "aimeos/ai-client-html": ">=2020.04.1,<2020.10.27|>=2021.04.1,<2021.10.22|>=2022.04.1,<2022.10.13|>=2023.04.1,<2023.10.15|>=2024.04.1,<2024.04.7",
+                "aimeos/ai-cms-grapesjs": ">=2021.04.1,<2021.10.8|>=2022.04.1,<2022.10.9|>=2023.04.1,<2023.10.15|>=2024.04.1,<2024.10.8|>=2025.04.1,<2025.10.2",
                 "aimeos/ai-controller-frontend": "<2020.10.15|>=2021.04.1,<2021.10.8|>=2022.04.1,<2022.10.8|>=2023.04.1,<2023.10.9|==2024.04.1",
                 "aimeos/aimeos-core": ">=2022.04.1,<2022.10.17|>=2023.04.1,<2023.10.17|>=2024.04.1,<2024.04.7",
                 "aimeos/aimeos-typo3": "<19.10.12|>=20,<20.10.5",
@@ -3030,7 +3031,7 @@
                 "georgringer/news": "<1.3.3",
                 "geshi/geshi": "<=1.0.9.1",
                 "getformwork/formwork": "<2.2",
-                "getgrav/grav": "<1.7.46",
+                "getgrav/grav": "<1.11.0.0-beta1",
                 "getkirby/cms": "<3.9.8.3-dev|>=3.10,<3.10.1.2-dev|>=4,<4.7.1|>=5,<5.1.4",
                 "getkirby/kirby": "<3.9.8.3-dev|>=3.10,<3.10.1.2-dev|>=4,<4.7.1",
                 "getkirby/panel": "<2.5.14",
@@ -3182,8 +3183,9 @@
                 "marshmallow/nova-tiptap": "<5.7",
                 "matomo/matomo": "<1.11",
                 "matyhtf/framework": "<3.0.6",
-                "mautic/core": "<5.2.8|>=6.0.0.0-alpha,<6.0.5",
+                "mautic/core": "<5.2.9|>=6,<6.0.7",
                 "mautic/core-lib": ">=1.0.0.0-beta,<4.4.13|>=5.0.0.0-alpha,<5.1.1",
+                "mautic/grapes-js-builder-bundle": ">=4,<4.4.18|>=5,<5.2.9|>=6,<6.0.7",
                 "maximebf/debugbar": "<1.19",
                 "mdanter/ecc": "<2",
                 "mediawiki/abuse-filter": "<1.39.9|>=1.40,<1.41.3|>=1.42,<1.42.2",
@@ -3721,7 +3723,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-11-26T00:22:38+00:00"
+            "time": "2025-12-03T14:06:51+00:00"
         },
         {
             "name": "sebastian/cli-parser",
