@@ -5,7 +5,9 @@
  * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    MilliCache
+ * @package     MilliCache
+ * @subpackage  Engine\Request
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine\Request;
@@ -24,6 +26,7 @@ use MilliCache\Engine\Utilities\ServerVars;
  *
  * @since      1.0.0
  * @package    MilliCache
+ * @subpackage Engine\Request
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class Cleaner {

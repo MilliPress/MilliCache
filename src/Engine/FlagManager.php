@@ -6,6 +6,8 @@
  * @since      1.0.0
  *
  * @package    MilliCache
+ * @subpackage Engine
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine;
@@ -23,6 +25,7 @@ namespace MilliCache\Engine;
  *
  * @since      1.0.0
  * @package    MilliCache
+ * @subpackage Engine
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class FlagManager {
@@ -63,6 +66,10 @@ final class FlagManager {
 	 * @return void
 	 */
 	public function add( string $flag ): void {
+		if ( empty( $flag ) ) {
+			return;
+		}
+
 		$prefixed_flag = $this->get_key( $flag );
 
 		if ( ! in_array( $prefixed_flag, $this->flags, true ) ) {

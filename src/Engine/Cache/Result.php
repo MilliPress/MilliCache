@@ -5,7 +5,9 @@
  * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    MilliCache
+ * @package     MilliCache
+ * @subpackage  Engine\Cache
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine\Cache;
@@ -105,38 +107,5 @@ final class Result {
 	 */
 	public function is_miss(): bool {
 		return null === $this->entry;
-	}
-
-	/**
-	 * Check if entry is stale.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $default_ttl Default TTL value.
-	 * @return bool True if cache is stale.
-	 */
-	public function is_stale( int $default_ttl ): bool {
-		if ( $this->is_miss() || null === $this->entry ) {
-			return false;
-		}
-
-		return $this->entry->is_stale( $default_ttl );
-	}
-
-	/**
-	 * Check if entry is too old (beyond grace).
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $default_ttl   Default TTL value.
-	 * @param int $default_grace Default grace value.
-	 * @return bool True if cache should be deleted.
-	 */
-	public function is_too_old( int $default_ttl, int $default_grace ): bool {
-		if ( $this->is_miss() || null === $this->entry ) {
-			return false;
-		}
-
-		return $this->entry->is_too_old( $default_ttl, $default_grace );
 	}
 }

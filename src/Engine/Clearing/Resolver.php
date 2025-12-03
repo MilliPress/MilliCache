@@ -6,23 +6,26 @@
  * @since      1.0.0
  *
  * @package    MilliCache
+ * @subpackage Engine/Clearing
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine\Clearing;
 
 use MilliCache\Engine\Multisite;
-use MilliCache\Engine\Request\Handler as RequestHandler;
+use MilliCache\Engine\Request\Manager as RequestManager;
 
 ! defined( 'ABSPATH' ) && exit;
 
 /**
- * Resolves URLs, post IDs, and other targets to cache flags.
+ * Resolves URLs, post-IDs, and other targets to cache flags.
  *
  * Converts high-level invalidation targets (URLs, post IDs) into
  * low-level cache flags that can be used to clear specific entries.
  *
  * @since      1.0.0
  * @package    MilliCache
+ * @subpackage MilliCache/Engine/Clearing
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class Resolver {
@@ -30,9 +33,9 @@ final class Resolver {
 	/**
 	 * Request handler for URL hashing.
 	 *
-	 * @var RequestHandler
+	 * @var RequestManager
 	 */
-	private RequestHandler $request_handler;
+	private RequestManager $request_manager;
 
 	/**
 	 * Multisite helper.
@@ -46,11 +49,11 @@ final class Resolver {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param RequestHandler $request_handler Request handler instance.
+	 * @param RequestManager $request_manager Request handler instance.
 	 * @param Multisite      $multisite      Multisite helper instance.
 	 */
-	public function __construct( RequestHandler $request_handler, Multisite $multisite ) {
-		$this->request_handler = $request_handler;
+	public function __construct( RequestManager $request_manager, Multisite $multisite ) {
+		$this->request_manager = $request_manager;
 		$this->multisite       = $multisite;
 	}
 
@@ -80,7 +83,7 @@ final class Resolver {
 				// URL target.
 				$flags = array_merge( $flags, $this->resolve_url( $target_str ) );
 			} elseif ( is_numeric( $target ) ) {
-				// Post ID target.
+				// Post-ID target.
 				$flags = array_merge( $flags, $this->resolve_post_id( (int) $target ) );
 			} else {
 				// Flag target.
@@ -105,10 +108,10 @@ final class Resolver {
 		$flags = array();
 
 		// Add URL with trailing slash.
-		$flags[] = 'url:' . $this->request_handler->get_url_hash( trailingslashit( $url ) );
+		$flags[] = 'url:' . $this->request_manager->get_url_hash( trailingslashit( $url ) );
 
 		// Add URL without trailing slash.
-		$flags[] = 'url:' . $this->request_handler->get_url_hash( untrailingslashit( $url ) );
+		$flags[] = 'url:' . $this->request_manager->get_url_hash( untrailingslashit( $url ) );
 
 		return $flags;
 	}

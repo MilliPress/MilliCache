@@ -6,6 +6,8 @@
  * @since      1.0.0
  *
  * @package    MilliCache
+ * @subpackage Engine
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine;
@@ -20,6 +22,7 @@ namespace MilliCache\Engine;
  *
  * @since      1.0.0
  * @package    MilliCache
+ * @subpackage Engine
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class Multisite {

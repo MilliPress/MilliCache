@@ -5,7 +5,9 @@
  * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    MilliCache
+ * @package     MilliCache
+ * @subpackage  Engine\Request
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine\Request;
@@ -22,9 +24,10 @@ use MilliCache\Engine\Utilities\ServerVars;
  * unique variables, and authorization headers to uniquely identify
  * cache entries.
  *
- * @since      1.0.0
- * @package    MilliCache
- * @author     Philipp Wellmer <hello@millipress.com>
+ * @since       1.0.0
+ * @package     MilliCache
+ * @subpackage  Engine\Request
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 final class Hasher {
 

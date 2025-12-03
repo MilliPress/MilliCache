@@ -5,7 +5,9 @@
  * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    MilliCache
+ * @package     MilliCache
+ * @subpackage  Engine\Cache
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine\Cache;
@@ -95,22 +97,22 @@ final class Entry {
 	 * @param array<string,mixed>|null $debug        Debug information.
 	 */
 	public function __construct(
-		$output,
+		string $output,
 		array $headers,
-		$status,
-		$gzip,
-		$updated,
-		$custom_ttl = null,
-		$custom_grace = null,
-		$debug = null
+		int $status,
+		bool $gzip,
+		int $updated,
+		?int $custom_ttl = null,
+		?int $custom_grace = null,
+		?array $debug = null
 	) {
-		$this->output       = (string) $output;
+		$this->output       = $output;
 		$this->headers      = $headers;
-		$this->status       = (int) $status;
-		$this->gzip         = (bool) $gzip;
-		$this->updated      = (int) $updated;
-		$this->custom_ttl   = null !== $custom_ttl ? (int) $custom_ttl : null;
-		$this->custom_grace = null !== $custom_grace ? (int) $custom_grace : null;
+		$this->status       = $status;
+		$this->gzip         = $gzip;
+		$this->updated      = $updated;
+		$this->custom_ttl   = null !== $custom_ttl ? $custom_ttl : null;
+		$this->custom_grace = null !== $custom_grace ? $custom_grace : null;
 		$this->debug        = $debug;
 	}
 
@@ -127,7 +129,7 @@ final class Entry {
 			isset( $data['output'] ) && is_string( $data['output'] ) ? $data['output'] : '',
 			self::extract_string_array( $data, 'headers' ),
 			isset( $data['status'] ) && is_numeric( $data['status'] ) ? (int) $data['status'] : 200,
-			isset( $data['gzip'] ) ? (bool) $data['gzip'] : false,
+			isset( $data['gzip'] ) && $data['gzip'],
 			isset( $data['updated'] ) && is_numeric( $data['updated'] ) ? (int) $data['updated'] : time(),
 			isset( $data['custom_ttl'] ) && is_numeric( $data['custom_ttl'] ) ? (int) $data['custom_ttl'] : null,
 			isset( $data['custom_grace'] ) && is_numeric( $data['custom_grace'] ) ? (int) $data['custom_grace'] : null,
@@ -185,46 +187,5 @@ final class Entry {
 		}
 
 		return $data;
-	}
-
-	/**
-	 * Check if cache is stale based on TTL.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $default_ttl Default TTL if no custom TTL set.
-	 * @return bool True if cache is stale (expired).
-	 */
-	public function is_stale( int $default_ttl ): bool {
-		$effective_ttl = null !== $this->custom_ttl ? $this->custom_ttl : $default_ttl;
-		return ( $this->updated + $effective_ttl ) < time();
-	}
-
-	/**
-	 * Check if cache is too old (beyond grace period).
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $default_ttl   Default TTL if no custom TTL set.
-	 * @param int $default_grace Default grace if no custom grace set.
-	 * @return bool True if cache should be deleted.
-	 */
-	public function is_too_old( int $default_ttl, int $default_grace ): bool {
-		$effective_ttl   = null !== $this->custom_ttl ? $this->custom_ttl : $default_ttl;
-		$effective_grace = null !== $this->custom_grace ? $this->custom_grace : $default_grace;
-		return ( $this->updated + $effective_ttl + $effective_grace ) < time();
-	}
-
-	/**
-	 * Get time remaining before expiration.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $default_ttl Default TTL if no custom TTL set.
-	 * @return int Seconds until expiration (negative if expired).
-	 */
-	public function time_to_expiry( int $default_ttl ): int {
-		$effective_ttl = null !== $this->custom_ttl ? $this->custom_ttl : $default_ttl;
-		return ( $this->updated + $effective_ttl ) - time();
 	}
 }

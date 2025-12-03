@@ -2,10 +2,12 @@
 /**
  * Cache configuration value object.
  *
- * @link       https://www.millipress.com
- * @since      1.0.0
+ * @link        https://www.millipress.com
+ * @since       1.0.0
  *
- * @package    MilliCache
+ * @package     MilliCache
+ * @subpackage  Engine\Cache
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine\Cache;
@@ -103,20 +105,20 @@ final class Config {
 	 * @param array<string> $unique              Variables making requests unique.
 	 */
 	public function __construct(
-		$ttl,
-		$grace,
-		$gzip,
-		$debug,
+		int $ttl,
+		int $grace,
+		bool $gzip,
+		bool $debug,
 		array $nocache_paths,
 		array $nocache_cookies,
 		array $ignore_cookies,
 		array $ignore_request_keys,
 		array $unique
 	) {
-		$this->ttl                 = (int) $ttl;
-		$this->grace               = (int) $grace;
-		$this->gzip                = (bool) $gzip;
-		$this->debug               = (bool) $debug;
+		$this->ttl                 = $ttl;
+		$this->grace               = $grace;
+		$this->gzip                = $gzip;
+		$this->debug               = $debug;
 		$this->nocache_paths       = $nocache_paths;
 		$this->nocache_cookies     = $nocache_cookies;
 		$this->ignore_cookies      = $ignore_cookies;
@@ -136,8 +138,8 @@ final class Config {
 		return new self(
 			isset( $settings['ttl'] ) && is_numeric( $settings['ttl'] ) ? (int) $settings['ttl'] : 86400,
 			isset( $settings['grace'] ) && is_numeric( $settings['grace'] ) ? (int) $settings['grace'] : 3600,
-			isset( $settings['gzip'] ) ? (bool) $settings['gzip'] : true,
-			isset( $settings['debug'] ) ? (bool) $settings['debug'] : false,
+			! isset( $settings['gzip'] ) || $settings['gzip'],
+			isset( $settings['debug'] ) && $settings['debug'],
 			self::extract_string_array( $settings, 'nocache_paths' ),
 			self::extract_string_array( $settings, 'nocache_cookies' ),
 			self::extract_string_array( $settings, 'ignore_cookies' ),

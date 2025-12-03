@@ -5,7 +5,9 @@
  * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    MilliCache
+ * @package     MilliCache
+ * @subpackage  Engine\Utilities
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine\Utilities;
@@ -17,9 +19,10 @@ namespace MilliCache\Engine\Utilities;
  *
  * Provides sanitization and default value handling for server variables.
  *
- * @since      1.0.0
- * @package    MilliCache
- * @author     Philipp Wellmer <hello@millipress.com>
+ * @since       1.0.0
+ * @package     MilliCache
+ * @subpackage  Engine\Utilities
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 final class ServerVars {
 

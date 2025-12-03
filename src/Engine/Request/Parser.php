@@ -5,7 +5,9 @@
  * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    MilliCache
+ * @package     MilliCache
+ * @subpackage  Engine\Request
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine\Request;
@@ -21,9 +23,10 @@ use MilliCache\Engine\Utilities\PatternMatcher;
  * Handles URI normalization, query string filtering, and cookie parsing
  * according to cache configuration rules.
  *
- * @since      1.0.0
- * @package    MilliCache
- * @author     Philipp Wellmer <hello@millipress.com>
+ * @since       1.0.0
+ * @package     MilliCache
+ * @subpackage  Engine\Request
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 final class Parser {
 

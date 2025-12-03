@@ -5,7 +5,9 @@
  * @link       https://www.millipress.com
  * @since      1.0.0
  *
- * @package    MilliCache
+ * @package     MilliCache
+ * @subpackage  Engine\Utilities
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine\Utilities;
@@ -18,9 +20,10 @@ namespace MilliCache\Engine\Utilities;
  * This class provides static methods for matching strings against patterns
  * that may contain wildcards (*) or be regex patterns (enclosed in /).
  *
- * @since      1.0.0
- * @package    MilliCache
- * @author     Philipp Wellmer <hello@millipress.com>
+ * @since       1.0.0
+ * @package     MilliCache
+ * @subpackage  Engine\Utilities
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 final class PatternMatcher {
 
@@ -94,7 +97,6 @@ final class PatternMatcher {
 	 * @return bool True if string matches regex.
 	 */
 	private static function match_regex( string $pattern, string $string ): bool {
-		// Suppress warnings for invalid regex patterns.
 		return (bool) @preg_match( $pattern, $string );
 	}
 

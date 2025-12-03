@@ -6,6 +6,8 @@
  * @since      1.0.0
  *
  * @package    MilliCache
+ * @subpackage Engine/Clearing
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine\Clearing;
@@ -23,6 +25,7 @@ use MilliCache\Engine\Multisite;
  *
  * @since      1.0.0
  * @package    MilliCache
+ * @subpackage Engine/Clearing
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class Flusher {
@@ -157,19 +160,6 @@ final class Flusher {
 		$this->clear_queues();
 
 		return true;
-	}
-
-	/**
-	 * Clear flags on shutdown.
-	 *
-	 * Convenience method for registering shutdown callback.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return void
-	 */
-	public function flush_on_shutdown(): void {
-		$this->flush();
 	}
 
 	/**

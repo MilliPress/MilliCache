@@ -2,10 +2,12 @@
 /**
  * Cache writing and storage.
  *
- * @link       https://www.millipress.com
- * @since      1.0.0
+ * @link        https://www.millipress.com
+ * @since       1.0.0
  *
- * @package    MilliCache
+ * @package     MilliCache
+ * @subpackage  Engine\Cache
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Engine\Cache;
