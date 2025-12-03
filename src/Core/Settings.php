@@ -2,9 +2,12 @@
 /**
  * Handles the settings storage for MilliCache.
  *
+ * @link       https://www.millipress.com
+ * @since      1.0.0
+ *
  * @package    MilliCache
- * @subpackage MilliCache/Core
- * @author     Philipp Wellmer <hello@millicache.com>
+ * @subpackage Core
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Core;

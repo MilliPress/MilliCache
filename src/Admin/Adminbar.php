@@ -136,7 +136,7 @@ class Adminbar {
 				}
 			}
 		} else {
-			$targets = MilliCache::get_request_flags();
+			$targets = Engine::get_flags();
 			$title   = __( 'Clear Current View Cache', 'millicache' );
 		}
 
