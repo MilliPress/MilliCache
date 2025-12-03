@@ -4,9 +4,12 @@
  *
  * Sets the cache time-to-live.
  *
- * @package MilliCache
- * @subpackage Rules\Actions
- * @since 1.0.0
+ * @link        https://www.millipress.com
+ * @since       1.0.0
+ *
+ * @package     MilliCache
+ * @subpackage  Rules\Actions\PHP
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Rules\Actions\PHP;
@@ -43,21 +46,9 @@ class SetTtl extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$ttl = $this->args[0];
-
-		if ( ! is_numeric( $ttl ) ) {
-			return;
-		}
-
-		$ttl_int = (int) $ttl;
-
-		if ( $ttl_int <= 0 ) {
-			return;
-		}
+		$ttl = $this->get_arg( 0 )->int();
 
 		// Call Engine to set TTL.
-		if ( class_exists( '\\MilliCache\\Engine' ) ) {
-			Engine::set_ttl( $ttl_int );
-		}
+		Engine::set_ttl( $ttl );
 	}
 }

@@ -4,9 +4,12 @@
  *
  * Removes a cache flag.
  *
- * @package MilliCache
- * @subpackage Rules\Actions
- * @since 1.0.0
+ * @link       https://www.millipress.com
+ * @since      1.0.0
+ *
+ * @package     MilliCache
+ * @subpackage  Rules\Actions\WP
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Rules\Actions\WP;
@@ -43,20 +46,9 @@ class RemoveFlag extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$flag = $this->args[0] ?? null;
-
-		// Resolve placeholders.
-		if ( is_string( $flag ) ) {
-			$flag = $this->resolve_value( $flag );
-		}
-
-		if ( empty( $flag ) || ! is_string( $flag ) ) {
-			return;
-		}
+		$flag = $this->get_arg( 0 )->string();
 
 		// Call Engine to remove the flag.
-		if ( class_exists( '\\MilliCache\\Engine' ) ) {
-			Engine::remove_flag( $flag );
-		}
+		Engine::remove_flag( $flag );
 	}
 }

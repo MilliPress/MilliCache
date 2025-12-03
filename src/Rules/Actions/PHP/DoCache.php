@@ -4,9 +4,12 @@
  *
  * Sets the cache decision for the current request.
  *
+ * @link       https://www.millipress.com
+ * @since      1.0.0
+ *
  * @package MilliCache
- * @subpackage Rules\Actions
- * @since 1.0.0
+ * @subpackage Rules\Actions\PHP
+ * @author Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Rules\Actions\PHP;
@@ -43,17 +46,10 @@ class DoCache extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$should_cache = $this->args[0] ?? true;
-		$reason       = $this->args[1] ?? ( $should_cache ? 'Rule action: do_cache() -> (cache)' : 'Rule action: do_cache() -> (do not cache)' );
-
-		// Resolve placeholders in reason.
-		if ( is_string( $reason ) ) {
-			$reason = $this->resolve_value( $reason );
-		}
+		$should_cache = $this->get_arg( 0, true )->bool();
+		$reason       = $this->get_arg( 1, $should_cache ? 'Rule action: do_cache() -> (cache)' : 'Rule action: do_cache() -> (do not cache)' )->string();
 
 		// Signal to Engine cache decision.
-		if ( class_exists( '\\MilliCache\\Engine' ) && is_string( $reason ) ) {
-			Engine::set_cache_decision( (bool) $should_cache, $reason );
-		}
+		Engine::set_cache_decision( $should_cache, $reason );
 	}
 }

@@ -4,9 +4,12 @@
  *
  * Sets the cache grace period.
  *
- * @package MilliCache
- * @subpackage Rules\Actions
- * @since 1.0.0
+ * @link       https://www.millipress.com
+ * @since      1.0.0
+ *
+ * @package     MilliCache
+ * @subpackage Rules\Actions\PHP
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Rules\Actions\PHP;
@@ -43,15 +46,9 @@ class SetGrace extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$grace = $this->args[0];
-
-		if ( ! is_numeric( $grace ) || $grace < 0 ) {
-			return;
-		}
+		$grace = $this->get_arg( 0 )->int();
 
 		// Call Engine to set the grace period.
-		if ( class_exists( '\\MilliCache\\Engine' ) ) {
-			Engine::set_grace( (int) $grace );
-		}
+		Engine::set_grace( $grace );
 	}
 }

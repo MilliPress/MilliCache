@@ -4,9 +4,12 @@
  *
  * Clears cache for a specific site or current site.
  *
- * @package MilliCache
- * @subpackage Rules\Actions
- * @since 1.0.0
+ * @link       https://www.millipress.com
+ * @since      1.0.0
+ *
+ * @package     MilliCache
+ * @subpackage  Rules\Actions\WP
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Rules\Actions\WP;
