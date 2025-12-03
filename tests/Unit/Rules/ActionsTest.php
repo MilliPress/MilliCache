@@ -13,8 +13,8 @@ use MilliCache\Rules\Actions\PHP\SetTtl;
 use MilliCache\Rules\Actions\PHP\SetGrace;
 use MilliCache\Rules\Actions\WP\AddFlag;
 use MilliCache\Rules\Actions\WP\RemoveFlag;
-use MilliCache\Rules\Actions\WP\FlushByFlag;
-use MilliCache\Rules\Actions\WP\FlushBySite;
+use MilliCache\Rules\Actions\WP\ClearCache;
+use MilliCache\Rules\Actions\WP\ClearSiteCache;
 use MilliCache\Deps\MilliRules\Context;
 
 describe( 'Rule Actions', function () {
@@ -79,9 +79,9 @@ describe( 'Rule Actions', function () {
 			expect( true )->toBeTrue();
 		} );
 
-		it( 'skips invalid TTL values', function () {
+		it( 'passes TTL value to Engine', function () {
 			$engine = Mockery::mock( 'alias:MilliCache\Engine' );
-			$engine->shouldReceive( 'set_ttl' )->never();
+			$engine->shouldReceive( 'set_ttl' )->once()->with( 0 );
 
 			$context = Mockery::mock( Context::class );
 			$action  = new SetTtl( array( 'type' => 'set_ttl', 0 => 0 ), $context );
@@ -140,9 +140,9 @@ describe( 'Rule Actions', function () {
 			expect( true )->toBeTrue();
 		} );
 
-		it( 'handles empty flag gracefully', function () {
+		it( 'passes empty flag to Engine', function () {
 			$engine = Mockery::mock( 'alias:MilliCache\Engine' );
-			$engine->shouldReceive( 'add_flag' )->never();
+			$engine->shouldReceive( 'add_flag' )->once()->with( '' );
 
 			$context = Mockery::mock( Context::class );
 			$action  = new AddFlag( array( 'type' => 'add_flag', 0 => '' ), $context );
@@ -151,9 +151,9 @@ describe( 'Rule Actions', function () {
 			expect( true )->toBeTrue();
 		} );
 
-		it( 'handles null flag gracefully', function () {
+		it( 'converts null flag to empty string', function () {
 			$engine = Mockery::mock( 'alias:MilliCache\Engine' );
-			$engine->shouldReceive( 'add_flag' )->never();
+			$engine->shouldReceive( 'add_flag' )->once()->with( '' );
 
 			$context = Mockery::mock( Context::class );
 			$action  = new AddFlag( array( 'type' => 'add_flag', 0 => null ), $context );
@@ -187,9 +187,9 @@ describe( 'Rule Actions', function () {
 			expect( true )->toBeTrue();
 		} );
 
-		it( 'handles empty flag gracefully', function () {
+		it( 'passes empty flag to Engine', function () {
 			$engine = Mockery::mock( 'alias:MilliCache\Engine' );
-			$engine->shouldReceive( 'remove_flag' )->never();
+			$engine->shouldReceive( 'remove_flag' )->once()->with( '' );
 
 			$context = Mockery::mock( Context::class );
 			$action  = new RemoveFlag( array( 'type' => 'remove_flag', 0 => '' ), $context );
@@ -199,72 +199,83 @@ describe( 'Rule Actions', function () {
 		} );
 	} );
 
-	describe( 'FlushByFlag Action', function () {
+	describe( 'ClearCache Action', function () {
 		it( 'returns correct action type', function () {
 			$context = Mockery::mock( Context::class );
-			$action  = new FlushByFlag( array( 'type' => 'flush_by_flag' ), $context );
-			expect( $action->get_type() )->toBe( 'flush_by_flag' );
+			$action  = new ClearCache( array( 'type' => 'clear_cache' ), $context );
+			expect( $action->get_type() )->toBe( 'clear_cache' );
 		} );
 
 		it( 'has executable interface', function () {
 			$context = Mockery::mock( Context::class );
-			$action  = new FlushByFlag( array( 'type' => 'flush_by_flag' ), $context );
+			$action  = new ClearCache( array( 'type' => 'clear_cache' ), $context );
 			expect( method_exists( $action, 'execute' ) )->toBeTrue();
 		} );
 
 		it( 'executes with context', function () {
 			$engine = Mockery::mock( 'alias:MilliCache\Engine' );
-			$engine->shouldReceive( 'clear_cache_by_flags' )->once()->with( array( 'test-flag' ) );
+			$engine->shouldReceive( 'clear_cache_by_targets' )->once()->with( array( 'test-flag' ), false );
 
 			$context = Mockery::mock( Context::class );
-			$action  = new FlushByFlag( array( 'type' => 'flush_by_flag', 0 => 'test-flag' ), $context );
+			$action  = new ClearCache( array( 'type' => 'clear_cache', 0 => array( 'test-flag' ) ), $context );
 			$action->execute( $context );
 
 			expect( true )->toBeTrue();
 		} );
 
-		it( 'handles empty flag gracefully', function () {
+		it( 'handles expire parameter', function () {
 			$engine = Mockery::mock( 'alias:MilliCache\Engine' );
-			$engine->shouldReceive( 'clear_cache_by_flags' )->once()->with( array( '' ) );
+			$engine->shouldReceive( 'clear_cache_by_targets' )->once()->with( array( 'test-flag' ), true );
 
 			$context = Mockery::mock( Context::class );
-			$action  = new FlushByFlag( array( 'type' => 'flush_by_flag', 0 => '' ), $context );
+			$action  = new ClearCache( array( 'type' => 'clear_cache', 0 => array( 'test-flag' ), 1 => true ), $context );
 			$action->execute( $context );
 
 			expect( true )->toBeTrue();
 		} );
 	} );
 
-	describe( 'FlushBySite Action', function () {
+	describe( 'ClearSiteCache Action', function () {
 		it( 'returns correct action type', function () {
 			$context = Mockery::mock( Context::class );
-			$action  = new FlushBySite( array( 'type' => 'flush_by_site' ), $context );
-			expect( $action->get_type() )->toBe( 'flush_by_site' );
+			$action  = new ClearSiteCache( array( 'type' => 'clear_site_cache' ), $context );
+			expect( $action->get_type() )->toBe( 'clear_site_cache' );
 		} );
 
 		it( 'has executable interface', function () {
 			$context = Mockery::mock( Context::class );
-			$action  = new FlushBySite( array( 'type' => 'flush_by_site' ), $context );
+			$action  = new ClearSiteCache( array( 'type' => 'clear_site_cache' ), $context );
 			expect( method_exists( $action, 'execute' ) )->toBeTrue();
 		} );
 
 		it( 'executes with context', function () {
 			$engine = Mockery::mock( 'alias:MilliCache\Engine' );
-			$engine->shouldReceive( 'clear_cache_by_site_ids' )->once()->with( null );
+			$engine->shouldReceive( 'clear_cache_by_site_ids' )->once()->with( array(), null, false );
 
 			$context = Mockery::mock( Context::class );
-			$action  = new FlushBySite( array( 'type' => 'flush_by_site' ), $context );
+			$action  = new ClearSiteCache( array( 'type' => 'clear_site_cache' ), $context );
 			$action->execute( $context );
 
 			expect( true )->toBeTrue();
 		} );
 
-		it( 'handles site_id parameter', function () {
+		it( 'handles site_ids parameter', function () {
 			$engine = Mockery::mock( 'alias:MilliCache\Engine' );
-			$engine->shouldReceive( 'clear_cache_by_site_ids' )->once()->with( array( 5 ) );
+			$engine->shouldReceive( 'clear_cache_by_site_ids' )->once()->with( array( 5 ), null, false );
 
 			$context = Mockery::mock( Context::class );
-			$action  = new FlushBySite( array( 'type' => 'flush_by_site', 0 => 5 ), $context );
+			$action  = new ClearSiteCache( array( 'type' => 'clear_site_cache', 0 => array( 5 ) ), $context );
+			$action->execute( $context );
+
+			expect( true )->toBeTrue();
+		} );
+
+		it( 'handles network_id and expire parameters', function () {
+			$engine = Mockery::mock( 'alias:MilliCache\Engine' );
+			$engine->shouldReceive( 'clear_cache_by_site_ids' )->once()->with( array( 5 ), 1, true );
+
+			$context = Mockery::mock( Context::class );
+			$action  = new ClearSiteCache( array( 'type' => 'clear_site_cache', 0 => array( 5 ), 1 => 1, 2 => true ), $context );
 			$action->execute( $context );
 
 			expect( true )->toBeTrue();
@@ -283,8 +294,8 @@ describe( 'Rule Actions', function () {
 			$context = Mockery::mock( Context::class );
 			expect( new AddFlag( array( 'type' => 'add_flag' ), $context ) )->toBeInstanceOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' );
 			expect( new RemoveFlag( array( 'type' => 'remove_flag' ), $context ) )->toBeInstanceOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' );
-			expect( new FlushByFlag( array( 'type' => 'flush_by_flag' ), $context ) )->toBeInstanceOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' );
-			expect( new FlushBySite( array( 'type' => 'flush_by_site' ), $context ) )->toBeInstanceOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' );
+			expect( new ClearCache( array( 'type' => 'clear_cache' ), $context ) )->toBeInstanceOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' );
+			expect( new ClearSiteCache( array( 'type' => 'clear_site_cache' ), $context ) )->toBeInstanceOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' );
 		} );
 
 		it( 'all actions have unique type identifiers', function () {
@@ -295,8 +306,8 @@ describe( 'Rule Actions', function () {
 				( new SetGrace( array( 'type' => 'set_grace' ), $context ) )->get_type(),
 				( new AddFlag( array( 'type' => 'add_flag' ), $context ) )->get_type(),
 				( new RemoveFlag( array( 'type' => 'remove_flag' ), $context ) )->get_type(),
-				( new FlushByFlag( array( 'type' => 'flush_by_flag' ), $context ) )->get_type(),
-				( new FlushBySite( array( 'type' => 'flush_by_site' ), $context ) )->get_type(),
+				( new ClearCache( array( 'type' => 'clear_cache' ), $context ) )->get_type(),
+				( new ClearSiteCache( array( 'type' => 'clear_site_cache' ), $context ) )->get_type(),
 			);
 
 			// All types should be unique.
