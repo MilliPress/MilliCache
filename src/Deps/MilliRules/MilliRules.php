@@ -52,6 +52,14 @@ use MilliCache\Deps\MilliRules\Packages\WordPress\Package as WordPressPackage;
  */
 class MilliRules
 {
+	/**
+	 * MilliCache\Deps\MilliRules version.
+	 *
+	 * @since 0.4.0
+	 * @var string
+	 */
+	public const VERSION = '0.3.0';
+
     /**
      * Private constructor prevents instantiation.
      *

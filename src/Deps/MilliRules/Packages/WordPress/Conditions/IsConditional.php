@@ -186,7 +186,7 @@ class IsConditional extends BaseCondition
      * @param string $value Candidate operator string.
      * @return bool
      */
-    private static function looks_like_operator(string $value): bool
+    private function looks_like_operator(string $value): bool
     {
         $upper = strtoupper(trim($value));
         $supported = array('=', '!=', 'IS', 'IS NOT');
@@ -205,10 +205,10 @@ class IsConditional extends BaseCondition
      * @param bool   $value    The boolean value (currently unused, but may be used in future).
      * @return string
      */
-    private static function normalize_operator(string $operator, bool $value): string
+    private function normalize_operator(string $operator, bool $value): string
     {
         $upper = strtoupper(trim($operator));
-        if (self::looks_like_operator($upper)) {
+        if ($this->looks_like_operator($upper)) {
             return $upper;
         }
         return 'IS';

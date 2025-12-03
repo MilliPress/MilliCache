@@ -114,8 +114,8 @@ class QueryVar extends BaseCondition
         }
 
         // Try to get from context first.
-        $context->load('query_vars');
-        $query_vars = $context->get('query_vars');
+        $context->load('query');
+        $query_vars = $context->get('query');
 
         if (is_array($query_vars) && isset($query_vars[ $this->query_var_name ])) {
             return $query_vars[ $this->query_var_name ];

@@ -3,7 +3,7 @@
 /**
  * Query Context
  *
- * Provides WordPress query conditional tags (is_home, is_archive, etc.).
+ * Provides WordPress query variables from $wp_query->query_vars.
  *
  * @package     MilliCache\Deps\MilliRules
  * @subpackage  WordPress\Contexts
@@ -18,16 +18,9 @@ use MilliCache\Deps\MilliRules\Contexts\BaseContext;
 /**
  * Class Query
  *
- * Provides 'query' context with WordPress query conditional flags:
- * - is_singular: Is singular post/page
- * - is_single: Is single post
- * - is_page: Is page
- * - is_archive: Is archive page
- * - is_home: Is home page
- * - is_front_page: Is front page
- * - is_search: Is search results
- * - is_404: Is 404 error
- * - is_admin: Is admin area
+ * Provides 'query' context with WordPress query variables.
+ * Allows access to WordPress query variables like post_type, paged, s, m, etc.
+ * Used by QueryVar condition to check specific query variables.
  *
  * @since 0.1.0
  */
@@ -54,33 +47,19 @@ class Query extends BaseContext
      */
     protected function build(): array
     {
-        if (! function_exists('is_singular')) {
-            return array( 'query' => array() );
-        }
-
         global $wp_query;
 
-        if (! isset($wp_query)) {
+        if (! isset($wp_query) || ! isset($wp_query->query_vars)) {
             return array( 'query' => array() );
         }
 
         return array(
-            'query' => array(
-                'is_singular'   => is_singular(),
-                'is_single'     => is_single(),
-                'is_page'       => is_page(),
-                'is_archive'    => is_archive(),
-                'is_home'       => is_home(),
-                'is_front_page' => is_front_page(),
-                'is_search'     => is_search(),
-                'is_404'        => is_404(),
-                'is_admin'      => is_admin(),
-            ),
+            'query' => $wp_query->query_vars,
         );
     }
 
     /**
-     * Check if WordPress query functions are available.
+     * Check if WordPress query is available.
      *
      * @since 0.1.0
      *
@@ -88,6 +67,6 @@ class Query extends BaseContext
      */
     public function is_available(): bool
     {
-        return function_exists('is_singular');
+        return function_exists('get_query_var');
     }
 }

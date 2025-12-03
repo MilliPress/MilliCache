@@ -145,7 +145,7 @@ class PlaceholderResolver
      * @param array<int, string> $parts    The remaining parts after the category.
      * @return mixed|null The resolved value or null if not found.
      */
-    protected function resolve_builtin_placeholder(string $category, array $parts): mixed
+    protected function resolve_builtin_placeholder(string $category, array $parts)
     {
         // If no parts, return null (can't return the entire category).
         if (empty($parts)) {

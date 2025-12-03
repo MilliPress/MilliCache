@@ -7,7 +7,7 @@
  * Provides a fluent interface for creating and registering rules.
  *
  * @package     MilliCache\Deps\MilliRules
- * @author      Philipp Wellmer <hello@millicache.com>
+ * @author      Philipp Wellmer <hello@millipress.com>
  * @since 0.1.0
  */
 
@@ -51,7 +51,7 @@ use MilliCache\Deps\MilliRules\Packages\PackageManager;
  * - WordPress hooks (set via ->on()) control when rules execute
  *
  * @package     MilliCache\Deps\MilliRules
- * @author      Philipp Wellmer <hello@millicache.com>
+ * @author      Philipp Wellmer <hello@millipress.com>
  * @since 0.1.0
  */
 class Rules

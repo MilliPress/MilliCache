@@ -140,6 +140,7 @@ class Context
      * Get a value using dot notation.
      *
      * Supports nested path access like 'post.type' or 'request.headers.user-agent'.
+     * Also supports object property access like 'hook.args.0.ID' or 'hook.args.2.permalink'.
      *
      * @since 0.1.0
      *
@@ -159,10 +160,35 @@ class Context
         $current = $this->data;
 
         foreach ($parts as $part) {
-            if (! is_array($current) || ! isset($current[ $part ])) {
+            // Handle array access
+            if (is_array($current)) {
+                if (! isset($current[ $part ])) {
+                    return $default;
+                }
+                $current = $current[ $part ];
+                continue;
+            }
+
+            // Handle object property access
+            if (is_object($current)) {
+                // Try public property first
+                if (property_exists($current, $part)) {
+                    $current = $current->{$part};
+                    continue;
+                }
+
+                // Try magic __get() method
+                if (method_exists($current, '__get')) {
+                    $current = $current->{$part};
+                    continue;
+                }
+
+                // Property doesn't exist
                 return $default;
             }
-            $current = $current[ $part ];
+
+            // Not an array or object
+            return $default;
         }
 
         return $current;

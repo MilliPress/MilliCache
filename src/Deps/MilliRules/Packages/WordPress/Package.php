@@ -9,7 +9,7 @@
  * Features:
  * - WordPress conditions (post type, user logged in, query conditionals, constants)
  * - WordPress context building (post, user, query, constants data)
- * - WordPress placeholder resolution ({wp.post.id}, {wp.user.login}, etc.)
+ * - WordPress placeholder resolution ({post.id}, {user.login}, etc.)
  * - Hook-based rule execution integrated with WordPress lifecycle
  *
  * This package requires the PHP package as a dependency.
@@ -143,7 +143,7 @@ class Package extends BasePackage
      * Get a placeholder resolver instance for this package.
      *
      * Returns PlaceholderResolver configured with the given context.
-     * Supports WordPress placeholders like {wp.post.id}, {wp.user.login}, {wp.query.is_singular}
+     * Supports WordPress placeholders like {post.id}, {user.login}, {query.is_singular}
      * plus all HTTP placeholders via inheritance.
      *
      * @since 0.1.0

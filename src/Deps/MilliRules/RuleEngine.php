@@ -6,7 +6,7 @@
  * Executes rules and manages execution context.
  *
  * @package     MilliCache\Deps\MilliRules
- * @author      Philipp Wellmer <hello@millicache.com>
+ * @author      Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Deps\MilliRules;
@@ -249,7 +249,13 @@ class RuleEngine
             }
 
             try {
-                $matches[] = $condition->matches($this->context);
+                $result = $condition->matches($this->context);
+                $matches[] = $result;
+
+                // Debug logging for request_method conditions.
+                if (isset($condition_config['type']) && $condition_config['type'] === 'request_method') {
+                    error_log('MilliCache DEBUG: request_method condition - config: ' . json_encode($condition_config) . ' | result: ' . ($result ? 'TRUE' : 'FALSE'));
+                }
             } catch (\Exception $e) {
                 Logger::aggregate('condition_check', 'Error checking condition: ' . $e->getMessage());
                 $matches[] = false;
@@ -257,17 +263,28 @@ class RuleEngine
         }
 
         // Apply match type logic.
+        $result = false;
         switch ($match_type) {
             case 'all':
-                return ! in_array(false, $matches, true);
+                $result = ! in_array(false, $matches, true);
+                break;
 
             case 'none':
-                return ! in_array(true, $matches, true);
+                $result = ! in_array(true, $matches, true);
+                break;
 
             case 'any':
             default:
-                return in_array(true, $matches, true);
+                $result = in_array(true, $matches, true);
+                break;
         }
+
+        // Debug logging for none match_type with request_method.
+        if ($match_type === 'none' && !empty($conditions) && isset($conditions[0]['type']) && $conditions[0]['type'] === 'request_method') {
+            error_log('MilliCache DEBUG: match_type=none | matches=' . json_encode($matches) . ' | final result: ' . ($result ? 'TRUE (rule matches)' : 'FALSE (rule does not match)'));
+        }
+
+        return $result;
     }
 
     /**

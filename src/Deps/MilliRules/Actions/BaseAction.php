@@ -12,6 +12,7 @@
 
 namespace MilliCache\Deps\MilliRules\Actions;
 
+use MilliCache\Deps\MilliRules\ArgumentValue;
 use MilliCache\Deps\MilliRules\Context;
 use MilliCache\Deps\MilliRules\PlaceholderResolver;
 
@@ -85,5 +86,30 @@ abstract class BaseAction implements ActionInterface
     protected function resolve_value(string $value): string
     {
         return $this->resolver->resolve($value);
+    }
+
+    /**
+     * Get an argument value with fluent type conversion.
+     *
+     * Provides a fluent API for accessing action arguments with automatic
+     * placeholder resolution and type-safe conversion.
+     *
+     * Examples:
+     *   $this->get_arg(0, 'default')->string()
+     *   $this->get_arg('to', 'admin@example.com')->string()
+     *   $this->get_arg('enabled', true)->bool()
+     *   $this->get_arg('count', 0)->int()
+     *
+     * @since 0.4.0
+     *
+     * @param int|string $key     The argument key (positional or named).
+     * @param mixed      $default The default value if key doesn't exist.
+     * @return ArgumentValue Fluent wrapper for type conversion.
+     */
+    protected function get_arg($key, $default = null): ArgumentValue
+    {
+        $value = $this->args[ $key ] ?? null;
+
+        return new ArgumentValue( $value, $default, $this->resolver );
     }
 }

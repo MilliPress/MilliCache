@@ -21,23 +21,23 @@ use MilliCache\Deps\MilliRules\Packages\PHP\PlaceholderResolver as PhpPlaceholde
  * Adds WordPress-specific placeholder resolvers for post, user, query, and constants.
  *
  * Supported placeholders:
- * - {wp.post.id} - Post ID
- * - {wp.post.type} - Post type
- * - {wp.post.status} - Post status
- * - {wp.post.author} - Post author ID
- * - {wp.post.parent} - Post parent ID
- * - {wp.post.name} - Post slug
- * - {wp.post.title} - Post title
- * - {wp.user.id} - User ID
- * - {wp.user.logged_in} - Whether user is logged in
- * - {wp.user.login} - User login name
- * - {wp.user.email} - User email
- * - {wp.user.display_name} - User display name
- * - {wp.query.is_singular} - Query conditional
- * - {wp.query.is_home} - Query conditional
- * - {wp.query.is_archive} - Query conditional
- * - {wp.constants.WP_DEBUG} - Constant value
- * - {wp.constants.WP_CACHE} - Constant value
+ * - {post.id} - Post ID
+ * - {post.type} - Post type
+ * - {post.status} - Post status
+ * - {post.author} - Post author ID
+ * - {post.parent} - Post parent ID
+ * - {post.name} - Post slug
+ * - {post.title} - Post title
+ * - {user.id} - User ID
+ * - {user.logged_in} - Whether user is logged in
+ * - {user.login} - User login name
+ * - {user.email} - User email
+ * - {user.display_name} - User display name
+ * - {query.post_type} - Query variable (post type)
+ * - {query.paged} - Query variable (pagination)
+ * - {query.s} - Query variable (search term)
+ * - {constants.WP_DEBUG} - Constant value
+ * - {constants.WP_CACHE} - Constant value
  *
  * @since 0.1.0
  */
@@ -67,7 +67,7 @@ class PlaceholderResolver extends PhpPlaceholderResolver
      */
     protected function register_wordpress_resolvers(): void
     {
-        // WordPress resolver: {wp.post.id}, {wp.user.login}, {wp.query.is_singular}, {wp.constants.WP_DEBUG}
+        // WordPress resolver: {post.id}, {user.login}, {query.is_singular}, {constants.WP_DEBUG}
         self::register_placeholder(
             'wp',
             function ($context, $parts) {
