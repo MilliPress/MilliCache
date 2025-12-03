@@ -29,7 +29,7 @@ use MilliCache\Deps\MilliRules\Rules;
  * User can create a rule with order 10 that sets TTL for specific paths,
  * overriding the default no-cache behavior because higher order executes last.
  *
- * @since 		1.0.0
+ * @since       1.0.0
  * @package     MilliCache
  * @subpackage  Rules
  * @author      Philipp Wellmer <hello@millipress.com>
