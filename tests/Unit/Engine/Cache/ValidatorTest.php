@@ -71,7 +71,7 @@ describe('Validator', function () {
 				1200 // Custom TTL in entry: 20 minutes
 			);
 
-			// Override with 2 hour TTL
+			// Options with 2 hour TTL
 			expect($this->validator->is_stale($entry, 7200))->toBeFalse();
 		});
 	});

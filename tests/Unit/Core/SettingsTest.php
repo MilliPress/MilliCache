@@ -362,4 +362,88 @@ describe( 'Settings', function () {
 			expect( $result )->toBeFalse();
 		} );
 	} );
+
+	describe( 'get_settings', function () {
+		it( 'returns merged settings with defaults', function () {
+			$settings = new Settings();
+			$result = $settings->get_settings();
+
+			expect( $result )->toBeArray();
+			expect( $result )->toHaveKey( 'storage' );
+			expect( $result )->toHaveKey( 'cache' );
+		} );
+
+		it( 'returns specific module settings', function () {
+			$settings = new Settings();
+			$result = $settings->get_settings( 'cache' );
+
+			expect( $result )->toBeArray();
+			expect( $result )->toHaveKey( 'ttl' );
+			expect( $result )->toHaveKey( 'grace' );
+		} );
+
+		it( 'can skip constants', function () {
+			$settings = new Settings();
+			$result = $settings->get_settings( null, true );
+
+			expect( $result )->toBeArray();
+		} );
+	} );
+
+	describe( 'add_config_file', function () {
+		it( 'can be called without error', function () {
+			$settings = new Settings();
+			$testData = array( 'test' => 'value' );
+
+			// Suppress file operation warnings in test environment.
+			set_error_handler( function () {}, E_WARNING );
+			$settings->add_config_file( 'millicache', $testData );
+			restore_error_handler();
+
+			// Just verify it doesn't throw.
+			expect( true )->toBeTrue();
+		} );
+	} );
+
+	describe( 'update_config_file', function () {
+		it( 'can be called without error', function () {
+			$settings = new Settings();
+			$oldData = array( 'test' => 'old' );
+			$newData = array( 'test' => 'new' );
+
+			// Suppress file operation warnings in test environment.
+			set_error_handler( function () {}, E_WARNING );
+			$settings->update_config_file( $oldData, $newData );
+			restore_error_handler();
+
+			// Just verify it doesn't throw.
+			expect( true )->toBeTrue();
+		} );
+	} );
+
+	describe( 'delete_config_file', function () {
+		it( 'ignores non-matching option names', function () {
+			$settings = new Settings();
+
+			// Should not throw when option name doesn't match.
+			expect( fn() => $settings->delete_config_file( 'other_option' ) )
+				->not->toThrow( Exception::class );
+		} );
+
+		it( 'can be called with matching option name', function () {
+			$settings = new Settings();
+
+			expect( fn() => $settings->delete_config_file( 'millicache' ) )
+				->not->toThrow( Exception::class );
+		} );
+	} );
+
+	describe( 'register_settings', function () {
+		it( 'can be called without error', function () {
+			$settings = new Settings();
+
+			expect( fn() => $settings->register_settings() )
+				->not->toThrow( Exception::class );
+		} );
+	} );
 } );

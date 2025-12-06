@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for Cache Flusher.
+ * Tests for Cache Invalidation Queue.
  *
  * @link       https://www.millipress.com
  * @since      1.0.0
@@ -8,9 +8,9 @@
  * @package    MilliCache
  */
 
-use MilliCache\Engine\Clearing\Flusher;
 use MilliCache\Core\Storage;
-use MilliCache\Engine\Multisite;
+use MilliCache\Engine\Cache\Invalidation\Queue;
+use MilliCache\Engine\Utilities\Multisite;
 
 // Mock WordPress functions.
 if ( ! function_exists( 'is_multisite' ) ) {
@@ -25,25 +25,25 @@ uses()->beforeEach( function () {
 	$this->multisite = new Multisite();
 } );
 
-describe( 'Clearing Flusher', function () {
+describe( 'Invalidation Queue', function () {
 
 	describe( 'constructor', function () {
 		it( 'creates flusher with dependencies', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 
-			expect( $flusher )->toBeInstanceOf( Flusher::class );
+			expect( $flusher )->toBeInstanceOf( Queue::class );
 		} );
 
 		it( 'sets default TTL correctly', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite, 7200 );
+			$flusher = new Queue( $this->storage, $this->multisite, 7200 );
 
-			expect( $flusher )->toBeInstanceOf( Flusher::class );
+			expect( $flusher )->toBeInstanceOf( Queue::class );
 		} );
 	} );
 
 	describe( 'add_to_expire', function () {
 		it( 'adds flags to expire queue', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_expire( array( 'flag1', 'flag2' ), false );
 
 			$queue = $flusher->get_expire_queue();
@@ -52,7 +52,7 @@ describe( 'Clearing Flusher', function () {
 		} );
 
 		it( 'handles empty flags array', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_expire( array(), false );
 
 			$queue = $flusher->get_expire_queue();
@@ -60,7 +60,7 @@ describe( 'Clearing Flusher', function () {
 		} );
 
 		it( 'accumulates multiple additions', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_expire( array( 'flag1' ), false );
 			$flusher->add_to_expire( array( 'flag2' ), false );
 
@@ -71,7 +71,7 @@ describe( 'Clearing Flusher', function () {
 
 	describe( 'add_to_delete', function () {
 		it( 'adds flags to delete queue', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_delete( array( 'flag1', 'flag2' ), false );
 
 			$queue = $flusher->get_delete_queue();
@@ -80,7 +80,7 @@ describe( 'Clearing Flusher', function () {
 		} );
 
 		it( 'handles empty flags array', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_delete( array(), false );
 
 			$queue = $flusher->get_delete_queue();
@@ -88,7 +88,7 @@ describe( 'Clearing Flusher', function () {
 		} );
 
 		it( 'accumulates multiple additions', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_delete( array( 'flag1' ), false );
 			$flusher->add_to_delete( array( 'flag2' ), false );
 
@@ -99,13 +99,13 @@ describe( 'Clearing Flusher', function () {
 
 	describe( 'get_expire_queue', function () {
 		it( 'returns empty array initially', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 
 			expect( $flusher->get_expire_queue() )->toBe( array() );
 		} );
 
 		it( 'returns accumulated expire flags', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_expire( array( 'flag1', 'flag2' ), false );
 
 			$queue = $flusher->get_expire_queue();
@@ -115,13 +115,13 @@ describe( 'Clearing Flusher', function () {
 
 	describe( 'get_delete_queue', function () {
 		it( 'returns empty array initially', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 
 			expect( $flusher->get_delete_queue() )->toBe( array() );
 		} );
 
 		it( 'returns accumulated delete flags', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_delete( array( 'flag1', 'flag2' ), false );
 
 			$queue = $flusher->get_delete_queue();
@@ -129,11 +129,11 @@ describe( 'Clearing Flusher', function () {
 		} );
 	} );
 
-	describe( 'flush', function () {
+	describe( 'execute', function () {
 		it( 'returns true when queues empty', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 
-			$result = $flusher->flush();
+			$result = $flusher->execute();
 			expect( $result )->toBeTrue();
 		} );
 
@@ -142,9 +142,9 @@ describe( 'Clearing Flusher', function () {
 				->once()
 				->with( Mockery::type( 'array' ), 3600 );
 
-			$flusher = new Flusher( $this->storage, $this->multisite, 3600 );
+			$flusher = new Queue( $this->storage, $this->multisite, 3600 );
 			$flusher->add_to_delete( array( 'flag1' ), false );
-			$flusher->flush();
+			$flusher->execute();
 
 			expect( true )->toBeTrue();
 		} );
@@ -160,9 +160,9 @@ describe( 'Clearing Flusher', function () {
 					Mockery::any()
 				);
 
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_expire( array( 'flag1' ), false );
-			$flusher->flush();
+			$flusher->execute();
 
 			expect( true )->toBeTrue();
 		} );
@@ -178,9 +178,9 @@ describe( 'Clearing Flusher', function () {
 					Mockery::any()
 				);
 
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_delete( array( 'flag1' ), false );
-			$flusher->flush();
+			$flusher->execute();
 
 			expect( true )->toBeTrue();
 		} );
@@ -190,21 +190,21 @@ describe( 'Clearing Flusher', function () {
 				->once()
 				->with( Mockery::any(), 7200 );
 
-			$flusher = new Flusher( $this->storage, $this->multisite, 7200 );
+			$flusher = new Queue( $this->storage, $this->multisite, 7200 );
 			$flusher->add_to_delete( array( 'flag1' ), false );
-			$flusher->flush();
+			$flusher->execute();
 
 			expect( true )->toBeTrue();
 		} );
 
-		it( 'clears queues after flush', function () {
+		it( 'clears queues after execute', function () {
 			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
 
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_delete( array( 'flag1' ), false );
 			$flusher->add_to_expire( array( 'flag2' ), false );
 
-			$flusher->flush();
+			$flusher->execute();
 
 			expect( $flusher->get_delete_queue() )->toBeEmpty();
 			expect( $flusher->get_expire_queue() )->toBeEmpty();
@@ -213,7 +213,7 @@ describe( 'Clearing Flusher', function () {
 
 	describe( 'prefix_flags', function () {
 		it( 'returns flags unchanged when multisite disabled', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$result = $flusher->prefix_flags( array( 'flag1', 'flag2' ) );
 
 			expect( $result )->toBe( array( 'flag1', 'flag2' ) );
@@ -222,7 +222,7 @@ describe( 'Clearing Flusher', function () {
 
 	describe( 'clear_queues', function () {
 		it( 'empties expire queue', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_expire( array( 'flag1' ), false );
 			$flusher->clear_queues();
 
@@ -230,7 +230,7 @@ describe( 'Clearing Flusher', function () {
 		} );
 
 		it( 'empties delete queue', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_delete( array( 'flag1' ), false );
 			$flusher->clear_queues();
 
@@ -240,7 +240,7 @@ describe( 'Clearing Flusher', function () {
 
 	describe( 'get_queue_sizes', function () {
 		it( 'returns zero sizes initially', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 
 			$sizes = $flusher->get_queue_sizes();
 			expect( $sizes['expire'] )->toBe( 0 );
@@ -248,7 +248,7 @@ describe( 'Clearing Flusher', function () {
 		} );
 
 		it( 'returns correct expire count', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_expire( array( 'flag1', 'flag2', 'flag3' ), false );
 
 			$sizes = $flusher->get_queue_sizes();
@@ -256,7 +256,7 @@ describe( 'Clearing Flusher', function () {
 		} );
 
 		it( 'returns correct delete count', function () {
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_delete( array( 'flag1', 'flag2' ), false );
 
 			$sizes = $flusher->get_queue_sizes();
@@ -264,15 +264,15 @@ describe( 'Clearing Flusher', function () {
 		} );
 	} );
 
-	describe( 'flush_on_shutdown', function () {
-		it( 'calls flush method', function () {
+	describe( 'shutdown behavior', function () {
+		it( 'execute clears queues after processing', function () {
 			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
 
-			$flusher = new Flusher( $this->storage, $this->multisite );
+			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_delete( array( 'flag1' ), false );
-			$flusher->flush_on_shutdown();
+			$flusher->execute();
 
-			// Verify flush was called (queues should be empty).
+			// Verify queues are empty after execute.
 			expect( $flusher->get_delete_queue() )->toBeEmpty();
 		} );
 	} );

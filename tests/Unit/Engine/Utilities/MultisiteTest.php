@@ -8,7 +8,7 @@
  * @package    MilliCache
  */
 
-use MilliCache\Engine\Multisite;
+use MilliCache\Engine\Utilities\Multisite;
 
 // Mock WordPress multisite functions.
 if ( ! function_exists( 'is_multisite' ) ) {

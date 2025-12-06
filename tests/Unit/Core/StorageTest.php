@@ -114,7 +114,11 @@ describe( 'Storage', function () {
 			);
 
 			$storage = new Storage( $settings );
+
+			// Suppress Redis connection warning during test.
+			set_error_handler( fn() => true, E_WARNING );
 			$result = $storage->set_add( 'test-set', 'member' );
+			restore_error_handler();
 
 			// Should return 0 on error.
 			expect( $result )->toBe( 0 );
@@ -131,7 +135,11 @@ describe( 'Storage', function () {
 			);
 
 			$storage = new Storage( $settings );
+
+			// Suppress Redis connection warning during test.
+			set_error_handler( fn() => true, E_WARNING );
 			$result = $storage->set_pop( 'test-set', 1 );
+			restore_error_handler();
 
 			// Should return empty array on error.
 			expect( $result )->toBe( array() );
@@ -148,7 +156,11 @@ describe( 'Storage', function () {
 			);
 
 			$storage = new Storage( $settings );
+
+			// Suppress Redis connection warning during test.
+			set_error_handler( fn() => true, E_WARNING );
 			$result = $storage->set_count( 'test-set' );
+			restore_error_handler();
 
 			// Should return 0 on error.
 			expect( $result )->toBe( 0 );
@@ -167,7 +179,11 @@ describe( 'Storage', function () {
 			);
 
 			$storage = new Storage( $settings );
+
+			// Suppress Redis connection warning during test.
+			set_error_handler( fn() => true, E_WARNING );
 			$result = $storage->get_cache( 'non-existent-hash' );
+			restore_error_handler();
 
 			expect( $result )->toBeNull();
 		} );
@@ -183,7 +199,11 @@ describe( 'Storage', function () {
 			);
 
 			$storage = new Storage( $settings );
+
+			// Suppress Redis connection warning during test.
+			set_error_handler( fn() => true, E_WARNING );
 			$result = $storage->lock( 'test-hash' );
+			restore_error_handler();
 
 			expect( $result )->toBeFalse();
 		} );
@@ -199,7 +219,11 @@ describe( 'Storage', function () {
 			);
 
 			$storage = new Storage( $settings );
+
+			// Suppress Redis connection warning during test.
+			set_error_handler( fn() => true, E_WARNING );
 			$result = $storage->unlock( 'test-hash' );
+			restore_error_handler();
 
 			expect( $result )->toBeFalse();
 		} );

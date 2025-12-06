@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for FlagManager.
+ * Tests for Flags.
  *
  * @link       https://www.millipress.com
  * @since      1.0.0
@@ -8,14 +8,13 @@
  * @package    MilliCache
  */
 
-use MilliCache\Engine\FlagManager;
-use MilliCache\Engine\Multisite;
+use MilliCache\Engine\Flags;
 
-describe( 'FlagManager', function () {
+describe( 'Flags', function () {
 
 	describe( 'single site', function () {
 		beforeEach( function () {
-			$this->manager = new FlagManager();
+			$this->manager = new Flags();
 		} );
 
 		it( 'adds flags', function () {
@@ -69,7 +68,7 @@ describe( 'FlagManager', function () {
 
 	describe( 'real-world scenarios', function () {
 		it( 'manages post-related flags', function () {
-			$manager = new FlagManager();
+			$manager = new Flags();
 
 			$manager->add( 'post:123' );
 			$manager->add( 'archive:post' );
@@ -88,7 +87,7 @@ describe( 'FlagManager', function () {
 		} );
 
 		it( 'manages URL hash flags', function () {
-			$manager = new FlagManager();
+			$manager = new Flags();
 
 			$manager->add( 'url:abc123def456' );
 
@@ -96,7 +95,7 @@ describe( 'FlagManager', function () {
 		} );
 
 		it( 'removes specific flag among many', function () {
-			$manager = new FlagManager();
+			$manager = new Flags();
 
 			$manager->add( 'post:1' );
 			$manager->add( 'post:2' );

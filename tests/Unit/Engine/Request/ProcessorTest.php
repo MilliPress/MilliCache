@@ -1,6 +1,6 @@
 <?php
 
-use MilliCache\Engine\Request\Manager;
+use MilliCache\Engine\Request\Processor;
 use MilliCache\Engine\Request\Parser;
 use MilliCache\Engine\Request\Cleaner;
 use MilliCache\Engine\Request\Hasher;
@@ -36,7 +36,7 @@ uses()
 			array()
 		);
 
-		$this->handler = new Manager($this->config);
+		$this->handler = new Processor($this->config);
 	})
 	->afterEach(function () {
 		// Restore original state.
@@ -50,8 +50,8 @@ describe('Handler', function () {
 
 	describe('constructor', function () {
 		it('creates handler with config', function () {
-			$handler = new Manager($this->config);
-			expect($handler)->toBeInstanceOf(Manager::class);
+			$handler = new Processor($this->config);
+			expect($handler)->toBeInstanceOf(Processor::class);
 		});
 
 		it('initializes parser', function () {
@@ -87,7 +87,7 @@ describe('Handler', function () {
 			$_SERVER['QUERY_STRING'] = 'id=123&utm_source=google';
 			$_GET = array('id' => '123', 'utm_source' => 'google');
 
-			$handler2 = new Manager($this->config);
+			$handler2 = new Processor($this->config);
 			$hash2 = $handler2->process();
 
 			expect($hash1)->toBe($hash2);
@@ -139,7 +139,7 @@ describe('Handler', function () {
 				3600, 600, true, true,
 				array(), array(), array(), array('utm_source'), array()
 			);
-			$handler = new Manager($config);
+			$handler = new Processor($config);
 			$handler->process();
 
 			$debug = $handler->get_debug_data();
@@ -164,7 +164,7 @@ describe('Handler', function () {
 				3600, 600, true, false,
 				array(), array(), array(), array('utm_*', 'fbclid'), array()
 			);
-			$handler = new Manager($config);
+			$handler = new Processor($config);
 
 			$hash = $handler->process();
 

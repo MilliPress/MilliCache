@@ -193,15 +193,15 @@ it('creates new instance with with_ttl', function () {
 });
 ```
 
-### Manager Classes
+### Processor Classes
 
 Test state management:
 
 ```php
-use MilliCache\Engine\FlagManager;
+use MilliCache\Engine\Flags;
 
 it('manages flags correctly', function () {
-    $manager = new FlagManager();
+    $manager = new Flags();
     $manager->add('post:123');
     $manager->add('home');
 

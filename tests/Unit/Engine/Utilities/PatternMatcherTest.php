@@ -70,7 +70,12 @@ describe( 'PatternMatcher', function () {
 		} );
 
 		it( 'handles invalid regex gracefully', function () {
-			expect( PatternMatcher::match( 'test', '/[/' ) )->toBeFalse();
+			// Suppress preg_match warning during test.
+			set_error_handler( fn() => true, E_WARNING );
+			$result = PatternMatcher::match( 'test', '/[/' );
+			restore_error_handler();
+
+			expect( $result )->toBeFalse();
 		} );
 	} );
 
