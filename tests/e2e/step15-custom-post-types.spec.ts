@@ -1,77 +1,17 @@
 import { test, expect } from './setup/e2e-wp-test';
-import { clearCache, networkActivatePlugin, runWpCliCommand } from './utils/tools';
+import { clearCache, networkActivatePlugin } from './utils/tools';
 import { FrontendPage } from './pages';
 
 /**
  * Step 15: Custom Post Type Tests
  *
  * Tests for caching behavior with custom post types.
- * Uses WooCommerce products as an example CPT if available.
+ * Plugin-specific CPT tests (e.g., WooCommerce products) are in step9-plugins.spec.ts
  */
 test.describe('Step 15: Custom Post Types', () => {
     test.beforeAll(async () => {
         await networkActivatePlugin();
         await clearCache('*');
-    });
-
-    test.describe('WooCommerce Products (if available)', () => {
-        test.beforeEach(async () => {
-            // Check if WooCommerce is active
-            try {
-                await runWpCliCommand('plugin is-active woocommerce');
-            } catch {
-                test.skip();
-            }
-        });
-
-        test('Product single pages should be cached', async ({ page }) => {
-            const frontend = new FrontendPage(page);
-
-            // Try to access a product page
-            // Note: This assumes WooCommerce sample data is installed
-            const response = await frontend.goto('/shop/');
-
-            if (response.status() === 200) {
-                const response2 = await frontend.reload();
-                await expect(response2).toBeCacheHit();
-            }
-        });
-
-        test('Product archives should be cached', async ({ page }) => {
-            const frontend = new FrontendPage(page);
-
-            const response = await frontend.goto('/shop/');
-
-            if (response.status() === 200) {
-                const response2 = await frontend.reload();
-                // Shop page should be cached for anonymous users
-                await expect(response2).toHaveCacheStatus(['hit', 'miss']);
-            }
-        });
-
-        test('Product with cart cookie should bypass cache', async ({
-            page,
-        }) => {
-            // Set WooCommerce cart cookie
-            await page.context().addCookies([
-                {
-                    name: 'woocommerce_cart_hash',
-                    value: 'abc123',
-                    domain: 'localhost',
-                    path: '/',
-                },
-            ]);
-
-            const frontend = new FrontendPage(page);
-            const response = await frontend.goto('/shop/');
-
-            // With cart cookie, should bypass (depending on config)
-            const status = response.headers()['x-millicache-status'];
-            expect(['bypass', 'miss', 'hit']).toContain(status);
-
-            // Clean up
-            await page.context().clearCookies();
-        });
     });
 
     test.describe('Generic CPT Behavior', () => {
