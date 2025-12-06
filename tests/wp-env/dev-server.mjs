@@ -103,37 +103,34 @@ const disableMultisiteInConfig = (wpConfigPath) => {
 };
 
 /**
- * Generate sample content if not already present.
+ * Generate sample content for a single site.
+ * @param {number} siteId The site ID (1 for main site, 2-5 for subsites).
  */
-const generateSampleContent = async () => {
-    // Check if content already exists (more than default "Hello World" post)
+const generateSiteContent = async (siteId) => {
+    const urlFlag = siteId === 1 ? '' : `--url=localhost:8889/site${siteId}`;
+    const wpCmd = (cmd) => ['wp-env', 'run', 'tests-cli', 'wp', ...cmd.split(' '), ...(urlFlag ? [urlFlag] : [])];
+
+    // Check if content already exists
     try {
-        const postCount = await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'list',
-            '--post_type=post', '--format=count'], { silent: true });
+        const postCount = await run('npx', wpCmd('post list --post_type=post --format=count'), { silent: true });
         if (parseInt(postCount.trim()) > 1) {
-            console.log('Sample content already exists');
-            return;
+            return { siteId, skipped: true };
         }
     } catch {}
 
-    console.log('Generating sample content...');
-
     // Flush rewrite rules to ensure CPTs are registered
-    await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'flush'], { silent: true });
+    await run('npx', wpCmd('rewrite flush'), { silent: true });
 
     // Generate posts and pages in parallel
     await Promise.all([
-        run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'generate', '--count=5',
-            '--post_type=post', '--post_status=publish'], { silent: true }),
-        run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'generate', '--count=3',
-            '--post_type=page', '--post_status=publish'], { silent: true }),
+        run('npx', wpCmd('post generate --count=5 --post_type=post --post_status=publish'), { silent: true }),
+        run('npx', wpCmd('post generate --count=3 --post_type=page --post_status=publish'), { silent: true }),
     ]);
 
-    // Create genre terms
+    // Create genre terms (parallel)
     const genres = ['Fiction', 'Non-Fiction', 'Science', 'History'];
     await Promise.all(genres.map(genre =>
-        run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'term', 'create', 'genre', genre], { silent: true })
-            .catch(() => {})
+        run('npx', wpCmd(`term create genre ${genre}`), { silent: true }).catch(() => {})
     ));
 
     // Create sample books with assigned genres
@@ -145,15 +142,51 @@ const generateSampleContent = async () => {
     for (const book of books) {
         try {
             const result = await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'create',
-                '--post_type=book', '--post_status=publish', `--post_title="${book.title}"`, '--porcelain'], { silent: true });
+                '--post_type=book', '--post_status=publish', `--post_title="${book.title}"`, '--porcelain',
+                ...(urlFlag ? [urlFlag] : [])], { silent: true });
             const postId = result.trim();
             if (postId) {
-                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'term', 'set', postId, 'genre', book.genre], { silent: true });
+                await run('npx', wpCmd(`term set ${postId} genre ${book.genre}`), { silent: true });
             }
         } catch {}
     }
 
-    console.log('Sample content generated (5 posts, 3 pages, 3 books, 4 genres)');
+    // Create navigation menu with books archive link
+    try {
+        // Create the menu
+        const menuId = await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'menu', 'create', 'Primary', '--porcelain',
+            ...(urlFlag ? [urlFlag] : [])], { silent: true });
+        if (menuId.trim()) {
+            // Add Home link
+            await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'menu', 'item', 'add-custom', 'Primary',
+                'Home', siteId === 1 ? 'http://localhost:8889/' : `http://localhost:8889/site${siteId}/`,
+                ...(urlFlag ? [urlFlag] : [])], { silent: true });
+            // Add Books archive link
+            await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'menu', 'item', 'add-custom', 'Primary',
+                'Books', siteId === 1 ? 'http://localhost:8889/books/' : `http://localhost:8889/site${siteId}/books/`,
+                ...(urlFlag ? [urlFlag] : [])], { silent: true });
+            // Assign menu to primary location
+            await run('npx', wpCmd('menu location assign Primary primary'), { silent: true }).catch(() => {});
+        }
+    } catch {}
+
+    return { siteId, skipped: false };
+};
+
+/**
+ * Generate sample content on all network sites.
+ */
+const generateSampleContent = async () => {
+    console.log('Generating sample content on all network sites...');
+
+    // Generate content on all 5 sites in parallel
+    const results = await Promise.all([1, 2, 3, 4, 5].map(siteId => generateSiteContent(siteId)));
+
+    const generated = results.filter(r => !r.skipped).map(r => r.siteId);
+    const skipped = results.filter(r => r.skipped).map(r => r.siteId);
+
+    if (generated.length) console.log(`Generated content on sites: ${generated.join(', ')}`);
+    if (skipped.length) console.log(`Content already exists on sites: ${skipped.join(', ')}`);
 };
 
 // Main function for starting the server
