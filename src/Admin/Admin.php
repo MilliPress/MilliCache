@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @subpackage MilliCache/admin
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-class Admin {
+final class Admin {
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -41,6 +41,16 @@ class Admin {
 	 * @var      Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
 	protected Loader $loader;
+
+	/**
+	 * The Engine instance.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @var      Engine    $engine    The Engine instance.
+	 */
+	private Engine $engine;
 
 	/**
 	 * The ID of this plugin.
@@ -79,12 +89,13 @@ class Admin {
 	 * @access   public
 	 *
 	 * @param    Loader $loader            The loader class.
+	 * @param    Engine $engine            The Engine instance.
 	 * @param    string $plugin_name       The name of this plugin.
 	 * @param    string $version           The version of this plugin.
 	 */
-	public function __construct( Loader $loader, string $plugin_name, string $version ) {
-
+	public function __construct( Loader $loader, Engine $engine, string $plugin_name, string $version ) {
 		$this->loader = $loader;
+		$this->engine = $engine;
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
@@ -101,8 +112,8 @@ class Admin {
 	 * @return   void
 	 */
 	private function load_dependencies() {
-		new Adminbar( $this->loader );
-		new RestAPI( $this->loader, $this->plugin_name, $this->version );
+		new Adminbar( $this->loader, $this->engine );
+		new RestAPI( $this->loader, $this->engine, $this->plugin_name, $this->version );
 	}
 
 	/**
@@ -325,7 +336,7 @@ class Admin {
 	 *
 	 * @return  void
 	 */
-	public static function add_dashboard_glance_cache_size(): void {
+	public function add_dashboard_glance_cache_size(): void {
 		printf(
 			'<li class="cache-count">%s</li>',
 			current_user_can( 'manage_options' )
@@ -350,13 +361,13 @@ class Admin {
 	 *
 	 * @return   void
 	 */
-	public static function delete_cache_size_transient(): void {
+	public function delete_cache_size_transient(): void {
 		// Delete single-site cache size transient.
-		delete_site_transient( 'millicache_size_' . Engine::get_flag_prefix() . '*' );
+		delete_site_transient( 'millicache_size_' . $this->engine->flags()->get_prefix() . '*' );
 
 		if ( is_multisite() ) {
 			// Delete network-wide cache size transient.
-			delete_site_transient( 'millicache_size_' . Engine::get_flag_prefix( '*' ) . '*' );
+			delete_site_transient( 'millicache_size_' . $this->engine->flags()->get_prefix( '*' ) . '*' );
 		}
 	}
 
@@ -364,7 +375,7 @@ class Admin {
 	 * Get the size of the cache.
 	 *
 	 * @since   1.0.0
-	 * @access  public
+	 * @access  public static
 	 *
 	 * @param string $flag The flag to search for. Wildcards are allowed.
 	 * @param bool   $reload Whether to reload the cache size from the storage server.
@@ -374,7 +385,7 @@ class Admin {
 		$size = get_site_transient( "millicache_size_$flag" );
 
 		if ( ! is_array( $size ) || $reload ) {
-			$storage = Engine::get_storage();
+			$storage = Engine::instance()->storage();
 			$size = $storage->get_cache_size( $flag );
 
 			if ( $size ) {
@@ -396,27 +407,27 @@ class Admin {
 	 * Get a summary string for the cache size.
 	 *
 	 * @since   1.0.0
-	 * @access  public
+	 * @access  public static
 	 *
 	 * @param ?array{index: int, size: int, size_human: string} $size The size of the cache.
 	 * @return string The summary string.
 	 */
 	public static function get_cache_size_summary_string( ?array $size = null ): string {
 		if ( ! $size ) {
-			$size = self::get_cache_size( Engine::get_flag_prefix( is_network_admin() ? '*' : null ) . '*' );
+			$size = self::get_cache_size( Engine::instance()->flags()->get_prefix( is_network_admin() ? '*' : null ) . '*' );
 		}
 
 		if ( $size['size'] > 0 ) {
 			return sprintf(
-				// translators: %1$s is the number of pages, %2$s is singular or plural "page", %3$s is the cache size, %4$s is the cache size unit.
-				__( '%1$s %2$s (%3$s) cached', 'millicache' ),
-				$size['index'],
+				// translators: %1$s is the number of pages, %2$s is singular or plural "page", %3$s is the cache size.
+				__( '%1$s %2$s (%3$s)', 'millicache' ),
+				number_format_i18n( $size['index'] ),
 				_n( 'page', 'pages', $size['index'], 'millicache' ),
-				$size['size_human'],
+				$size['size_human']
 			);
-		} else {
-			return __( 'Empty cache', 'millicache' );
 		}
+
+		return __( 'No cached pages', 'millicache' );
 	}
 
 	/**

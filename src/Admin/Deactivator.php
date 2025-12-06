@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @subpackage MilliCache/Admin
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-class Deactivator {
+final class Deactivator {
 
 	/**
 	 * Deactivate the plugin.
@@ -41,8 +41,8 @@ class Deactivator {
 		// Remove the cron events.
 		self::unschedule_events();
 
-		// Flush the cache.
-		Engine::clear_cache();
+		// Reset the cache.
+		Engine::instance()->clear()->all();
 
 		// Remove advanced-cache.php.
 		self::remove_advanced_cache_file();

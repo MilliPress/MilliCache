@@ -311,7 +311,7 @@ class Storage {
 			$key = $this->get_cache_key( $hash );
 
 			/**
-			 * Fires before a page cache is stored in the storage server.
+			 * Fires before a cache entry is stored in the storage server.
 			 *
 			 * @since 1.0.0
 			 *
@@ -320,7 +320,7 @@ class Storage {
 			 * @param array  $flags The flags associated with the cache.
 			 * @param mixed  $data The data to cache.
 			 */
-			do_action( 'millicache_cache_storing', $hash, $key, $flags, $data );
+			do_action( 'millicache_entry_storing', $hash, $key, $flags, $data );
 
 			// Serialize the data and calculate its size.
 			$serialized_data = serialize( $data );
@@ -351,13 +351,13 @@ class Storage {
 					}
 
 					// Set the max expiration time.
-					$config = Engine::get_config();
+					$config = Engine::instance()->config();
 					$tx->expire( $key, $config->ttl + $config->grace );
 				}
 			);
 
 			/**
-			 * Fires after a page cache is stored in the storage server.
+			 * Fires after a cache entry is stored in the storage server.
 			 *
 			 * @since 1.0.0
 			 *
@@ -366,7 +366,7 @@ class Storage {
 			 * @param array  $flags The flags associated with the cache.
 			 * @param mixed  $data The data to cache.
 			 */
-			do_action( 'millicache_cache_stored', $hash, $key, $flags, $data );
+			do_action( 'millicache_entry_stored', $hash, $key, $flags, $data );
 
 			return true;
 		} catch ( PredisException $e ) {
@@ -397,13 +397,13 @@ class Storage {
 			}
 
 			/**
-			 * Fires before a page cache is deleted in the storage server.
+			 * Fires before a cache entry is deleted in the storage server.
 			 *
 			 * @param string $hash The cache URL hash.
 			 * @param string $key The cache key.
 			 * @param array  $flags The flags associated with the cache.
 			 */
-			do_action( 'millicache_cache_deleting', $hash, $key, $flags );
+			do_action( 'millicache_entry_deleting', $hash, $key, $flags );
 
 			$this->client->transaction(
 				function ( $tx ) use ( $key, $flags ) {
@@ -428,7 +428,7 @@ class Storage {
 			);
 
 			/**
-			 * Fires after a page cache is deleted in the storage server.
+			 * Fires after a cache entry is deleted in the storage server.
 			 *
 			 * @since 1.0.0
 			 *
@@ -436,7 +436,7 @@ class Storage {
 			 * @param string $key The cache key.
 			 * @param array  $flags The flags associated with the cache.
 			 */
-			do_action( 'millicache_cache_deleted', $hash, $key, $flags );
+			do_action( 'millicache_entry_deleted', $hash, $key, $flags );
 
 			return true;
 		} catch ( PredisException $e ) {

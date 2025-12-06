@@ -23,7 +23,7 @@ use MilliCache\Engine;
  * @subpackage MilliCache/Admin
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-class CLI {
+final class CLI {
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -35,6 +35,16 @@ class CLI {
 	 * @var      Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
 	protected Loader $loader;
+
+	/**
+	 * The Engine instance.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @var      Engine    $engine    The Engine instance.
+	 */
+	private Engine $engine;
 
 	/**
 	 * The ID of this plugin.
@@ -64,14 +74,15 @@ class CLI {
 	 * @access public
 	 *
 	 * @param Loader $loader Maintains and registers all hooks for the plugin.
+	 * @param Engine $engine The Engine instance.
 	 * @param string $plugin_name The name of the plugin.
 	 * @param string $version The version of the plugin.
 	 *
 	 * @return void
 	 */
-	public function __construct( Loader $loader, string $plugin_name, string $version ) {
-
+	public function __construct( Loader $loader, Engine $engine, string $plugin_name, string $version ) {
 		$this->loader = $loader;
+		$this->engine = $engine;
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
@@ -138,13 +149,11 @@ class CLI {
 			)
 		);
 
-		$engine = new Engine();
-
 		$expire = $assoc_args['expire'];
 
 		// Clear the full cache if no arguments are given.
 		if ( '' === $assoc_args['ids'] && '' === $assoc_args['urls'] && '' === $assoc_args['flags'] && '' === $assoc_args['sites'] && '' === $assoc_args['networks'] ) {
-			$engine::clear_cache( $expire );
+			$this->engine->clear()->all( $expire );
 			\WP_CLI::success( is_multisite() ? esc_html__( 'Network cache cleared.', 'millicache' ) : esc_html__( 'Site cache cleared.', 'millicache' ) );
 		}
 
@@ -152,7 +161,7 @@ class CLI {
 		if ( '' !== $assoc_args['networks'] ) {
 			$network_ids = explode( ',', $assoc_args['networks'] );
 			foreach ( $network_ids as $network_id ) {
-				$engine::clear_cache_by_network_id( (int) $network_id, $expire );
+				$this->engine->clear()->network( (int) $network_id, $expire );
 			}
 			\WP_CLI::success( esc_html__( 'Network cache cleared.', 'millicache' ) );
 		}
@@ -161,7 +170,7 @@ class CLI {
 		if ( '' !== $assoc_args['sites'] ) {
 			$site_ids = explode( ',', $assoc_args['sites'] );
 			foreach ( $site_ids as $site_id ) {
-				$engine::clear_cache_by_site_ids( (int) $site_id, null, $expire );
+				$this->engine->clear()->sites( (int) $site_id, null, $expire );
 			}
 			\WP_CLI::success( esc_html__( 'Site cache cleared.', 'millicache' ) );
 		}
@@ -170,7 +179,7 @@ class CLI {
 		if ( '' !== $assoc_args['ids'] ) {
 			$post_ids = explode( ',', $assoc_args['ids'] );
 			foreach ( $post_ids as $post_id ) {
-				$engine::clear_cache_by_post_ids( (int) $post_id, $expire );
+				$this->engine->clear()->posts( (int) $post_id, $expire );
 			}
 			\WP_CLI::success( esc_html__( 'Post cache cleared.', 'millicache' ) );
 		}
@@ -179,7 +188,7 @@ class CLI {
 		if ( '' !== $assoc_args['urls'] ) {
 			$urls = explode( ',', $assoc_args['urls'] );
 			foreach ( $urls as $url ) {
-				$engine::clear_cache_by_urls( $url, $expire );
+				$this->engine->clear()->urls( $url, $expire );
 			}
 			\WP_CLI::success( esc_html__( 'URL cache cleared.', 'millicache' ) );
 		}
@@ -188,7 +197,7 @@ class CLI {
 		if ( '' !== $assoc_args['flags'] ) {
 			$flags = explode( ',', $assoc_args['flags'] );
 			foreach ( $flags as $flag ) {
-				$engine::clear_cache_by_flags( $flag, $expire, false );
+				$this->engine->clear()->flags( $flag, $expire, false );
 			}
 			\WP_CLI::success( esc_html__( 'Cache cleared for flags.', 'millicache' ) );
 		}

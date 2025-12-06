@@ -25,7 +25,7 @@ use MilliCache\Core\Settings;
  * @subpackage MilliCache/Admin
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-class Activator {
+final class Activator {
 
 	/**
 	 * Activate the plugin.

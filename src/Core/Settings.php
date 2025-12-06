@@ -24,7 +24,7 @@ use MilliCache\Engine\Utilities\ServerVars;
  * @subpackage MilliCache/Core
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-class Settings {
+final class Settings {
 
 	/**
 	 * The domain for which the settings are stored.

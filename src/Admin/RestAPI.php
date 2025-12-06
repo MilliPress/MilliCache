@@ -26,7 +26,7 @@ use MilliCache\MilliCache;
  * @subpackage MilliCache/Admin
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-class RestAPI {
+final class RestAPI {
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -38,6 +38,16 @@ class RestAPI {
 	 * @var      Loader $loader Maintains and registers all hooks for the plugin.
 	 */
 	protected Loader $loader;
+
+	/**
+	 * The Engine instance.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @var      Engine $engine The Engine instance.
+	 */
+	private Engine $engine;
 
 	/**
 	 * The ID of this plugin.
@@ -66,11 +76,13 @@ class RestAPI {
 	 * @access public
 	 *
 	 * @param Loader $loader The loader class.
+	 * @param Engine $engine The Engine instance.
 	 * @param string $plugin_name The name of this plugin.
 	 * @param string $version The version of this plugin.
 	 */
-	public function __construct( Loader $loader, string $plugin_name, string $version ) {
+	public function __construct( Loader $loader, Engine $engine, string $plugin_name, string $version ) {
 		$this->loader = $loader;
+		$this->engine = $engine;
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
@@ -192,10 +204,10 @@ class RestAPI {
 					$is_network_admin = (bool) $request->get_param( 'is_network_admin' );
 
 					if ( $is_network_admin ) {
-						Engine::clear_cache_by_network_id();
+						$this->engine->clear()->network();
 						$message = __( 'The network cache has been cleared.', 'millicache' );
 					} else {
-						Engine::clear_cache_by_site_ids();
+						$this->engine->clear()->sites();
 						$message = __( 'The site cache has been cleared.', 'millicache' );
 					}
 
@@ -231,7 +243,7 @@ class RestAPI {
 						);
 					}
 
-					Engine::clear_cache_by_flags( $flags );
+					$this->engine->clear()->flags( $flags );
 
 					$message = __( 'The current page cache has been cleared.', 'millicache' );
 
@@ -248,7 +260,7 @@ class RestAPI {
 						);
 					}
 
-					Engine::clear_cache_by_targets( $targets );
+					$this->engine->clear()->targets( $targets );
 
 					$message = empty( $targets ) ?
 						__( 'The site cache has been cleared.', 'millicache' ) :
@@ -403,8 +415,8 @@ class RestAPI {
 					array(
 						'plugin_name' => $this->plugin_name,
 						'version' => $this->version,
-						'cache' => Engine::get_status( $request->get_param( 'network' ) === 'true' ),
-						'storage' => Engine::get_storage()->get_status(),
+						'cache' => $this->engine->cache()->get_status( $request->get_param( 'network' ) === 'true' ),
+						'storage' => $this->engine->storage()->get_status(),
 						'dropin' => Admin::validate_advanced_cache_file(),
 						'settings' => array(
 							'has_defaults' => Settings::has_default_settings(),
