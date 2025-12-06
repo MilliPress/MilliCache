@@ -1,18 +1,22 @@
-name: E2E- & Performance-Tests
+name: E2E & Performance Tests
 
 on:
   workflow_call:
   pull_request:
-    branches: [ main ]
+    branches: [main]
   push:
-    branches: [ main ]
+    branches: [main]
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
+  e2e:
+    name: E2E & Performance
     timeout-minutes: 25
     runs-on: ubuntu-latest
     env:
@@ -23,7 +27,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get Composer directory path
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+
+      - name: Get Composer cache directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
@@ -31,9 +41,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
+          key: ${{ runner.os }}-composer-e2e-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-e2e-
 
       - name: Cache WP-ENV
         uses: actions/cache@v4
@@ -43,10 +52,9 @@ jobs:
             /home/runner/.wp-env
             /home/runner/.wp-cli
           key: ${{ runner.os }}-wp-env-${{ hashFiles('**/wp-env.json') }}-v1
-          restore-keys: |
-            ${{ runner.os }}-wp-env-
+          restore-keys: ${{ runner.os }}-wp-env-
 
-      - name: Setup Node on ${{ runner.os }}
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           cache: 'npm'
@@ -150,5 +158,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: performance-results
-          path: ${{ env.WP_ARTIFACTS_PATH }}/performance-results.json
+          path: ${{ github.workspace }}/artifacts/performance-results.json
           retention-days: 7
