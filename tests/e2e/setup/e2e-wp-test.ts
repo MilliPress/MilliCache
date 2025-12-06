@@ -7,6 +7,9 @@ import {
     RequestUtils,
 } from '@wordpress/e2e-test-utils-playwright';
 
+// Register custom matchers for cache header validation
+import './matchers/cache-matchers';
+
 /**
  * Extends the base test environment with additional WordPress utilities.
  */

@@ -4,10 +4,12 @@ import { expect } from '@playwright/test';
 /**
  * Clear the MilliCache.
  *
- * @param flags The cache flags to clear.
+ * @param flags The cache flags to clear. Use '*' to clear all.
  */
 export async function clearCache(flags = '') {
-    const stdout = await runWpCliCommand(`millicache clear -- --flags="${flags ? flags : '*'}"`);
+    const stdout = await runWpCliCommand(
+        flags ? `millicache clear -- --flags="${flags}"` : 'millicache clear'
+    );
     expect(stdout).toContain('Success');
 }
 
