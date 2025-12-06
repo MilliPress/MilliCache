@@ -28,28 +28,35 @@ use MilliCache\Engine\Utilities\ServerVars;
  * @subpackage  Engine\Request
  * @author      Philipp Wellmer <hello@millipress.com>
  */
-final class Manager {
+final class Processor {
+
+	/**
+	 * Cache configuration.
+	 *
+	 * @var Config
+	 */
+	private Config $config;
 
 	/**
 	 * Request parser.
 	 *
-	 * @var Parser
+	 * @var Parser|null
 	 */
-	private Parser $parser;
+	private ?Parser $parser = null;
 
 	/**
 	 * Request cleaner.
 	 *
-	 * @var Cleaner
+	 * @var Cleaner|null
 	 */
-	private Cleaner $cleaner;
+	private ?Cleaner $cleaner = null;
 
 	/**
 	 * Request hasher.
 	 *
-	 * @var Hasher
+	 * @var Hasher|null
 	 */
-	private Hasher $hasher;
+	private ?Hasher $hasher = null;
 
 	/**
 	 * Constructor.
@@ -59,9 +66,7 @@ final class Manager {
 	 * @param Config $config Cache configuration.
 	 */
 	public function __construct( Config $config ) {
-		$this->parser  = new Parser( $config );
-		$this->cleaner = new Cleaner( $config, $this->parser );
-		$this->hasher  = new Hasher( $config, $this->parser );
+		$this->config = $config;
 	}
 
 	/**
@@ -72,6 +77,9 @@ final class Manager {
 	 * @return Parser The parser instance.
 	 */
 	public function get_parser(): Parser {
+		if ( ! $this->parser ) {
+			$this->parser = new Parser( $this->config );
+		}
 		return $this->parser;
 	}
 
@@ -83,6 +91,9 @@ final class Manager {
 	 * @return Cleaner The cleaner instance.
 	 */
 	public function get_cleaner(): Cleaner {
+		if ( ! $this->cleaner ) {
+			$this->cleaner = new Cleaner( $this->config, $this->get_parser() );
+		}
 		return $this->cleaner;
 	}
 
@@ -94,6 +105,9 @@ final class Manager {
 	 * @return Hasher The hasher instance.
 	 */
 	public function get_hasher(): Hasher {
+		if ( ! $this->hasher ) {
+			$this->hasher = new Hasher( $this->config, $this->get_parser() );
+		}
 		return $this->hasher;
 	}
 
@@ -108,8 +122,8 @@ final class Manager {
 	 * @return string The generated request hash.
 	 */
 	public function process(): string {
-		$this->cleaner->clean_request();
-		return $this->hasher->generate();
+		$this->get_cleaner()->clean_request();
+		return $this->get_hasher()->generate();
 	}
 
 	/**
@@ -123,14 +137,14 @@ final class Manager {
 	public function get_url_hash( ?string $url = null ): string {
 		if ( ! $url ) {
 			$host = strtolower( ServerVars::get( 'HTTP_HOST' ) );
-			$path = $this->parser->parse_request_uri( ServerVars::get( 'REQUEST_URI' ) );
+			$path = $this->get_parser()->parse_request_uri( ServerVars::get( 'REQUEST_URI' ) );
 		} else {
 			$parsed = parse_url( $url );
 			$host   = strtolower( $parsed['host'] ?? '' );
 			$path   = ( $parsed['path'] ?? '' ) . ( isset( $parsed['query'] ) ? '?' . $parsed['query'] : '' );
 		}
 
-		return $this->parser->get_url_hash( $host, $path );
+		return $this->get_parser()->get_url_hash( $host, $path );
 	}
 
 	/**
@@ -141,6 +155,6 @@ final class Manager {
 	 * @return array<string,mixed>|null Debug data, or null if debug disabled.
 	 */
 	public function get_debug_data(): ?array {
-		return $this->hasher->get_debug_data();
+		return $this->get_hasher()->get_debug_data();
 	}
 }

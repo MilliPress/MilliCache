@@ -81,7 +81,9 @@ final class Hasher {
 	 */
 	public function generate(): string {
 		$request_hash = array(
-			'request' => $this->parser->parse_request_uri( ServerVars::get( 'REQUEST_URI' ) ),
+			'request' => $this->parser->parse_request_uri(
+				ServerVars::get( 'REQUEST_URI' )
+			),
 			'host'    => ServerVars::get( 'HTTP_HOST' ),
 			'https'   => ServerVars::get( 'HTTPS' ),
 			'method'  => ServerVars::get( 'REQUEST_METHOD' ),
@@ -89,15 +91,14 @@ final class Hasher {
 			'cookies' => $this->parser->parse_cookies( $_COOKIE ),
 		);
 
-		// Make sure requests with Authorization: headers are unique.
-		if ( ! empty( $_SERVER['HTTP_AUTHORIZATION'] ) ) {
-			$request_hash['unique']['mc-auth-header'] = ServerVars::get( 'HTTP_AUTHORIZATION' );
+		// Make sure requests with Authorization headers are unique.
+		$auth = ServerVars::get( 'HTTP_AUTHORIZATION' );
+		if ( ! empty( $auth ) ) {
+			$request_hash['unique']['mc-auth-header'] = md5( $auth );
 		}
 
 		// Store debug data if enabled.
-		if ( $this->config->debug ) {
-			$this->debug_data = array( 'request_hash' => $request_hash );
-		}
+		$this->debug_data = $this->config->debug ? array( 'request_hash' => $request_hash ) : null;
 
 		// Convert to an actual hash.
 		$this->hash = md5( serialize( $request_hash ) );

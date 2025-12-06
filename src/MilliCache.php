@@ -116,10 +116,10 @@ final class MilliCache {
 	 */
 	private function load_dependencies() {
 		$this->loader = new Loader();
-		$this->engine = new Engine();
+		$this->engine = Engine::instance();
 
-		new CLI( $this->get_loader(), $this->get_plugin_name(), $this->version );
-		new Admin( $this->get_loader(), $this->get_plugin_name(), $this->version );
+		new CLI( $this->loader, $this->engine, $this->plugin_name, $this->version );
+		new Admin( $this->loader, $this->engine, $this->plugin_name, $this->version );
 	}
 
 	/**
@@ -141,7 +141,7 @@ final class MilliCache {
 
 		// Register hooks that clear the full site cache.
 		foreach ( $this->get_clear_site_cache_hooks() as $hook => $priority ) {
-			$this->loader->add_action( $hook, $this->engine, 'clear_cache_by_site_ids', $priority, 0 );
+			$this->loader->add_action( $hook, $this->engine->clear(), 'sites', $priority, 0 );
 		}
 
 		// Cron events.
@@ -301,7 +301,7 @@ final class MilliCache {
 			return;
 		}
 
-		$this->engine->clear_cache_by_flags( $this->get_post_related_flags( $post ) );
+		$this->engine->clear()->flags( $this->get_post_related_flags( $post ) );
 	}
 
 	/**
@@ -319,10 +319,10 @@ final class MilliCache {
 	public function transition_post_status( string $new_status, string $old_status, \WP_Post $post ) {
 		if ( 'publish' === $new_status && 'publish' !== $old_status ) {
 			// Clear URL cache for any existing entry.
-			$this->engine->clear_cache_by_urls( (string) get_permalink( $post->ID ) );
+			$this->engine->clear()->urls( (string) get_permalink( $post->ID ) );
 
 			// Clear the cache for related archives, author, taxonomies, etc.
-			$this->engine->clear_cache_by_flags( $this->get_post_related_flags( $post ) );
+			$this->engine->clear()->flags( $this->get_post_related_flags( $post ) );
 		}
 	}
 
@@ -431,13 +431,13 @@ final class MilliCache {
 
 		if ( in_array( $option, $options, true ) ) {
 			if ( 'page_on_front' === $option || 'page_for_posts' === $option ) {
-				$this->engine->clear_cache_by_flags( array( 'home', 'archive:post' ) );
+				$this->engine->clear()->flags( array( 'home', 'archive:post' ) );
 
 				if ( is_numeric( $old_value ) && is_numeric( $value ) ) {
-					$this->engine->clear_cache_by_post_ids( array( (int) $old_value, (int) $value ) );
+					$this->engine->clear()->posts( array( (int) $old_value, (int) $value ) );
 				}
 			} else {
-				$this->engine->clear_cache_by_site_ids();
+				$this->engine->clear()->sites();
 			}
 		}
 	}
@@ -451,8 +451,7 @@ final class MilliCache {
 	 * @return void
 	 */
 	public function cleanup_expired_flags() {
-		$storage = Engine::get_storage();
-		$storage->cleanup_expired_flags();
+		Engine::instance()->storage()->cleanup_expired_flags();
 	}
 
 	/**

@@ -27,6 +27,18 @@ namespace MilliCache\Engine\Utilities;
 final class ServerVars {
 
 	/**
+	 * Check if a server variable is set.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $key The server variable key.
+	 * @return bool True if the server variable exists.
+	 */
+	public static function has( string $key ): bool {
+		return isset( $_SERVER[ $key ] );
+	}
+
+	/**
 	 * Get the value of a server variable safely.
 	 *
 	 * Sanitizes the value by:
@@ -45,18 +57,6 @@ final class ServerVars {
 
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- We are sanitizing & un-slashing here with PHP native functions.
 		return htmlspecialchars( stripslashes( $_SERVER[ $key ] ), ENT_QUOTES, 'UTF-8' );
-	}
-
-	/**
-	 * Check if a server variable is set.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $key The server variable key.
-	 * @return bool True if the server variable exists.
-	 */
-	public static function has( string $key ): bool {
-		return isset( $_SERVER[ $key ] );
 	}
 
 	/**

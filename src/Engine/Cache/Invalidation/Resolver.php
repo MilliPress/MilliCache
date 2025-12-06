@@ -6,14 +6,14 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage Engine/Clearing
+ * @subpackage Engine/Cache/Invalidation
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 
-namespace MilliCache\Engine\Clearing;
+namespace MilliCache\Engine\Cache\Invalidation;
 
-use MilliCache\Engine\Multisite;
-use MilliCache\Engine\Request\Manager as RequestManager;
+use MilliCache\Engine\Request\Processor as RequestManager;
+use MilliCache\Engine\Utilities\Multisite;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -25,7 +25,7 @@ use MilliCache\Engine\Request\Manager as RequestManager;
  *
  * @since      1.0.0
  * @package    MilliCache
- * @subpackage MilliCache/Engine/Clearing
+ * @subpackage Engine/Cache/Invalidation
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class Resolver {

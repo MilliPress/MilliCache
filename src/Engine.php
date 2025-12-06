@@ -11,22 +11,23 @@
 
 namespace MilliCache;
 
-use MilliCache\Admin\Admin;
 use MilliCache\Core\Settings;
 use MilliCache\Core\Storage;
-use MilliCache\Engine\Cache\Config;
-use MilliCache\Engine\Cache\Entry;
-use MilliCache\Engine\Cache\Manager as CacheManager;
-use MilliCache\Engine\Clearing\Manager as ClearingManager;
-use MilliCache\Engine\FlagManager;
-use MilliCache\Engine\Multisite;
-use MilliCache\Engine\Request\Manager as RequestManager;
-use MilliCache\Engine\Utilities\ServerVars;
-use MilliCache\Rules\Bootstrap as BootstrapRules;
-use MilliCache\Rules\WordPress as WordPressRules;
-use MilliCache\Rules\RequestFlags;
 use MilliCache\Deps\MilliRules\MilliRules;
 use MilliCache\Deps\MilliRules\Rules;
+use MilliCache\Engine\Cache\Config;
+use MilliCache\Engine\Cache\Invalidation\Manager as InvalidationManager;
+use MilliCache\Engine\Cache\Manager as CacheManager;
+use MilliCache\Engine\Flags;
+use MilliCache\Engine\Options;
+use MilliCache\Engine\Request\Processor as RequestProcessor;
+use MilliCache\Engine\Response\Headers;
+use MilliCache\Engine\Response\Processor as ResponseProcessor;
+use MilliCache\Engine\Response\State;
+use MilliCache\Engine\Utilities\Multisite;
+use MilliCache\Rules\Bootstrap as BootstrapRules;
+use MilliCache\Rules\RequestFlags;
+use MilliCache\Rules\WordPress as WordPressRules;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -42,124 +43,14 @@ use MilliCache\Deps\MilliRules\Rules;
 final class Engine {
 
 	/**
-	 * If the cache engine has been started.
+	 * The singleton instance.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var bool If the cache engine has been started.
+	 * @var Engine|null The singleton instance.
 	 */
-	private static bool $started = false;
-
-	/**
-	 * The Cache Storage object.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var Storage The Cache Storage object.
-	 */
-	private static Storage $storage;
-
-	/**
-	 * The Multisite helper instance.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var Multisite The Multisite helper instance.
-	 */
-	private static Multisite $multisite;
-
-	/**
-	 * The MilliCache Settings.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var array<mixed> The MilliPress Settings.
-	 */
-	private static array $settings;
-
-	/**
-	 * Whether TTL has been manually set via set_ttl().
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var bool If TTL was manually overridden.
-	 */
-	private static bool $ttl_overridden = false;
-
-	/**
-	 * Custom TTL override value.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var int|null Custom TTL value when overridden.
-	 */
-	private static ?int $ttl_override = null;
-
-	/**
-	 * Whether a grace period has been manually set via set_grace().
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var bool If grace was manually overridden.
-	 */
-	private static bool $grace_overridden = false;
-
-	/**
-	 * Custom grace override value.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var int|null Custom grace value when overridden.
-	 */
-	private static ?int $grace_override = null;
-
-	/**
-	 * Request hash.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var string The request hash.
-	 */
-	private static string $request_hash;
-
-	/**
-	 * Request handler.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var RequestManager|null The request handler instance.
-	 */
-	private static ?RequestManager $request_manager = null;
-
-	/**
-	 * Cache handler.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var CacheManager|null The cache handler instance.
-	 */
-	private static ?CacheManager $cache_manager = null;
-
-	/**
-	 * Clearing handler.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @var ClearingManager|null The clearing handler instance.
-	 */
-	private static ?ClearingManager $clearing_manager = null;
+	private static ?Engine $instance = null;
 
 	/**
 	 * Cache configuration.
@@ -169,47 +60,107 @@ final class Engine {
 	 *
 	 * @var Config|null The cache configuration instance.
 	 */
-	private static ?Config $config = null;
+	private ?Config $config;
 
 	/**
-	 * Flag manager.
+	 * The Cache Storage object.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var FlagManager|null The flag manager instance.
+	 * @var Storage|null The Cache Storage object.
 	 */
-	private static ?FlagManager $flag_manager = null;
+	private ?Storage $storage;
 
 	/**
-	 * Debug data.
+	 * The Multisite helper instance.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array<string,mixed>|null Debug data.
+	 * @var Multisite|null The Multisite helper instance.
 	 */
-	private static ?array $debug_data = null;
+	private ?Multisite $multisite;
 
 	/**
-	 * FastCGI Regenerate.
+	 * Flags handler.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var bool If we can regenerate the request in the background.
+	 * @var Flags|null The flag handler instance.
 	 */
-	private static bool $fcgi_regenerate = false;
+	private ?Flags $flags;
 
 	/**
-	 * Cache decision override from rules.
+	 * Lazy-loaded header manager instance.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array{decision: bool, reason: string}|null Cache decision with 'decision' and 'reason' keys.
+	 * @var Headers|null
 	 */
-	private static ?array $cache_decision = null;
+	private ?Headers $headers = null;
+
+	/**
+	 * State-Options for TTL, Grace-TTL and cache decision.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var Options|null The override manager instance.
+	 */
+	private ?Options $options = null;
+
+	/**
+	 * Cache handler.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var CacheManager|null The cache handler instance.
+	 */
+	private ?CacheManager $cache_manager;
+
+	/**
+	 * Clearing handler.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var InvalidationManager|null The clearing handler instance.
+	 */
+	private ?InvalidationManager $invalidation_manager;
+
+	/**
+	 * Request processor.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var RequestProcessor|null The request handler instance.
+	 */
+	private ?RequestProcessor $request_processor;
+
+	/**
+	 * Response processor.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var ResponseProcessor|null The response handler instance.
+	 */
+	private ?ResponseProcessor $response_processor = null;
+
+	/**
+	 * The MilliCache Settings.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var array<mixed> The MilliPress Settings.
+	 */
+	private array $settings;
 
 	/**
 	 * Whether autoloader has been initialized.
@@ -219,20 +170,72 @@ final class Engine {
 	 *
 	 * @var bool
 	 */
-	private static bool $autoloader_initialized = false;
+	private bool $autoloaded = false;
 
 	/**
-	 * If not running, start the cache engine.
+	 * Constructor with dependency injection.
 	 *
-	 * @since    1.0.0
-	 * @access   public
+	 * @param Settings|null            $settings          Settings Processor.
+	 * @param Storage|null             $storage           Storage.
+	 * @param Multisite|null           $multisite         Multisite.
+	 * @param Config|null              $config            Config.
+	 * @param Flags|null               $flag_manager      Flag Processor.
+	 * @param RequestProcessor|null    $request_manager Request Processor.
+	 * @param CacheManager|null        $cache_manager     Cache Processor.
+	 * @param InvalidationManager|null $clearing_manager  Clearing Processor.
 	 *
-	 * @return   void
+	 * @return void
+	 * @since 1.0.0
+	 * @access public
 	 */
-	public function __construct() {
-		if ( ! self::$started ) {
-			self::start();
+	public function __construct(
+		?Settings $settings = null,
+		?Storage $storage = null,
+		?Multisite $multisite = null,
+		?Config $config = null,
+		?Flags $flag_manager = null,
+		?RequestProcessor $request_manager = null,
+		?CacheManager $cache_manager = null,
+		?InvalidationManager $clearing_manager = null
+	) {
+		// Initialize autoloader first.
+		$this->autoload();
+
+		// Store settings.
+		$settings = $settings ?? new Settings();
+		$this->settings = $settings->get_settings();
+
+		// Store injected dependencies (for testing).
+		$this->storage = $storage;
+		$this->multisite = $multisite;
+		$this->config = $config;
+		$this->flags = $flag_manager;
+		$this->request_processor = $request_manager;
+		$this->cache_manager = $cache_manager;
+		$this->invalidation_manager = $clearing_manager;
+
+		// Store singleton instance.
+		self::$instance = $this;
+	}
+
+	/**
+	 * Get the Engine instance.
+	 *
+	 * Creates a new instance with default dependencies if one doesn't exist.
+	 * For testing with custom dependencies, create Engine instance directly
+	 * via constructor before calling instance().
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return Engine The Engine instance.
+	 */
+	public static function instance(): Engine {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
 		}
+
+		return self::$instance;
 	}
 
 	/**
@@ -243,44 +246,56 @@ final class Engine {
 	 *
 	 * @return   void
 	 */
-	public static function start() {
-		self::init_autoloader();
+	public function start() {
+		$this->register_rules();
 
-		// Initialize multisite helper.
-		self::$multisite = new Multisite();
+		// Register the shutdown function to expire/delete cache flags.
+		register_shutdown_function( fn() => $this->invalidation()->get_queue()->execute() );
 
-		self::get_settings();
-		self::setup_test_cookie();
-		self::register_rules();
-		self::get_storage();
-		self::warmup();
+		// Always set the initial header.
+		$this->headers()->set_status( 'miss' );
 
 		// Execute PHP rules.
 		MilliRules::execute_rules( array( 'PHP' ) );
 
 		// Proceed if the request is cachable.
-		if ( self::check_cache_decision() ) {
-			self::run();
+		if ( $this->check_cache_decision() ) {
+			$this->run();
 		}
-
-		self::$started = true;
 	}
 
 	/**
-	 * Get the Settings.
+	 * Run the cache engine.
 	 *
-	 * @since     1.0.0
-	 * @access    public
+	 * @since    1.0.0
+	 * @access   private
 	 *
-	 * @param string|null $module The MilliCache Settings module.
-	 * @return array<mixed> The MilliCache Settings.
+	 * @return   void
 	 */
-	public static function get_settings( ?string $module = null ): array {
-		if ( ! isset( self::$settings ) && class_exists( 'MilliCache\Core\Settings' ) ) {
-			self::$settings = ( new Settings() )->get_settings( $module );
-		}
+	private function run() {
+		// Clean request and generate hash.
+		$hash = $this->request()->process();
 
-		return self::$settings;
+		// Create State object.
+		$context = State::create( $hash );
+
+		// Get and return cached content (options applied in ResponseManager).
+		$context = $this->response()->retrieve_and_serve_cache( $context );
+
+		// Start the output buffer.
+		add_action(
+			'template_redirect',
+			function () use ( $context ) {
+				if ( $this->check_cache_decision() ) {
+					// Apply any options set by rules.
+					$context = $this->options()->apply_to_state( $context );
+
+					// Start the output buffer.
+					$this->response()->start_output_buffer( $context );
+				}
+			},
+			200
+		);
 	}
 
 	/**
@@ -294,7 +309,7 @@ final class Engine {
 	 *
 	 * @return void
 	 */
-	private static function register_rules(): void {
+	private function register_rules(): void {
 		// Initialize MilliRules with the PHP package for early execution.
 		MilliRules::init( array( 'PHP' ) );
 
@@ -302,17 +317,17 @@ final class Engine {
 		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\PHP', 'PHP' );
 		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\WP', 'WP' );
 
-		// Register Bootstrap rules, which execute before WordPress loads.
+		// Rules that execute before WordPress loads.
 		BootstrapRules::register();
 
 		// Defer WP package and rules until WordPress is ready.
 		add_action(
 			'plugins_loaded',
 			function () {
-				// Load MilliRules WP package.
+				// Load MilliRules WordPress package.
 				MilliRules::load_packages( array( 'WP' ) );
 
-				// Register WordPress rules.
+				// Rules that execute after WordPress loaded.
 				WordPressRules::register();
 
 				// Register Request Flags rules.
@@ -323,632 +338,6 @@ final class Engine {
 	}
 
 	/**
-	 * Returns the MilliCache Storage instance.
-	 *
-	 * @since    1.0.0
-	 * @access   public
-	 *
-	 * @return   Storage The MilliCache Storage instance.
-	 */
-	public static function get_storage(): Storage {
-		if ( ! isset( self::$storage ) && class_exists( 'MilliCache\Core\Storage' ) ) {
-			self::$storage = new Storage( (array) self::$settings['storage'] );
-		}
-
-		return self::$storage;
-	}
-
-	/**
-	 * Get cache configuration instance.
-	 *
-	 * Provides access to the immutable cache configuration object.
-	 * External code can use this to access all configuration properties.
-	 *
-	 * @since    1.0.0
-	 * @access   public
-	 *
-	 * @return   Config The cache configuration instance.
-	 */
-	public static function get_config(): Config {
-		if ( ! self::$config ) {
-			self::$config = self::init_config();
-		}
-
-		return self::$config;
-	}
-
-	/**
-	 * Get WordPress test cookie name.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   string The test cookie name.
-	 */
-	private static function get_test_cookie_name(): string {
-		return defined( 'TEST_COOKIE' ) ? TEST_COOKIE : 'wordpress_test_cookie';
-	}
-
-	/**
-	 * Initialize cache configuration.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   Config The initialized configuration.
-	 */
-	private static function init_config(): Config {
-		// Get cache settings.
-		$cache_settings = self::$settings['cache'] ?? array();
-		$settings = is_array( $cache_settings ) ? $cache_settings : array();
-
-		// Add WordPress test cookie to ignore list.
-		if ( ! isset( $settings['ignore_cookies'] ) || ! is_array( $settings['ignore_cookies'] ) ) {
-			$settings['ignore_cookies'] = array();
-		}
-		$settings['ignore_cookies'][] = self::get_test_cookie_name();
-
-		return Config::from_settings( $settings );
-	}
-
-	/**
-	 * Setup WordPress test cookie for login requests.
-	 *
-	 * WordPress uses a test cookie to verify browser cookie support.
-	 * This sets the cookie for wp-login.php POST requests.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   void
-	 */
-	private static function setup_test_cookie(): void {
-		if ( strpos( ServerVars::get( 'REQUEST_URI' ), '/wp-login.php' ) === 0
-			&& strtoupper( ServerVars::get( 'REQUEST_METHOD' ) ) === 'POST' ) {
-			$_COOKIE[ self::get_test_cookie_name() ] = 'WP Cookie check';
-		}
-	}
-
-	/**
-	 * Warm up the cache engine.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   void
-	 */
-	private static function warmup() {
-		// Initialize invalidation handler.
-		self::get_clearing_manager();
-
-		// Register the shutdown function to expire/delete cache flags.
-		register_shutdown_function( array( __CLASS__, 'clear_cache_on_shutdown' ) );
-
-		// Always set the initial header.
-		self::set_header( 'Status', 'miss' );
-	}
-
-	/**
-	 * Get clearing handler instance.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   ClearingManager The clearing handler instance.
-	 */
-	private static function get_clearing_manager(): ClearingManager {
-		if ( ! self::$clearing_manager ) {
-			$config = self::get_config();
-
-			self::$clearing_manager = new ClearingManager(
-				self::$storage,
-				self::get_request_manager(),
-				self::$multisite,
-				$config->ttl
-			);
-		}
-
-		return self::$clearing_manager;
-	}
-
-	/**
-	 * Get request handler instance.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   RequestManager The request handler instance.
-	 */
-	private static function get_request_manager(): RequestManager {
-		if ( ! self::$request_manager ) {
-			self::$request_manager = new RequestManager( self::get_config() );
-		}
-
-		return self::$request_manager;
-	}
-
-	/**
-	 * Get cache handler instance.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   CacheManager The cache handler instance.
-	 */
-	private static function get_cache_manager(): CacheManager {
-		if ( ! self::$cache_manager ) {
-			self::$cache_manager = new CacheManager(
-				self::get_config(),
-				self::$storage
-			);
-		}
-
-		return self::$cache_manager;
-	}
-
-	/**
-	 * Get flag manager instance.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   FlagManager The flag manager instance.
-	 */
-	private static function get_flag_manager(): FlagManager {
-		if ( ! self::$flag_manager ) {
-			self::$flag_manager = new FlagManager( self::$multisite );
-		}
-
-		return self::$flag_manager;
-	}
-
-	/**
-	 * Run the cache engine.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   void
-	 */
-	private static function run() {
-		// Generate the unique request hash.
-		self::generate_request_hash();
-
-		// Get and return cached content.
-		self::get_cache();
-
-		// Start the output buffer, if needed.
-		add_action(
-			'template_redirect',
-			function () {
-				// Start the buffer if WP rules pass.
-				if ( self::check_cache_decision() ) {
-					self::start_buffer();
-				}
-			},
-			200
-		);
-	}
-
-	/**
-	 * Generate a unique request hash.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   void
-	 */
-	private static function generate_request_hash(): void {
-		// Process request (clean and generate hash).
-		self::$request_hash = self::get_request_manager()->process();
-
-		// Store debug data if enabled.
-		if ( self::get_config()->debug ) {
-			self::$debug_data = self::get_request_manager()->get_debug_data();
-			self::set_header( 'Key', self::$request_hash );
-		}
-	}
-
-	/**
-	 * Get the cache for the request.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   void
-	 */
-	private static function get_cache() {
-		// Get and validate cache.
-		$result = self::get_cache_manager()->get_and_validate(
-			self::$request_hash,
-			self::can_fcgi_regenerate()
-		);
-
-		// No cache to serve.
-		if ( ! $result['serve'] ) {
-			if ( $result['regenerate'] ) {
-				self::$fcgi_regenerate = true;
-			}
-			return;
-		}
-
-		// Set regenerate flag if needed.
-		self::$fcgi_regenerate = $result['regenerate'];
-
-		// Get the cache entry (guaranteed to exist if serve is true).
-		$entry = $result['entry'];
-		assert( $entry instanceof Entry );
-
-		// Debug headers.
-		if ( self::get_config()->debug ) {
-			self::set_header( 'Time', gmdate( 'D, d M Y H:i:s \G\M\T', $entry->updated ) );
-			self::set_header( 'Flags', implode( ' ', $result['result']->flags ) );
-
-			if ( $entry->gzip ) {
-				self::set_header( 'Gzip', 'true' );
-			}
-
-			$validator = self::get_cache_manager()->get_validator();
-			$time_left = $validator->time_to_expiry( $entry );
-			self::set_header( 'Expires', $validator->format_time_remaining( $time_left ) );
-		}
-
-		// Set status header.
-		self::set_header( 'Status', self::$fcgi_regenerate ? 'stale' : 'hit' );
-
-		// Output the cache.
-		self::get_cache_manager()->get_reader()->output( $entry, self::$fcgi_regenerate );
-	}
-
-	/**
-	 * Start the output buffer.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @return   void
-	 */
-	private static function start_buffer() {
-		ob_start( array( __CLASS__, 'output_buffer' ) );
-	}
-
-	/**
-	 * Output buffer callback.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @param    string $output The output buffer.
-	 * @return   string The output buffer.
-	 */
-	private static function output_buffer( string $output ): ?string {
-		// Get the flags for this request.
-		$flags = self::get_flag_manager()->get_all();
-		$flags[] = 'url:' . self::get_request_manager()->get_url_hash();
-		$flags = array_unique( $flags );
-
-		// If no flags are set, use the fallback site flag.
-		if ( count( $flags ) <= 1 ) {
-			$flags[] = self::get_flag_key( 'flag' );
-		}
-
-		// Determine custom TTL/grace if overridden.
-		$custom_ttl   = self::$ttl_overridden ? self::$ttl_override : null;
-		$custom_grace = self::$grace_overridden ? self::$grace_override : null;
-		$debug        = self::get_config()->debug ? self::$debug_data : null;
-
-		// Cache the output.
-		$result = self::get_cache_manager()->cache_output(
-			self::$request_hash,
-			$output,
-			$flags,
-			$custom_ttl,
-			$custom_grace,
-			$debug
-		);
-
-		// Set headers based on result.
-		if ( ! $result['cached'] && ! self::$fcgi_regenerate ) {
-			self::set_header( 'Status', 'bypass' );
-		}
-
-		// Add reason header if a reason message exists.
-		if ( ! empty( $result['reason'] ) ) {
-			self::set_reason( $result['reason'] );
-		}
-
-		// Return output, but not for the background task.
-		return self::$fcgi_regenerate ? null : $output;
-	}
-
-	/**
-	 * Clears items from the cache during shutdown.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @return void
-	 */
-	public static function clear_cache_on_shutdown() {
-		self::get_clearing_manager()->flush();
-	}
-
-	/**
-	 * Clear cache by given Targets.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param string|array<string|int> $targets The targets (Flags, Post-IDs or URLs) to clear the cache for.
-	 * @param bool                     $expire Expire cache if set to true, or delete by default.
-	 * @return void
-	 */
-	public static function clear_cache_by_targets( $targets, bool $expire = false ): void {
-		self::get_clearing_manager()->clear_by_targets( $targets, $expire );
-	}
-
-	/**
-	 * Clear cache by given URLs.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param string|array<string> $urls A string or array of URLs to flush.
-	 * @param bool                 $expire Expire cache if set to true, or delete by default.
-	 */
-	public static function clear_cache_by_urls( $urls, bool $expire = false ): void {
-		self::get_clearing_manager()->clear_by_urls( $urls, $expire );
-	}
-
-	/**
-	 * Expire caches by post id.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param int|array<int> $post_ids The post-IDs to expire.
-	 * @param bool           $expire Expire cache if set to true, or delete by default.
-	 */
-	public static function clear_cache_by_post_ids( $post_ids, bool $expire = false ): void {
-		self::get_clearing_manager()->clear_by_post_ids( $post_ids, $expire );
-	}
-
-	/**
-	 * Clears cache by given flags.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param string|array<string> $flags A string or array of flags to expire.
-	 * @param bool                 $expire Expire cache if set to true, or delete by default.
-	 * @param bool                 $add_prefix Add the flag prefix to the flags.
-	 * @return void
-	 */
-	public static function clear_cache_by_flags( $flags, bool $expire = false, bool $add_prefix = true ): void {
-		self::get_clearing_manager()->clear_by_flags( $flags, $expire, $add_prefix );
-	}
-
-	/**
-	 * Clear the full cache of a given website.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param int|array<int> $site_ids The site IDs to clear.
-	 * @param int|null       $network_id The network ID.
-	 * @param bool           $expire Expire cache if set to true, or delete by default.
-	 * @return void
-	 */
-	public static function clear_cache_by_site_ids( $site_ids = null, ?int $network_id = null, bool $expire = false ): void {
-		self::get_clearing_manager()->clear_by_site_ids( $site_ids, $network_id, $expire );
-	}
-
-	/**
-	 * Clear the full cache of each site in a given network.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param int|null $network_id The network ID.
-	 * @param bool     $expire Expire cache.
-	 * @return void
-	 */
-	public static function clear_cache_by_network_id( ?int $network_id = null, bool $expire = false ): void {
-		self::get_clearing_manager()->clear_by_network_id( $network_id, $expire );
-	}
-
-	/**
-	 * Clear cache of each site in each network
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param bool $expire Expire cache if set to true, or delete by default.
-	 * @return void
-	 */
-	public static function clear_cache( bool $expire = false ): void {
-		self::get_clearing_manager()->clear_all( $expire );
-	}
-
-	/**
-	 * If the site is a Multisite network
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @return bool If the site is a Multisite network.
-	 */
-	public static function is_multisite(): bool {
-		return self::$multisite->is_enabled();
-	}
-
-	/**
-	 * Get all available site ids of a given network
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param int $network_id The network ID.
-	 * @return array<int> The site IDs.
-	 */
-	public static function get_site_ids( int $network_id = 1 ): array {
-		return self::$multisite->get_site_ids( $network_id );
-	}
-
-	/**
-	 * Get all available network ids
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @return array<int>
-	 */
-	public static function get_network_ids(): array {
-		return self::$multisite->get_network_ids();
-	}
-
-	/**
-	 * Get the flag prefix with network and site namespace.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param int|string|null $site_id The site ID.
-	 * @param int|string|null $network_id The network ID.
-	 *
-	 * @return string The flag prefix.
-	 */
-	public static function get_flag_prefix( $site_id = null, $network_id = null ): string {
-		return self::get_flag_manager()->get_prefix( $site_id, $network_id );
-	}
-
-	/**
-	 * Prefix the flags with the current site and network ID.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param array<string>|string $flags The flags to prefix.
-	 * @param int|string|null      $site_id The site ID.
-	 * @param int|string|null      $network_id The network ID.
-	 *
-	 * @return array<string> The prefixed flags.
-	 */
-	public static function prefix_flags( $flags = array(), $site_id = null, $network_id = null ): array {
-		return self::get_flag_manager()->prefix( $flags, $site_id, $network_id );
-	}
-
-	/**
-	 * Get the flag key.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param string          $flag The flag name.
-	 * @param int|string|null $site_id The site ID.
-	 * @param int|string|null $network_id The network ID.
-	 *
-	 * @return string The flag key.
-	 */
-	public static function get_flag_key( string $flag, $site_id = null, $network_id = null ): string {
-		return self::get_flag_manager()->get_key( $flag, $site_id, $network_id );
-	}
-
-	/**
-	 * Add a flag to this request.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param string $flag Keep these short and unique, don't overuse.
-	 */
-	public static function add_flag( string $flag ): void {
-		self::get_flag_manager()->add( $flag );
-	}
-
-	/**
-	 * Remove a flag from the current request.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param string $flag The flag to remove.
-	 */
-	public static function remove_flag( string $flag ): void {
-		self::get_flag_manager()->remove( $flag );
-	}
-
-	/**
-	 * Get all flags for the current request.
-	 *
-	 * @since 2.0.0
-	 * @access public
-	 *
-	 * @return array<string> Array of flag names.
-	 */
-	public static function get_flags(): array {
-		return self::get_flag_manager()->get_all();
-	}
-
-	/**
-	 * Set TTL for the current request.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param int $seconds TTL in seconds.
-	 */
-	public static function set_ttl( int $seconds ): void {
-		if ( $seconds > 0 ) {
-			self::$ttl_override = $seconds;
-			self::$ttl_overridden = true;
-		}
-	}
-
-	/**
-	 * Set grace period for the current request.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param int $seconds Grace period in seconds.
-	 */
-	public static function set_grace( int $seconds ): void {
-		if ( $seconds >= 0 ) {
-			self::$grace_override = $seconds;
-			self::$grace_overridden = true;
-		}
-	}
-
-	/**
-	 * Override cache decision from rules.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @param bool   $should_cache Whether to cache this request.
-	 * @param string $reason       Reason for the decision.
-	 */
-	public static function set_cache_decision( bool $should_cache, string $reason = '' ): void {
-		self::$cache_decision = array(
-			'decision' => $should_cache,
-			'reason'   => $reason,
-		);
-	}
-
-	/**
-	 * Get the cache decision if set by rules.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @return array{decision: bool, reason: string}|null Array with 'decision' and 'reason', or null if not set.
-	 */
-	public static function get_cache_decision(): ?array {
-		return self::$cache_decision;
-	}
-
-	/**
 	 * Check cache decision and set appropriate headers.
 	 *
 	 * @since 1.0.0
@@ -956,12 +345,15 @@ final class Engine {
 	 *
 	 * @return bool True if caching should proceed, false to bypass.
 	 */
-	private static function check_cache_decision(): bool {
-		$decision = self::get_cache_decision();
+	private function check_cache_decision(): bool {
+		$decision = $this->options()->get_cache_decision();
+
+		if ( ! empty( $decision['reason'] ) ) {
+			$this->headers()->set_reason( (string) $decision['reason'] );
+		}
 
 		if ( $decision && ! $decision['decision'] ) {
-			self::set_header( 'Status', 'bypass' );
-			self::set_reason( $decision['reason'] );
+			$this->headers()->set_status( 'bypass' );
 			return false;
 		}
 
@@ -969,73 +361,214 @@ final class Engine {
 	}
 
 	/**
-	 * Set HTTP header.
+	 * Get the Settings.
 	 *
-	 * @since 1.0.0
-	 * @access private
+	 * @since     1.0.0
+	 * @access    public
 	 *
-	 * @param string $key The header key.
-	 * @param string $value The header value.
+	 * @param string|null $module The MilliCache Settings module.
+	 * @return array<mixed> The MilliCache Settings.
 	 */
-	private static function set_header( string $key, string $value ): void {
-		if ( ! headers_sent() ) {
-			header( "X-MilliCache-$key: $value" );
+	public function get_settings( ?string $module = null ): array {
+		if ( ! isset( $this->settings ) ) {
+			$this->settings = ( new Settings() )->get_settings();
 		}
-	}
 
-	/**
-	 * Set HTTP reason header for debugging.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 *
-	 * @param string $value The reason header value.
-	 * @return void
-	 */
-	private static function set_reason( string $value ): void {
-		if ( self::get_config()->debug && ! empty( $value ) ) {
-			self::set_header( 'Reason', $value );
+		if ( $module ) {
+			return is_array( $this->settings[ $module ] ) ? $this->settings[ $module ] : array();
 		}
+
+		return $this->settings;
 	}
 
 	/**
-	 * Whether we can regenerate the request in the background.
+	 * Get config instance.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @return bool
+	 * @return Config The config instance.
 	 */
-	private static function can_fcgi_regenerate(): bool {
-		return function_exists( 'fastcgi_finish_request' );
+	public function config(): Config {
+		if ( ! $this->config ) {
+			$cache_settings = $this->get_settings( 'cache' );
+
+			// Ensure ignore_cookies array exists.
+			if ( ! isset( $cache_settings['ignore_cookies'] ) || ! is_array( $cache_settings['ignore_cookies'] ) ) {
+				$cache_settings['ignore_cookies'] = array();
+			}
+
+			// Add WordPress test cookie to ignore list.
+			$cache_settings['ignore_cookies'][] = defined( 'TEST_COOKIE' ) ? TEST_COOKIE : 'wordpress_test_cookie';
+
+			// Create Config from settings.
+			$this->config = Config::from_settings( $cache_settings );
+		}
+		return $this->config;
 	}
 
+	/**
+	 * Get storage instance.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @return Storage The storage instance.
+	 */
+	public function storage(): Storage {
+		if ( ! $this->storage ) {
+			$this->storage = new Storage( $this->get_settings( 'storage' ) );
+		}
+		return $this->storage;
+	}
 
 	/**
-	 * Get meaningful Cache config and info.
+	 * Get multisite instance.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @return   Multisite The multisite instance.
+	 */
+	private function multisite(): Multisite {
+		if ( ! $this->multisite ) {
+			$this->multisite = new Multisite();
+		}
+		return $this->multisite;
+	}
+
+	/**
+	 * Get flag manager instance.
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param bool $network If the network is set to true, get the network cache status.
-	 *
-	 * @return array<mixed> The Cache status.
+	 * @return Flags The flag manager instance.
 	 */
-	public static function get_status( bool $network = false ): array {
-		$config = self::get_config();
+	public function flags(): Flags {
+		if ( ! $this->flags ) {
+			$this->flags = new Flags( $this->multisite() );
+		}
+		return $this->flags;
+	}
 
-		$cache = array(
-			'ttl' => $config->ttl,
-			'grace' => $config->grace,
-			'gzip' => $config->gzip,
-			'debug' => $config->debug,
-			'nocache_paths' => $config->nocache_paths,
-			'ignore_cookies' => $config->ignore_cookies,
-			'nocache_cookies' => $config->nocache_cookies,
-			'ignore_request_keys' => $config->ignore_request_keys,
-		);
+	/**
+	 * Get headers manager instance.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @return Headers Response headers instance.
+	 */
+	private function headers(): Headers {
+		if ( ! $this->headers ) {
+			$this->headers = new Headers( $this->config() );
+		}
+		return $this->headers;
+	}
 
-		return array_merge( $cache, Admin::get_cache_size( $network ? self::get_flag_key( 'site', '*' ) : self::get_flag_key( '*' ), true ) );
+	/**
+	 * Get override manager instance.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return Options The Options instance.
+	 */
+	public function options(): Options {
+		if ( ! $this->options ) {
+			$this->options = new Options();
+		}
+		return $this->options;
+	}
+
+	/**
+	 * Get cache manager instance.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return CacheManager The cache manager instance.
+	 */
+	public function cache(): CacheManager {
+		if ( ! $this->cache_manager ) {
+			$this->cache_manager = new CacheManager(
+				$this->config(),
+				$this->storage()
+			);
+		}
+		return $this->cache_manager;
+	}
+
+	/**
+	 * Get invalidation manager instance.
+	 *
+	 * @return InvalidationManager The clearing manager instance.
+	 * @since 1.0.0
+	 * @access private
+	 */
+	private function invalidation(): InvalidationManager {
+		if ( ! $this->invalidation_manager ) {
+			$cache_settings = $this->get_settings( 'cache' );
+			$ttl = is_numeric( $cache_settings['ttl'] ?? null ) ? (int) $cache_settings['ttl'] : 3600;
+
+			$this->invalidation_manager = new InvalidationManager(
+				$this->storage(),
+				$this->request(),
+				$this->multisite(),
+				$ttl
+			);
+		}
+		return $this->invalidation_manager;
+	}
+
+	/**
+	 * Get request manager instance.
+	 *
+	 * @return RequestProcessor The request manager instance.
+	 * @since 1.0.0
+	 * @access private
+	 */
+	private function request(): RequestProcessor {
+		if ( ! $this->request_processor ) {
+			$this->request_processor = new RequestProcessor( $this->config() );
+		}
+		return $this->request_processor;
+	}
+
+	/**
+	 * Get Response Processor instance.
+	 *
+	 * @return ResponseProcessor
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public function response(): ResponseProcessor {
+		if ( ! $this->response_processor ) {
+			$this->response_processor = new ResponseProcessor(
+				$this->config(),
+				$this->flags(),
+				$this->headers(),
+				$this->cache(),
+				$this->request()
+			);
+		}
+		return $this->response_processor;
+	}
+
+	/**
+	 * Get cache clearing interface.
+	 *
+	 * Provides fluent API for cache invalidation operations.
+	 * Example: Engine::instance()->clear()->by_targets($targets)
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return InvalidationManager The cache clearing interface.
+	 */
+	public function clear(): InvalidationManager {
+		return $this->invalidation();
 	}
 
 	/**
@@ -1049,8 +582,8 @@ final class Engine {
 	 *
 	 * @return void
 	 */
-	private static function init_autoloader(): void {
-		if ( self::$autoloader_initialized ) {
+	private function autoload(): void {
+		if ( $this->autoloaded ) {
 			return;
 		}
 
@@ -1072,6 +605,6 @@ final class Engine {
 			);
 		}
 
-		self::$autoloader_initialized = true;
+		$this->autoloaded = true;
 	}
 }

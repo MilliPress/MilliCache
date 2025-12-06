@@ -127,7 +127,7 @@ final class Config {
 	}
 
 	/**
-	 * Create from settings array.
+	 * Create config from settings array.
 	 *
 	 * @since 1.0.0
 	 *
@@ -166,50 +166,6 @@ final class Config {
 		return array_filter(
 			array_map( 'strval', $settings[ $key ] ),
 			'is_string'
-		);
-	}
-
-	/**
-	 * Create a modified copy with new TTL.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $ttl New TTL value.
-	 * @return self New instance with modified TTL.
-	 */
-	public function with_ttl( int $ttl ): self {
-		return new self(
-			$ttl,
-			$this->grace,
-			$this->gzip,
-			$this->debug,
-			$this->nocache_paths,
-			$this->nocache_cookies,
-			$this->ignore_cookies,
-			$this->ignore_request_keys,
-			$this->unique
-		);
-	}
-
-	/**
-	 * Create a modified copy with new grace period.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $grace New grace value.
-	 * @return self New instance with modified grace.
-	 */
-	public function with_grace( int $grace ): self {
-		return new self(
-			$this->ttl,
-			$grace,
-			$this->gzip,
-			$this->debug,
-			$this->nocache_paths,
-			$this->nocache_cookies,
-			$this->ignore_cookies,
-			$this->ignore_request_keys,
-			$this->unique
 		);
 	}
 }

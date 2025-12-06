@@ -12,6 +12,8 @@
 
 namespace MilliCache\Engine;
 
+use MilliCache\Engine\Utilities\Multisite;
+
 ! defined( 'ABSPATH' ) && exit;
 
 /**
@@ -28,7 +30,7 @@ namespace MilliCache\Engine;
  * @subpackage Engine
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-final class FlagManager {
+final class Flags {
 
 	/**
 	 * Current request's flags.
@@ -42,7 +44,7 @@ final class FlagManager {
 	 *
 	 * @var Multisite|null
 	 */
-	private ?Multisite $multisite = null;
+	private ?Multisite $multisite;
 
 	/**
 	 * Constructor.
@@ -161,7 +163,6 @@ final class FlagManager {
 	 * @return array<string> Prefixed flags.
 	 */
 	public function prefix( $flags, $site_id = null, $network_id = null ): array {
-		// Convert to array if string.
 		if ( is_string( $flags ) ) {
 			$flags = array( $flags );
 		}

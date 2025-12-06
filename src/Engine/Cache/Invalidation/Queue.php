@@ -6,14 +6,14 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage Engine/Clearing
+ * @subpackage Engine/Cache/Invalidation
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 
-namespace MilliCache\Engine\Clearing;
+namespace MilliCache\Engine\Cache\Invalidation;
 
 use MilliCache\Core\Storage;
-use MilliCache\Engine\Multisite;
+use MilliCache\Engine\Utilities\Multisite;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -25,10 +25,10 @@ use MilliCache\Engine\Multisite;
  *
  * @since      1.0.0
  * @package    MilliCache
- * @subpackage Engine/Clearing
+ * @subpackage Engine/Cache/Invalidation
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-final class Flusher {
+final class Queue {
 
 	/**
 	 * Storage instance.
@@ -143,7 +143,7 @@ final class Flusher {
 	 *
 	 * @return bool True if cleared successfully.
 	 */
-	public function flush(): bool {
+	public function execute(): bool {
 		if ( empty( $this->flags_to_expire ) && empty( $this->flags_to_delete ) ) {
 			return true;
 		}
@@ -156,7 +156,7 @@ final class Flusher {
 		// Clear cache by sets.
 		$this->storage->clear_cache_by_sets( $sets, $this->default_ttl );
 
-		// Clear queues after flush.
+		// Clear queues after executing.
 		$this->clear_queues();
 
 		return true;

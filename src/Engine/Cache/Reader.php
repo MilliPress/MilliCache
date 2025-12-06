@@ -112,10 +112,9 @@ final class Reader {
 	 *
 	 * @param Result $result       The cache result.
 	 * @param string $hash         The request hash.
-	 * @param bool   $can_regenerate Whether FastCGI regeneration is possible.
 	 * @return array{serve: bool, regenerate: bool} Array with serve and regenerate flags.
 	 */
-	public function should_serve( Result $result, string $hash, bool $can_regenerate ): array {
+	public function should_serve( Result $result, string $hash ): array {
 		if ( $result->is_miss() ) {
 			return array(
 				'serve'      => false,
@@ -172,7 +171,7 @@ final class Reader {
 		}
 
 		// Successfully locked - check if we can regenerate in background.
-		if ( $can_regenerate ) {
+		if ( function_exists( 'fastcgi_finish_request' ) ) {
 			// Serve stale cache and regenerate in background.
 			return array(
 				'serve'      => true,

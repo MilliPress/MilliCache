@@ -6,15 +6,15 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage Engine/Clearing
+ * @subpackage Engine/Cache/Invalidation
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 
-namespace MilliCache\Engine\Clearing;
+namespace MilliCache\Engine\Cache\Invalidation;
 
 use MilliCache\Core\Storage;
-use MilliCache\Engine\Multisite;
-use MilliCache\Engine\Request\Manager as RequestManager;
+use MilliCache\Engine\Request\Processor as RequestManager;
+use MilliCache\Engine\Utilities\Multisite;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -22,11 +22,11 @@ use MilliCache\Engine\Request\Manager as RequestManager;
  * Orchestrates cache invalidation operations.
  *
  * High-level API for clearing cache by various targets (URLs, posts, flags, sites).
- * Delegates to Resolver and Flusher for the actual work.
+ * Delegates to Resolver and Queue for the actual work.
  *
  * @since      1.0.0
  * @package    MilliCache
- * @subpackage Engine/Clearing
+ * @subpackage Engine/Cache/Invalidation
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class Manager {
@@ -39,11 +39,11 @@ final class Manager {
 	private Resolver $resolver;
 
 	/**
-	 * Flag flusher.
+	 * Clearing queue.
 	 *
-	 * @var Flusher
+	 * @var Queue
 	 */
-	private Flusher $flusher;
+	private Queue $queue;
 
 	/**
 	 * Multisite helper.
@@ -70,7 +70,7 @@ final class Manager {
 	) {
 		$this->multisite = $multisite;
 		$this->resolver  = new Resolver( $request_manager, $multisite );
-		$this->flusher   = new Flusher( $storage, $multisite, $default_ttl );
+		$this->queue     = new Queue( $storage, $multisite, $default_ttl );
 	}
 
 	/**
@@ -85,14 +85,14 @@ final class Manager {
 	}
 
 	/**
-	 * Get flag flusher.
+	 * Get clearing queue.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return Flusher The flusher instance.
+	 * @return Queue The queue instance.
 	 */
-	public function get_flusher(): Flusher {
-		return $this->flusher;
+	public function get_queue(): Queue {
+		return $this->queue;
 	}
 
 	/**
@@ -106,7 +106,7 @@ final class Manager {
 	 * @param bool                     $expire  Expire (true) or delete (false).
 	 * @return void
 	 */
-	public function clear_by_targets( $targets, bool $expire = false ): void {
+	public function targets( $targets, bool $expire = false ): void {
 		// Convert to array.
 		if ( ! is_array( $targets ) ) {
 			$targets = array( $targets );
@@ -114,7 +114,7 @@ final class Manager {
 
 		// Empty targets means clear entire site.
 		if ( empty( $targets ) ) {
-			$this->clear_by_site_ids();
+			$this->sites();
 			return;
 		}
 
@@ -125,16 +125,16 @@ final class Manager {
 			if ( $this->resolver->is_url( $target_str ) ) {
 				// Only clear URLs from current site.
 				if ( function_exists( 'get_home_url' ) && strpos( $target_str, get_home_url() ) === 0 ) {
-					$this->clear_by_urls( $target_str, $expire );
+					$this->urls( $target_str, $expire );
 				}
 			} elseif ( $this->resolver->is_post_id( $target_str ) ) {
-				$this->clear_by_post_ids( (int) $target, $expire );
+				$this->posts( (int) $target, $expire );
 			} else {
 				// Flag - limit to current site if not network admin.
 				$add_prefix = $this->multisite->is_enabled() &&
 							  function_exists( 'is_network_admin' ) &&
 							  ! is_network_admin();
-				$this->clear_by_flags( $target_str, $expire, $add_prefix );
+				$this->flags( $target_str, $expire, $add_prefix );
 			}
 		}
 	}
@@ -148,7 +148,7 @@ final class Manager {
 	 * @param bool                 $expire Expire (true) or delete (false).
 	 * @return void
 	 */
-	public function clear_by_urls( $urls, bool $expire = false ): void {
+	public function urls( $urls, bool $expire = false ): void {
 		// Convert to array.
 		$urls = is_string( $urls ) ? array( $urls ) : $urls;
 
@@ -160,9 +160,9 @@ final class Manager {
 
 		// Add to flusher queue.
 		if ( $expire ) {
-			$this->flusher->add_to_expire( $flags, false );
+			$this->queue->add_to_expire( $flags, false );
 		} else {
-			$this->flusher->add_to_delete( $flags, false );
+			$this->queue->add_to_delete( $flags, false );
 		}
 	}
 
@@ -175,7 +175,7 @@ final class Manager {
 	 * @param bool           $expire   Expire (true) or delete (false).
 	 * @return void
 	 */
-	public function clear_by_post_ids( $post_ids, bool $expire = false ): void {
+	public function posts( $post_ids, bool $expire = false ): void {
 		// Convert to array.
 		$post_ids = ! is_array( $post_ids ) ? array( $post_ids ) : $post_ids;
 
@@ -186,7 +186,7 @@ final class Manager {
 		}
 
 		// Add to clearer queue.
-		$this->clear_by_flags( $flags, $expire );
+		$this->flags( $flags, $expire );
 
 		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
@@ -204,15 +204,15 @@ final class Manager {
 	 * @param bool                 $add_prefix Whether to add multisite prefix.
 	 * @return void
 	 */
-	public function clear_by_flags( $flags, bool $expire = false, bool $add_prefix = true ): void {
+	public function flags( $flags, bool $expire = false, bool $add_prefix = true ): void {
 		// Convert to array.
 		$flags = is_string( $flags ) ? array( $flags ) : $flags;
 
 		// Add to flusher queue.
 		if ( $expire ) {
-			$this->flusher->add_to_expire( $flags, $add_prefix );
+			$this->queue->add_to_expire( $flags, $add_prefix );
 		} else {
-			$this->flusher->add_to_delete( $flags, $add_prefix );
+			$this->queue->add_to_delete( $flags, $add_prefix );
 		}
 
 		// Fire WordPress action.
@@ -231,15 +231,15 @@ final class Manager {
 	 * @param bool                $expire     Expire (true) or delete (false).
 	 * @return void
 	 */
-	public function clear_by_site_ids( $site_ids = null, ?int $network_id = null, bool $expire = false ): void {
+	public function sites( $site_ids = null, ?int $network_id = null, bool $expire = false ): void {
 		// Resolve sites to flags.
 		$flags = $this->resolver->resolve_site_ids( $site_ids, $network_id );
 
 		// Add to flusher queue (no prefix, already includes site prefix with wildcard).
 		if ( $expire ) {
-			$this->flusher->add_to_expire( $flags, false );
+			$this->queue->add_to_expire( $flags, false );
 		} else {
-			$this->flusher->add_to_delete( $flags, false );
+			$this->queue->add_to_delete( $flags, false );
 		}
 
 		// Fire WordPress action.
@@ -257,11 +257,11 @@ final class Manager {
 	 * @param bool     $expire     Expire (true) or delete (false).
 	 * @return void
 	 */
-	public function clear_by_network_id( ?int $network_id = null, bool $expire = false ): void {
+	public function network( ?int $network_id = null, bool $expire = false ): void {
 		$site_ids = $this->resolver->resolve_network_to_sites( $network_id );
 
 		foreach ( $site_ids as $site_id ) {
-			$this->clear_by_site_ids( $site_id, $network_id, $expire );
+			$this->sites( $site_id, $network_id, $expire );
 		}
 
 		// Fire WordPress action.
@@ -278,27 +278,16 @@ final class Manager {
 	 * @param bool $expire Expire (true) or delete (false).
 	 * @return void
 	 */
-	public function clear_all( bool $expire = false ): void {
+	public function all( bool $expire = false ): void {
 		$network_ids = $this->resolver->get_all_networks();
 
 		foreach ( $network_ids as $network_id ) {
-			$this->clear_by_network_id( $network_id, $expire );
+			$this->network( $network_id, $expire );
 		}
 
 		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
 			do_action( 'millicache_cache_cleared', $expire );
 		}
-	}
-
-	/**
-	 * Flush queued invalidations immediately.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return bool True if flushed successfully.
-	 */
-	public function flush(): bool {
-		return $this->flusher->flush();
 	}
 }

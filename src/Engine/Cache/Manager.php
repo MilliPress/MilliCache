@@ -12,7 +12,9 @@
 
 namespace MilliCache\Engine\Cache;
 
+use MilliCache\Admin\Admin;
 use MilliCache\Core\Storage;
+use MilliCache\Engine;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -27,6 +29,13 @@ use MilliCache\Core\Storage;
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class Manager {
+
+	/**
+	 * Cache configuration.
+	 *
+	 * @var Config
+	 */
+	private Config $config;
 
 	/**
 	 * Cache validator.
@@ -54,13 +63,26 @@ final class Manager {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param Config  $config  Cache configuration.
+	 * @param Config  $config  Cache configuration object.
 	 * @param Storage $storage Storage instance.
 	 */
 	public function __construct( Config $config, Storage $storage ) {
-		$this->validator = new Validator( $config );
-		$this->reader    = new Reader( $config, $storage, $this->validator );
-		$this->writer    = new Writer( $config, $storage );
+		$this->config = $config;
+
+		$this->validator = new Validator( $this->config );
+		$this->reader    = new Reader( $this->config, $storage, $this->validator );
+		$this->writer    = new Writer( $this->config, $storage );
+	}
+
+	/**
+	 * Get the cache configuration.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return Config The configuration instance.
+	 */
+	public function get_config(): Config {
+		return $this->config;
 	}
 
 	/**
@@ -104,10 +126,9 @@ final class Manager {
 	 * @since 1.0.0
 	 *
 	 * @param string $hash           The request hash.
-	 * @param bool   $can_regenerate Whether FastCGI regeneration is possible.
 	 * @return array{result: Result, serve: bool, regenerate: bool, entry: Entry|null} Cache result with serving decision.
 	 */
-	public function get_and_validate( string $hash, bool $can_regenerate ): array {
+	public function get_and_validate( string $hash ): array {
 		$result = $this->reader->get( $hash );
 
 		if ( $result->is_miss() ) {
@@ -119,7 +140,7 @@ final class Manager {
 			);
 		}
 
-		$decision = $this->reader->should_serve( $result, $hash, $can_regenerate );
+		$decision = $this->reader->should_serve( $result, $hash );
 
 		// If we shouldn't serve, return early.
 		if ( ! $decision['serve'] ) {
@@ -231,5 +252,34 @@ final class Manager {
 			'cached' => $stored,
 			'reason' => $stored ? '' : 'Storage failed',
 		);
+	}
+
+	/**
+	 * Get meaningful Cache config and info.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param bool $network If the network is set to true, get the network cache status.
+	 *
+	 * @return array<mixed> The Cache status.
+	 */
+	public function get_status( bool $network = false ): array {
+		$flag = $network
+			? Engine::instance()->flags()->get_key( 'site', '*' )
+			: Engine::instance()->flags()->get_key( '*' );
+
+		$cache = array(
+			'ttl' => $this->config->ttl,
+			'grace' => $this->config->grace,
+			'gzip' => $this->config->gzip,
+			'debug' => $this->config->debug,
+			'nocache_paths' => $this->config->nocache_paths,
+			'ignore_cookies' => $this->config->ignore_cookies,
+			'nocache_cookies' => $this->config->nocache_cookies,
+			'ignore_request_keys' => $this->config->ignore_request_keys,
+		);
+
+		return array_merge( $cache, Admin::get_cache_size( $flag, true ) );
 	}
 }

@@ -10,7 +10,7 @@
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 
-namespace MilliCache\Engine;
+namespace MilliCache\Engine\Utilities;
 
 ! defined( 'ABSPATH' ) && exit;
 
