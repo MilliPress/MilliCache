@@ -115,7 +115,7 @@ const Header = () => {
 									></Button>
 								);
 							} }
-							renderContent={ () => {
+							renderContent={ ( props ) => {
 								return (
 									<>
 										<MenuGroup
@@ -128,12 +128,13 @@ const Header = () => {
 												__next40pxDefaultSize
 												icon={ lifesaver }
 												iconPosition="left"
-												onClick={ () =>
-													window.open(
-														'https://github.com/MilliPress/MilliCache/issues',
-														'_blank'
-													)
-												}
+                                                onClick={ () => {
+                                                    props.onClose();
+                                                    window.open(
+                                                        'https://github.com/MilliPress/MilliCache/issues',
+                                                        '_blank'
+                                                    );
+                                                } }
 											>
 												{ __(
 													'Get Help',
@@ -145,10 +146,12 @@ const Header = () => {
 												__next40pxDefaultSize
 												icon={ flipVertical }
 												iconPosition="left"
-												onClick={ () =>
-													triggerAction(
-														'reset'
-													)
+												onClick={ () => {
+                                                        props.onClose();
+                                                        triggerAction(
+                                                            'reset'
+                                                        );
+                                                    }
 												}
 												disabled={
 													status.settings?.has_defaults
@@ -165,11 +168,12 @@ const Header = () => {
 													__next40pxDefaultSize
 													icon={ backup }
 													iconPosition="left"
-													onClick={ () =>
-														triggerAction(
-															'restore'
-														)
-													}
+                                                    onClick={ () => {
+                                                        props.onClose();
+                                                        triggerAction(
+                                                            'restore'
+                                                        );
+                                                    } }
 												>
 													{ __(
 														'Restore previous Settings',
