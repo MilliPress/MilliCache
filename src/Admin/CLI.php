@@ -149,57 +149,89 @@ final class CLI {
 			)
 		);
 
-		$expire = $assoc_args['expire'];
+		$expire = (bool) $assoc_args['expire'];
 
 		// Clear the full cache if no arguments are given.
 		if ( '' === $assoc_args['ids'] && '' === $assoc_args['urls'] && '' === $assoc_args['flags'] && '' === $assoc_args['sites'] && '' === $assoc_args['networks'] ) {
-			$this->engine->clear()->all( $expire );
+			$this->engine->clear()->all( $expire )->execute_queue();
 			\WP_CLI::success( is_multisite() ? esc_html__( 'Network cache cleared.', 'millicache' ) : esc_html__( 'Site cache cleared.', 'millicache' ) );
+			return;
 		}
 
-		// Clear network cache.
+		$clear  = $this->engine->clear();
+		$messages = array();
+
+		// Queue network cache clearing.
 		if ( '' !== $assoc_args['networks'] ) {
-			$network_ids = explode( ',', $assoc_args['networks'] );
+			$network_ids = array_map( 'intval', explode( ',', $assoc_args['networks'] ) );
 			foreach ( $network_ids as $network_id ) {
-				$this->engine->clear()->network( (int) $network_id, $expire );
+				$clear->network( $network_id, $expire );
 			}
-			\WP_CLI::success( esc_html__( 'Network cache cleared.', 'millicache' ) );
+			$messages[] = sprintf(
+				// translators: %s is a comma-separated list of network IDs.
+				esc_html__( 'Network cache cleared for networks: %s', 'millicache' ),
+				implode( ', ', $network_ids )
+			);
 		}
 
-		// Clear site cache.
+		// Queue site cache clearing.
 		if ( '' !== $assoc_args['sites'] ) {
-			$site_ids = explode( ',', $assoc_args['sites'] );
+			$site_ids = array_map( 'intval', explode( ',', $assoc_args['sites'] ) );
 			foreach ( $site_ids as $site_id ) {
-				$this->engine->clear()->sites( (int) $site_id, null, $expire );
+				$clear->sites( $site_id, null, $expire );
 			}
-			\WP_CLI::success( esc_html__( 'Site cache cleared.', 'millicache' ) );
+			$messages[] = sprintf(
+				// translators: %s is a comma-separated list of site IDs.
+				esc_html__( 'Site cache cleared for sites: %s', 'millicache' ),
+				implode( ', ', $site_ids )
+			);
 		}
 
-		// Clear cache by post-IDs.
+		// Queue cache clearing by post-IDs.
 		if ( '' !== $assoc_args['ids'] ) {
-			$post_ids = explode( ',', $assoc_args['ids'] );
+			$post_ids = array_map( 'intval', explode( ',', $assoc_args['ids'] ) );
 			foreach ( $post_ids as $post_id ) {
-				$this->engine->clear()->posts( (int) $post_id, $expire );
+				$clear->posts( $post_id, $expire );
 			}
-			\WP_CLI::success( esc_html__( 'Post cache cleared.', 'millicache' ) );
+			$messages[] = sprintf(
+				// translators: %s is a comma-separated list of post IDs.
+				esc_html__( 'Post cache cleared for IDs: %s', 'millicache' ),
+				implode( ', ', $post_ids )
+			);
 		}
 
-		// Clear cache by URLs.
+		// Queue cache clearing by URLs.
 		if ( '' !== $assoc_args['urls'] ) {
-			$urls = explode( ',', $assoc_args['urls'] );
+			$urls = array_map( 'trim', explode( ',', $assoc_args['urls'] ) );
 			foreach ( $urls as $url ) {
-				$this->engine->clear()->urls( $url, $expire );
+				$clear->urls( $url, $expire );
 			}
-			\WP_CLI::success( esc_html__( 'URL cache cleared.', 'millicache' ) );
+			$messages[] = sprintf(
+				// translators: %s is a comma-separated list of URLs.
+				esc_html__( 'URL cache cleared for: %s', 'millicache' ),
+				implode( ', ', $urls )
+			);
 		}
 
-		// Clear cache by flags.
+		// Queue cache clearing by flags.
 		if ( '' !== $assoc_args['flags'] ) {
-			$flags = explode( ',', $assoc_args['flags'] );
+			$flags = array_map( 'trim', explode( ',', $assoc_args['flags'] ) );
 			foreach ( $flags as $flag ) {
-				$this->engine->clear()->flags( $flag, $expire, false );
+				$clear->flags( $flag, $expire, false );
 			}
-			\WP_CLI::success( esc_html__( 'Cache cleared for flags.', 'millicache' ) );
+			$messages[] = sprintf(
+				// translators: %s is a comma-separated list of flags.
+				esc_html__( 'Cache cleared for flags: %s', 'millicache' ),
+				implode( ', ', $flags )
+			);
+		}
+
+		// Execute all queued operations.
+		$clear->execute_queue();
+
+		// Output success messages.
+		foreach ( $messages as $message ) {
+			\WP_CLI::success( $message );
 		}
 	}
 
