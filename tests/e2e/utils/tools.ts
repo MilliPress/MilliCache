@@ -31,6 +31,7 @@ export async function runWpCliCommand(command: string): Promise<string> {
 
 /**
  * Network activates a plugin.
+ * Plugin activation is idempotent - activating an already-active plugin succeeds silently.
  * @param slug
  */
 export async function networkActivatePlugin(slug = 'millicache') {
@@ -38,17 +39,10 @@ export async function networkActivatePlugin(slug = 'millicache') {
         return;
     }
 
-    // Run the WP-CLI command to get the list of activated plugins
-    const activatedPlugins = await runWpCliCommand('plugin list -- --status=active-network -- --field=name');
-
-    // Check if the plugin is already activated
-    if (!activatedPlugins.split('\n').includes(slug)) {
-        // Run the WP-CLI command to activate the plugin
-        try {
-            await runWpCliCommand(`plugin activate ${slug} -- --network`);
-        } catch (error) {
-            console.error(`Failed to activate plugin ${slug}:`, error);
-        }
+    try {
+        await runWpCliCommand(`plugin activate ${slug} -- --network`);
+    } catch (error) {
+        console.error(`Failed to activate plugin ${slug}:`, error);
     }
 }
 

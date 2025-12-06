@@ -1,7 +1,7 @@
 import { test } from './setup/e2e-wp-test';
 import {runWpCliCommand, validateHeaderAfterReload, clearCache} from "./utils/tools";
 
-test.beforeEach(async () => {
+test.beforeAll(async () => {
     await clearCache('*');
 });
 
