@@ -2,27 +2,23 @@ import { test } from './setup/e2e-wp-test';
 import { clearCache, validateHeader } from './utils/tools';
 
 /**
- * Clear cache before running the tests.
+ * Test cache flag generation for different content types.
  */
 test.describe('Step 5: Cache RequestFlags', () => {
     test('Check flags by context', async ({ page }) => {
-        // Targets and their expected cache flags
+        // URLs and their expected cache flags
         // Multisite prefix for flags is "{site_id}:".
-        const targets = {
-            'Hello World!': ['1:post:1'],
-            'Sample Page': ['1:post:2'],
-        };
+        const targets = [
+            { url: '/hello-world/', expectedFlags: ['1:post:'] },
+            { url: '/sample-page/', expectedFlags: ['1:post:'] },
+        ];
 
         // Flush the cache
         await clearCache('1:*');
 
         // Check pages for cache flags
-        for (const [linkTitle, expectedFlags] of Object.entries(targets)) {
-            await page.goto('/');
-
-            const href = await page.getByText(linkTitle).getAttribute('href');
-
-            let response = await page.goto(href);
+        for (const { url, expectedFlags } of targets) {
+            let response = await page.goto(url);
             await validateHeader(response, 'status', 'miss');
 
             response = await page.reload();

@@ -61,6 +61,6 @@ test.describe('Step 8: WP-CLI Commands', () => {
         const stdout5 = await runWpCliCommand('millicache stats -- --flag=1:*');
 
         // Validate network 1 cache is empty
-        expect(stdout5).toContain('Empty');
+        expect(stdout5).toContain('No cached pages');
     });
 });
