@@ -121,11 +121,16 @@ const generateSiteContent = async (siteId) => {
     // Flush rewrite rules to ensure CPTs are registered
     await run('npx', wpCmd('rewrite flush'), { silent: true });
 
-    // Generate posts and pages in parallel
-    await Promise.all([
-        run('npx', wpCmd('post generate --count=5 --post_type=post --post_status=publish'), { silent: true }),
-        run('npx', wpCmd('post generate --count=3 --post_type=page --post_status=publish'), { silent: true }),
-    ]);
+    // Generate posts
+    await run('npx', wpCmd('post generate --count=5 --post_type=post --post_status=publish'), { silent: true });
+
+    // Create named pages (About, Contact, Services)
+    const pages = ['About', 'Contact', 'Services'];
+    await Promise.all(pages.map(title =>
+        run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'create',
+            '--post_type=page', '--post_status=publish', `--post_title="${title}"`,
+            ...(urlFlag ? [urlFlag] : [])], { silent: true }).catch(() => {})
+    ));
 
     // Create genre terms (parallel)
     const genres = ['Fiction', 'Non-Fiction', 'Science', 'History'];
@@ -151,20 +156,26 @@ const generateSiteContent = async (siteId) => {
         } catch {}
     }
 
-    // Create navigation menu with books archive link
+    // Create navigation menu with links
+    const siteBase = siteId === 1 ? 'http://localhost:8889' : `http://localhost:8889/site${siteId}`;
     try {
         // Create the menu
         const menuId = await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'menu', 'create', 'Primary', '--porcelain',
             ...(urlFlag ? [urlFlag] : [])], { silent: true });
         if (menuId.trim()) {
-            // Add Home link
-            await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'menu', 'item', 'add-custom', 'Primary',
-                'Home', siteId === 1 ? 'http://localhost:8889/' : `http://localhost:8889/site${siteId}/`,
-                ...(urlFlag ? [urlFlag] : [])], { silent: true });
-            // Add Books archive link
-            await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'menu', 'item', 'add-custom', 'Primary',
-                'Books', siteId === 1 ? 'http://localhost:8889/books/' : `http://localhost:8889/site${siteId}/books/`,
-                ...(urlFlag ? [urlFlag] : [])], { silent: true });
+            // Add menu items
+            const menuItems = [
+                { title: 'Home', url: `${siteBase}/` },
+                { title: 'About', url: `${siteBase}/about/` },
+                { title: 'Contact', url: `${siteBase}/contact/` },
+                { title: 'Services', url: `${siteBase}/services/` },
+                { title: 'Books', url: `${siteBase}/books/` },
+                { title: 'Sample Site', url: 'http://localhost:8889/site2/' },
+            ];
+            for (const item of menuItems) {
+                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'menu', 'item', 'add-custom', 'Primary',
+                    item.title, item.url, ...(urlFlag ? [urlFlag] : [])], { silent: true }).catch(() => {});
+            }
             // Assign menu to primary location
             await run('npx', wpCmd('menu location assign Primary primary'), { silent: true }).catch(() => {});
         }
