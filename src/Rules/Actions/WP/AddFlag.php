@@ -48,7 +48,7 @@ class AddFlag extends BaseAction {
 	public function execute( Context $context ): void {
 		$flag = $this->get_arg( 0 )->string();
 
-		// Call Engine to add the flag.
-		Engine::add_flag( $flag );
+		// Call Engine's flag manager to add the flag.
+		Engine::instance()->flags()->add( $flag );
 	}
 }

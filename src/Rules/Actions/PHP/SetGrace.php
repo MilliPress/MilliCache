@@ -48,7 +48,7 @@ class SetGrace extends BaseAction {
 	public function execute( Context $context ): void {
 		$grace = $this->get_arg( 0 )->int();
 
-		// Call Engine to set the grace period.
-		Engine::set_grace( $grace );
+		// Set grace override.
+		Engine::instance()->options()->set_grace( $grace );
 	}
 }

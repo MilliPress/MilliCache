@@ -24,11 +24,11 @@ use MilliCache\Deps\MilliRules\Rules;
  * so user rules can override them.
  *
  * Registered rules:
- * - core-wp-no-cache-cron: Skip cache for cron requests
- * - core-wp-no-cache-ajax: Skip cache for AJAX requests
- * - core-wp-donotcachepage: Skip cache if DONOTCACHEPAGE constant is true
+ * - millicache:wp:no-cache-cron: Skip cache for cron requests
+ * - millicache:wp:no-cache-ajax: Skip cache for AJAX requests
+ * - millicache:wp:donotcachepage: Skip cache if DONOTCACHEPAGE constant is true
  *
- * Override example:
+ * Options example:
  * User can create a rule with order 10 that enables caching for specific AJAX endpoints,
  * overriding the default no-cache behavior because higher order executes last.
  *
@@ -37,7 +37,7 @@ use MilliCache\Deps\MilliRules\Rules;
  * @subpackage  Rules
  * @author      Philipp Wellmer <hello@millipress.com>
  */
-class WordPress {
+final class WordPress {
 	/**
 	 * The WordPress hook to attach the rules to.
 	 *
@@ -93,13 +93,13 @@ class WordPress {
 	 * @return void
 	 */
 	private static function register_logged_in_rule(): void {
-		Rules::create( 'core-wp-logged-in' )
+		Rules::create( 'millicache:wp:logged-in' )
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
-			->is_user_logged_in()
+				->is_user_logged_in()
 			->then()
-			->do_cache( false, 'Core: Skip cache for logged-in users' )
+				->do_cache( false, 'MilliCache: Logged-in user' )
 			->register();
 	}
 
@@ -114,13 +114,13 @@ class WordPress {
 	 * @return void
 	 */
 	private static function register_response_code_rule(): void {
-		Rules::create( 'core-wp-response-code' )
+		Rules::create( 'millicache:wp:response:code' )
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
-			->custom( 'core-wp-check-response-code', fn() => 200 !== http_response_code() )
+				->custom( 'millicache:check-response-code', fn() => 200 !== http_response_code() )
 			->then()
-			->do_cache( false, 'Core: Skip cache for non-200 response codes' )
+				->do_cache( false, 'MilliCache: Non-200 response codes' )
 			->register();
 	}
 
@@ -135,13 +135,13 @@ class WordPress {
 	 * @return void
 	 */
 	private static function register_donotcachepage_rule(): void {
-		Rules::create( 'core-wp-donotcachepage' )
+		Rules::create( 'millicache:wp:const:donotcachepage' )
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
-			->constant( 'DONOTCACHEPAGE', true, 'IS' )
+				->constant( 'DONOTCACHEPAGE', true, 'IS' )
 			->then()
-			->do_cache( false, 'Core: Skip cache if DONOTCACHEPAGE constant is true' )
+				->do_cache( false, 'MilliCache: DONOTCACHEPAGE constant is true' )
 			->register();
 	}
 
@@ -156,13 +156,13 @@ class WordPress {
 	 * @return void
 	 */
 	private static function register_cron_rule(): void {
-		Rules::create( 'core-wp-no-cache-cron' )
+		Rules::create( 'millicache:wp:const:doing-cron' )
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
 				->constant( 'DOING_CRON', true )
 			->then()
-				->do_cache( false, 'Core: Skip cache for cron requests' )
+				->do_cache( false, 'MilliCache: Cron requests' )
 			->register();
 	}
 
@@ -177,13 +177,13 @@ class WordPress {
 	 * @return void
 	 */
 	private static function register_ajax_rule(): void {
-		Rules::create( 'core-wp-no-cache-ajax' )
+		Rules::create( 'millicache:wp:const:doing-ajax' )
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
 				->constant( 'DOING_AJAX', true, 'IS' )
 			->then()
-				->do_cache( false, 'Core: Skip cache for AJAX requests' )
+				->do_cache( false, 'MilliCache: AJAX request' )
 			->register();
 	}
 }

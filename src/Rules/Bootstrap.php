@@ -25,7 +25,7 @@ use MilliCache\Deps\MilliRules\Rules;
  * Registers default bootstrap rules that execute before WordPress initialization.
  * These rules use order 0 so user rules can override them.
  *
- * Override example:
+ * Options example:
  * User can create a rule with order 10 that sets TTL for specific paths,
  * overriding the default no-cache behavior because higher order executes last.
  *
@@ -34,7 +34,7 @@ use MilliCache\Deps\MilliRules\Rules;
  * @subpackage  Rules
  * @author      Philipp Wellmer <hello@millipress.com>
  */
-class Bootstrap {
+final class Bootstrap {
 	/**
 	 * Register default bootstrap rules.
 	 *
@@ -55,7 +55,7 @@ class Bootstrap {
 	 * @return void
 	 */
 	public static function register(): void {
-		$config = Engine::get_config();
+		$config = Engine::instance()->config();
 
 		self::register_wp_cache_rule();
 		self::register_rest_request_rule();
@@ -78,12 +78,12 @@ class Bootstrap {
 	 */
 	private static function register_wp_cache_rule(): void {
 		// Check WP_CACHE constant.
-		Rules::create( 'core-wp-cache', 'php' )
+		Rules::create( 'millicache:const:wp-cache', 'php' )
 			->order( -10 )
 			->when()
-			->constant( 'WP_CACHE', true, '!=' )
+				->constant( 'WP_CACHE', true, '!=' )
 			->then()
-			->do_cache( false, 'Core: WP_CACHE not enabled' )
+				->do_cache( false, 'MilliCache: WP_CACHE not enabled' )
 			->register();
 	}
 
@@ -96,12 +96,12 @@ class Bootstrap {
 	 */
 	private static function register_rest_request_rule(): void {
 		// Check REST request.
-		Rules::create( 'core-rest-request', 'php' )
+		Rules::create( 'millicache:request:rest', 'php' )
 			->order( -10 )
 			->when()
-			->constant( 'REST_REQUEST', true )
+				->constant( 'REST_REQUEST', true )
 			->then()
-			->do_cache( false, 'Core: REST request' )
+				->do_cache( false, 'MilliCache: REST request' )
 			->register();
 	}
 
@@ -114,12 +114,12 @@ class Bootstrap {
 	 */
 	private static function register_xmlrpc_request_rule(): void {
 		// Check XML-RPC request.
-		Rules::create( 'core-xmlrpc-request', 'php' )
+		Rules::create( 'millicache:request:xmlrpc', 'php' )
 			->order( -10 )
 			->when()
-			->constant( 'XMLRPC_REQUEST', true )
+				->constant( 'XMLRPC_REQUEST', true )
 			->then()
-			->do_cache( false, 'Core: XML-RPC request' )
+				->do_cache( false, 'MilliCache: XML-RPC request' )
 			->register();
 	}
 
@@ -132,23 +132,23 @@ class Bootstrap {
 	 */
 	private static function register_file_request_rule(): void {
 		// Check file request (static assets).
-		Rules::create( 'core-file-request', 'php' )
+		Rules::create( 'millicache:request:file', 'php' )
 			->order( -10 )
 			->when()
-			->custom(
-				'is-file-request',
-				function ( Context $context ) {
-					$uri = $context->get( 'request.uri', '' );
+				->custom(
+					'is-file-request',
+					function ( Context $context ) {
+						$uri = $context->get( 'request.uri', '' );
 
-					if ( ! is_string( $uri ) || empty( $uri ) ) {
-						return false;
+						if ( ! is_string( $uri ) || empty( $uri ) ) {
+							return false;
+						}
+
+						return (bool) preg_match( '/\.[a-z0-9]+($|\?)/i', $uri );
 					}
-
-					return (bool) preg_match( '/\.[a-z0-9]+($|\?)/i', $uri );
-				}
-			)
+				)
 			->then()
-			->do_cache( false, 'Core: File request' )
+				->do_cache( false, 'MilliCache: File request' )
 			->register();
 	}
 
@@ -161,13 +161,13 @@ class Bootstrap {
 	 */
 	private static function register_request_method_rule(): void {
 		// Check the request method (only GET/HEAD).
-		Rules::create( 'core-request-method', 'php' )
+		Rules::create( 'millicache:request:check-method', 'php' )
 			->order( -10 )
 			->when_none()
-			->request_method( 'GET' )
-			->request_method( 'HEAD' )
+				->request_method( 'GET' )
+				->request_method( 'HEAD' )
 			->then()
-			->do_cache( false, 'Core: Non-GET/HEAD request' )
+				->do_cache( false, 'MilliCache: Non-GET/HEAD request' )
 			->register();
 	}
 
@@ -180,18 +180,18 @@ class Bootstrap {
 	 */
 	private static function register_cli_request_rule(): void {
 		// Check CLI request.
-		Rules::create( 'core-cli-request', 'php' )
+		Rules::create( 'millicache:request:cli', 'php' )
 			->order( -10 )
 			->when()
-			->custom(
-				'cli-request',
-				function () {
-					return php_sapi_name() === 'cli';
-				}
-			)
-			->constant( 'WP_CLI', true )
+				->custom(
+					'cli-request',
+					function () {
+						return php_sapi_name() === 'cli';
+					}
+				)
+				->constant( 'WP_CLI', true )
 			->then()
-			->do_cache( false, 'Core: CLI request' )
+				->do_cache( false, 'MilliCache: CLI request' )
 			->register();
 	}
 
@@ -204,12 +204,12 @@ class Bootstrap {
 	 */
 	private static function register_wp_json_request_rule(): void {
 		// Check WP-JSON request.
-		Rules::create( 'core-wp-json-request', 'php' )
+		Rules::create( 'millicache:request:wp-json', 'php' )
 			->order( -10 )
 			->when()
-			->request_url( '*wp-json*' )
+				->request_url( '*wp-json*' )
 			->then()
-			->do_cache( false, 'Core: WP-JSON request' )
+				->do_cache( false, 'MilliCache: WP-JSON request' )
 			->register();
 	}
 
@@ -223,17 +223,17 @@ class Bootstrap {
 	 */
 	private static function register_ttl_check_rule( Config $config ): void {
 		// Check TTL is configured.
-		Rules::create( 'core-ttl-not-set', 'php' )
+		Rules::create( 'millicache:config:ttl-not-set', 'php' )
 			->order( -10 )
 			->when()
-			->custom(
-				'ttl-not-set',
-				function () use ( $config ) {
-					return $config->ttl <= 0;
-				}
-			)
+				->custom(
+					'ttl-not-set',
+					function () use ( $config ) {
+						return $config->ttl <= 0;
+					}
+				)
 			->then()
-			->do_cache( false, 'Core: TTL not set' )
+				->do_cache( false, 'MilliCache: TTL not set' )
 			->register();
 	}
 
@@ -256,7 +256,7 @@ class Bootstrap {
 		}
 
 		// Build rule using fluent API.
-		$builder = Rules::create( 'core-nocache-cookies', 'php' )
+		$builder = Rules::create( 'millicache:config:nocache-cookies', 'php' )
 			->order( 0 )
 			->when_any(); // Any cookie match triggers.
 
@@ -267,7 +267,7 @@ class Bootstrap {
 
 		// Set action and register.
 		$builder->then()
-			->do_cache( false, 'Core: Skip cache for no-cache cookies' )
+			->do_cache( false, 'MilliCache: Skip cache for no-cache cookies' )
 			->register();
 	}
 
@@ -291,7 +291,7 @@ class Bootstrap {
 		}
 
 		// Build rule using fluent API.
-		$builder = Rules::create( 'core-nocache-paths', 'php' )
+		$builder = Rules::create( 'millicache:config:nocache-paths', 'php' )
 			->order( 0 )
 			->when_any();
 
@@ -302,7 +302,7 @@ class Bootstrap {
 
 		// Set action and register.
 		$builder->then()
-			->do_cache( false, 'Core: Skip cache for no-cache paths' )
+			->do_cache( false, 'MilliCache: Skip cache for no-cache paths' )
 			->register();
 	}
 }

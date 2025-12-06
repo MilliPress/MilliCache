@@ -57,6 +57,6 @@ class ClearSiteCache extends BaseAction {
 		$expire = $this->get_arg( 2, false )->bool();
 
 		// Call Engine to clear cache for specified site(s) or current site.
-		Engine::clear_cache_by_site_ids( $site_ids, $network_id, $expire );
+		Engine::instance()->clear()->sites( $site_ids, $network_id, $expire );
 	}
 }

@@ -48,7 +48,7 @@ class RemoveFlag extends BaseAction {
 	public function execute( Context $context ): void {
 		$flag = $this->get_arg( 0 )->string();
 
-		// Call Engine to remove the flag.
-		Engine::remove_flag( $flag );
+		// Call Engine's flag manager to remove the flag.
+		Engine::instance()->flags()->remove( $flag );
 	}
 }

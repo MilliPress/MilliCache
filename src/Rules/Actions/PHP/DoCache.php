@@ -47,9 +47,9 @@ class DoCache extends BaseAction {
 	 */
 	public function execute( Context $context ): void {
 		$should_cache = $this->get_arg( 0, true )->bool();
-		$reason       = $this->get_arg( 1, $should_cache ? 'Rule action: do_cache() -> (cache)' : 'Rule action: do_cache() -> (do not cache)' )->string();
+		$reason       = $this->get_arg( 1, $should_cache ? 'Rule action: do_cache() -> (cache)' : 'Rule action: do_cache(false) -> (do not cache)' )->string();
 
-		// Signal to Engine cache decision.
-		Engine::set_cache_decision( $should_cache, $reason );
+		// Set cache decision.
+		Engine::instance()->options()->set_cache_decision( $should_cache, $reason );
 	}
 }

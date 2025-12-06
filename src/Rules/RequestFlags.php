@@ -44,7 +44,7 @@ use MilliCache\Engine;
  * @subpackage  Rules
  * @author      Philipp Wellmer <hello@millipress.com>
  */
-class RequestFlags {
+final class RequestFlags {
 	/**
 	 * The WordPress hook to attach the rules to.
 	 *
@@ -259,7 +259,7 @@ class RequestFlags {
 						}
 
 						if ( ! empty( $date_parts ) ) {
-							Engine::add_flag( 'archive:' . implode( ':', $date_parts ) );
+							Engine::instance()->flags()->add( 'archive:' . implode( ':', $date_parts ) );
 						}
 					}
 				)
@@ -325,7 +325,7 @@ class RequestFlags {
 						if ( is_array( $custom_flags ) && ! empty( $custom_flags ) ) {
 							foreach ( $custom_flags as $flag ) {
 								if ( is_string( $flag ) && '' !== $flag ) {
-									Engine::add_flag( $flag );
+									Engine::instance()->flags()->add( $flag );
 								}
 							}
 						}

@@ -55,6 +55,6 @@ class ClearCache extends BaseAction {
 		$expire = $this->get_arg( 1, false )->bool();
 
 		// Call Engine to clear cache for specified targets.
-		Engine::clear_cache_by_targets( $targets, $expire );
+		Engine::instance()->clear()->targets( $targets, $expire );
 	}
 }

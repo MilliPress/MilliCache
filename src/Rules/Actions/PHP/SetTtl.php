@@ -48,7 +48,7 @@ class SetTtl extends BaseAction {
 	public function execute( Context $context ): void {
 		$ttl = $this->get_arg( 0 )->int();
 
-		// Call Engine to set TTL.
-		Engine::set_ttl( $ttl );
+		// Set TTL override.
+		Engine::instance()->options()->set_ttl( $ttl );
 	}
 }
