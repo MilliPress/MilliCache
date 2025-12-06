@@ -51,6 +51,15 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 }
 
 /**
+ * Load MilliPress API functions.
+ *
+ * @since 1.0.0
+ */
+if ( file_exists( __DIR__ . '/functions.php' ) ) {
+	require_once __DIR__ . '/functions.php';
+}
+
+/**
  * The code that runs during plugin activation.
  *
  * @since 1.0.0

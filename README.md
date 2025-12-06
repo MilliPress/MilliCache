@@ -304,39 +304,71 @@ The `$expire` parameter in cache-clearing methods is optional:
 
 Decide whether to expire or delete cache entries based on your requirements and how time-critical the content is.
 
-- ### Clear Global Cache
+- ### Reset Cache
 
-  To clear all cache entries.
+  To reset the full cache.
 
   ```php
-  /*
+  /**
    * @param bool $expire Expire cache if set to true, or delete by default. (optional)
    */
-  \MilliCache\Engine::clear_cache($expire);
+  millipress_reset_cache( $expire );
   ```
 
-- ### Clear Cache by Flag
+- ### Clear Cache
+
+  A convenient method to clear the cache based on different target types in a single call.
+  This method automatically determines the target type by its format (URL, numeric Post ID, or cache flag).
+
+  ```php
+  /**
+   * @param string|array $targets String or array of targets to clear:
+   *   - URLs (any valid URL that starts with your site URL)
+   *   - Post IDs (any numeric value will be treated as a post-ID)
+   *   - Cache flags (any non-numeric, non-URL string will be treated as a flag)
+   * @param bool $expire Expire cache if set to true, or delete by default. (optional)
+   */
+  millipress_clear_cache( $targets, $expire );
+  ```
+
+  Example usage:
+
+  ```php
+  // Clear cache for multiple types of targets, such as post-IDs, flags, or URLs.
+  millipress_clear_cache( [
+      'home',                             // Treated as a flag
+      'post:123',                         // Treated as a flag
+      123,                                // Treated as a post-ID
+      'https://example.com/special-page/' // Treated as a URL
+  ] );
+  ```
+  
+  In multisite installations,
+  the method automatically limits flag-based clearing to the current site
+  when called from a non-network admin context.
+
+- ### Clear Cache by Flags
 
   To clear the cache by specific flags.
   Please note the [wildcard support](#wildcards) below.
 
   ```php
-  /*
+  /**
    * @param string|array $flags Flag or array of flags to clear.
    * @param bool $expire Expire cache if set to true, or delete by default. (optional)
    */
-  \MilliCache\Engine::clear_cache_by_flags($flags, $expire);
+  millipress_clear_cache_by_flags( $flags, $expire );
   ```
-  
+
   #### Wildcards
 
   MilliCache supports wildcards when clearing cache by flags.
   The way these wildcards are used depends on your WordPress installation type.
-  
+
   - ##### `*`-Wildcards
-  
+
     The `*` can be used to match any number of characters. Here are examples of different WordPress installations:
-    
+
     | Installation Type | Example Pattern | What It Matches                                     |
     |-------------------|-----------------|-----------------------------------------------------|
     | Single site       | `post:*`        | All posts (matches `post:1`, `post:123`, etc.)      |
@@ -345,27 +377,27 @@ Decide whether to expire or delete cache entries based on your requirements and 
     | Multisite         | `*:home`        | Home page on all sites (matches `1:home`, `2:home`) |
     | Multinetwork      | `1:*:post:*`    | All posts on all sites in network 1                 |
     | Multinetwork      | `*:*:home`      | Home pages across all sites in all networks         |
-  
+
   - ##### `?`-Wildcards
-  
+
     The `?` matches exactly one character:
-    
+
     | Installation Type | Example Pattern | What It Matches                                                              |
     |-------------------|-----------------|------------------------------------------------------------------------------|
     | Single site       | `post:?`        | Posts with single-digit IDs (1-9)                                            |
     | Multisite         | `?:home`        | Home pages on sites with single-digit IDs                                    |
     | Multinetwork      | `?:?:*`         | All content on sites with single-digit IDs in networks with single-digit IDs |
 
-- ### Clear Cache by URL
+- ### Clear Cache by URLs
 
-  To clear the cache by a specific URL.
+  To clear the cache by specific URLs.
 
   ```php
-  /*
+  /**
    * @param string|array $urls URL or array of URLs to clear.
    * @param bool $expire Expire cache if set to true, or delete by default. (optional)
    */
-  \MilliCache\Engine::clear_cache_by_urls($urls, $expire);
+  millipress_clear_cache_by_urls( $urls, $expire );
   ```
 
 - ### Clear Cache by Post IDs
@@ -373,73 +405,108 @@ Decide whether to expire or delete cache entries based on your requirements and 
   To clear the cache of specific posts, pages, or CPTs.
 
   ```php
-  /*
+  /**
    * @param int|array $post_ids Post ID or array of Post IDs to clear.
    * @param bool $expire Expire cache if set to true, or delete by default. (optional)
    */
-  \MilliCache\Engine::clear_cache_by_post_ids($post_ids, $expire);
+  millipress_clear_cache_by_post_ids( $post_ids, $expire );
   ```
 
 - ### Clear Cache by Site IDs
-  
+
   To clear the cache of specific sites in a WordPress Multisite network.
 
   ```php
-    /*
-     * @param int|array $site_ids Site ID or array of Site IDs to clear.
-     * @param bool $expire Expire cache if set to true, or delete by default. (optional)
-     */
-  \MilliCache\Engine::clear_cache_by_site_ids($site_ids, $expire);
-  ```
-
-
-- ### Clear Cache by Network IDs
-
-  To clear the cache of specific networks in a multi-network installation.
-
-  ```php
-  /*
-   * @param int|array $network_ids Network ID or array of Network IDs to clear.
+  /**
+   * @param int|array $site_ids Site ID or array of Site IDs to clear.
+   * @param int|null $network_id Network ID (optional).
    * @param bool $expire Expire cache if set to true, or delete by default. (optional)
    */
-  \MilliCache\Engine::clear_cache_by_network_ids($network_ids, $expire);
+  millipress_clear_cache_by_site_ids( $site_ids, $network_id, $expire );
   ```
 
-- ### Clear Cache by Targets
+- ### Clear Cache by Network ID
 
-  A convenient method to clear the cache based on different target types in a single call.
-  This method automatically determines the target type by its format (URL, numeric Post ID, or cache flag).
+  To clear the full cache of each site in a given network.
 
   ```php
-  /*
-   * @param string|array $targets String or array of targets to clear:
-   *   - URLs (any valid URL that starts with your site URL)
-   *   - Post IDs (any numeric value will be treated as a post-ID)
-   *   - Cache flags (any non-numeric, non-URL string will be treated as a flag)
+  /**
+   * @param int|null $network_id Network ID (optional, defaults to current network).
    * @param bool $expire Expire cache if set to true, or delete by default. (optional)
-   * @return void
    */
-  \MilliCache\Engine::clear_cache_by_targets($targets, $expire);
+  millipress_clear_cache_by_network_id( $network_id, $expire );
   ```
-  
+
+### Managing Cache Flags
+
+MilliCache provides functions to manage flags for the current request, which are used to tag cache entries for efficient clearing.
+
+- ### Add Flag to Current Request
+
+  Add a flag to the current request. Flags are labels attached to cache entries that allow for efficient cache clearing.
+
+  ```php
+  /**
+   * @param string $flag The flag name (e.g., 'post:123', 'custom-flag').
+   */
+  millipress_add_flag( $flag );
+  ```
+
   Example usage:
 
   ```php
-  // Clear cache for multiple types of targets, such as post-IDs, flags, or URLs.
-  \MilliCache\Engine::clear_cache_by_targets([
-      'home',                             // Treated as a flag
-      'post:123',                         // Treated as a flag
-      123,                                // Treated as a post-ID
-      'https://example.com/special-page/' // Treated as a URL
-  ]);
-  
-  // If no targets are provided, the entire site cache will be cleared
-  \MilliCache\Engine::clear_cache_by_targets([]);
+  // Check if we're using a specific page template
+  if ( is_page_template( 'templates/landing-page.php' ) ) {
+      $flags[] = 'template:landing-page';
+  }
   ```
-  
-  In multisite installations,
-  the method automatically limits flag-based clearing to the current site
-  when called from a non-network admin context.
+
+- ### Remove Flag from Current Request
+
+  Remove a flag from the current request.
+
+  ```php
+  /**
+   * @param string $flag The flag name to remove.
+   */
+  millipress_remove_flag( $flag );
+  ```
+
+- ### Get Flag Prefix
+
+  Get the prefix for flags based on site and network IDs. In multisite environments, flags are automatically prefixed with site and network IDs.
+
+  ```php
+  /**
+   * @param int|string|null $site_id Site ID (null for current).
+   * @param int|string|null $network_id Network ID (null for current).
+   * @return string The prefix string (empty string for non-multisite).
+   */
+  $prefix = millipress_get_flag_prefix( $site_id, $network_id );
+  ```
+
+- ### Prefix Flags
+
+  Prefix an array of flags with site/network prefix. Useful when you need to manually construct prefixed flags in multisite environments.
+
+  ```php
+  /**
+   * @param string|array $flags Flags to prefix (string or array).
+   * @param int|string|null $site_id Site ID (null for current).
+   * @param int|string|null $network_id Network ID (null for current).
+   * @return array Array of prefixed flags.
+   */
+  $prefixed_flags = millipress_prefix_flags( $flags, $site_id, $network_id );
+  ```
+
+  Example usage:
+
+  ```php
+  // Prefix flags for a specific site in a multisite installation
+  $flags = [ 'home', 'post:123' ];
+  $prefixed = millipress_prefix_flags( $flags, 2 ); // For site ID 2
+  // Result in multisite: [ '2:home', '2:post:123' ]
+  ```
 
 ---
 

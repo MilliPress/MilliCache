@@ -3,7 +3,7 @@
 package*            export-ignore
 php*.*              export-ignore
 playwright.*        export-ignore
-mozart.*            export-ignore
+bin/                export-ignore
 composer.lock       export-ignore
 assets/             export-ignore
 tests/              export-ignore

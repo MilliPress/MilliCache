@@ -30,7 +30,10 @@
     "autoload": {
         "psr-4": {
             "MilliCache\\": "src/"
-        }
+        },
+        "classmap": [
+            "deps/"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -47,16 +50,14 @@
         "test:phpstan": "phpstan analyse -c phpstan.neon --memory-limit 1G",
         "test:lint": "phpcs --standard=phpcs.xml -s",
         "test:fix": "phpcbf --standard=phpcs.xml",
+        "strauss": "@php bin/strauss.phar",
         "post-install-cmd": [
-            "@mozart-if-present",
-            "composer dump-autoload"
+            "@strauss",
+            "@composer dump-autoload"
         ],
         "post-update-cmd": [
-            "@mozart-if-present",
-            "composer dump-autoload"
-        ],
-        "mozart-if-present": [
-            "bash -c \"if [ -f 'mozart.phar' ]; then php mozart.phar compose; elif [ -f 'vendor/bin/mozart' ]; then vendor/bin/mozart compose; fi\""
+            "@strauss",
+            "@composer dump-autoload"
         ],
         "cghooks": [
             "vendor/bin/cghooks"
@@ -71,11 +72,12 @@
         }
     },
     "extra": {
-        "mozart": {
-            "dep_namespace": "MilliCache\\Deps\\",
-            "dep_directory": "/src/Deps/",
-            "classmap_directory": "/classes/",
+        "strauss": {
+            "target_directory": "deps",
+            "namespace_prefix": "MilliCache\\Deps\\",
             "classmap_prefix": "MilliCache_",
+            "classmap_output": false,
+            "delete_vendor_packages": true,
             "packages": [
                 "predis/predis",
                 "millipress/millirules"

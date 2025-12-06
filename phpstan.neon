@@ -6,10 +6,12 @@ parameters:
     - assets/
     - src/
   excludePaths:
-    - src/Deps/
-  scanFiles:
+    - deps/
+  stubFiles:
     - stubs/ActionBuilder.php
     - stubs/ConditionBuilder.php
+  scanFiles:
+    - stubs/functions.php
     - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
   fileExtensions:
     - php
