@@ -102,6 +102,60 @@ const disableMultisiteInConfig = (wpConfigPath) => {
     }
 };
 
+/**
+ * Generate sample content if not already present.
+ */
+const generateSampleContent = async () => {
+    // Check if content already exists (more than default "Hello World" post)
+    try {
+        const postCount = await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'list',
+            '--post_type=post', '--format=count'], { silent: true });
+        if (parseInt(postCount.trim()) > 1) {
+            console.log('Sample content already exists');
+            return;
+        }
+    } catch {}
+
+    console.log('Generating sample content...');
+
+    // Flush rewrite rules to ensure CPTs are registered
+    await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'flush'], { silent: true });
+
+    // Generate posts and pages in parallel
+    await Promise.all([
+        run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'generate', '--count=5',
+            '--post_type=post', '--post_status=publish'], { silent: true }),
+        run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'generate', '--count=3',
+            '--post_type=page', '--post_status=publish'], { silent: true }),
+    ]);
+
+    // Create genre terms
+    const genres = ['Fiction', 'Non-Fiction', 'Science', 'History'];
+    await Promise.all(genres.map(genre =>
+        run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'term', 'create', 'genre', genre], { silent: true })
+            .catch(() => {})
+    ));
+
+    // Create sample books with assigned genres
+    const books = [
+        { title: 'Test Book One', genre: 'Fiction' },
+        { title: 'Test Book Two', genre: 'Non-Fiction' },
+        { title: 'Test Book Three', genre: 'Science' },
+    ];
+    for (const book of books) {
+        try {
+            const result = await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'create',
+                '--post_type=book', '--post_status=publish', `--post_title="${book.title}"`, '--porcelain'], { silent: true });
+            const postId = result.trim();
+            if (postId) {
+                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'term', 'set', postId, 'genre', book.genre], { silent: true });
+            }
+        } catch {}
+    }
+
+    console.log('Sample content generated (5 posts, 3 pages, 3 books, 4 genres)');
+};
+
 // Main function for starting the server
 const startServer = async () => {
     try {
@@ -193,6 +247,9 @@ const startServer = async () => {
             writeFileSync(htaccessPath, htaccessOriginal);
         }
 
+        // Generate sample content (posts, pages, books, genres)
+        await generateSampleContent();
+
         console.log('MilliCache Dev Server has been started!');
     } catch (error) {
         console.error(`An error occurred during the start process: ${error.message}`);
@@ -219,7 +276,6 @@ const destroyServer = async () => {
         console.log('Destroying the server');
         await run('docker', ['compose', ...mergeConfig.split(' '), 'down', '-v']);
         await run('npx', ['wp-env', 'destroy', '--yes']);
-        await run('docker', ['rmi', 'redis', 'eqalpha/keydb', 'docker.dragonflydb.io/dragonflydb/dragonfly']);
         console.log('MilliCache Dev Server has been destroyed!');
     } catch (error) {
         console.error(`An error occurred during the destroy process: ${error.message}`);
