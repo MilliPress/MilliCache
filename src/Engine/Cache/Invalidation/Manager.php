@@ -96,6 +96,20 @@ final class Manager {
 	}
 
 	/**
+	 * Execute the queue immediately.
+	 *
+	 * Use this for synchronous execution (e.g., CLI commands).
+	 * For web requests, the queue is executed on shutdown.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return bool True if executed successfully.
+	 */
+	public function execute_queue(): bool {
+		return $this->queue->execute();
+	}
+
+	/**
 	 * Clear cache by mixed targets.
 	 *
 	 * Accepts URLs, post-IDs, or flags and clears appropriate cache entries.
@@ -104,9 +118,9 @@ final class Manager {
 	 *
 	 * @param string|array<string|int> $targets Target(s) to clear.
 	 * @param bool                     $expire  Expire (true) or delete (false).
-	 * @return void
+	 * @return self                    For fluent chaining.
 	 */
-	public function targets( $targets, bool $expire = false ): void {
+	public function targets( $targets, bool $expire = false ): self {
 		// Convert to array.
 		if ( ! is_array( $targets ) ) {
 			$targets = array( $targets );
@@ -114,8 +128,7 @@ final class Manager {
 
 		// Empty targets means clear entire site.
 		if ( empty( $targets ) ) {
-			$this->sites();
-			return;
+			return $this->sites();
 		}
 
 		// Resolve each target and clear.
@@ -137,6 +150,8 @@ final class Manager {
 				$this->flags( $target_str, $expire, $add_prefix );
 			}
 		}
+
+		return $this;
 	}
 
 	/**
@@ -146,9 +161,9 @@ final class Manager {
 	 *
 	 * @param string|array<string> $urls   URL(s) to clear.
 	 * @param bool                 $expire Expire (true) or delete (false).
-	 * @return void
+	 * @return self                For fluent chaining.
 	 */
-	public function urls( $urls, bool $expire = false ): void {
+	public function urls( $urls, bool $expire = false ): self {
 		// Convert to array.
 		$urls = is_string( $urls ) ? array( $urls ) : $urls;
 
@@ -164,6 +179,8 @@ final class Manager {
 		} else {
 			$this->queue->add_to_delete( $flags, false );
 		}
+
+		return $this;
 	}
 
 	/**
@@ -173,9 +190,9 @@ final class Manager {
 	 *
 	 * @param int|array<int> $post_ids Post ID(s) to clear.
 	 * @param bool           $expire   Expire (true) or delete (false).
-	 * @return void
+	 * @return self          For fluent chaining.
 	 */
-	public function posts( $post_ids, bool $expire = false ): void {
+	public function posts( $post_ids, bool $expire = false ): self {
 		// Convert to array.
 		$post_ids = ! is_array( $post_ids ) ? array( $post_ids ) : $post_ids;
 
@@ -192,6 +209,8 @@ final class Manager {
 		if ( function_exists( 'do_action' ) ) {
 			do_action( 'millicache_cache_cleared_by_posts', $post_ids, $expire );
 		}
+
+		return $this;
 	}
 
 	/**
@@ -202,9 +221,9 @@ final class Manager {
 	 * @param string|array<string> $flags      Flag(s) to clear.
 	 * @param bool                 $expire     Expire (true) or delete (false).
 	 * @param bool                 $add_prefix Whether to add multisite prefix.
-	 * @return void
+	 * @return self                For fluent chaining.
 	 */
-	public function flags( $flags, bool $expire = false, bool $add_prefix = true ): void {
+	public function flags( $flags, bool $expire = false, bool $add_prefix = true ): self {
 		// Convert to array.
 		$flags = is_string( $flags ) ? array( $flags ) : $flags;
 
@@ -219,6 +238,8 @@ final class Manager {
 		if ( function_exists( 'do_action' ) ) {
 			do_action( 'millicache_cache_cleared_by_flags', $flags, $expire );
 		}
+
+		return $this;
 	}
 
 	/**
@@ -229,9 +250,9 @@ final class Manager {
 	 * @param int|array<int>|null $site_ids   Site ID(s) to clear (null for current).
 	 * @param int|null            $network_id Network ID.
 	 * @param bool                $expire     Expire (true) or delete (false).
-	 * @return void
+	 * @return self               For fluent chaining.
 	 */
-	public function sites( $site_ids = null, ?int $network_id = null, bool $expire = false ): void {
+	public function sites( $site_ids = null, ?int $network_id = null, bool $expire = false ): self {
 		// Resolve sites to flags.
 		$flags = $this->resolver->resolve_site_ids( $site_ids, $network_id );
 
@@ -246,6 +267,8 @@ final class Manager {
 		if ( function_exists( 'do_action' ) ) {
 			do_action( 'millicache_cache_cleared_by_sites', $site_ids, $network_id, $expire );
 		}
+
+		return $this;
 	}
 
 	/**
@@ -255,9 +278,9 @@ final class Manager {
 	 *
 	 * @param int|null $network_id Network ID (null for current).
 	 * @param bool     $expire     Expire (true) or delete (false).
-	 * @return void
+	 * @return self    For fluent chaining.
 	 */
-	public function network( ?int $network_id = null, bool $expire = false ): void {
+	public function network( ?int $network_id = null, bool $expire = false ): self {
 		$site_ids = $this->resolver->resolve_network_to_sites( $network_id );
 
 		foreach ( $site_ids as $site_id ) {
@@ -268,6 +291,8 @@ final class Manager {
 		if ( function_exists( 'do_action' ) ) {
 			do_action( 'millicache_cleared_by_network_id', $network_id, $expire );
 		}
+
+		return $this;
 	}
 
 	/**
@@ -276,9 +301,9 @@ final class Manager {
 	 * @since 1.0.0
 	 *
 	 * @param bool $expire Expire (true) or delete (false).
-	 * @return void
+	 * @return self For fluent chaining.
 	 */
-	public function all( bool $expire = false ): void {
+	public function all( bool $expire = false ): self {
 		$network_ids = $this->resolver->get_all_networks();
 
 		foreach ( $network_ids as $network_id ) {
@@ -289,5 +314,7 @@ final class Manager {
 		if ( function_exists( 'do_action' ) ) {
 			do_action( 'millicache_cache_cleared', $expire );
 		}
+
+		return $this;
 	}
 }
