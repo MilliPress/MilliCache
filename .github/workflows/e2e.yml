@@ -51,7 +51,7 @@ jobs:
             /home/runner/wp-env
             /home/runner/.wp-env
             /home/runner/.wp-cli
-          key: ${{ runner.os }}-wp-env-${{ hashFiles('**/wp-env.json') }}-v1
+          key: ${{ runner.os }}-wp-env-${{ hashFiles('.wp-env.json', 'tests/wp-env/docker-compose.custom.yml') }}-v2
           restore-keys: ${{ runner.os }}-wp-env-
 
       - name: Setup Node
@@ -61,26 +61,36 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Cache Playwright browsers
+        id: playwright-cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-ms-playwright-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-ms-playwright-
+            ${{ runner.os }}-playwright-
+
+      - name: Cache Docker images
+        uses: ScribeMD/docker-cache@0.5.0
+        with:
+          key: docker-${{ runner.os }}-${{ hashFiles('.wp-env.json', 'tests/wp-env/docker-compose.custom.yml') }}
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install-deps chromium
 
       - name: Install dependencies (HEAD)
         run: |
           npm ci
           composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
       - name: Build styles and scripts (HEAD)
         run: npm run build
 
       - name: Start WordPress Environment
         run: npm run env:start
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
 
       - name: Run Playwright Tests (HEAD)
         run: npm run env:e2e
