@@ -16,7 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['7.4', '8.0', '8.1', '8.2', '8.3']
+        # Pest 2.x requires PHP 8.2+, so we only test on supported versions
+        php: ['8.2', '8.3']
     steps:
       - uses: actions/checkout@v4
 
@@ -52,7 +53,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: '8.2'
           coverage: none
 
       - name: Get Composer cache directory
@@ -63,8 +64,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-8.1-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-8.1-
+          key: ${{ runner.os }}-composer-8.2-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-8.2-
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
@@ -81,7 +82,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: '8.2'
           coverage: none
 
       - name: Get Composer cache directory
@@ -92,8 +93,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-8.1-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-8.1-
+          key: ${{ runner.os }}-composer-8.2-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-8.2-
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
