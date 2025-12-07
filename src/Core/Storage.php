@@ -808,7 +808,7 @@ class Storage {
 	 */
 	public function get_status(): array {
 		$status = array(
-			'connected' => $this->is_connected(),
+			'connected' => false,
 			'config' => array(
 				'host' => $this->host,
 				'port' => $this->port,
@@ -819,70 +819,71 @@ class Storage {
 			'info' => array(),
 		);
 
-		if ( ! $status['connected'] ) {
-			try {
-				$this->client->ping();
-			} catch ( PredisException $e ) {
-				$status['error'] = $e->getMessage();
-			}
-		} else {
-			// Get the storage server config.
-			$config_keys = array(
-				'databases',
+		// Try to connect if not already connected (Predis uses lazy connections).
+		try {
+			$this->client->ping();
+			$status['connected'] = true;
+		} catch ( PredisException $e ) {
+			$status['error'] = $e->getMessage();
+			return $status;
+		}
+
+		// Get the storage server config.
+		$config_keys = array(
+			'databases',
+			'maxmemory',
+			'maxmemory-policy',
+		);
+
+		foreach ( $config_keys as $key ) {
+			$status['config'] = array_merge( $status['config'], (array) $this->client->config( 'GET', $key ) );
+		}
+
+		// Get the storage server info.
+		$info_keys = array(
+			'Memory' => array(
+				'used_memory',
+				'used_memory_peak',
+				'used_memory_human',
 				'maxmemory',
-				'maxmemory-policy',
-			);
+				'maxmemory_human',
+				'maxmemory_policy',
+			),
+			'Server' => array(
+				'redis_version',
+				'valkey_version',
+				'keydb_version',
+				'dragonfly_version',
+				'tcp_port',
+			),
+		);
 
-			foreach ( $config_keys as $key ) {
-				$status['config'] = array_merge( $status['config'], (array) $this->client->config( 'GET', $key ) );
+		foreach ( $info_keys as $section => $keys ) {
+			$info = $this->client->info( $section );
+
+			if ( ! is_array( $info ) ) {
+				continue;
 			}
 
-			// Get the storage server info.
-			$info_keys = array(
-				'Memory' => array(
-					'used_memory',
-					'used_memory_peak',
-					'used_memory_human',
-					'maxmemory',
-					'maxmemory_human',
-					'maxmemory_policy',
-				),
-				'Server' => array(
-					'redis_version',
-					'valkey_version',
-					'keydb_version',
-					'dragonfly_version',
-					'tcp_port',
-				),
-			);
-
-			foreach ( $info_keys as $section => $keys ) {
-				$info = $this->client->info( $section );
-
-				if ( ! is_array( $info ) ) {
-					continue;
-				}
-
-				foreach ( $keys as $key ) {
-					if ( isset( $info[ $section ][ $key ] ) ) {
-						$status['info'][ $section ][ $key ] = $info[ $section ][ $key ];
-					}
+			foreach ( $keys as $key ) {
+				if ( isset( $info[ $section ][ $key ] ) ) {
+					$status['info'][ $section ][ $key ] = $info[ $section ][ $key ];
 				}
 			}
+		}
 
-			// Add the server type and version.
-			$types = array(
-				'valkey_version' => 'Valkey',
-				'keydb_version' => 'KeyDB',
-				'dragonfly_version' => 'Dragonfly',
-				'redis_version' => 'Redis',
-			);
+		// Add the server type and version.
+		$types = array(
+			'valkey_version' => 'Valkey',
+			'keydb_version' => 'KeyDB',
+			'dragonfly_version' => 'Dragonfly',
+			'redis_version' => 'Redis',
+		);
 
-			foreach ( $types as $key => $type ) {
-				if ( isset( $info['Server'][ $key ] ) ) {
-					$status['info']['Server']['version'] = "$type {$info[ 'Server' ][ $key ]}";
-					break;
-				}
+		foreach ( $types as $key => $type ) {
+			if ( isset( $info['Server'][ $key ] ) ) {
+				$status['info']['Server']['version'] = "$type {$info[ 'Server' ][ $key ]}";
+				break;
 			}
 		}
 
