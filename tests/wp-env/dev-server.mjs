@@ -258,6 +258,13 @@ const startServer = async () => {
         console.log(`Starting WP-ENV Dev Server${process.env.CI ? ' (CI mode, skipping updates)' : ''}`);
         await run('npx', wpEnvArgs);
 
+        // Wait for containers to be fully ready (MySQL needs time to initialize)
+        console.log('Waiting for containers to be ready...');
+        await retry(async () => {
+            await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'db', 'check'], { silent: true });
+        }, 10, 3000);
+        console.log('Containers ready');
+
         // Run redis-cli installation and permalink setup with retry logic
         console.log('Configuring environment...');
 
