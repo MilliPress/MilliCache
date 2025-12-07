@@ -14,14 +14,10 @@ const WP_ARTIFACTS_PATH = process.env.WP_ARTIFACTS_PATH ?? join(process.cwd(), '
 
 class PerformanceReporter implements Reporter {
     private shard?: FullConfig['shard'];
-    private allResults: Record<string, { title: string; results: Record<string, number[]>[] }> = {};
+    private allResults: Record<string, { title: string; results: Record<string, Record<string, number[]>>[] }> = {};
 
     /**
      * Formats performance values based on the metric key.
-     *
-     * @param value - The performance value.
-     * @param key - The metric name.
-     * @returns A formatted string representing the metric value.
      */
     private formatValue(value: number, key: string): string {
         switch (key) {
@@ -30,29 +26,16 @@ class PerformanceReporter implements Reporter {
             case 'wpDbQueries':
                 return value.toFixed(0);
             case 'wpMemoryUsage':
-                return `${(value / 1e6).toFixed(2)} MB`; // Convert to MB
+                return `${(value / 1e6).toFixed(2)} MB`;
             default:
                 return `${value.toFixed(2)} ms`;
         }
     }
 
-    /**
-     * This method is called when the test run begins.
-     * It sets up configuration-related data, such as the shard information.
-     *
-     * @param config - The full configuration of the test run.
-     */
     onBegin(config: FullConfig): void {
         this.shard = config.shard;
     }
 
-    /**
-     * This method is called at the end of each test case.
-     * It captures and stores performance results in the allResults object.
-     *
-     * @param test - The current test case.
-     * @param result - The result of the test case.
-     */
     onTestEnd(test: TestCase, result: TestResult): void {
         const performanceResults = result.attachments.find(
             (attachment) => attachment.name === 'results'
@@ -67,34 +50,31 @@ class PerformanceReporter implements Reporter {
         }
     }
 
-    /**
-     * This method is called at the end of all tests.
-     * It aggregates results and writes them to a JSON file for further analysis.
-     *
-     * @param result - The final result of the test run.
-     */
     onEnd(result: FullResult): void {
         if (!Object.keys(this.allResults).length) return;
 
-        // Display shard info if available
+        // Display header
         if (this.shard) {
-            console.log(`\nPerformance Test Results ${this.shard.current}/${this.shard.total}`);
+            console.log(`\nMilliCache Performance Results ${this.shard.current}/${this.shard.total}`);
         } else {
-            console.log('\nPerformance Test Results');
+            console.log('\nMilliCache Performance Results');
         }
         console.log(`Status: ${result.status}`);
 
-        const summary: Array<{ file: string; title: string; results: Record<string, number[]> }> = [];
+        const summary: Array<{ file: string; title: string; results: Record<string, Record<string, number[]>> }> = [];
 
         for (const [file, { title, results }] of Object.entries(this.allResults)) {
             const aggregatedResults = this.aggregateResults(results);
 
-            // Create data for console.table
-            // @ts-ignore
+            // Display results
             const tableData = this.formatTableData(aggregatedResults);
-            console.table(tableData);
+            if (tableData.length > 0) {
+                console.table(tableData);
 
-            // @ts-ignore
+                // Show speedup summary
+                this.showSpeedupSummary(aggregatedResults);
+            }
+
             summary.push({ file, title, results: aggregatedResults });
         }
 
@@ -102,26 +82,38 @@ class PerformanceReporter implements Reporter {
     }
 
     /**
-     * Aggregates the results by plugin and metric.
-     *
-     * @param results - The raw test results.
-     * @returns Aggregated results.
+     * Show a quick speedup summary in the console.
      */
-    private aggregateResults(results: Record<string, number[]>[]): Record<string, Record<string, number[]>> {
-        return results.reduce((acc, pluginResults) => {
-            for (const [plugin, metrics] of Object.entries(pluginResults)) {
-                acc[plugin] ??= {};
+    private showSpeedupSummary(results: Record<string, Record<string, number[]>>): void {
+        const nocache = results['nocache'];
+        const millicache = results['millicache'];
 
-                // Ensure metrics is either an array or an object
+        if (nocache?.timeToFirstByte && millicache?.timeToFirstByte) {
+            const nocacheTtfb = median(nocache.timeToFirstByte);
+            const millicacheTtfb = median(millicache.timeToFirstByte);
+
+            if (millicacheTtfb > 0) {
+                const speedup = nocacheTtfb / millicacheTtfb;
+                console.log(`\n  TTFB Speedup: ${speedup.toFixed(2)}x faster with MilliCache`);
+            }
+        }
+    }
+
+    /**
+     * Aggregates the results by scenario and metric.
+     */
+    private aggregateResults(results: Record<string, Record<string, number[]>>[]): Record<string, Record<string, number[]>> {
+        return results.reduce((acc, scenarioResults) => {
+            for (const [scenario, metrics] of Object.entries(scenarioResults)) {
+                acc[scenario] ??= {};
+
                 for (const [metricKey, metricValues] of Object.entries(metrics)) {
-                    acc[plugin][metricKey] ??= [];
+                    acc[scenario][metricKey] ??= [];
 
                     if (Array.isArray(metricValues)) {
-                        // Spread array of values
-                        acc[plugin][metricKey].push(...metricValues);
+                        acc[scenario][metricKey].push(...metricValues);
                     } else if (typeof metricValues === 'number') {
-                        // If the metric value is a single number, push it directly
-                        acc[plugin][metricKey].push(metricValues);
+                        acc[scenario][metricKey].push(metricValues);
                     }
                 }
             }
@@ -130,15 +122,12 @@ class PerformanceReporter implements Reporter {
     }
 
     /**
-     * Formats the results into a structure suitable for displaying using console.table.
-     *
-     * @param aggregatedResults - The aggregated results by plugin and metric.
-     * @returns A list of rows formatted for console.table.
+     * Formats the results for console.table display.
      */
     private formatTableData(aggregatedResults: Record<string, Record<string, number[]>>): Array<Record<string, string>> {
-        return Object.keys(aggregatedResults).map((plugin) => {
-            const row: Record<string, string> = { Plugin: plugin };
-            for (const [metric, values] of Object.entries(aggregatedResults[plugin])) {
+        return Object.keys(aggregatedResults).map((scenario) => {
+            const row: Record<string, string> = { Scenario: scenario };
+            for (const [metric, values] of Object.entries(aggregatedResults[scenario])) {
                 row[metric] = this.formatValue(median(values), metric);
             }
             return row;
@@ -146,22 +135,30 @@ class PerformanceReporter implements Reporter {
     }
 
     /**
-     * Writes the summary results to a JSON file in the WP artifacts path.
-     *
-     * @param summary - The aggregated summary data to be written to the file.
+     * Writes the results to a JSON file.
      */
-    private writeResultsToFile(summary: Array<{ file: string; title: string; results: Record<string, number[]> }>): void {
+    private writeResultsToFile(summary: Array<{ file: string; title: string; results: Record<string, Record<string, number[]>> }>): void {
         const artifactsPath = WP_ARTIFACTS_PATH;
 
-        // Ensure the directory exists
         if (!existsSync(artifactsPath)) {
             mkdirSync(artifactsPath, { recursive: true });
         }
 
-        const summaryFilePath = join(artifactsPath, 'performance-results.json');
+        // Output format compatible with results.js
+        const output = {
+            metadata: {
+                warmUpRuns: Number(process.env.WARMUP_RUNS) || 3,
+                iterations: Number(process.env.TEST_ITERATIONS) || 15,
+                timestamp: new Date().toISOString(),
+                commitSha: process.env.GITHUB_SHA,
+            },
+            scenarios: summary.length > 0 ? summary[0].results : {},
+        };
+
+        const summaryFilePath = join(artifactsPath, 'performance-raw.json');
         try {
-            writeFileSync(summaryFilePath, JSON.stringify(summary, null, 2));
-            console.log(`Results written to ${summaryFilePath}`);
+            writeFileSync(summaryFilePath, JSON.stringify(output, null, 2));
+            console.log(`\nResults written to ${summaryFilePath}`);
         } catch (error) {
             console.error(`Error writing results: ${(error as Error).message}`);
         }

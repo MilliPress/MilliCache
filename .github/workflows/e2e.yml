@@ -1,4 +1,4 @@
-name: E2E & Performance Tests
+name: E2E & MilliCache Performance
 
 on:
   workflow_call:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   e2e:
-    name: E2E & Performance
+    name: E2E & Performance Regression
     timeout-minutes: 25
     runs-on: ubuntu-latest
     env:
@@ -104,11 +104,11 @@ jobs:
           if-no-files-found: ignore
           retention-days: 5
 
-      # ---------- Performance (HEAD) ----------
-      - name: Run Performance Playwright Tests (HEAD)
+      # ---------- MilliCache Performance (HEAD) ----------
+      - name: Run MilliCache Performance Tests (HEAD)
         run: |
           npm run env:e2e:performance
-          mv "$WP_ARTIFACTS_PATH/performance-results.json" "${{ runner.temp }}/results_after.json"
+          mv "$WP_ARTIFACTS_PATH/performance-raw.json" "${{ runner.temp }}/results_after.json"
 
       # ---------- Switch to BASE without restarting wp-env ----------
       - name: Resolve BASE SHA
@@ -137,18 +137,18 @@ jobs:
           composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
           npm run build
 
-      - name: Run Performance Playwright Tests (BASE)
+      - name: Run MilliCache Performance Tests (BASE)
         run: |
           npm run env:e2e:performance || true
-          if [ -f "$WP_ARTIFACTS_PATH/performance-results.json" ]; then
-            mv "$WP_ARTIFACTS_PATH/performance-results.json" "${{ runner.temp }}/results_before.json"
+          if [ -f "$WP_ARTIFACTS_PATH/performance-raw.json" ]; then
+            mv "$WP_ARTIFACTS_PATH/performance-raw.json" "${{ runner.temp }}/results_before.json"
           fi
 
-      # ---------- Restore HEAD & compare ----------
+      # ---------- Compare & Detect Regression ----------
       - name: Reset to original commit
         run: git reset --hard $GITHUB_SHA
 
-      - name: Compare perf results
+      - name: Compare performance and detect regression
         run: |
           if [ -f "${{ runner.temp }}/results_before.json" ]; then
             npm run env:e2e:performance:results "${{ runner.temp }}/results_after.json" "${{ runner.temp }}/results_before.json"

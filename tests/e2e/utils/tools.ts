@@ -66,6 +66,27 @@ export async function networkDeactivatePlugin(slug = 'millicache') {
 }
 
 /**
+ * Removes the advanced-cache.php drop-in to ensure no page caching.
+ * This is important for accurate "nocache" baseline measurements.
+ */
+export async function removeAdvancedCacheDropIn() {
+    try {
+        // Remove the advanced-cache.php drop-in via shell command
+        await runWpCliCommand(`eval "
+            \\$file = WP_CONTENT_DIR . '/advanced-cache.php';
+            if (file_exists(\\$file)) {
+                unlink(\\$file);
+                echo 'Removed advanced-cache.php';
+            } else {
+                echo 'No advanced-cache.php found';
+            }
+        "`);
+    } catch (error) {
+        console.error('Failed to remove advanced-cache.php:', error);
+    }
+}
+
+/**
  * Validate a header value.
  *
  * @param response
