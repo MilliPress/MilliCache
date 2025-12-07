@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 
 /**
  * Get the URL path for a category by slug.
- * This handles the varying permalink structures in multisite (e.g., /category/slug/ vs /blog/category/slug/).
+ * This handles the varying permalink structures in multisite (e.g., /category/slug/ vs. /blog/category/slug/).
  *
  * @param slug The category slug (default: 'uncategorized')
  * @returns The URL path for the category
@@ -12,16 +12,15 @@ export async function getCategoryUrl(slug = 'uncategorized'): Promise<string> {
     const output = await runWpCliCommand(
         `term list category -- --slug=${slug} --field=url`
     );
-    // Extract the URL from output (it may contain npm/wp-env logging)
-    // Handles both /category/slug/ and /blog/category/slug/ patterns
-    const urlMatch = output.match(/https?:\/\/[^\s]+(?:\/blog)?\/category\/[^\s]+\//);
-    if (!urlMatch) {
-        // Fallback to default path if URL not found
-        return `/category/${slug}/`;
+    // Extract the URL from the output - look for lines starting with http
+    const lines = output.split('\n');
+    const urlLine = lines.find(line => line.trim().startsWith('http'));
+    if (urlLine) {
+        const url = new URL(urlLine.trim());
+        return url.pathname;
     }
-    // Parse the URL and extract just the path
-    const url = new URL(urlMatch[0]);
-    return url.pathname;
+    // Fallback to default path if URL not found
+    return `/category/${slug}/`;
 }
 
 /**
