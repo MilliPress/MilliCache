@@ -44,15 +44,9 @@ jobs:
           key: ${{ runner.os }}-composer-e2e-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-e2e-
 
-      - name: Cache WP-ENV
-        uses: actions/cache@v4
-        with:
-          path: |
-            /home/runner/wp-env
-            /home/runner/.wp-env
-            /home/runner/.wp-cli
-          key: ${{ runner.os }}-wp-env-${{ hashFiles('.wp-env.json', 'tests/wp-env/docker-compose.custom.yml') }}-v2
-          restore-keys: ${{ runner.os }}-wp-env-
+      # NOTE: WP-ENV caching removed - causes mismatch issues when Docker state is ephemeral
+      # The cached config tells wp-env to skip setup, but Docker volumes are empty
+      # Keeping other caches (Composer, Playwright) which don't have this problem
 
       - name: Setup Node
         uses: actions/setup-node@v4
