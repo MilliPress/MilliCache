@@ -134,7 +134,6 @@ final class MilliCache {
 	private function define_cache_hooks() {
 		// Fundamental cache clearing hooks.
 		$this->loader->add_action( 'clean_post_cache', $this, 'clear_post_cache' );
-		$this->loader->add_action( 'before_delete_post', $this, 'clear_post_cache' );
 		$this->loader->add_action( 'transition_post_status', $this, 'transition_post_status', 10, 3 );
 
 		// Register options that clear the full site cache.
@@ -298,11 +297,7 @@ final class MilliCache {
 			$post = get_post( $post );
 		}
 
-		if ( ! $post instanceof \WP_Post ) {
-			return;
-		}
-
-		if ( ! in_array( $post->post_status, array( 'publish', 'trash' ), true ) ) {
+		if ( ! $post instanceof \WP_Post || 'publish' !== $post->post_status ) {
 			return;
 		}
 
