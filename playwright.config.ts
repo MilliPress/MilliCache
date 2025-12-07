@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 
 require('dotenv').config();
 
-process.env.TEST_ITERATIONS ??= '15';
+process.env.TEST_ITERATIONS ??= '50';
 process.env.WP_ARTIFACTS_PATH ??= join( process.cwd(), 'artifacts' );
 process.env.STORAGE_STATE_PATH ??= join(
     process.env.WP_ARTIFACTS_PATH,

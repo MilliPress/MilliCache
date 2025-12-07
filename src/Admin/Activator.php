@@ -6,7 +6,7 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Admin
  */
 
 namespace MilliCache\Admin;
@@ -22,10 +22,10 @@ use MilliCache\Core\Settings;
  *
  * @since      1.0.0
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Admin
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-class Activator {
+final class Activator {
 
 	/**
 	 * Activate the plugin.

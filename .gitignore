@@ -2,6 +2,7 @@
 /vendor/
 /artifacts/
 node_modules/
+.phpunit.cache/
 
 # Playwright
 /tests/wp-env/plugins/*/*

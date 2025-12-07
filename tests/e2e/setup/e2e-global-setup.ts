@@ -33,24 +33,9 @@ export default async function globalSetup() {
         console.log('Authenticating user...');
         await requestUtils.setupRest();
 
-        // Add a delay to ensure file is written completely
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Verify that the auth file exists and has content
-        if (fs.existsSync(process.env.WP_AUTH_STORAGE)) {
-            const stats = fs.statSync(process.env.WP_AUTH_STORAGE);
-            console.log(`Auth file exists. Size: ${stats.size} bytes`);
-
-            if (stats.size === 0) {
-                console.error('Auth file is empty!');
-            } else {
-                // Optionally read and log cookies count (not the values for security)
-                const content = fs.readFileSync(process.env.WP_AUTH_STORAGE, 'utf8');
-                const data = JSON.parse(content);
-                console.log(`Auth file contains ${data.cookies?.length || 0} cookies`);
-            }
-        } else {
-            console.error('Auth file was not created!');
+        // Verify auth file was created
+        if (!fs.existsSync(process.env.WP_AUTH_STORAGE)) {
+            throw new Error('Auth file was not created!');
         }
 
         await requestContext.dispose();

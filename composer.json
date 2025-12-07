@@ -13,6 +13,7 @@
         "php": ">=7.4"
     },
     "require-dev": {
+        "millipress/millirules": "^0.4.0",
         "predis/predis": "^2.2",
         "wp-coding-standards/wpcs": "^3.0",
         "phpcompatibility/phpcompatibility-wp": "*",
@@ -23,31 +24,40 @@
         "szepeviktor/phpstan-wordpress": "^1.3",
         "swissspidy/phpstan-no-private": "^0.2.0",
         "roave/security-advisories": "dev-latest",
-        "coenjacobs/mozart": "^0.7.1"
+        "pestphp/pest": "^2.0",
+        "mockery/mockery": "^1.6"
     },
     "autoload": {
         "psr-4": {
             "MilliCache\\": "src/"
+        },
+        "classmap": [
+            "deps/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MilliCache\\Tests\\": "tests/Unit/"
         }
     },
     "suggest": {
         "ext-zlib": "Allows MilliCache to compress the cache with zlib."
     },
     "scripts": {
-        "test": "composer fix && composer lint && composer phpstan",
-        "phpstan": "phpstan analyse -c phpstan.neon --memory-limit 1G",
-        "lint": "phpcs --standard=phpcs.xml -s",
-        "fix": "phpcbf --standard=phpcs.xml",
+        "test": "composer test:fix && composer test:lint && composer test:phpstan && composer test:unit",
+        "test:unit": "pest --colors=always",
+        "test:coverage": "XDEBUG_MODE=coverage pest --coverage --min=80",
+        "test:phpstan": "phpstan analyse -c phpstan.neon --memory-limit 1G",
+        "test:lint": "phpcs --standard=phpcs.xml -s",
+        "test:fix": "phpcbf --standard=phpcs.xml",
+        "strauss": "@php bin/strauss.phar",
         "post-install-cmd": [
-            "@mozart-if-present",
-            "composer dump-autoload"
+            "@strauss",
+            "@composer dump-autoload"
         ],
         "post-update-cmd": [
-            "@mozart-if-present",
-            "composer dump-autoload"
-        ],
-        "mozart-if-present": [
-            "bash -c \"if [ -f 'vendor/bin/mozart' ]; then vendor/bin/mozart compose; fi\""
+            "@strauss",
+            "@composer dump-autoload"
         ],
         "cghooks": [
             "vendor/bin/cghooks"
@@ -57,17 +67,20 @@
         "vendor-dir": "vendor",
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true,
-            "phpstan/extension-installer": true
+            "phpstan/extension-installer": true,
+            "pestphp/pest-plugin": true
         }
     },
     "extra": {
-        "mozart": {
-            "dep_namespace": "MilliCache\\Deps\\",
-            "dep_directory": "/src/Deps/",
-            "classmap_directory": "/classes/",
+        "strauss": {
+            "target_directory": "deps",
+            "namespace_prefix": "MilliCache\\Deps\\",
             "classmap_prefix": "MilliCache_",
+            "classmap_output": false,
+            "delete_vendor_packages": true,
             "packages": [
-                "predis/predis"
+                "predis/predis",
+                "millipress/millirules"
             ]
         },
         "hooks": {

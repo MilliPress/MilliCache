@@ -51,6 +51,15 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 }
 
 /**
+ * Load MilliPress API functions.
+ *
+ * @since 1.0.0
+ */
+if ( file_exists( __DIR__ . '/functions.php' ) ) {
+	require_once __DIR__ . '/functions.php';
+}
+
+/**
  * The code that runs during plugin activation.
  *
  * @since 1.0.0
@@ -85,6 +94,15 @@ register_deactivation_hook( MILLICACHE_FILE, 'deactivate_millicache' );
 function run_millicache() {
 	$plugin = new MilliCache\MilliCache();
 	$plugin->run();
+
+	/**
+	 * Fires when MilliCache is fully loaded and ready.
+	 *
+	 * Use this hook to register custom rules, conditions, and actions.
+	 *
+	 * @since 1.1.0
+	 */
+	do_action( 'millicache_loaded' );
 }
 
 run_millicache();

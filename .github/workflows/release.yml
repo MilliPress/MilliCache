@@ -1,10 +1,10 @@
-name: Build & Publish Release
+name: Release
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'SemVer tag (e.g. v1.2.3)'
+        description: 'Version (e.g., 1.2.0 or 1.2.0-rc.1)'
         required: true
         type: string
       prerelease:
@@ -20,114 +20,323 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
-  call-workflow-e2e-test:
-   name: Run Playwright e2e-Tests
-   uses: ./.github/workflows/tests.yml
+  test:
+    name: Run Tests
+    uses: ./.github/workflows/e2e.yml
 
   release:
-    name: Build & tag dist
-    needs: call-workflow-e2e-test
+    name: Build & Release
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Derive version & sanity checks
+      - name: Validate version format
         id: meta
         run: |
-          set -euo pipefail
-          VER="${{ inputs.version }}"
-          if ! [[ "$VER" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9\.-]+)?$ ]]; then
-            echo "Version must look like v1.2.3 or v1.2.3-rc.2"; exit 1
-          fi
-          echo "VER=$VER" >> $GITHUB_OUTPUT
+          VERSION="${{ inputs.version }}"
+          # Remove 'v' prefix if provided
+          VERSION="${VERSION#v}"
 
-      - name: Checkout source branch
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9\.-]+)?$ ]]; then
+            echo "::error::Version must be in format X.Y.Z or X.Y.Z-suffix (e.g., 1.2.0 or 1.2.0-rc.1)"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure Git
         run: |
-          git config user.name  "github-actions[bot]"
+          git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Fail early if tag already exists on remote
-          git fetch --tags --force
-          if git ls-remote --tags origin | grep -q "refs/tags/${{ steps.meta.outputs.VER }}$"; then
-            echo "Tag ${{ steps.meta.outputs.VER }} already exists on origin"; exit 1
+
+          # Check if tag already exists
+          if git ls-remote --tags origin | grep -q "refs/tags/${{ steps.meta.outputs.tag }}$"; then
+            echo "::error::Tag ${{ steps.meta.outputs.tag }} already exists"
+            exit 1
           fi
 
-      # Build (Node)
-      - name: Use Node.js from .nvmrc
+      - name: Get previous tag
+        id: previous
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
+
+          if [ -n "$PREV_TAG" ]; then
+            echo "Previous release: $PREV_TAG"
+          else
+            echo "No previous release found (initial release)"
+          fi
+
+      - name: Determine release type
+        id: release_type
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          PREV_TAG="${{ steps.previous.outputs.tag }}"
+
+          # Check for prerelease suffix
+          if [[ "$VERSION" =~ -[A-Za-z] ]]; then
+            echo "type=prerelease" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "type=initial" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          PREV_VERSION="${PREV_TAG#v}"
+          # Remove any prerelease suffix for comparison
+          PREV_VERSION="${PREV_VERSION%%-*}"
+          BASE_VERSION="${VERSION%%-*}"
+
+          IFS='.' read -r PREV_MAJOR PREV_MINOR PREV_PATCH <<< "$PREV_VERSION"
+          IFS='.' read -r NEW_MAJOR NEW_MINOR NEW_PATCH <<< "$BASE_VERSION"
+
+          if [ "$NEW_MAJOR" != "$PREV_MAJOR" ]; then
+            echo "type=major" >> $GITHUB_OUTPUT
+          elif [ "$NEW_MINOR" != "$PREV_MINOR" ]; then
+            echo "type=minor" >> $GITHUB_OUTPUT
+          else
+            echo "type=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          PREV_TAG="${{ steps.previous.outputs.tag }}"
+
+          # Get commits since last tag
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="HEAD"
+          else
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          # Initialize changelog sections
+          FEATURES=""
+          FIXES=""
+          DOCS=""
+          PERF=""
+          REFACTOR=""
+          OTHER=""
+
+          # Parse conventional commits
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+
+            # Extract commit message (remove hash prefix if present)
+            MSG="$line"
+
+            # Categorize by conventional commit prefix
+            if [[ "$MSG" =~ ^feat(\(.+\))?:\ (.+)$ ]]; then
+              FEATURES="${FEATURES}- ${BASH_REMATCH[2]}\n"
+            elif [[ "$MSG" =~ ^fix(\(.+\))?:\ (.+)$ ]]; then
+              FIXES="${FIXES}- ${BASH_REMATCH[2]}\n"
+            elif [[ "$MSG" =~ ^docs?(\(.+\))?:\ (.+)$ ]]; then
+              DOCS="${DOCS}- ${BASH_REMATCH[2]}\n"
+            elif [[ "$MSG" =~ ^perf(\(.+\))?:\ (.+)$ ]]; then
+              PERF="${PERF}- ${BASH_REMATCH[2]}\n"
+            elif [[ "$MSG" =~ ^refactor(\(.+\))?:\ (.+)$ ]]; then
+              REFACTOR="${REFACTOR}- ${BASH_REMATCH[2]}\n"
+            elif [[ "$MSG" =~ ^(chore|build|ci|test|style)(\(.+\))?:\ (.+)$ ]]; then
+              : # Skip maintenance commits from changelog
+            else
+              # Include non-conventional commits in Other
+              OTHER="${OTHER}- ${MSG}\n"
+            fi
+          done < <(git log $RANGE --pretty=format:"%s" --no-merges)
+
+          # Get merged PRs for additional context
+          if [ -n "$PREV_TAG" ]; then
+            echo "Fetching merged PRs..."
+            PRS=$(gh pr list --state merged --base main --search "merged:>=$(git log -1 --format=%ci $PREV_TAG | cut -d' ' -f1)" --json number,title --jq '.[] | "- \(.title) (#\(.number))"' 2>/dev/null || echo "")
+          fi
+
+          # Build changelog content
+          {
+            echo "## What's Changed"
+            echo ""
+
+            if [ -n "$FEATURES" ]; then
+              echo "### Features"
+              printf "$FEATURES"
+              echo ""
+            fi
+
+            if [ -n "$FIXES" ]; then
+              echo "### Bug Fixes"
+              printf "$FIXES"
+              echo ""
+            fi
+
+            if [ -n "$PERF" ]; then
+              echo "### Performance"
+              printf "$PERF"
+              echo ""
+            fi
+
+            if [ -n "$REFACTOR" ]; then
+              echo "### Refactoring"
+              printf "$REFACTOR"
+              echo ""
+            fi
+
+            if [ -n "$DOCS" ]; then
+              echo "### Documentation"
+              printf "$DOCS"
+              echo ""
+            fi
+
+            if [ -n "$OTHER" ]; then
+              echo "### Other Changes"
+              printf "$OTHER"
+              echo ""
+            fi
+
+            if [ -n "$PREV_TAG" ]; then
+              echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${VERSION}"
+            fi
+          } > /tmp/changelog.md
+
+          echo "Generated changelog:"
+          cat /tmp/changelog.md
+
+      - name: Download performance results
+        uses: actions/download-artifact@v4
+        with:
+          name: performance-results
+          path: /tmp/performance
+        continue-on-error: true
+
+      - name: Append performance summary to changelog
+        run: |
+          if [ -f /tmp/performance/performance-results.md ]; then
+            echo "" >> /tmp/changelog.md
+            echo "### Performance" >> /tmp/changelog.md
+            echo "" >> /tmp/changelog.md
+            cat /tmp/performance/performance-results.md >> /tmp/changelog.md
+            echo "Performance summary appended to changelog"
+          else
+            echo "No performance results found, skipping"
+          fi
+
+      - name: Update version in plugin
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+
+          # Update plugin header version
+          sed -i "s/^\( \* Version: *\).*/\1$VERSION/" millicache.php
+
+          # Update MILLICACHE_VERSION constant
+          sed -i "s/define( 'MILLICACHE_VERSION', '[^']*' );/define( 'MILLICACHE_VERSION', '$VERSION' );/" millicache.php
+
+          echo "Updated millicache.php to version $VERSION"
+          git diff millicache.php
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
 
-      - name: Install JS deps
-        run: npm ci
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
 
-      - name: Build styles and scripts
-        run: npm run build
-
-      - name: Clean up node_modules
-        run: rm -rf node_modules
-
-      # Build (PHP deps)
-      - name: Install PHP deps (no-dev) for bundling
-        run: composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader --classmap-authoritative
-
-      # Assemble Dist Tree
-      - name: Assemble clean dist tree
+      - name: Build assets
         run: |
-          set -euo pipefail
+          npm ci
+          npm run build
+          rm -rf node_modules
+
+      - name: Install production dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --classmap-authoritative
+
+      - name: Commit version bump
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          git add millicache.php
+          git commit -m "chore(release): bump version to $VERSION" || echo "No version changes to commit"
+          git push origin ${{ github.ref_name }}
+
+      - name: Create dist build
+        run: |
           rm -rf dist && mkdir dist
-          
-          # 1) start from tracked files filtered by .gitattributes export-ignore
+
+          # Export tracked files (respects .gitattributes export-ignore)
           git archive --format=tar HEAD | tar -x -C dist
-          
-          # 2) add generated artifacts not tracked in git
-          [ -d build ]  && rsync -a build/  dist/build/
+
+          # Add build artifacts
+          [ -d build ] && rsync -a build/ dist/build/
           [ -d vendor ] && rsync -a vendor/ dist/vendor/
-          
-          # 3) Output folder and file list of the assembled dist tree
-          echo "Dist tree:" && find dist -maxdepth 1 -mindepth 1 -printf '%P\n' | sort
 
-      # Create orphan dist commit, tag, push tag
-      - name: Create orphan dist commit and final tag
+          echo "Dist contents:"
+          ls -la dist/
+
+      - name: Create release tag
         run: |
-          set -euo pipefail
-          VER="${{ steps.meta.outputs.VER }}"
-          
-          # Create an orphan branch (empty index/history)
-          git switch --orphan "dist/${VER}"
+          TAG="${{ steps.meta.outputs.tag }}"
 
-          # Only keep the files from the dist directory
+          # Create orphan branch for dist
+          git switch --orphan "dist/${TAG}"
           git rm -rf . >/dev/null 2>&1 || true
+
+          # Move dist contents to root
           rsync -a dist/ . --remove-source-files
           rm -rf dist/
-  
-          # Add these files and commit
-          git add -A
-          git commit -m "Dist build for ${VER}"
-          
-          # Create and push an annotated tag
-          git tag -a "${VER}" -m "Release ${VER}"
-          git push origin "refs/tags/${VER}"
 
-      - name: Create ZIP asset
+          # Commit and tag
+          git add -A
+          git commit -m "Release ${TAG}"
+          git tag -a "${TAG}" -m "Release ${TAG}"
+          git push origin "refs/tags/${TAG}"
+
+      - name: Create release archive
         run: |
-          zip -rq "millicache-${{ steps.meta.outputs.VER }}.zip" .
-        working-directory: .
+          TAG="${{ steps.meta.outputs.tag }}"
+          zip -rq "millicache-${TAG}.zip" . -x ".git/*"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.meta.outputs.VER }}
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.tag }}
+          body_path: /tmp/changelog.md
           draft: ${{ inputs.draft }}
           prerelease: ${{ inputs.prerelease }}
-          files: |
-            millicache-${{ steps.meta.outputs.VER }}.zip
+          files: millicache-${{ steps.meta.outputs.tag }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release summary
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          TYPE="${{ steps.release_type.outputs.type }}"
+
+          {
+            echo "## Release ${TAG} Created"
+            echo ""
+            echo "| Property | Value |"
+            echo "|----------|-------|"
+            echo "| Version | ${TAG} |"
+            echo "| Type | ${TYPE} |"
+            echo "| Draft | ${{ inputs.draft }} |"
+            echo "| Prerelease | ${{ inputs.prerelease }} |"
+            echo ""
+            echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/${TAG})"
+          } >> $GITHUB_STEP_SUMMARY

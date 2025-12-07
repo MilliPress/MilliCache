@@ -1,6 +1,7 @@
-import { test } from './setup/e2e-wp-test';
-import { validateHeader, networkActivatePlugin } from "./utils/tools";
-import { login, logout } from "./utils/auth";
+import { test, expect } from './setup/e2e-wp-test';
+import { networkActivatePlugin } from './utils/tools';
+import { login, logout } from './utils/auth';
+import { FrontendPage } from './pages';
 
 /**
  * Set the test mode to serial.
@@ -20,41 +21,54 @@ test.beforeAll(async () => {
 });
 
 /**
- * Step 2: Dashboard Elements & Functionality
+ * Step 6: New Post Caching
  */
-test.describe('Step 6: Dashboard Elements & Functionality', () => {
-    let postId = null;
+test.describe('Step 6: New Post Caching', () => {
+    let postId: number | null = null;
 
     test('Create new page', async ({ admin, editor }) => {
         await admin.createNewPost({
             postType: 'page',
-            title: "MilliCache Test",
-            content: "This is a test post for MilliCache.",
-            showWelcomeGuide: false
+            title: 'MilliCache Test',
+            content: 'This is a test post for MilliCache.',
+            showWelcomeGuide: false,
         });
         postId = await editor.publishPost();
     });
 
-    test('Validate cache headers for new page', async ({ page }) => {
+    test('Validate cache headers for new page (logged-out)', async ({
+        page,
+    }) => {
+        // Logout and clear cookies to test as anonymous user
         await logout(page);
         await page.context().clearCookies();
-        const response1 = await page.goto('/millicache-test/');
-        await validateHeader(response1, 'status', 'miss');
-        const response2 = await page.reload();
-        await validateHeader(response2, 'status', 'hit');
+
+        const frontend = new FrontendPage(page);
+
+        // First request should be a cache miss
+        const response1 = await frontend.goto('/millicache-test/');
+        await expect(response1).toBeCacheMiss();
+
+        // Second request should be a cache hit
+        const response2 = await frontend.reload();
+        await expect(response2).toBeCacheHit();
     });
 
-    test('Login and validate "bypass" cache header', async ({ page }) => {
+    test('Validate cache bypass for logged-in users', async ({ page }) => {
         await login(page);
-        const response3 = await page.goto('/millicache-test/');
-        await validateHeader(response3, 'status', 'bypass');
+
+        const frontend = new FrontendPage(page);
+        const response = await frontend.goto('/millicache-test/');
+        await expect(response).toBeCacheBypassed();
     });
 
-    test('Delete the page', async ({ requestUtils }) => {
-        await requestUtils.rest({
-            method: 'DELETE',
-            path: `/wp/v2/pages/${postId}`,
-            params: { force: true },
-        });
+    test('Delete the test page', async ({ requestUtils }) => {
+        if (postId) {
+            await requestUtils.rest({
+                method: 'DELETE',
+                path: `/wp/v2/pages/${postId}`,
+                params: { force: true },
+            });
+        }
     });
 });

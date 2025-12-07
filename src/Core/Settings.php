@@ -2,14 +2,18 @@
 /**
  * Handles the settings storage for MilliCache.
  *
+ * @link       https://www.millipress.com
+ * @since      1.0.0
+ *
  * @package    MilliCache
- * @subpackage MilliCache/includes
- * @author     Philipp Wellmer <hello@millicache.com>
+ * @subpackage Core
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Core;
 
 use MilliCache\Engine;
+use MilliCache\Engine\Utilities\ServerVars;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -17,10 +21,10 @@ use MilliCache\Engine;
  * Handles the settings storage for MilliCache.
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Core
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-class Settings {
+final class Settings {
 
 	/**
 	 * The domain for which the settings are stored.
@@ -43,7 +47,7 @@ class Settings {
 	 * @access   public
 	 */
 	public function __construct() {
-		self::$domain = (string) preg_replace( '/[^a-zA-Z0-9_\-]/', '_', Engine::get_server_var( 'HTTP_HOST' ) );
+		self::$domain = (string) preg_replace( '/[^a-zA-Z0-9_\-]/', '_', ServerVars::get( 'HTTP_HOST' ) );
 
 		if ( function_exists( 'add_action' ) ) {
 			add_action( 'init', array( $this, 'register_settings' ) );
@@ -120,13 +124,14 @@ class Settings {
 					'grace' => MONTH_IN_SECONDS,
 					'unique' => array(),
 					'nocache_paths' => array(),
-					'nocache_cookies' => array( 'comment_author_*' ),
+					'nocache_cookies' => array( 'wp-*pass*', 'comment_author_*' ),
 					'ignore_cookies' => array( '_*' ),
 					'ignore_request_keys' => array( '_*', 'utm_*' ),
 					'skip_millicache_callback' => '',
 					'debug' => false,
 					'gzip' => true,
 				),
+				'rules' => array(),
 			)
 		);
 
@@ -359,7 +364,7 @@ class Settings {
 	 *
 	 * @return void
 	 */
-	public static function backup( string $module = null ): void {
+	public static function backup( ?string $module = null ): void {
 		$settings = new self();
 		$current_settings = $settings->get_settings( $module );
 
@@ -390,7 +395,7 @@ class Settings {
 	 *
 	 * @return bool True if the settings were restored, false otherwise.
 	 */
-	public static function restore_backup( string $module = null ): bool {
+	public static function restore_backup( ?string $module = null ): bool {
 		$backup = get_transient( 'millicache_settings_backup' );
 
 		if ( ! $backup ) {
@@ -413,7 +418,7 @@ class Settings {
 	 *
 	 * @return bool True if the settings are the default settings, false otherwise.
 	 */
-	public static function has_default_settings( string $module = null ): bool {
+	public static function has_default_settings( ?string $module = null ): bool {
 		$settings = new self();
 		return $settings->get_settings( $module, true ) === $settings->get_default_settings( $module );
 	}

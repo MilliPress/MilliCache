@@ -6,7 +6,8 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage Core
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Core;
@@ -25,10 +26,10 @@ use MilliCache\Deps\Predis\PredisException;
  *
  * @since      1.0.0
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage Core
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-final class Storage {
+class Storage {
 
 	/**
 	 * The Predis Client object.
@@ -258,39 +259,34 @@ final class Storage {
 	 */
 	public function get_cache( string $hash ): ?array {
 		try {
-			$cache = null;
-			$lock_status = '';
-
 			// Get the cache entry and lock status.
 			$key = $this->get_cache_key( $hash );
 
-			$this->client->transaction(
-				function ( $tx ) use ( $key, &$cache, &$lock_status ) {
+			$results = $this->client->transaction(
+				function ( $tx ) use ( $key ) {
 					// Get cache entry.
-					$cache = $this->client->hgetall( $key );
+					$tx->hgetall( $key );
 
 					// Get lock status.
-					$lock_status = $this->client->get( $key . '-lock' );
+					$tx->get( $key . '-lock' );
 				}
 			);
 
-			if ( ! $cache ) {
+			if ( ! is_array( $results ) || ! is_array( $results[0] ?? null ) ) {
 				return null;
 			}
 
-			// Sort out the flags.
-			$flags = array();
-			foreach ( array_keys( $cache ) as $key ) {
-				if ( strpos( (string) $key, $this->prefix . ':f:' ) === 0 ) {
-					$flags[] = $this->get_flag_key( (string) $key );
-				}
-			}
+			$cache = $results[0];
+			$lock_status = $results[1] ?? '';
+			$flags = array_filter(
+				array_keys( $cache ),
+				fn( $key ) => strpos( (string) $key, $this->prefix . ':f:' ) === 0
+			);
 
-			// Return the data, the flags and lock status.
 			return isset( $cache['data'] ) ? array(
 				(array) unserialize( $cache['data'] ),
-				$flags,
-				$lock_status ?? '',
+				array_map( array( $this, 'get_flag_key' ), $flags ),
+				$lock_status,
 			) : null;
 		} catch ( PredisException $e ) {
 			error_log( 'Unable to get cache from the storage server: ' . $e->getMessage() );
@@ -315,7 +311,7 @@ final class Storage {
 			$key = $this->get_cache_key( $hash );
 
 			/**
-			 * Fires before a page cache is stored in the storage server.
+			 * Fires before a cache entry is stored in the storage server.
 			 *
 			 * @since 1.0.0
 			 *
@@ -324,7 +320,7 @@ final class Storage {
 			 * @param array  $flags The flags associated with the cache.
 			 * @param mixed  $data The data to cache.
 			 */
-			do_action( 'millicache_cache_storing', $hash, $key, $flags, $data );
+			do_action( 'millicache_entry_storing', $hash, $key, $flags, $data );
 
 			// Serialize the data and calculate its size.
 			$serialized_data = serialize( $data );
@@ -355,12 +351,13 @@ final class Storage {
 					}
 
 					// Set the max expiration time.
-					$tx->expire( $key, Engine::$ttl + Engine::$grace );
+					$config = Engine::instance()->config();
+					$tx->expire( $key, $config->ttl + $config->grace );
 				}
 			);
 
 			/**
-			 * Fires after a page cache is stored in the storage server.
+			 * Fires after a cache entry is stored in the storage server.
 			 *
 			 * @since 1.0.0
 			 *
@@ -369,7 +366,7 @@ final class Storage {
 			 * @param array  $flags The flags associated with the cache.
 			 * @param mixed  $data The data to cache.
 			 */
-			do_action( 'millicache_cache_stored', $hash, $key, $flags, $data );
+			do_action( 'millicache_entry_stored', $hash, $key, $flags, $data );
 
 			return true;
 		} catch ( PredisException $e ) {
@@ -400,13 +397,13 @@ final class Storage {
 			}
 
 			/**
-			 * Fires before a page cache is deleted in the storage server.
+			 * Fires before a cache entry is deleted in the storage server.
 			 *
 			 * @param string $hash The cache URL hash.
 			 * @param string $key The cache key.
 			 * @param array  $flags The flags associated with the cache.
 			 */
-			do_action( 'millicache_cache_deleting', $hash, $key, $flags );
+			do_action( 'millicache_entry_deleting', $hash, $key, $flags );
 
 			$this->client->transaction(
 				function ( $tx ) use ( $key, $flags ) {
@@ -431,7 +428,7 @@ final class Storage {
 			);
 
 			/**
-			 * Fires after a page cache is deleted in the storage server.
+			 * Fires after a cache entry is deleted in the storage server.
 			 *
 			 * @since 1.0.0
 			 *
@@ -439,7 +436,7 @@ final class Storage {
 			 * @param string $key The cache key.
 			 * @param array  $flags The flags associated with the cache.
 			 */
-			do_action( 'millicache_cache_deleted', $hash, $key, $flags );
+			do_action( 'millicache_entry_deleted', $hash, $key, $flags );
 
 			return true;
 		} catch ( PredisException $e ) {

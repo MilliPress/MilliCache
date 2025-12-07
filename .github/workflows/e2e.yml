@@ -1,0 +1,174 @@
+name: E2E & MilliCache Performance
+
+on:
+  workflow_call:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: E2E & Performance Regression
+    timeout-minutes: 25
+    runs-on: ubuntu-latest
+    env:
+      WP_ARTIFACTS_PATH: ${{ github.workspace }}/artifacts
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-e2e-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-e2e-
+
+      - name: Cache WP-ENV
+        uses: actions/cache@v4
+        with:
+          path: |
+            /home/runner/wp-env
+            /home/runner/.wp-env
+            /home/runner/.wp-cli
+          key: ${{ runner.os }}-wp-env-${{ hashFiles('.wp-env.json', 'tests/wp-env/docker-compose.custom.yml') }}-v2
+          restore-keys: ${{ runner.os }}-wp-env-
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          cache: 'npm'
+          node-version-file: '.nvmrc'
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Cache Docker images
+        uses: ScribeMD/docker-cache@0.5.0
+        with:
+          key: docker-${{ runner.os }}-${{ hashFiles('.wp-env.json', 'tests/wp-env/docker-compose.custom.yml') }}
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Install dependencies (HEAD)
+        run: |
+          npm ci
+          composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
+      - name: Build styles and scripts (HEAD)
+        run: npm run build
+
+      - name: Start WordPress Environment
+        run: npm run env:start
+
+      - name: Run Playwright Tests (HEAD)
+        run: npm run env:e2e
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 5
+
+      # ---------- MilliCache Performance (HEAD) ----------
+      - name: Run MilliCache Performance Tests (HEAD)
+        run: |
+          npm run env:e2e:performance
+          mv "$WP_ARTIFACTS_PATH/performance-raw.json" "${{ runner.temp }}/results_after.json"
+
+      # ---------- Switch to BASE without restarting wp-env ----------
+      - name: Resolve BASE SHA
+        id: base
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT" = "pull_request" ] && [ -n "$PR_BASE" ]; then
+            echo "sha=$PR_BASE" >> $GITHUB_OUTPUT
+          else
+            echo "sha=$BEFORE" >> $GITHUB_OUTPUT
+          fi
+          echo "Base SHA: ${{ steps.base.outputs.sha }}"
+
+      - name: Switch repo to BASE (no env restart)
+        run: |
+          git fetch --prune
+          git reset --hard ${{ steps.base.outputs.sha }}
+
+      # If dependencies/assets differ on BASE, just rebuild; wp-env keeps running and picks up files.
+      - name: Install deps + build (BASE)
+        run: |
+          npm ci
+          composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+          npm run build
+
+      - name: Run MilliCache Performance Tests (BASE)
+        run: |
+          npm run env:e2e:performance || true
+          if [ -f "$WP_ARTIFACTS_PATH/performance-raw.json" ]; then
+            mv "$WP_ARTIFACTS_PATH/performance-raw.json" "${{ runner.temp }}/results_before.json"
+          fi
+
+      # ---------- Compare & Detect Regression ----------
+      - name: Reset to original commit
+        run: git reset --hard $GITHUB_SHA
+
+      - name: Compare performance and detect regression
+        run: |
+          if [ -f "${{ runner.temp }}/results_before.json" ]; then
+            npm run env:e2e:performance:results "${{ runner.temp }}/results_after.json" "${{ runner.temp }}/results_before.json"
+          else
+            npm run env:e2e:performance:results "${{ runner.temp }}/results_after.json"
+          fi
+
+      - name: Add workflow summary
+        if: always()
+        run: |
+          if [ -f "$WP_ARTIFACTS_PATH/performance-results.md" ]; then
+            cat "$WP_ARTIFACTS_PATH/performance-results.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: |
+            ${{ github.workspace }}/artifacts/performance-results.json
+            ${{ github.workspace }}/artifacts/performance-results.md
+          retention-days: 7

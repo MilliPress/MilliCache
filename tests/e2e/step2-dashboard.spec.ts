@@ -1,5 +1,6 @@
 import { test, expect } from './setup/e2e-wp-test';
-import { networkActivatePlugin } from "./utils/tools";
+import { networkActivatePlugin } from './utils/tools';
+import { AdminBarComponent, SettingsPage } from './pages';
 
 /**
  * Set the test mode to serial.
@@ -22,7 +23,7 @@ test.beforeAll(async () => {
  * Step 2: Dashboard Elements & Functionality
  */
 test.describe('Step 2: Dashboard Elements & Functionality', () => {
-    test('"At a Glance"-Widget is available', async ({ page, admin}) => {
+    test('"At a Glance"-Widget is available', async ({ page, admin }) => {
         await admin.visitAdminPage('/');
         const element = page.locator('#dashboard_right_now .cache-count');
         await expect(element).toBeVisible();
@@ -30,41 +31,31 @@ test.describe('Step 2: Dashboard Elements & Functionality', () => {
 
     test('Adminbar menu is available', async ({ page, admin }) => {
         await admin.visitAdminPage('/');
-        const element = page.locator('#wp-admin-bar-millicache');
-        await expect(element).toBeVisible();
+        const adminBar = new AdminBarComponent(page);
+        await expect(adminBar.millicacheMenu).toBeVisible();
     });
 
     test('Settings page is available', async ({ page, admin }) => {
-        await admin.visitAdminPage('/options-general.php?page=millicache');
+        const settings = new SettingsPage(page, admin);
 
-        // React component is rendered.
-        const element = page.locator('#millicache-settings .components-panel');
-        await expect(element).toBeVisible();
+        // Navigate to settings page
+        await settings.goto();
 
-        // Open Settings Tab.
-        const settingsTab = page.locator('#tab-panel-0-settings');
-        await expect(settingsTab).toBeVisible();
-        await settingsTab.click();
+        // Open Settings Tab
+        await settings.openSettingsTab();
 
-        // Get the element that has the text "Grace Period".
-        const grace = page.locator('span:has-text("Grace Period")');
-        await expect(grace).toBeVisible();
+        // Get current value and set to a different value to trigger change detection
+        const currentGrace = await settings.getGracePeriod();
+        const newValue = currentGrace === '2' ? '3' : '2';
 
-        // Get the grace input field.
-        const graceInput = grace
-            .locator('xpath=ancestor::div[contains(@class, "components-unit-control-wrapper")]//input');
-        await expect(graceInput).toBeVisible();
+        // Set the new value
+        await settings.setGracePeriod(newValue);
 
-        // Change the value of graceInput.
-        await graceInput.fill('2');
-        await expect(graceInput).toHaveValue('2');
+        // Save settings
+        await settings.saveSettings();
 
-        // Click the button that has the text "Save Changes".
-        const saveButton = page.locator('button:has-text("Save Settings")');
-        await expect(saveButton).toBeVisible();
-        await saveButton.click();
-
-        // Check if the value of graceInput is still 2
-        await expect(graceInput).toHaveValue('2');
+        // Verify the value persisted
+        const savedGrace = await settings.getGracePeriod();
+        expect(savedGrace).toBe(newValue);
     });
 });

@@ -9,7 +9,7 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache;
@@ -31,7 +31,6 @@ use MilliCache\Core\Loader;
  *
  * @since      1.0.0
  * @package    MilliCache
- * @subpackage MilliCache/includes
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class MilliCache {
@@ -117,10 +116,10 @@ final class MilliCache {
 	 */
 	private function load_dependencies() {
 		$this->loader = new Loader();
-		$this->engine = new Engine();
+		$this->engine = Engine::instance();
 
-		new CLI( $this->get_loader(), $this->get_plugin_name(), $this->version );
-		new Admin( $this->get_loader(), $this->get_plugin_name(), $this->version );
+		new CLI( $this->loader, $this->engine, $this->plugin_name, $this->version );
+		new Admin( $this->loader, $this->engine, $this->plugin_name, $this->version );
 	}
 
 	/**
@@ -133,11 +132,9 @@ final class MilliCache {
 	 * @return   void
 	 */
 	private function define_cache_hooks() {
-		// Caching hooks.
-		$this->loader->add_action( 'template_redirect', $this, 'set_cache_flags', 100 );
-
-		// Specific cache clearing hooks.
+		// Fundamental cache clearing hooks.
 		$this->loader->add_action( 'clean_post_cache', $this, 'clear_post_cache' );
+		$this->loader->add_action( 'before_delete_post', $this, 'clear_post_cache' );
 		$this->loader->add_action( 'transition_post_status', $this, 'transition_post_status', 10, 3 );
 
 		// Register options that clear the full site cache.
@@ -145,7 +142,7 @@ final class MilliCache {
 
 		// Register hooks that clear the full site cache.
 		foreach ( $this->get_clear_site_cache_hooks() as $hook => $priority ) {
-			$this->loader->add_action( $hook, $this->engine, 'clear_cache_by_site_ids', $priority, 0 );
+			$this->loader->add_action( $hook, $this->engine->clear(), 'sites', $priority, 0 );
 		}
 
 		// Cron events.
@@ -211,114 +208,6 @@ final class MilliCache {
 	 */
 	public function get_version(): string {
 		return $this->version;
-	}
-
-	/**
-	 * Get related flags for the current request.
-	 *
-	 * This method generates cache flags IDs based on the current context,
-	 * such as singular posts, home/front page, archives, etc.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @return array<string> An array of cache flags for the current context.
-	 */
-	public static function get_request_flags(): array {
-		$flags = array();
-
-		// Singular post/page/custom post type.
-		if ( is_singular() ) {
-			$post_id = get_queried_object_id();
-			if ( $post_id ) {
-				$flags[] = "post:$post_id";
-			}
-		}
-
-		// Home and Front Page.
-		if ( is_front_page() && is_home() ) {
-			$flags[] = 'home';
-			$flags[] = 'archive:post';
-		} elseif ( is_front_page() ) {
-			$flags[] = 'home';
-		} elseif ( is_home() ) {
-			$flags[] = 'archive:post';
-		}
-
-		// Archives.
-		if ( is_archive() ) {
-			if ( is_post_type_archive() ) {
-				$post_types = get_query_var( 'post_type' );
-				foreach ( (array) $post_types as $post_type ) {
-					if ( is_string( $post_type ) && '' !== $post_type ) {
-						$flags[] = "archive:$post_type";
-					}
-				}
-			} elseif ( is_category() || is_tag() || is_tax() ) {
-				$term = get_queried_object();
-				if ( $term && isset( $term->taxonomy, $term->term_id ) ) {
-					$flags[] = "archive:{$term->taxonomy}:{$term->term_id}";
-				}
-			} elseif ( is_author() ) {
-				$author_id = get_query_var( 'author' );
-				$author_id = is_numeric( $author_id ) ? (int) $author_id : 0;
-				if ( $author_id > 0 ) {
-					$flags[] = "archive:author:$author_id";
-				}
-			} elseif ( is_date() ) {
-				$date_parts = array();
-
-				foreach ( array( 'year', 'monthnum', 'day' ) as $key ) {
-					$part = get_query_var( $key );
-					if ( is_numeric( $part ) && $part > 0 ) {
-						$date_parts[] = str_pad( (string) $part, 2, '0', STR_PAD_LEFT );
-					}
-				}
-
-				if ( ! empty( $date_parts ) ) {
-					$flags[] = 'archive:' . implode( ':', $date_parts );
-				}
-			}
-		}
-
-		// Feeds (e.g., /feed/).
-		if ( is_feed() ) {
-			$flags[] = 'feed';
-		}
-
-		return $flags;
-	}
-
-	/**
-	 * Flag the cache during template_redirect.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @return void
-	 */
-	public function set_cache_flags() {
-		foreach ( $this->get_request_flags() as $flag ) {
-			$this->engine->add_flag( $flag );
-		}
-
-		/**
-		 * Filter to add additional cache flags for the current request.
-		 *
-		 * These flags are stored alongside the cache and determine when and how it can be targeted & invalidated.
-		 * This hook runs with WordPress fully loaded, so you may use conditional logic based on user roles, templates, queries, etc.
-		 * Note: Don't use this too excessively, as it will increase the cache size.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param array $custom_flags The custom flags.
-		 */
-		$custom_flags = apply_filters( 'millicache_flags_for_request', array() );
-		if ( is_array( $custom_flags ) && ! empty( $custom_flags ) ) {
-			foreach ( $custom_flags as $flag ) {
-				$this->engine->add_flag( $flag );
-			}
-		}
 	}
 
 	/**
@@ -395,7 +284,7 @@ final class MilliCache {
 	}
 
 	/**
-	 * Clear the cache for a post.
+	 * Clear post-cache when post is updated, comment count changes, etc.
 	 *
 	 * @since 1.0.0
 	 * @access public
@@ -413,7 +302,7 @@ final class MilliCache {
 			return;
 		}
 
-		$this->engine->clear_cache_by_flags( $this->get_post_related_flags( $post ) );
+		$this->engine->clear()->flags( $this->get_post_related_flags( $post ) );
 	}
 
 	/**
@@ -431,10 +320,10 @@ final class MilliCache {
 	public function transition_post_status( string $new_status, string $old_status, \WP_Post $post ) {
 		if ( 'publish' === $new_status && 'publish' !== $old_status ) {
 			// Clear URL cache for any existing entry.
-			$this->engine->clear_cache_by_urls( (string) get_permalink( $post->ID ) );
+			$this->engine->clear()->urls( (string) get_permalink( $post->ID ) );
 
 			// Clear the cache for related archives, author, taxonomies, etc.
-			$this->engine->clear_cache_by_flags( $this->get_post_related_flags( $post ) );
+			$this->engine->clear()->flags( $this->get_post_related_flags( $post ) );
 		}
 	}
 
@@ -543,13 +432,13 @@ final class MilliCache {
 
 		if ( in_array( $option, $options, true ) ) {
 			if ( 'page_on_front' === $option || 'page_for_posts' === $option ) {
-				$this->engine->clear_cache_by_flags( array( 'home', 'archive:post' ) );
+				$this->engine->clear()->flags( array( 'home', 'archive:post' ) );
 
 				if ( is_numeric( $old_value ) && is_numeric( $value ) ) {
-					$this->engine->clear_cache_by_post_ids( array( (int) $old_value, (int) $value ) );
+					$this->engine->clear()->posts( array( (int) $old_value, (int) $value ) );
 				}
 			} else {
-				$this->engine->clear_cache_by_site_ids();
+				$this->engine->clear()->sites();
 			}
 		}
 	}
@@ -563,8 +452,7 @@ final class MilliCache {
 	 * @return void
 	 */
 	public function cleanup_expired_flags() {
-		$storage = Engine::get_storage();
-		$storage->cleanup_expired_flags();
+		Engine::instance()->storage()->cleanup_expired_flags();
 	}
 
 	/**
