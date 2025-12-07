@@ -285,43 +285,53 @@ const startServer = async () => {
 
         console.log('Checking Multisite status...');
         try {
-            await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'list', '--quiet'], { silent: true }));
+            await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'list', '--quiet'], { silent: true }), 5, 2000);
             console.log('Multisite already initialized');
         } catch {
             console.log('Initializing Multisite...');
 
-            // Check if the MULTISITE constant is already set
+            // Check if the MULTISITE constant is already set (with retry for container readiness)
             let hasConstant;
             try {
-                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'has', 'MULTISITE', '--quiet'], { silent: true });
+                await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'has', 'MULTISITE', '--quiet'], { silent: true }), 5, 2000);
                 hasConstant = true;
             } catch {
                 hasConstant = false;
             }
 
+            // Use allSettled for multisite conversion to handle partial failures gracefully
             if (hasConstant || process.env.CI) {
-                await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet', '--skip-config'], { silent: true }));
-                await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'set', 'MULTISITE', 'true', '--raw', '--quiet'], { silent: true }));
+                const conversionResults = await Promise.allSettled([
+                    retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet', '--skip-config'], { silent: true }), 5, 2000),
+                ]);
+                // Only set MULTISITE if conversion succeeded
+                if (conversionResults[0].status === 'fulfilled') {
+                    await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'set', 'MULTISITE', 'true', '--raw', '--quiet'], { silent: true }), 5, 2000);
+                } else {
+                    console.warn(`Warning: Multisite conversion failed: ${conversionResults[0].reason?.message || 'Unknown error'}`);
+                }
             } else {
-                await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet'], { silent: true }));
+                await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet'], { silent: true }), 5, 2000);
             }
 
             // Create additional sites (with retry for each site)
             console.log('Creating multisite subsites...');
-            const siteResults = await Promise.all(
+            const siteResults = await Promise.allSettled(
                 [2, 3, 4, 5].map(async (i) => {
                     try {
-                        await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'create', `--slug='site${i}'`, `--title='Site ${i}'`, `--email='site${i}@admin.local'`], { silent: true }));
+                        await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'create', `--slug='site${i}'`, `--title='Site ${i}'`, `--email='site${i}@admin.local'`], { silent: true }), 5, 2000);
                         return { site: i, created: true };
                     } catch {
                         return { site: i, created: false };
                     }
                 })
             );
-            const created = siteResults.filter(r => r.created).map(r => r.site);
-            const skipped = siteResults.filter(r => !r.created).map(r => r.site);
+            const created = siteResults.filter(r => r.status === 'fulfilled' && r.value?.created).map(r => r.value.site);
+            const skipped = siteResults.filter(r => r.status === 'fulfilled' && !r.value?.created).map(r => r.value.site);
+            const failed = siteResults.filter(r => r.status === 'rejected');
             if (created.length) console.log(`Created sites: ${created.join(', ')}`);
             if (skipped.length) console.log(`Sites already exist: ${skipped.join(', ')}`);
+            if (failed.length) console.warn(`Warning: ${failed.length} site creation(s) failed`);
         }
 
         // Restore original .htaccess (WordPress overwrites it during permalink setup)
