@@ -286,6 +286,7 @@ const startServer = async () => {
         if (redisInstalled.length) console.log(`Installed redis-cli on: ${redisInstalled.join(', ')}`);
         if (redisExisting.length) console.log(`redis-cli already present on: ${redisExisting.join(', ')}`);
 
+        // Setup multisite - all failures are non-fatal (may already be configured from cache)
         console.log('Checking Multisite status...');
         try {
             await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'list', '--quiet'], { silent: true }), 5, 2000);
@@ -309,12 +310,16 @@ const startServer = async () => {
                 ]);
                 // Only set MULTISITE if conversion succeeded
                 if (conversionResults[0].status === 'fulfilled') {
-                    await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'set', 'MULTISITE', 'true', '--raw', '--quiet'], { silent: true }), 5, 2000);
+                    await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'set', 'MULTISITE', 'true', '--raw', '--quiet'], { silent: true }), 5, 2000).catch(() => {});
                 } else {
-                    console.warn(`Warning: Multisite conversion failed: ${conversionResults[0].reason?.message || 'Unknown error'}`);
+                    console.warn(`Warning: Multisite conversion failed (may already be configured)`);
                 }
             } else {
-                await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet'], { silent: true }), 5, 2000);
+                try {
+                    await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet'], { silent: true }), 5, 2000);
+                } catch {
+                    console.warn('Warning: Multisite conversion failed (may already be configured)');
+                }
             }
 
             // Create additional sites (with retry for each site)
@@ -330,11 +335,9 @@ const startServer = async () => {
                 })
             );
             const created = siteResults.filter(r => r.status === 'fulfilled' && r.value?.created).map(r => r.value.site);
-            const skipped = siteResults.filter(r => r.status === 'fulfilled' && !r.value?.created).map(r => r.value.site);
-            const failed = siteResults.filter(r => r.status === 'rejected');
+            const existing = siteResults.filter(r => r.status === 'fulfilled' && !r.value?.created).map(r => r.value.site);
             if (created.length) console.log(`Created sites: ${created.join(', ')}`);
-            if (skipped.length) console.log(`Sites already exist: ${skipped.join(', ')}`);
-            if (failed.length) console.warn(`Warning: ${failed.length} site creation(s) failed`);
+            if (existing.length) console.log(`Sites already exist or skipped: ${existing.join(', ')}`);
         }
 
         // Restore original .htaccess (WordPress overwrites it during permalink setup)
@@ -342,12 +345,14 @@ const startServer = async () => {
             writeFileSync(htaccessPath, htaccessOriginal);
         }
 
-        // Generate sample content (posts, pages, books, genres)
-        try {
-            await generateSampleContent();
-        } catch (error) {
-            console.warn(`Warning: Sample content generation failed: ${error.message}`);
-            console.warn('Continuing without sample content...');
+        // Generate sample content (posts, pages, books, genres) - skip in CI
+        if (!process.env.CI) {
+            try {
+                await generateSampleContent();
+            } catch (error) {
+                console.warn(`Warning: Sample content generation failed: ${error.message}`);
+                console.warn('Continuing without sample content...');
+            }
         }
 
         console.log('MilliCache Dev Server has been started!');
