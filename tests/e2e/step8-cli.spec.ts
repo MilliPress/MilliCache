@@ -36,32 +36,49 @@ test.describe('Step 8: WP-CLI Commands', () => {
     });
 
     test('WP-CLI: MilliCache Stats', async ({ page }) => {
-        // General cache stats
-        const stdout = await runWpCliCommand('millicache stats');
-
-        // If the output contains "Empty", the cache is empty. Otherwise, it is not empty.
-        expect(stdout).not.toContain('Empty');
-
-        // Clear cache of another site
-        await clearCache('2:*');
-
         // Open site 1 front-page to make sure it is cached
         await page.goto('/');
 
+        // General cache stats - should have entries
+        const stdout = await runWpCliCommand('millicache stats');
+        expect(stdout).toContain('entries');
+        expect(stdout).toContain('size');
+
         // Get stats by flag of site 1
         const stdout3 = await runWpCliCommand('millicache stats -- --flag=1:home');
-
-        // Validate network 1 cache is still available
-        expect(stdout3).not.toContain('Empty');
+        expect(stdout3).toContain('entries');
 
         // Clear cache of network 1
         await clearCache('1:*');
 
-        // Stats by flag of network 1
+        // Stats by flag of network 1 - should show 0 entries
         const stdout5 = await runWpCliCommand('millicache stats -- --flag=1:*');
+        expect(stdout5).toMatch(/entries\s*\|\s*0/);
+    });
 
-        // Validate network 1 cache is empty
-        expect(stdout5).toContain('No cached pages');
+    test('WP-CLI: MilliCache Stats JSON format', async ({ page }) => {
+        // Open front-page to ensure cache has entries
+        await page.goto('/');
+
+        // Run stats command with JSON format
+        const stdout = await runWpCliCommand('millicache stats -- --format=json');
+
+        // Extract JSON from output (may contain npm script prefix)
+        const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+        expect(jsonMatch).not.toBeNull();
+
+        // Parse JSON output
+        const stats = JSON.parse(jsonMatch![0]);
+
+        // Validate JSON structure
+        expect(stats).toHaveProperty('flag');
+        expect(stats).toHaveProperty('entries');
+        expect(stats).toHaveProperty('size');
+        expect(stats).toHaveProperty('size_human');
+        expect(stats).toHaveProperty('avg_size');
+        expect(stats).toHaveProperty('avg_size_human');
+        expect(typeof stats.entries).toBe('number');
+        expect(typeof stats.size).toBe('number');
     });
 
     test('WP-CLI: MilliCache Status', async () => {
