@@ -63,4 +63,70 @@ test.describe('Step 8: WP-CLI Commands', () => {
         // Validate network 1 cache is empty
         expect(stdout5).toContain('No cached pages');
     });
+
+    test('WP-CLI: MilliCache Status', async () => {
+        // Run status command
+        const stdout = await runWpCliCommand('millicache status');
+
+        // Validate output contains expected status fields
+        expect(stdout).toContain('plugin_version');
+        expect(stdout).toContain('wp_cache');
+        expect(stdout).toContain('advanced_cache');
+        expect(stdout).toContain('storage_connected');
+        expect(stdout).toContain('yes'); // storage should be connected
+        expect(stdout).toContain('cache_entries');
+        expect(stdout).toContain('cache_size');
+    });
+
+    test('WP-CLI: MilliCache Status JSON format', async () => {
+        // Run status command with JSON format
+        const stdout = await runWpCliCommand('millicache status -- --format=json');
+
+        // Extract JSON from output (may contain npm script prefix)
+        const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+        expect(jsonMatch).not.toBeNull();
+
+        // Parse JSON output
+        const status = JSON.parse(jsonMatch![0]);
+
+        // Validate JSON structure
+        expect(status).toHaveProperty('plugin_version');
+        expect(status).toHaveProperty('wp_cache');
+        expect(status).toHaveProperty('advanced_cache');
+        expect(status).toHaveProperty('storage_connected', 'yes');
+        expect(status).toHaveProperty('cache_entries');
+        expect(status).toHaveProperty('cache_size');
+    });
+
+    test('WP-CLI: MilliCache Test', async () => {
+        // Run test command
+        const stdout = await runWpCliCommand('millicache test');
+
+        // Validate output contains test results
+        expect(stdout).toContain('Testing Redis connection');
+        expect(stdout).toContain('Connection');
+        expect(stdout).toContain('PASS');
+        expect(stdout).toContain('Ping');
+        expect(stdout).toContain('Write');
+        expect(stdout).toContain('Read');
+        expect(stdout).toContain('Delete');
+        expect(stdout).toContain('All tests passed');
+    });
+
+    test('WP-CLI: MilliCache Fix', async () => {
+        // Run fix command
+        const stdout = await runWpCliCommand('millicache fix');
+
+        // Should either succeed with symlink already configured or create new one
+        expect(stdout).toMatch(/Success:|symlink/i);
+    });
+
+    test('WP-CLI: MilliCache Fix --force', async () => {
+        // Run fix command with force flag
+        const stdout = await runWpCliCommand('millicache fix -- --force');
+
+        // Should succeed with creating symlink or copying file
+        expect(stdout).toContain('Success:');
+        expect(stdout).toMatch(/symlink|Copied/i);
+    });
 });

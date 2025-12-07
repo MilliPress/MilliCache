@@ -42,6 +42,26 @@ describe( 'CLI', function () {
 			$reflection = new ReflectionClass( CLI::class );
 			expect( $reflection->hasMethod( 'stats' ) )->toBeTrue();
 		} );
+
+		it( 'has cli method', function () {
+			$reflection = new ReflectionClass( CLI::class );
+			expect( $reflection->hasMethod( 'cli' ) )->toBeTrue();
+		} );
+
+		it( 'has fix method', function () {
+			$reflection = new ReflectionClass( CLI::class );
+			expect( $reflection->hasMethod( 'fix' ) )->toBeTrue();
+		} );
+
+		it( 'has status method', function () {
+			$reflection = new ReflectionClass( CLI::class );
+			expect( $reflection->hasMethod( 'status' ) )->toBeTrue();
+		} );
+
+		it( 'has test method', function () {
+			$reflection = new ReflectionClass( CLI::class );
+			expect( $reflection->hasMethod( 'test' ) )->toBeTrue();
+		} );
 	} );
 
 	describe( 'properties', function () {
@@ -135,6 +155,90 @@ describe( 'CLI', function () {
 
 		it( 'stats takes two array parameters', function () {
 			$method = new ReflectionMethod( CLI::class, 'stats' );
+			expect( $method->getNumberOfParameters() )->toBe( 2 );
+
+			$params = $method->getParameters();
+			expect( $params[0]->getName() )->toBe( 'args' );
+			expect( $params[1]->getName() )->toBe( 'assoc_args' );
+		} );
+
+		it( 'cli is public', function () {
+			$method = new ReflectionMethod( CLI::class, 'cli' );
+			expect( $method->isPublic() )->toBeTrue();
+		} );
+
+		it( 'cli returns void', function () {
+			$method = new ReflectionMethod( CLI::class, 'cli' );
+			$return_type = $method->getReturnType();
+			expect( $return_type )->not->toBeNull();
+			expect( $return_type->getName() )->toBe( 'void' );
+		} );
+
+		it( 'cli takes two array parameters', function () {
+			$method = new ReflectionMethod( CLI::class, 'cli' );
+			expect( $method->getNumberOfParameters() )->toBe( 2 );
+
+			$params = $method->getParameters();
+			expect( $params[0]->getName() )->toBe( 'args' );
+			expect( $params[1]->getName() )->toBe( 'assoc_args' );
+		} );
+
+		it( 'fix is public', function () {
+			$method = new ReflectionMethod( CLI::class, 'fix' );
+			expect( $method->isPublic() )->toBeTrue();
+		} );
+
+		it( 'fix returns void', function () {
+			$method = new ReflectionMethod( CLI::class, 'fix' );
+			$return_type = $method->getReturnType();
+			expect( $return_type )->not->toBeNull();
+			expect( $return_type->getName() )->toBe( 'void' );
+		} );
+
+		it( 'fix takes two array parameters', function () {
+			$method = new ReflectionMethod( CLI::class, 'fix' );
+			expect( $method->getNumberOfParameters() )->toBe( 2 );
+
+			$params = $method->getParameters();
+			expect( $params[0]->getName() )->toBe( 'args' );
+			expect( $params[1]->getName() )->toBe( 'assoc_args' );
+		} );
+
+		it( 'status is public', function () {
+			$method = new ReflectionMethod( CLI::class, 'status' );
+			expect( $method->isPublic() )->toBeTrue();
+		} );
+
+		it( 'status returns void', function () {
+			$method = new ReflectionMethod( CLI::class, 'status' );
+			$return_type = $method->getReturnType();
+			expect( $return_type )->not->toBeNull();
+			expect( $return_type->getName() )->toBe( 'void' );
+		} );
+
+		it( 'status takes two array parameters', function () {
+			$method = new ReflectionMethod( CLI::class, 'status' );
+			expect( $method->getNumberOfParameters() )->toBe( 2 );
+
+			$params = $method->getParameters();
+			expect( $params[0]->getName() )->toBe( 'args' );
+			expect( $params[1]->getName() )->toBe( 'assoc_args' );
+		} );
+
+		it( 'test is public', function () {
+			$method = new ReflectionMethod( CLI::class, 'test' );
+			expect( $method->isPublic() )->toBeTrue();
+		} );
+
+		it( 'test returns void', function () {
+			$method = new ReflectionMethod( CLI::class, 'test' );
+			$return_type = $method->getReturnType();
+			expect( $return_type )->not->toBeNull();
+			expect( $return_type->getName() )->toBe( 'void' );
+		} );
+
+		it( 'test takes two array parameters', function () {
+			$method = new ReflectionMethod( CLI::class, 'test' );
 			expect( $method->getNumberOfParameters() )->toBe( 2 );
 
 			$params = $method->getParameters();
