@@ -172,37 +172,37 @@ jobs:
 
             if [ -n "$FEATURES" ]; then
               echo "### Features"
-              printf "$FEATURES"
+              printf '%b' "$FEATURES"
               echo ""
             fi
 
             if [ -n "$FIXES" ]; then
               echo "### Bug Fixes"
-              printf "$FIXES"
+              printf '%b' "$FIXES"
               echo ""
             fi
 
             if [ -n "$PERF" ]; then
               echo "### Performance"
-              printf "$PERF"
+              printf '%b' "$PERF"
               echo ""
             fi
 
             if [ -n "$REFACTOR" ]; then
               echo "### Refactoring"
-              printf "$REFACTOR"
+              printf '%b' "$REFACTOR"
               echo ""
             fi
 
             if [ -n "$DOCS" ]; then
               echo "### Documentation"
-              printf "$DOCS"
+              printf '%b' "$DOCS"
               echo ""
             fi
 
             if [ -n "$OTHER" ]; then
               echo "### Other Changes"
-              printf "$OTHER"
+              printf '%b' "$OTHER"
               echo ""
             fi
 
