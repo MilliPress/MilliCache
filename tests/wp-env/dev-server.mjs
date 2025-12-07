@@ -72,6 +72,29 @@ const run = (command, args = [], { silent = false } = {}) => {
 };
 
 /**
+ * Retry a function with exponential backoff.
+ * @param {Function} fn The async function to retry.
+ * @param {number} maxRetries Maximum number of retries.
+ * @param {number} baseDelay Base delay in ms between retries.
+ * @returns {Promise<any>} The result of the function.
+ */
+const retry = async (fn, maxRetries = 3, baseDelay = 1000) => {
+    let lastError;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            return await fn();
+        } catch (error) {
+            lastError = error;
+            if (attempt < maxRetries) {
+                const delay = baseDelay * Math.pow(2, attempt);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    throw lastError;
+};
+
+/**
  * Check if redis-cli is installed on a container, install if missing.
  * @param {string} container The container name ('cli' or 'tests-cli').
  * @returns {Promise<void>}
@@ -232,22 +255,37 @@ const startServer = async () => {
         console.log(`Starting WP-ENV Dev Server${process.env.CI ? ' (CI mode, skipping updates)' : ''}`);
         await run('npx', wpEnvArgs);
 
-        // Run redis-cli installation and permalink setup in parallel for faster startup
-        console.log('Configuring environment (parallel)...');
-        const [redisCliResult, redisTestsCliResult] = await Promise.all([
-            checkAndInstallRedis('cli'),
-            checkAndInstallRedis('tests-cli'),
-            run('npx', ['wp-env', 'run', 'cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--quiet', '--hard'], { silent: true }),
-            run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--quiet', '--hard'], { silent: true })
+        // Run redis-cli installation and permalink setup with retry logic
+        console.log('Configuring environment...');
+
+        // Use Promise.allSettled to avoid failing if one task fails
+        const configResults = await Promise.allSettled([
+            retry(() => checkAndInstallRedis('cli')),
+            retry(() => checkAndInstallRedis('tests-cli')),
+            retry(() => run('npx', ['wp-env', 'run', 'cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--quiet', '--hard'], { silent: true })),
+            retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--quiet', '--hard'], { silent: true }))
         ]);
-        const redisInstalled = [redisCliResult, redisTestsCliResult].filter(r => r.installed).map(r => r.container);
-        const redisExisting = [redisCliResult, redisTestsCliResult].filter(r => !r.installed).map(r => r.container);
+
+        // Check for failures
+        const failures = configResults.filter(r => r.status === 'rejected');
+        if (failures.length > 0) {
+            console.warn(`Warning: ${failures.length} configuration task(s) failed, but continuing...`);
+            failures.forEach((f, i) => console.warn(`  Task ${i + 1}: ${f.reason?.message || 'Unknown error'}`));
+        }
+
+        // Extract redis results from settled promises
+        const [redisCliResult, redisTestsCliResult] = configResults.slice(0, 2);
+        const redisResults = [redisCliResult, redisTestsCliResult]
+            .filter(r => r.status === 'fulfilled')
+            .map(r => r.value);
+        const redisInstalled = redisResults.filter(r => r?.installed).map(r => r.container);
+        const redisExisting = redisResults.filter(r => r && !r.installed).map(r => r.container);
         if (redisInstalled.length) console.log(`Installed redis-cli on: ${redisInstalled.join(', ')}`);
         if (redisExisting.length) console.log(`redis-cli already present on: ${redisExisting.join(', ')}`);
 
         console.log('Checking Multisite status...');
         try {
-            await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'list', '--quiet'], { silent: true });
+            await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'list', '--quiet'], { silent: true }));
             console.log('Multisite already initialized');
         } catch {
             console.log('Initializing Multisite...');
@@ -262,18 +300,18 @@ const startServer = async () => {
             }
 
             if (hasConstant || process.env.CI) {
-                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet', '--skip-config'], { silent: true });
-                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'set', 'MULTISITE', 'true', '--raw', '--quiet'], { silent: true });
+                await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet', '--skip-config'], { silent: true }));
+                await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'set', 'MULTISITE', 'true', '--raw', '--quiet'], { silent: true }));
             } else {
-                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet'], { silent: true });
+                await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet'], { silent: true }));
             }
 
-            // Create additional sites in parallel (skip if already exists)
-            console.log('Creating multisite subsites (parallel)...');
+            // Create additional sites (with retry for each site)
+            console.log('Creating multisite subsites...');
             const siteResults = await Promise.all(
                 [2, 3, 4, 5].map(async (i) => {
                     try {
-                        await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'create', `--slug='site${i}'`, `--title='Site ${i}'`, `--email='site${i}@admin.local'`], { silent: true });
+                        await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'create', `--slug='site${i}'`, `--title='Site ${i}'`, `--email='site${i}@admin.local'`], { silent: true }));
                         return { site: i, created: true };
                     } catch {
                         return { site: i, created: false };
