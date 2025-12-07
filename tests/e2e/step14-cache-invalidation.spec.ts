@@ -60,7 +60,7 @@ test.describe('Step 14: Cache Invalidation', () => {
             // Prime the cache
             await frontend.goto(`/${testPostSlug}/`);
             const response = await frontend.reload();
-            await expect(response).toBeCacheHit();
+            expect(response).toBeCacheHit();
         });
 
         test('Updating post should invalidate cache', async ({
@@ -84,13 +84,14 @@ test.describe('Step 14: Cache Invalidation', () => {
             // Clear cookies to test as anonymous
             await page.context().clearCookies();
 
-            // Request should be a cache miss after update
+            // Request should be a cache miss after update (invalidated)
             const frontend = new FrontendPage(page);
             const response = await frontend.goto(`/${testPostSlug}/`);
+            expect(response).toBeCacheMiss();
 
-            // After update, should be miss (invalidated) or hit with new content
-            // The key is that the cache was properly invalidated
-            await expect(response).toHaveCacheStatus(['miss', 'hit']);
+            // Verify cache works again after priming
+            const response2 = await frontend.reload();
+            expect(response2).toBeCacheHit();
         });
     });
 
@@ -116,11 +117,13 @@ test.describe('Step 14: Cache Invalidation', () => {
             await page.context().clearCookies();
             const frontend = new FrontendPage(page);
             await frontend.goto(`/${deleteTestSlug}/`);
-            await frontend.reload();
+            const response = await frontend.reload();
+            expect(response).toBeCacheHit();
         });
 
         test('Deleting post should result in 404', async ({
             requestUtils,
+            editor,
             page,
         }) => {
             if (!deleteTestPostId) {
@@ -141,7 +144,6 @@ test.describe('Step 14: Cache Invalidation', () => {
             // Request should now 404
             const frontend = new FrontendPage(page);
             const response = await frontend.goto(`/${deleteTestSlug}/`);
-
             expect(response.status()).toBe(404);
         });
     });
@@ -227,11 +229,11 @@ test.describe('Step 14: Cache Invalidation', () => {
                 await anonContext.clearCookies();
 
                 // Prime the uncategorized archive cache
-                await frontend.goto('/blog/category/uncategorized/');
+                await frontend.goto('/category/uncategorized/');
                 const primeResponse = await frontend.reload();
-                await expect(primeResponse).toBeCacheHit();
+                expect(primeResponse).toBeCacheHit();
 
-                // Update post category via REST API
+                // Update post-category via REST API
                 // This should trigger category archive invalidation
                 await requestUtils.rest({
                     method: 'POST',
@@ -241,9 +243,13 @@ test.describe('Step 14: Cache Invalidation', () => {
                     },
                 });
 
-                // After invalidation, should be miss (invalidated) or hit with new content
-                const response = await frontend.goto('/blog/category/uncategorized/');
-                await expect(response).toHaveCacheStatus(['miss', 'hit']);
+                // After invalidation, should be miss (invalidated)
+                const response = await frontend.goto('/category/uncategorized/');
+                await expect(response).toBeCacheMiss();
+
+                // Verify cache works again after priming
+                const response2 = await frontend.reload();
+                await expect(response2).toBeCacheHit();
             } finally {
                 await anonPage.close();
                 await anonContext.close();

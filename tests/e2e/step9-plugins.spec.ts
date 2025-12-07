@@ -31,24 +31,18 @@ test.describe('Step 9: Plugins Compatibility', () => {
             const browser = page.context().browser()!;
             const anonContext = await browser.newContext();
             const anonPage = await anonContext.newPage();
+            const frontend = new FrontendPage(anonPage);
 
             try {
-                // Product Page - prime and verify cache
-                await anonPage.goto('/product/test-product/');
+                // Product Page - prime the cache
+                await frontend.goto('/product/test-product/');
                 // Clear WooCommerce cookies that were set on first load
                 await anonContext.clearCookies();
-                await anonPage.reload();
-                const productResponse = await anonPage.reload();
-                const productStatus = productResponse?.headers()['x-millicache-status'];
-                // Product should be cached after two requests (first primes, second hits)
-                if (productStatus !== 'hit') {
-                    console.log(
-                        'Product page decision:',
-                        productResponse?.headers()['x-millicache-decision']
-                    );
-                }
-                // eslint-disable-next-line playwright/no-conditional-expect
-                expect(productStatus === 'hit' || productStatus === 'miss').toBeTruthy();
+                // Prime again after clearing cookies
+                await frontend.reload();
+                // Third request should be a cache hit
+                const productResponse = await frontend.reload();
+                await expect(productResponse).toBeCacheHit();
             } finally {
                 await anonPage.close();
                 await anonContext.close();
@@ -66,9 +60,11 @@ test.describe('Step 9: Plugins Compatibility', () => {
             if (response.status() === 200) {
                 // Clear cookies again after first load
                 await page.context().clearCookies();
+                // Prime the cache after clearing cookies
+                await frontend.reload();
+                // Third request should be a cache hit
                 const response2 = await frontend.reload();
-                // Shop page should be cached for anonymous users
-                await expect(response2).toHaveCacheStatus(['hit', 'miss']);
+                await expect(response2).toBeCacheHit();
             }
         });
 

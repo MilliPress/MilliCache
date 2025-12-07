@@ -22,8 +22,11 @@ test.describe('Step 7: Network Caching & Flushing', () => {
 
         for (let i = 1; i <= sites; i++) {
             const path = i === 1 ? '/' : `/site${i}/`;
-            const response = await frontend.goto(path);
-            await expect(response).toHaveCacheStatus(['miss', 'hit']);
+            // First request primes the cache
+            await frontend.goto(path);
+            // Second request should be a cache hit
+            const response = await frontend.reload();
+            await expect(response).toBeCacheHit();
         }
     });
 
@@ -37,11 +40,10 @@ test.describe('Step 7: Network Caching & Flushing', () => {
             // Test one path per site (first path after home)
             const testPath = paths[1] || paths[0];
 
-            // Navigate to the path
-            const response1 = await frontend.goto(testPath);
-            await expect(response1).toHaveCacheStatus(['miss', 'hit']);
+            // First request primes the cache
+            await frontend.goto(testPath);
 
-            // Reload to verify caching
+            // Reload to verify caching (should be a hit)
             const response2 = await frontend.reload();
             await expect(response2).toBeCacheHit();
 

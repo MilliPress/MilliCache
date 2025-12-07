@@ -64,7 +64,7 @@ test.describe('Step 12: Cache Flag Generation', () => {
             const frontend = new FrontendPage(page);
 
             // Navigate to category archive
-            const firstResponse = await frontend.goto('/blog/category/uncategorized/');
+            const firstResponse = await frontend.goto('/category/uncategorized/');
 
             // Skip test if category doesn't exist or is 404
             if (firstResponse.status() !== 200) {

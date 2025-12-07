@@ -60,9 +60,11 @@ test.describe('Step 11: WordPress Rules', () => {
             await logout(page);
             await page.context().clearCookies();
 
-            // Request as logged-out user should hit cache
-            const hitResponse = await frontend.goto('/');
-            await expect(hitResponse).toHaveCacheStatus(['hit', 'miss']);
+            // First request as logged-out user primes the cache
+            await frontend.goto('/');
+            // Second request should be a cache hit
+            const hitResponse = await frontend.reload();
+            await expect(hitResponse).toBeCacheHit();
         });
     });
 
