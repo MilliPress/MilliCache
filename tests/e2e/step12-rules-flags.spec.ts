@@ -1,5 +1,5 @@
 import { test, expect } from './setup/e2e-wp-test';
-import { clearCache, networkActivatePlugin } from './utils/tools';
+import { clearCache, getCategoryUrl, networkActivatePlugin } from './utils/tools';
 import { FrontendPage } from './pages';
 
 /**
@@ -63,8 +63,11 @@ test.describe('Step 12: Cache Flag Generation', () => {
 
             const frontend = new FrontendPage(page);
 
+            // Get the category URL dynamically (handles /category/uncategorized/ vs /blog/category/uncategorized/)
+            const categoryUrl = await getCategoryUrl('uncategorized');
+
             // Navigate to category archive
-            const firstResponse = await frontend.goto('/category/uncategorized/');
+            const firstResponse = await frontend.goto(categoryUrl);
 
             // Skip test if category doesn't exist or is 404
             if (firstResponse.status() !== 200) {

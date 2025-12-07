@@ -1,5 +1,5 @@
 import { test, expect } from './setup/e2e-wp-test';
-import { clearCache, networkActivatePlugin } from './utils/tools';
+import { clearCache, getCategoryUrl, networkActivatePlugin } from './utils/tools';
 import { FrontendPage } from './pages';
 
 /**
@@ -218,6 +218,9 @@ test.describe('Step 14: Cache Invalidation', () => {
             // Clear cache to ensure fresh state
             await clearCache('*');
 
+            // Get the category URL dynamically (handles /category/uncategorized/ vs /blog/category/uncategorized/)
+            const categoryUrl = await getCategoryUrl('uncategorized');
+
             // Use a separate browser context for anonymous testing
             const browser = page.context().browser()!;
             const anonContext = await browser.newContext();
@@ -229,7 +232,7 @@ test.describe('Step 14: Cache Invalidation', () => {
                 await anonContext.clearCookies();
 
                 // Prime the uncategorized archive cache
-                await frontend.goto('/category/uncategorized/');
+                await frontend.goto(categoryUrl);
                 const primeResponse = await frontend.reload();
                 expect(primeResponse).toBeCacheHit();
 
@@ -244,12 +247,12 @@ test.describe('Step 14: Cache Invalidation', () => {
                 });
 
                 // After invalidation, should be miss (invalidated)
-                const response = await frontend.goto('/category/uncategorized/');
-                await expect(response).toBeCacheMiss();
+                const response = await frontend.goto(categoryUrl);
+                expect(response).toBeCacheMiss();
 
                 // Verify cache works again after priming
                 const response2 = await frontend.reload();
-                await expect(response2).toBeCacheHit();
+                expect(response2).toBeCacheHit();
             } finally {
                 await anonPage.close();
                 await anonContext.close();

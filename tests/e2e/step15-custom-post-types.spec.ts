@@ -1,5 +1,5 @@
 import { test, expect } from './setup/e2e-wp-test';
-import { clearCache, networkActivatePlugin } from './utils/tools';
+import { clearCache, getCategoryUrl, networkActivatePlugin } from './utils/tools';
 import { FrontendPage } from './pages';
 
 /**
@@ -50,8 +50,11 @@ test.describe('Step 15: Custom Post Types', () => {
         test('Post type archives should be cached', async ({ page }) => {
             const frontend = new FrontendPage(page);
 
+            // Get the category URL dynamically (handles /category/uncategorized/ vs /blog/category/uncategorized/)
+            const categoryUrl = await getCategoryUrl('uncategorized');
+
             // Test category archive (acts like a post type archive)
-            await frontend.goto('/category/uncategorized/');
+            await frontend.goto(categoryUrl);
 
             if ((await frontend.getLastResponse())?.status() === 200) {
                 const response = await frontend.reload();
@@ -64,7 +67,10 @@ test.describe('Step 15: Custom Post Types', () => {
         }) => {
             const frontend = new FrontendPage(page);
 
-            await frontend.goto('/category/uncategorized/');
+            // Get the category URL dynamically (handles /category/uncategorized/ vs /blog/category/uncategorized/)
+            const categoryUrl = await getCategoryUrl('uncategorized');
+
+            await frontend.goto(categoryUrl);
             const response = await frontend.reload();
 
             const headers = frontend.getCacheHeaders();
