@@ -303,12 +303,16 @@ final class CLI {
 		$settings = new Settings();
 		$storage_settings = $settings->get_settings( 'storage' );
 
+		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
 		/** @var string $host */
 		$host = $storage_settings['host'] ?? '127.0.0.1';
+		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
 		/** @var int $port */
 		$port = $storage_settings['port'] ?? 6379;
+		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
 		/** @var int $db */
 		$db = $storage_settings['db'] ?? 0;
+		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
 		/** @var string $password */
 		$password = $storage_settings['enc_password'] ?? '';
 
@@ -325,6 +329,7 @@ final class CLI {
 			$command .= sprintf( ' -a %s --no-auth-warning', escapeshellarg( $password ) );
 		}
 
+		// translators: %1$s is the Redis host, %2$d is the port, %3$d is the database number.
 		\WP_CLI::line( sprintf( __( 'Connecting to Redis at %1$s:%2$d (database %3$d)...', 'millicache' ), $host, $port, $db ) );
 		\WP_CLI::line( __( 'Type "quit" to exit.', 'millicache' ) );
 		\WP_CLI::line( '' );
@@ -497,7 +502,7 @@ final class CLI {
 			if ( ! empty( $storage_status['info']['Memory']['used_memory_human'] ) ) {
 				$status['storage_memory_used'] = $storage_status['info']['Memory']['used_memory_human'];
 			}
-			if ( ! empty( $storage_status['info']['Memory']['maxmemory_human'] ) && $storage_status['info']['Memory']['maxmemory_human'] !== '0B' ) {
+			if ( ! empty( $storage_status['info']['Memory']['maxmemory_human'] ) && '0B' !== $storage_status['info']['Memory']['maxmemory_human'] ) {
 				$status['storage_memory_max'] = $storage_status['info']['Memory']['maxmemory_human'];
 			}
 		}
@@ -558,11 +563,14 @@ final class CLI {
 		$settings = new Settings();
 		$storage_settings = $settings->get_settings( 'storage' );
 
+		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
 		/** @var string $host */
 		$host = $storage_settings['host'] ?? '127.0.0.1';
+		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
 		/** @var int $port */
 		$port = $storage_settings['port'] ?? 6379;
 
+		// translators: %1$s is the Redis host, %2$d is the port.
 		\WP_CLI::line( sprintf( __( 'Server: %1$s:%2$d', 'millicache' ), $host, $port ) );
 		\WP_CLI::line( '' );
 
@@ -598,6 +606,7 @@ final class CLI {
 				$tests[] = array(
 					'test'   => __( 'Ping', 'millicache' ),
 					'status' => $ping_result ? 'PASS' : 'FAIL',
+					// translators: %s is the latency in milliseconds.
 					'info'   => $ping_result ? sprintf( __( '%sms', 'millicache' ), $latency ) : '',
 				);
 				if ( ! $ping_result ) {
