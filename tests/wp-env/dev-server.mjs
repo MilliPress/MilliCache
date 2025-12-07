@@ -259,32 +259,31 @@ const startServer = async () => {
         await run('npx', wpEnvArgs);
 
         // Wait for containers to be fully ready (MySQL needs time to initialize)
+        // Use longer retry with exponential backoff for more reliability
         console.log('Waiting for containers to be ready...');
-        await retry(async () => {
-            await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'db', 'check'], { silent: true });
-        }, 10, 3000);
+        let containersReady = false;
+        for (let attempt = 1; attempt <= 15; attempt++) {
+            try {
+                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'db', 'check'], { silent: true });
+                containersReady = true;
+                break;
+            } catch {
+                const delay = Math.min(attempt * 2000, 10000); // 2s, 4s, 6s, ... up to 10s
+                console.log(`  Attempt ${attempt}/15: Waiting ${delay/1000}s for containers...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+        if (!containersReady) {
+            throw new Error('Containers failed to become ready after 15 attempts');
+        }
         console.log('Containers ready');
 
-        // Run redis-cli installation and permalink setup with retry logic
-        console.log('Configuring environment...');
-
-        // Use Promise.allSettled to avoid failing if one task fails
-        const configResults = await Promise.allSettled([
+        // Install redis-cli on containers (non-blocking)
+        console.log('Installing redis-cli on containers...');
+        const [redisCliResult, redisTestsCliResult] = await Promise.allSettled([
             retry(() => checkAndInstallRedis('cli')),
             retry(() => checkAndInstallRedis('tests-cli')),
-            retry(() => run('npx', ['wp-env', 'run', 'cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--quiet', '--hard'], { silent: true })),
-            retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--quiet', '--hard'], { silent: true }))
         ]);
-
-        // Check for failures
-        const failures = configResults.filter(r => r.status === 'rejected');
-        if (failures.length > 0) {
-            console.warn(`Warning: ${failures.length} configuration task(s) failed, but continuing...`);
-            failures.forEach((f, i) => console.warn(`  Task ${i + 1}: ${f.reason?.message || 'Unknown error'}`));
-        }
-
-        // Extract redis results from settled promises
-        const [redisCliResult, redisTestsCliResult] = configResults.slice(0, 2);
         const redisResults = [redisCliResult, redisTestsCliResult]
             .filter(r => r.status === 'fulfilled')
             .map(r => r.value);
@@ -292,6 +291,28 @@ const startServer = async () => {
         const redisExisting = redisResults.filter(r => r && !r.installed).map(r => r.container);
         if (redisInstalled.length) console.log(`Installed redis-cli on: ${redisInstalled.join(', ')}`);
         if (redisExisting.length) console.log(`redis-cli already present on: ${redisExisting.join(', ')}`);
+
+        // Configure permalinks - critical for REST API discovery
+        console.log('Configuring permalinks...');
+        try {
+            await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--hard'], { silent: true }), 10, 3000);
+            console.log('Permalinks configured for tests-cli');
+        } catch (error) {
+            console.warn(`Warning: Failed to configure permalinks: ${error.message}`);
+            // Try alternative approach - flush rewrite rules
+            try {
+                await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'flush', '--hard'], { silent: true }), 5, 2000);
+                console.log('Rewrite rules flushed');
+            } catch {
+                console.warn('Warning: Could not flush rewrite rules');
+            }
+        }
+        // Also configure dev site
+        try {
+            await retry(() => run('npx', ['wp-env', 'run', 'cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--hard'], { silent: true }), 5, 2000);
+        } catch {
+            // Dev site is less critical
+        }
 
         // Setup multisite - all failures are non-fatal (may already be configured from cache)
         console.log('Checking Multisite status...');
