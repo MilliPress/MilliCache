@@ -213,14 +213,17 @@ const generateSiteContent = async (siteId) => {
 const generateSampleContent = async () => {
     console.log('Generating sample content on all network sites...');
 
-    // Generate content on all 5 sites in parallel
-    const results = await Promise.all([1, 2, 3, 4, 5].map(siteId => generateSiteContent(siteId)));
+    // Generate content on all 5 sites in parallel using allSettled for resilience
+    const results = await Promise.allSettled([1, 2, 3, 4, 5].map(siteId => generateSiteContent(siteId)));
 
-    const generated = results.filter(r => !r.skipped).map(r => r.siteId);
-    const skipped = results.filter(r => r.skipped).map(r => r.siteId);
+    const successful = results.filter(r => r.status === 'fulfilled' && r.value);
+    const generated = successful.filter(r => !r.value.skipped).map(r => r.value.siteId);
+    const skipped = successful.filter(r => r.value.skipped).map(r => r.value.siteId);
+    const failed = results.filter(r => r.status === 'rejected');
 
     if (generated.length) console.log(`Generated content on sites: ${generated.join(', ')}`);
     if (skipped.length) console.log(`Content already exists on sites: ${skipped.join(', ')}`);
+    if (failed.length) console.warn(`Warning: Content generation failed for ${failed.length} site(s)`);
 };
 
 // Main function for starting the server
@@ -340,7 +343,12 @@ const startServer = async () => {
         }
 
         // Generate sample content (posts, pages, books, genres)
-        await generateSampleContent();
+        try {
+            await generateSampleContent();
+        } catch (error) {
+            console.warn(`Warning: Sample content generation failed: ${error.message}`);
+            console.warn('Continuing without sample content...');
+        }
 
         console.log('MilliCache Dev Server has been started!');
     } catch (error) {
