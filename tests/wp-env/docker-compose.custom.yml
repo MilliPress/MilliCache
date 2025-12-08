@@ -1,0 +1,17 @@
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    # command: /bin/bash -c "redis-server --requirepass ''"
+  keydb:
+    image: eqalpha/keydb:latest
+    container_name: keydb
+  dragonfly:
+    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+    container_name: dragonfly
+    ulimits:
+      memlock: -1
+    volumes:
+      - dragonflydata:/data
+volumes:
+  dragonflydata:
