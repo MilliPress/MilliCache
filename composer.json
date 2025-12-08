@@ -10,11 +10,11 @@
         }
     ],
     "require": {
-        "php": ">=7.4"
+        "php": ">=7.4",
+        "millipress/millirules": "^0.4.0",
+        "predis/predis": "^2.2"
     },
     "require-dev": {
-        "millipress/millirules": "^0.4.0",
-        "predis/predis": "^2.2",
         "wp-coding-standards/wpcs": "^3.0",
         "phpcompatibility/phpcompatibility-wp": "*",
         "php-stubs/wp-cli-stubs": "^2.10",
