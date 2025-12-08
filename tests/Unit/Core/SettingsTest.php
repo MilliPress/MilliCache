@@ -446,4 +446,194 @@ describe( 'Settings', function () {
 				->not->toThrow( Exception::class );
 		} );
 	} );
+
+	describe( 'coerce_value', function () {
+		it( 'coerces "true" to boolean true', function () {
+			expect( Settings::coerce_value( 'true' ) )->toBe( true );
+			expect( Settings::coerce_value( 'TRUE' ) )->toBe( true );
+		} );
+
+		it( 'coerces "false" to boolean false', function () {
+			expect( Settings::coerce_value( 'false' ) )->toBe( false );
+			expect( Settings::coerce_value( 'FALSE' ) )->toBe( false );
+		} );
+
+		it( 'coerces "null" to null', function () {
+			expect( Settings::coerce_value( 'null' ) )->toBe( null );
+			expect( Settings::coerce_value( 'NULL' ) )->toBe( null );
+		} );
+
+		it( 'coerces integer strings to integers', function () {
+			expect( Settings::coerce_value( '42' ) )->toBe( 42 );
+			expect( Settings::coerce_value( '0' ) )->toBe( 0 );
+			expect( Settings::coerce_value( '-5' ) )->toBe( -5 );
+		} );
+
+		it( 'coerces float strings to floats', function () {
+			expect( Settings::coerce_value( '3.14' ) )->toBe( 3.14 );
+			expect( Settings::coerce_value( '0.5' ) )->toBe( 0.5 );
+		} );
+
+		it( 'keeps regular strings as strings', function () {
+			expect( Settings::coerce_value( 'hello' ) )->toBe( 'hello' );
+			expect( Settings::coerce_value( 'localhost' ) )->toBe( 'localhost' );
+		} );
+	} );
+
+	describe( 'get', function () {
+		it( 'gets nested value with dot notation', function () {
+			$settings = new Settings();
+
+			// MC_STORAGE_HOST is defined in this file, so the value comes from the constant.
+			$value = $settings->get( 'storage.host' );
+			expect( $value )->toBe( '192.168.1.1' );
+		} );
+
+		it( 'returns default for non-existent key', function () {
+			$settings = new Settings();
+
+			$value = $settings->get( 'nonexistent.key', 'default' );
+			expect( $value )->toBe( 'default' );
+		} );
+
+		it( 'gets nested value from cache module', function () {
+			$settings = new Settings();
+
+			$value = $settings->get( 'cache.ttl' );
+			expect( $value )->toBe( DAY_IN_SECONDS );
+		} );
+	} );
+
+	describe( 'set', function () {
+		it( 'returns false for invalid key format', function () {
+			$settings = new Settings();
+
+			$result = $settings->set( 'singlekey', 'value' );
+			expect( $result )->toBeFalse();
+		} );
+
+		it( 'returns true for valid key', function () {
+			$settings = new Settings();
+
+			$result = $settings->set( 'cache.ttl', 3600 );
+			expect( $result )->toBeTrue();
+		} );
+	} );
+
+	describe( 'get_setting_source', function () {
+		it( 'returns constant for constant-defined settings', function () {
+			$settings = new Settings();
+
+			// MC_STORAGE_HOST is defined earlier in this file.
+			$source = $settings->get_setting_source( 'storage', 'host' );
+			expect( $source )->toBe( 'constant' );
+		} );
+
+		it( 'returns default for non-constant settings', function () {
+			$settings = new Settings();
+
+			$source = $settings->get_setting_source( 'cache', 'ttl' );
+			expect( $source )->toBe( 'default' );
+		} );
+	} );
+
+	describe( 'export', function () {
+		it( 'exports settings without encrypted fields by default', function () {
+			$settings = new Settings();
+
+			$exported = $settings->export();
+
+			expect( $exported )->toBeArray();
+			expect( $exported )->toHaveKey( 'storage' );
+			expect( $exported )->toHaveKey( 'cache' );
+			expect( $exported )->not->toHaveKey( 'host' );
+		} );
+
+		it( 'excludes enc_ prefixed fields when not including encrypted', function () {
+			$settings = new Settings();
+
+			$exported = $settings->export();
+
+			expect( $exported['storage'] )->not->toHaveKey( 'enc_password' );
+		} );
+	} );
+
+	describe( 'import', function () {
+		it( 'imports valid settings', function () {
+			$settings = new Settings();
+
+			$data = array(
+				'cache' => array( 'ttl' => 7200 ),
+			);
+
+			$result = $settings->import( $data );
+			expect( $result )->toBeTrue();
+		} );
+
+		it( 'returns false for empty settings', function () {
+			$settings = new Settings();
+
+			$result = $settings->import( array() );
+			expect( $result )->toBeFalse();
+		} );
+
+		it( 'filters out invalid modules', function () {
+			$settings = new Settings();
+
+			$data = array(
+				'invalid_module' => array( 'key' => 'value' ),
+			);
+
+			$result = $settings->import( $data );
+			expect( $result )->toBeFalse();
+		} );
+	} );
+
+	describe( 'reset', function () {
+		it( 'resets all settings', function () {
+			$settings = new Settings();
+
+			$result = $settings->reset();
+			expect( $result )->toBeTrue();
+		} );
+
+		it( 'resets specific module settings', function () {
+			$settings = new Settings();
+
+			$result = $settings->reset( 'cache' );
+			expect( $result )->toBeTrue();
+		} );
+	} );
+
+	describe( 'encrypt_value static method', function () {
+		it( 'encrypts a value', function () {
+			$encrypted = Settings::encrypt_value( 'mysecret' );
+
+			expect( $encrypted )->toBeString();
+			expect( $encrypted )->toContain( 'ENC:' );
+		} );
+
+		it( 'is a public static method', function () {
+			$method = new ReflectionMethod( Settings::class, 'encrypt_value' );
+			expect( $method->isPublic() )->toBeTrue();
+			expect( $method->isStatic() )->toBeTrue();
+		} );
+	} );
+
+	describe( 'public accessor methods', function () {
+		it( 'get_settings_from_constants is public', function () {
+			$method = new ReflectionMethod( Settings::class, 'get_settings_from_constants' );
+			expect( $method->isPublic() )->toBeTrue();
+		} );
+
+		it( 'get_settings_from_file is public', function () {
+			$method = new ReflectionMethod( Settings::class, 'get_settings_from_file' );
+			expect( $method->isPublic() )->toBeTrue();
+		} );
+
+		it( 'get_settings_from_db is public', function () {
+			$method = new ReflectionMethod( Settings::class, 'get_settings_from_db' );
+			expect( $method->isPublic() )->toBeTrue();
+		} );
+	} );
 } );

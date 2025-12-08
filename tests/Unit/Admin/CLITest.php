@@ -62,6 +62,11 @@ describe( 'CLI', function () {
 			$reflection = new ReflectionClass( CLI::class );
 			expect( $reflection->hasMethod( 'test' ) )->toBeTrue();
 		} );
+
+		it( 'has config method', function () {
+			$reflection = new ReflectionClass( CLI::class );
+			expect( $reflection->hasMethod( 'config' ) )->toBeTrue();
+		} );
 	} );
 
 	describe( 'properties', function () {
@@ -239,6 +244,27 @@ describe( 'CLI', function () {
 
 		it( 'test takes two array parameters', function () {
 			$method = new ReflectionMethod( CLI::class, 'test' );
+			expect( $method->getNumberOfParameters() )->toBe( 2 );
+
+			$params = $method->getParameters();
+			expect( $params[0]->getName() )->toBe( 'args' );
+			expect( $params[1]->getName() )->toBe( 'assoc_args' );
+		} );
+
+		it( 'config is public', function () {
+			$method = new ReflectionMethod( CLI::class, 'config' );
+			expect( $method->isPublic() )->toBeTrue();
+		} );
+
+		it( 'config returns void', function () {
+			$method = new ReflectionMethod( CLI::class, 'config' );
+			$return_type = $method->getReturnType();
+			expect( $return_type )->not->toBeNull();
+			expect( $return_type->getName() )->toBe( 'void' );
+		} );
+
+		it( 'config takes two array parameters', function () {
+			$method = new ReflectionMethod( CLI::class, 'config' );
 			expect( $method->getNumberOfParameters() )->toBe( 2 );
 
 			$params = $method->getParameters();
