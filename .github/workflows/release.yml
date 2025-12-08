@@ -117,6 +117,7 @@ jobs:
         run: |
           VERSION="${{ steps.meta.outputs.version }}"
           PREV_TAG="${{ steps.previous.outputs.tag }}"
+          REPO="${{ github.repository }}"
 
           # Get commits since last tag
           if [ -z "$PREV_TAG" ]; then
@@ -133,37 +134,70 @@ jobs:
           REFACTOR=""
           OTHER=""
 
-          # Parse conventional commits
+          # Parse conventional commits (format: "hash subject")
           while IFS= read -r line; do
             [ -z "$line" ] && continue
 
-            # Extract commit message (remove hash prefix if present)
-            MSG="$line"
+            # Extract hash and message
+            HASH="${line%% *}"
+            MSG="${line#* }"
+            SHORT_HASH="${HASH:0:7}"
+            COMMIT_LINK="[\`${SHORT_HASH}\`](https://github.com/${REPO}/commit/${HASH})"
 
-            # Categorize by conventional commit prefix
-            if [[ "$MSG" =~ ^feat(\(.+\))?:\ (.+)$ ]]; then
-              FEATURES="${FEATURES}- ${BASH_REMATCH[2]}\n"
-            elif [[ "$MSG" =~ ^fix(\(.+\))?:\ (.+)$ ]]; then
-              FIXES="${FIXES}- ${BASH_REMATCH[2]}\n"
-            elif [[ "$MSG" =~ ^docs?(\(.+\))?:\ (.+)$ ]]; then
-              DOCS="${DOCS}- ${BASH_REMATCH[2]}\n"
-            elif [[ "$MSG" =~ ^perf(\(.+\))?:\ (.+)$ ]]; then
-              PERF="${PERF}- ${BASH_REMATCH[2]}\n"
-            elif [[ "$MSG" =~ ^refactor(\(.+\))?:\ (.+)$ ]]; then
-              REFACTOR="${REFACTOR}- ${BASH_REMATCH[2]}\n"
-            elif [[ "$MSG" =~ ^(chore|build|ci|test|style)(\(.+\))?:\ (.+)$ ]]; then
-              : # Skip maintenance commits from changelog
-            else
-              # Include non-conventional commits in Other
-              OTHER="${OTHER}- ${MSG}\n"
+            # Categorize by conventional commit prefix, include scope if present
+            if [[ "$MSG" =~ ^feat(\(([^)]+)\))?:\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[2]}"
+              DESC="${BASH_REMATCH[3]}"
+              if [ -n "$SCOPE" ]; then
+                FEATURES="${FEATURES}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+              else
+                FEATURES="${FEATURES}- ${DESC} (${COMMIT_LINK})\n"
+              fi
+            elif [[ "$MSG" =~ ^fix(\(([^)]+)\))?:\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[2]}"
+              DESC="${BASH_REMATCH[3]}"
+              if [ -n "$SCOPE" ]; then
+                FIXES="${FIXES}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+              else
+                FIXES="${FIXES}- ${DESC} (${COMMIT_LINK})\n"
+              fi
+            elif [[ "$MSG" =~ ^docs?(\(([^)]+)\))?:\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[2]}"
+              DESC="${BASH_REMATCH[3]}"
+              if [ -n "$SCOPE" ]; then
+                DOCS="${DOCS}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+              else
+                DOCS="${DOCS}- ${DESC} (${COMMIT_LINK})\n"
+              fi
+            elif [[ "$MSG" =~ ^perf(\(([^)]+)\))?:\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[2]}"
+              DESC="${BASH_REMATCH[3]}"
+              if [ -n "$SCOPE" ]; then
+                PERF="${PERF}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+              else
+                PERF="${PERF}- ${DESC} (${COMMIT_LINK})\n"
+              fi
+            elif [[ "$MSG" =~ ^refactor(\(([^)]+)\))?:\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[2]}"
+              DESC="${BASH_REMATCH[3]}"
+              if [ -n "$SCOPE" ]; then
+                REFACTOR="${REFACTOR}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+              else
+                REFACTOR="${REFACTOR}- ${DESC} (${COMMIT_LINK})\n"
+              fi
+            elif [[ "$MSG" =~ ^(chore|build|ci|test|style)(\(([^)]+)\))?:\ (.+)$ ]]; then
+              # Other conventional commits go to "Other" section
+              TYPE="${BASH_REMATCH[1]}"
+              SCOPE="${BASH_REMATCH[3]}"
+              DESC="${BASH_REMATCH[4]}"
+              if [ -n "$SCOPE" ]; then
+                OTHER="${OTHER}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+              else
+                OTHER="${OTHER}- ${DESC} (${COMMIT_LINK})\n"
+              fi
             fi
-          done < <(git log $RANGE --pretty=format:"%s" --no-merges)
-
-          # Get merged PRs for additional context
-          if [ -n "$PREV_TAG" ]; then
-            echo "Fetching merged PRs..."
-            PRS=$(gh pr list --state merged --base main --search "merged:>=$(git log -1 --format=%ci $PREV_TAG | cut -d' ' -f1)" --json number,title --jq '.[] | "- \(.title) (#\(.number))"' 2>/dev/null || echo "")
-          fi
+            # Skip commits without conventional prefix (no else clause)
+          done < <(git log $RANGE --pretty=format:"%H %s" --no-merges)
 
           # Build changelog content
           {
@@ -207,7 +241,8 @@ jobs:
             fi
 
             if [ -n "$PREV_TAG" ]; then
-              echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${VERSION}"
+              echo ""
+              echo "**Full Changelog**: https://github.com/${REPO}/compare/${PREV_TAG}...v${VERSION}"
             fi
           } > /tmp/changelog.md
 
