@@ -281,9 +281,10 @@ jobs:
           # Export tracked files (respects .gitattributes export-ignore)
           git archive --format=tar HEAD | tar -x -C dist
 
-          # Add build artifacts
+          # Add build artifacts and dependencies
           [ -d build ] && rsync -a build/ dist/build/
           [ -d vendor ] && rsync -a vendor/ dist/vendor/
+          [ -d deps ] && rsync -a deps/ dist/deps/
 
           echo "Dist contents:"
           ls -la dist/
@@ -291,6 +292,9 @@ jobs:
       - name: Create release tag
         run: |
           TAG="${{ steps.meta.outputs.tag }}"
+
+          # Reset any uncommitted changes before switching branches
+          git checkout -- .
 
           # Create orphan branch for dist
           git switch --orphan "dist/${TAG}"
