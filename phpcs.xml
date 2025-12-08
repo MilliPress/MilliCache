@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<ruleset name="Coding standard">
+    <description>Coding standard for WordPress plugins</description>
+
+    <!-- Pass some flags to PHPCS:
+		 p flag: Show progress of the run.
+		 s flag: Show sniff codes in all reports.
+		 v flag: Print verbose output.
+		 n flag: Do not print warnings.
+	-->
+    <arg value="psvn"/>
+
+    <!-- use colors in output -->
+    <arg name="colors"/>
+
+    <!-- Scan only PHP files -->
+    <arg name="extensions" value="php"/>
+
+    <!-- Set files & folders-->
+    <file>src</file>
+    <file>assets</file>
+    <file>millicache.php</file>
+    <file>advanced-cache.php</file>
+    <exclude-pattern>*/index.php</exclude-pattern>
+    <exclude-pattern>src/Deps/*</exclude-pattern>
+    <exclude-pattern>tests/*</exclude-pattern>
+    <exclude-pattern>lib/*</exclude-pattern>
+    <!-- WordPress coding standards -->
+    <config name="minimum_supported_wp_version" value="5.1"/>
+    <rule ref="WordPress-Core">
+        <exclude name="WordPress.Files.FileName" />
+    </rule>
+    <rule ref="WordPress">
+        <exclude name="PSR2.Classes.PropertyDeclaration.Underscore"/>
+        <exclude name="PSR2.Methods.MethodDeclaration.Underscore"/>
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+    </rule>
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="millicache"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Include sniffs for PHP cross-version compatibility. -->
+    <config name="testVersion" value="7.4-"/>
+    <rule ref="PHPCompatibilityWP"/>
+</ruleset>

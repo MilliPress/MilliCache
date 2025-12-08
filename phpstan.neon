@@ -1,0 +1,17 @@
+parameters:
+  level: max
+  paths:
+    - millicache.php
+    - advanced-cache.php
+    - assets/
+    - src/
+  excludePaths:
+    - deps/
+  stubFiles:
+    - stubs/ActionBuilder.php
+    - stubs/ConditionBuilder.php
+  scanFiles:
+    - stubs/functions.php
+    - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
+  fileExtensions:
+    - php
