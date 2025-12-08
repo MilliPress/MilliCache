@@ -246,9 +246,11 @@ final class Settings {
 		};
 
 		if ( $module ) {
-			foreach ( $settings as $key => $value ) {
-				$assign_constant( $settings, $key, "MC_{$module}" );
+			$module_settings = $settings[ $module ] ?? array();
+			foreach ( $module_settings as $key => $value ) {
+				$assign_constant( $module_settings, $key, "MC_{$module}" );
 			}
+			return array_filter( $module_settings );
 		} else {
 			foreach ( $settings as $module_key => $module_settings ) {
 				if ( is_array( $module_settings ) ) {
