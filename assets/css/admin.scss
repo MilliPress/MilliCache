@@ -1,0 +1,11 @@
+// stylelint-disable-next-line
+#dashboard_right_now {
+
+	.cache-count {
+
+		a::before,
+		span::before {
+			content: "\f17e";
+		}
+	}
+}
