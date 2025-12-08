@@ -1,0 +1,381 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g., 1.2.0 or 1.2.0-rc.1)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Publish as prerelease?'
+        required: false
+        default: false
+        type: boolean
+      draft:
+        description: 'Publish as draft?'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  test:
+    name: Run Tests
+    uses: ./.github/workflows/e2e.yml
+
+  release:
+    name: Build & Release
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate version format
+        id: meta
+        run: |
+          VERSION="${{ inputs.version }}"
+          # Remove 'v' prefix if provided
+          VERSION="${VERSION#v}"
+
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9\.-]+)?$ ]]; then
+            echo "::error::Version must be in format X.Y.Z or X.Y.Z-suffix (e.g., 1.2.0 or 1.2.0-rc.1)"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Check if tag already exists
+          if git ls-remote --tags origin | grep -q "refs/tags/${{ steps.meta.outputs.tag }}$"; then
+            echo "::error::Tag ${{ steps.meta.outputs.tag }} already exists"
+            exit 1
+          fi
+
+      - name: Get previous tag
+        id: previous
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
+
+          if [ -n "$PREV_TAG" ]; then
+            echo "Previous release: $PREV_TAG"
+          else
+            echo "No previous release found (initial release)"
+          fi
+
+      - name: Determine release type
+        id: release_type
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          PREV_TAG="${{ steps.previous.outputs.tag }}"
+
+          # Check for prerelease suffix
+          if [[ "$VERSION" =~ -[A-Za-z] ]]; then
+            echo "type=prerelease" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "type=initial" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          PREV_VERSION="${PREV_TAG#v}"
+          # Remove any prerelease suffix for comparison
+          PREV_VERSION="${PREV_VERSION%%-*}"
+          BASE_VERSION="${VERSION%%-*}"
+
+          IFS='.' read -r PREV_MAJOR PREV_MINOR PREV_PATCH <<< "$PREV_VERSION"
+          IFS='.' read -r NEW_MAJOR NEW_MINOR NEW_PATCH <<< "$BASE_VERSION"
+
+          if [ "$NEW_MAJOR" != "$PREV_MAJOR" ]; then
+            echo "type=major" >> $GITHUB_OUTPUT
+          elif [ "$NEW_MINOR" != "$PREV_MINOR" ]; then
+            echo "type=minor" >> $GITHUB_OUTPUT
+          else
+            echo "type=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          PREV_TAG="${{ steps.previous.outputs.tag }}"
+          REPO="${{ github.repository }}"
+
+          # Get commits since last tag
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="HEAD"
+          else
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          # Initialize changelog sections
+          FEATURES=""
+          FIXES=""
+          DOCS=""
+          PERF=""
+          REFACTOR=""
+          OTHER=""
+
+          # Parse conventional commits (format: "hash subject")
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+
+            # Extract hash and message
+            HASH="${line%% *}"
+            MSG="${line#* }"
+            SHORT_HASH="${HASH:0:7}"
+            COMMIT_LINK="[\`${SHORT_HASH}\`](https://github.com/${REPO}/commit/${HASH})"
+
+            # Categorize by conventional commit prefix, include scope if present
+            if [[ "$MSG" =~ ^feat(\(([^)]+)\))?:\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[2]}"
+              DESC="${BASH_REMATCH[3]}"
+              if [ -n "$SCOPE" ]; then
+                FEATURES="${FEATURES}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+              else
+                FEATURES="${FEATURES}- ${DESC} (${COMMIT_LINK})\n"
+              fi
+            elif [[ "$MSG" =~ ^fix(\(([^)]+)\))?:\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[2]}"
+              DESC="${BASH_REMATCH[3]}"
+              if [ -n "$SCOPE" ]; then
+                FIXES="${FIXES}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+              else
+                FIXES="${FIXES}- ${DESC} (${COMMIT_LINK})\n"
+              fi
+            elif [[ "$MSG" =~ ^docs?(\(([^)]+)\))?:\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[2]}"
+              DESC="${BASH_REMATCH[3]}"
+              if [ -n "$SCOPE" ]; then
+                DOCS="${DOCS}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+              else
+                DOCS="${DOCS}- ${DESC} (${COMMIT_LINK})\n"
+              fi
+            elif [[ "$MSG" =~ ^perf(\(([^)]+)\))?:\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[2]}"
+              DESC="${BASH_REMATCH[3]}"
+              if [ -n "$SCOPE" ]; then
+                PERF="${PERF}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+              else
+                PERF="${PERF}- ${DESC} (${COMMIT_LINK})\n"
+              fi
+            elif [[ "$MSG" =~ ^refactor(\(([^)]+)\))?:\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[2]}"
+              DESC="${BASH_REMATCH[3]}"
+              if [ -n "$SCOPE" ]; then
+                REFACTOR="${REFACTOR}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+              else
+                REFACTOR="${REFACTOR}- ${DESC} (${COMMIT_LINK})\n"
+              fi
+            elif [[ "$MSG" =~ ^(chore|build|ci|test|style)(\(([^)]+)\))?:\ (.+)$ ]]; then
+              # Other conventional commits go to "Other" section
+              TYPE="${BASH_REMATCH[1]}"
+              SCOPE="${BASH_REMATCH[3]}"
+              DESC="${BASH_REMATCH[4]}"
+              if [ -n "$SCOPE" ]; then
+                OTHER="${OTHER}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+              else
+                OTHER="${OTHER}- ${DESC} (${COMMIT_LINK})\n"
+              fi
+            fi
+            # Skip commits without conventional prefix (no else clause)
+          done < <(git log $RANGE --pretty=format:"%H %s" --no-merges)
+
+          # Build changelog content
+          {
+            echo "## What's Changed"
+            echo ""
+
+            if [ -n "$FEATURES" ]; then
+              echo "### Features"
+              printf '%b' "$FEATURES"
+              echo ""
+            fi
+
+            if [ -n "$FIXES" ]; then
+              echo "### Bug Fixes"
+              printf '%b' "$FIXES"
+              echo ""
+            fi
+
+            if [ -n "$PERF" ]; then
+              echo "### Performance"
+              printf '%b' "$PERF"
+              echo ""
+            fi
+
+            if [ -n "$REFACTOR" ]; then
+              echo "### Refactoring"
+              printf '%b' "$REFACTOR"
+              echo ""
+            fi
+
+            if [ -n "$DOCS" ]; then
+              echo "### Documentation"
+              printf '%b' "$DOCS"
+              echo ""
+            fi
+
+            if [ -n "$OTHER" ]; then
+              echo "### Other Changes"
+              printf '%b' "$OTHER"
+              echo ""
+            fi
+
+            if [ -n "$PREV_TAG" ]; then
+              echo ""
+              echo "**Full Changelog**: https://github.com/${REPO}/compare/${PREV_TAG}...v${VERSION}"
+            fi
+          } > /tmp/changelog.md
+
+          echo "Generated changelog:"
+          cat /tmp/changelog.md
+
+      - name: Download performance results
+        uses: actions/download-artifact@v4
+        with:
+          name: performance-results
+          path: /tmp/performance
+        continue-on-error: true
+
+      - name: Append performance summary to changelog
+        run: |
+          if [ -f /tmp/performance/performance-results.md ]; then
+            echo "" >> /tmp/changelog.md
+            echo "### Performance" >> /tmp/changelog.md
+            echo "" >> /tmp/changelog.md
+            cat /tmp/performance/performance-results.md >> /tmp/changelog.md
+            echo "Performance summary appended to changelog"
+          else
+            echo "No performance results found, skipping"
+          fi
+
+      - name: Update version in plugin
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+
+          # Update plugin header version
+          sed -i "s/^\( \* Version: *\).*/\1$VERSION/" millicache.php
+
+          # Update MILLICACHE_VERSION constant
+          sed -i "s/define( 'MILLICACHE_VERSION', '[^']*' );/define( 'MILLICACHE_VERSION', '$VERSION' );/" millicache.php
+
+          echo "Updated millicache.php to version $VERSION"
+          git diff millicache.php
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Build assets
+        run: |
+          npm ci
+          npm run build
+          rm -rf node_modules
+
+      - name: Install production dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --classmap-authoritative
+
+      - name: Commit version bump
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          git add millicache.php
+          git commit -m "chore(release): bump version to $VERSION" || echo "No version changes to commit"
+          git push origin ${{ github.ref_name }}
+
+      - name: Create dist build
+        run: |
+          rm -rf dist && mkdir dist
+
+          # Export tracked files (respects .gitattributes export-ignore)
+          git archive --format=tar HEAD | tar -x -C dist
+
+          # Add build artifacts and dependencies
+          [ -d build ] && rsync -a build/ dist/build/
+          [ -d vendor ] && rsync -a vendor/ dist/vendor/
+          [ -d deps ] && rsync -a deps/ dist/deps/
+
+          echo "Dist contents:"
+          ls -la dist/
+
+      - name: Create release tag
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+
+          # Reset any uncommitted changes before switching branches
+          git checkout -- .
+
+          # Create orphan branch for dist
+          git switch --orphan "dist/${TAG}"
+          git rm -rf . >/dev/null 2>&1 || true
+
+          # Move dist contents to root
+          rsync -a dist/ . --remove-source-files
+          rm -rf dist/
+
+          # Commit and tag
+          git add -A
+          git commit -m "Release ${TAG}"
+          git tag -a "${TAG}" -m "Release ${TAG}"
+          git push origin "refs/tags/${TAG}"
+
+      - name: Create release archive
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          zip -rq "millicache-${TAG}.zip" . -x ".git/*"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.tag }}
+          body_path: /tmp/changelog.md
+          draft: ${{ inputs.draft }}
+          prerelease: ${{ inputs.prerelease }}
+          files: millicache-${{ steps.meta.outputs.tag }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release summary
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          TYPE="${{ steps.release_type.outputs.type }}"
+
+          {
+            echo "## Release ${TAG} Created"
+            echo ""
+            echo "| Property | Value |"
+            echo "|----------|-------|"
+            echo "| Version | ${TAG} |"
+            echo "| Type | ${TYPE} |"
+            echo "| Draft | ${{ inputs.draft }} |"
+            echo "| Prerelease | ${{ inputs.prerelease }} |"
+            echo ""
+            echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/${TAG})"
+          } >> $GITHUB_STEP_SUMMARY
