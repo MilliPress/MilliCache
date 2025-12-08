@@ -23,13 +23,18 @@ permissions:
   pull-requests: read
 
 jobs:
-  test:
-    name: Run Tests
+  ci:
+    name: Run CI
+    uses: ./.github/workflows/ci.yml
+
+  e2e:
+    name: Run E2E
+    needs: ci
     uses: ./.github/workflows/e2e.yml
 
   release:
     name: Build & Release
-    needs: test
+    needs: [ci, e2e]
     runs-on: ubuntu-latest
 
     steps:
@@ -145,56 +150,49 @@ jobs:
             COMMIT_LINK="[\`${SHORT_HASH}\`](https://github.com/${REPO}/commit/${HASH})"
 
             # Categorize by conventional commit prefix, include scope if present
-            if [[ "$MSG" =~ ^feat(\(([^)]+)\))?:\ (.+)$ ]]; then
+            # Use simpler regex patterns to avoid bash parsing issues with special chars
+            if [[ "$MSG" =~ ^feat\(([a-zA-Z0-9_-]+)\):\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[1]}"
+              DESC="${BASH_REMATCH[2]}"
+              FEATURES="${FEATURES}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+            elif [[ "$MSG" =~ ^feat:\ (.+)$ ]]; then
+              DESC="${BASH_REMATCH[1]}"
+              FEATURES="${FEATURES}- ${DESC} (${COMMIT_LINK})\n"
+            elif [[ "$MSG" =~ ^fix\(([a-zA-Z0-9_-]+)\):\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[1]}"
+              DESC="${BASH_REMATCH[2]}"
+              FIXES="${FIXES}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+            elif [[ "$MSG" =~ ^fix:\ (.+)$ ]]; then
+              DESC="${BASH_REMATCH[1]}"
+              FIXES="${FIXES}- ${DESC} (${COMMIT_LINK})\n"
+            elif [[ "$MSG" =~ ^docs?\(([a-zA-Z0-9_-]+)\):\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[1]}"
+              DESC="${BASH_REMATCH[2]}"
+              DOCS="${DOCS}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+            elif [[ "$MSG" =~ ^docs?:\ (.+)$ ]]; then
+              DESC="${BASH_REMATCH[1]}"
+              DOCS="${DOCS}- ${DESC} (${COMMIT_LINK})\n"
+            elif [[ "$MSG" =~ ^perf\(([a-zA-Z0-9_-]+)\):\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[1]}"
+              DESC="${BASH_REMATCH[2]}"
+              PERF="${PERF}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+            elif [[ "$MSG" =~ ^perf:\ (.+)$ ]]; then
+              DESC="${BASH_REMATCH[1]}"
+              PERF="${PERF}- ${DESC} (${COMMIT_LINK})\n"
+            elif [[ "$MSG" =~ ^refactor\(([a-zA-Z0-9_-]+)\):\ (.+)$ ]]; then
+              SCOPE="${BASH_REMATCH[1]}"
+              DESC="${BASH_REMATCH[2]}"
+              REFACTOR="${REFACTOR}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+            elif [[ "$MSG" =~ ^refactor:\ (.+)$ ]]; then
+              DESC="${BASH_REMATCH[1]}"
+              REFACTOR="${REFACTOR}- ${DESC} (${COMMIT_LINK})\n"
+            elif [[ "$MSG" =~ ^(chore|build|ci|test|style)\(([a-zA-Z0-9_-]+)\):\ (.+)$ ]]; then
               SCOPE="${BASH_REMATCH[2]}"
               DESC="${BASH_REMATCH[3]}"
-              if [ -n "$SCOPE" ]; then
-                FEATURES="${FEATURES}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
-              else
-                FEATURES="${FEATURES}- ${DESC} (${COMMIT_LINK})\n"
-              fi
-            elif [[ "$MSG" =~ ^fix(\(([^)]+)\))?:\ (.+)$ ]]; then
-              SCOPE="${BASH_REMATCH[2]}"
-              DESC="${BASH_REMATCH[3]}"
-              if [ -n "$SCOPE" ]; then
-                FIXES="${FIXES}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
-              else
-                FIXES="${FIXES}- ${DESC} (${COMMIT_LINK})\n"
-              fi
-            elif [[ "$MSG" =~ ^docs?(\(([^)]+)\))?:\ (.+)$ ]]; then
-              SCOPE="${BASH_REMATCH[2]}"
-              DESC="${BASH_REMATCH[3]}"
-              if [ -n "$SCOPE" ]; then
-                DOCS="${DOCS}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
-              else
-                DOCS="${DOCS}- ${DESC} (${COMMIT_LINK})\n"
-              fi
-            elif [[ "$MSG" =~ ^perf(\(([^)]+)\))?:\ (.+)$ ]]; then
-              SCOPE="${BASH_REMATCH[2]}"
-              DESC="${BASH_REMATCH[3]}"
-              if [ -n "$SCOPE" ]; then
-                PERF="${PERF}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
-              else
-                PERF="${PERF}- ${DESC} (${COMMIT_LINK})\n"
-              fi
-            elif [[ "$MSG" =~ ^refactor(\(([^)]+)\))?:\ (.+)$ ]]; then
-              SCOPE="${BASH_REMATCH[2]}"
-              DESC="${BASH_REMATCH[3]}"
-              if [ -n "$SCOPE" ]; then
-                REFACTOR="${REFACTOR}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
-              else
-                REFACTOR="${REFACTOR}- ${DESC} (${COMMIT_LINK})\n"
-              fi
-            elif [[ "$MSG" =~ ^(chore|build|ci|test|style)(\(([^)]+)\))?:\ (.+)$ ]]; then
-              # Other conventional commits go to "Other" section
-              TYPE="${BASH_REMATCH[1]}"
-              SCOPE="${BASH_REMATCH[3]}"
-              DESC="${BASH_REMATCH[4]}"
-              if [ -n "$SCOPE" ]; then
-                OTHER="${OTHER}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
-              else
-                OTHER="${OTHER}- ${DESC} (${COMMIT_LINK})\n"
-              fi
+              OTHER="${OTHER}- **${SCOPE}:** ${DESC} (${COMMIT_LINK})\n"
+            elif [[ "$MSG" =~ ^(chore|build|ci|test|style):\ (.+)$ ]]; then
+              DESC="${BASH_REMATCH[2]}"
+              OTHER="${OTHER}- ${DESC} (${COMMIT_LINK})\n"
             fi
             # Skip commits without conventional prefix (no else clause)
           done < <(git log $RANGE --pretty=format:"%H %s" --no-merges)
