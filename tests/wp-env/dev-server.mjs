@@ -72,13 +72,13 @@ const run = (command, args = [], { silent = false } = {}) => {
 };
 
 /**
- * Retry a function with exponential backoff.
+ * Retry a function with linear backoff (capped).
  * @param {Function} fn The async function to retry.
- * @param {number} maxRetries Maximum number of retries.
- * @param {number} baseDelay Base delay in ms between retries.
+ * @param {number} maxRetries Maximum number of retries (default: 3).
+ * @param {number} delay Fixed delay in ms between retries (default: 1000).
  * @returns {Promise<any>} The result of the function.
  */
-const retry = async (fn, maxRetries = 3, baseDelay = 1000) => {
+const retry = async (fn, maxRetries = 3, delay = 1000) => {
     let lastError;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
@@ -86,7 +86,6 @@ const retry = async (fn, maxRetries = 3, baseDelay = 1000) => {
         } catch (error) {
             lastError = error;
             if (attempt < maxRetries) {
-                const delay = baseDelay * Math.pow(2, attempt);
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
@@ -161,23 +160,24 @@ const generateSiteContent = async (siteId) => {
         run('npx', wpCmd(`term create genre ${genre}`), { silent: true }).catch(() => {})
     ));
 
-    // Create sample books with assigned genres
+    // Create sample books with assigned genres (parallel creation, then parallel term assignment)
     const books = [
         { title: 'Test Book One', genre: 'Fiction' },
         { title: 'Test Book Two', genre: 'Non-Fiction' },
         { title: 'Test Book Three', genre: 'Science' },
     ];
-    for (const book of books) {
-        try {
-            const result = await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'create',
-                '--post_type=book', '--post_status=publish', `--post_title="${book.title}"`, '--porcelain',
-                ...(urlFlag ? [urlFlag] : [])], { silent: true });
-            const postId = result.trim();
-            if (postId) {
-                await run('npx', wpCmd(`term set ${postId} genre ${book.genre}`), { silent: true });
-            }
-        } catch {}
-    }
+    const bookResults = await Promise.allSettled(books.map(book =>
+        run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'create',
+            '--post_type=book', '--post_status=publish', `--post_title="${book.title}"`, '--porcelain',
+            ...(urlFlag ? [urlFlag] : [])], { silent: true })
+            .then(result => ({ postId: result.trim(), genre: book.genre }))
+    ));
+    // Assign genres in parallel
+    await Promise.allSettled(
+        bookResults
+            .filter(r => r.status === 'fulfilled' && r.value?.postId)
+            .map(r => run('npx', wpCmd(`term set ${r.value.postId} genre ${r.value.genre}`), { silent: true }))
+    );
 
     // Create navigation menu with links
     const siteBase = siteId === 1 ? 'http://localhost:8889' : `http://localhost:8889/site${siteId}`;
@@ -186,7 +186,7 @@ const generateSiteContent = async (siteId) => {
         const menuId = await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'menu', 'create', 'Primary', '--porcelain',
             ...(urlFlag ? [urlFlag] : [])], { silent: true });
         if (menuId.trim()) {
-            // Add menu items
+            // Add menu items in parallel
             const menuItems = [
                 { title: 'Home', url: `${siteBase}/` },
                 { title: 'About', url: `${siteBase}/about/` },
@@ -195,10 +195,10 @@ const generateSiteContent = async (siteId) => {
                 { title: 'Books', url: `${siteBase}/books/` },
                 { title: 'Sample Site', url: 'http://localhost:8889/site2/' },
             ];
-            for (const item of menuItems) {
-                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'menu', 'item', 'add-custom', 'Primary',
-                    item.title, item.url, ...(urlFlag ? [urlFlag] : [])], { silent: true }).catch(() => {});
-            }
+            await Promise.allSettled(menuItems.map(item =>
+                run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'menu', 'item', 'add-custom', 'Primary',
+                    item.title, item.url, ...(urlFlag ? [urlFlag] : [])], { silent: true })
+            ));
             // Assign menu to primary location
             await run('npx', wpCmd('menu location assign Primary primary'), { silent: true }).catch(() => {});
         }
@@ -295,67 +295,70 @@ const startServer = async () => {
         // Configure permalinks - critical for REST API discovery
         console.log('Configuring permalinks...');
         try {
-            await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--hard'], { silent: true }), 10, 3000);
+            await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--hard'], { silent: true }), 3, 1000);
             console.log('Permalinks configured for tests-cli');
         } catch (error) {
             console.warn(`Warning: Failed to configure permalinks: ${error.message}`);
             // Try alternative approach - flush rewrite rules
             try {
-                await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'flush', '--hard'], { silent: true }), 5, 2000);
+                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'flush', '--hard'], { silent: true });
                 console.log('Rewrite rules flushed');
             } catch {
                 console.warn('Warning: Could not flush rewrite rules');
             }
         }
-        // Also configure dev site
+        // Also configure dev site (no retry - dev site is less critical)
         try {
-            await retry(() => run('npx', ['wp-env', 'run', 'cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--hard'], { silent: true }), 5, 2000);
+            await run('npx', ['wp-env', 'run', 'cli', 'wp', 'rewrite', 'structure', '/%postname%/', '--hard'], { silent: true });
         } catch {
             // Dev site is less critical
         }
 
         // Setup multisite - all failures are non-fatal (may already be configured from cache)
         console.log('Checking Multisite status...');
+        let isMultisite = false;
         try {
-            await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'list', '--quiet'], { silent: true }), 5, 2000);
+            // No retry here - if it fails, multisite isn't set up yet (expected case)
+            await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'list', '--quiet'], { silent: true });
+            isMultisite = true;
             console.log('Multisite already initialized');
         } catch {
+            // Multisite not set up yet - this is expected on first run
+        }
+
+        if (!isMultisite) {
             console.log('Initializing Multisite...');
 
-            // Check if the MULTISITE constant is already set (with retry for container readiness)
-            let hasConstant;
+            // Check if the MULTISITE constant is already set (no retry - just a quick check)
+            let hasConstant = false;
             try {
-                await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'has', 'MULTISITE', '--quiet'], { silent: true }), 5, 2000);
+                await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'has', 'MULTISITE', '--quiet'], { silent: true });
                 hasConstant = true;
             } catch {
-                hasConstant = false;
+                // Constant not set - this is fine
             }
 
-            // Use allSettled for multisite conversion to handle partial failures gracefully
-            if (hasConstant || process.env.CI) {
-                const conversionResults = await Promise.allSettled([
-                    retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet', '--skip-config'], { silent: true }), 5, 2000),
-                ]);
-                // Only set MULTISITE if conversion succeeded
-                if (conversionResults[0].status === 'fulfilled') {
-                    await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'set', 'MULTISITE', 'true', '--raw', '--quiet'], { silent: true }), 5, 2000).catch(() => {});
-                } else {
-                    console.warn(`Warning: Multisite conversion failed (may already be configured)`);
+            // Convert to multisite (retry only twice with short delay)
+            const skipConfig = hasConstant || process.env.CI;
+            try {
+                const convertArgs = ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet'];
+                if (skipConfig) convertArgs.push('--skip-config');
+                await retry(() => run('npx', convertArgs, { silent: true }), 2, 1000);
+
+                // Set MULTISITE constant if we skipped config
+                if (skipConfig) {
+                    await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'config', 'set', 'MULTISITE', 'true', '--raw', '--quiet'], { silent: true }).catch(() => {});
                 }
-            } else {
-                try {
-                    await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'core', 'multisite-convert', '--quiet'], { silent: true }), 5, 2000);
-                } catch {
-                    console.warn('Warning: Multisite conversion failed (may already be configured)');
-                }
+            } catch {
+                console.warn('Warning: Multisite conversion failed (may already be configured)');
             }
 
-            // Create additional sites (with retry for each site)
+            // Create additional sites (parallel, no retry - if site exists it will fail fast)
             console.log('Creating multisite subsites...');
             const siteResults = await Promise.allSettled(
                 [2, 3, 4, 5].map(async (i) => {
                     try {
-                        await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'create', `--slug='site${i}'`, `--title='Site ${i}'`, `--email='site${i}@admin.local'`], { silent: true }), 5, 2000);
+                        await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'site', 'create', `--slug='site${i}'`, `--title='Site ${i}'`, `--email='site${i}@admin.local'`], { silent: true });
                         return { site: i, created: true };
                     } catch {
                         return { site: i, created: false };
