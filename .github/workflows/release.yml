@@ -258,7 +258,6 @@ jobs:
         run: |
           if [ -f /tmp/performance/performance-results.md ]; then
             echo "" >> /tmp/changelog.md
-            echo "### Performance" >> /tmp/changelog.md
             echo "" >> /tmp/changelog.md
             cat /tmp/performance/performance-results.md >> /tmp/changelog.md
             echo "Performance summary appended to changelog"
