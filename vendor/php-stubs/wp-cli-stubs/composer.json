@@ -1,0 +1,30 @@
+{
+    "name": "php-stubs/wp-cli-stubs",
+    "description": "WP-CLI function and class declaration stubs for static analysis.",
+    "keywords": [
+        "wp-cli",
+        "wordpress",
+        "static analysis",
+        "phpstan"
+    ],
+    "homepage": "https://github.com/php-stubs/wp-cli-stubs",
+    "license": "MIT",
+    "require": {
+        "php-stubs/wordpress-stubs": "^4.7 || ^5.0 || ^6.0"
+    },
+    "require-dev": {
+        "php": "~7.3 || ~8.0",
+        "php-stubs/generator": "^0.8.0"
+    },
+    "suggest": {
+        "szepeviktor/phpstan-wordpress": "WordPress extensions for PHPStan",
+        "symfony/polyfill-php73": "Symfony polyfill backporting some PHP 7.3+ features to lower PHP versions"
+    },
+    "minimum-stability": "stable",
+    "scripts": {
+        "cleanup": "git status --short --ignored | sed -n -e 's#^!! ##p' | xargs -r rm -vrf"
+    },
+    "scripts-descriptions": {
+        "cleanup": "Remove all ignored files."
+    }
+}
