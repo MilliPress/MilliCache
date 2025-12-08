@@ -6,7 +6,8 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage Core
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Core;
@@ -25,10 +26,10 @@ use MilliCache\Deps\Predis\PredisException;
  *
  * @since      1.0.0
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage Core
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-final class Storage {
+class Storage {
 
 	/**
 	 * The Predis Client object.
@@ -103,11 +104,12 @@ final class Storage {
 	/**
 	 * Initialize the class and set its properties.
 	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
 	 * @param array<mixed> $settings The settings for the storage server connection.
 	 *
 	 * @return void
-	 * @since    1.0.0
-	 * @access   public
 	 */
 	public function __construct( array $settings ) {
 		$this->config( $settings );
@@ -257,39 +259,34 @@ final class Storage {
 	 */
 	public function get_cache( string $hash ): ?array {
 		try {
-			$cache = null;
-			$lock_status = '';
-
 			// Get the cache entry and lock status.
 			$key = $this->get_cache_key( $hash );
 
-			$this->client->transaction(
-				function ( $tx ) use ( $key, &$cache, &$lock_status ) {
+			$results = $this->client->transaction(
+				function ( $tx ) use ( $key ) {
 					// Get cache entry.
-					$cache = $this->client->hgetall( $key );
+					$tx->hgetall( $key );
 
 					// Get lock status.
-					$lock_status = $this->client->get( $key . '-lock' );
+					$tx->get( $key . '-lock' );
 				}
 			);
 
-			if ( ! $cache ) {
+			if ( ! is_array( $results ) || ! is_array( $results[0] ?? null ) ) {
 				return null;
 			}
 
-			// Sort out the flags.
-			$flags = array();
-			foreach ( array_keys( $cache ) as $key ) {
-				if ( strpos( (string) $key, $this->prefix . ':f:' ) === 0 ) {
-					$flags[] = $this->get_flag_key( (string) $key );
-				}
-			}
+			$cache = $results[0];
+			$lock_status = $results[1] ?? '';
+			$flags = array_filter(
+				array_keys( $cache ),
+				fn( $key ) => strpos( (string) $key, $this->prefix . ':f:' ) === 0
+			);
 
-			// Return the data, the flags and lock status.
 			return isset( $cache['data'] ) ? array(
 				(array) unserialize( $cache['data'] ),
-				$flags,
-				$lock_status ?? '',
+				array_map( array( $this, 'get_flag_key' ), $flags ),
+				$lock_status,
 			) : null;
 		} catch ( PredisException $e ) {
 			error_log( 'Unable to get cache from the storage server: ' . $e->getMessage() );
@@ -314,7 +311,7 @@ final class Storage {
 			$key = $this->get_cache_key( $hash );
 
 			/**
-			 * Fires before a page cache is stored in the storage server.
+			 * Fires before a cache entry is stored in the storage server.
 			 *
 			 * @since 1.0.0
 			 *
@@ -323,7 +320,7 @@ final class Storage {
 			 * @param array  $flags The flags associated with the cache.
 			 * @param mixed  $data The data to cache.
 			 */
-			do_action( 'millicache_before_page_cache_stored', $hash, $key, $flags, $data );
+			do_action( 'millicache_entry_storing', $hash, $key, $flags, $data );
 
 			// Serialize the data and calculate its size.
 			$serialized_data = serialize( $data );
@@ -354,12 +351,13 @@ final class Storage {
 					}
 
 					// Set the max expiration time.
-					$tx->expire( $key, Engine::$ttl + Engine::$grace );
+					$config = Engine::instance()->config();
+					$tx->expire( $key, $config->ttl + $config->grace );
 				}
 			);
 
 			/**
-			 * Fires after a page cache is stored in the storage server.
+			 * Fires after a cache entry is stored in the storage server.
 			 *
 			 * @since 1.0.0
 			 *
@@ -368,7 +366,7 @@ final class Storage {
 			 * @param array  $flags The flags associated with the cache.
 			 * @param mixed  $data The data to cache.
 			 */
-			do_action( 'millicache_after_page_cache_stored', $hash, $key, $flags, $data );
+			do_action( 'millicache_entry_stored', $hash, $key, $flags, $data );
 
 			return true;
 		} catch ( PredisException $e ) {
@@ -399,13 +397,13 @@ final class Storage {
 			}
 
 			/**
-			 * Fires before a page cache is deleted in the storage server.
+			 * Fires before a cache entry is deleted in the storage server.
 			 *
 			 * @param string $hash The cache URL hash.
 			 * @param string $key The cache key.
 			 * @param array  $flags The flags associated with the cache.
 			 */
-			do_action( 'millicache_before_page_cache_deleted', $hash, $key, $flags );
+			do_action( 'millicache_entry_deleting', $hash, $key, $flags );
 
 			$this->client->transaction(
 				function ( $tx ) use ( $key, $flags ) {
@@ -430,7 +428,7 @@ final class Storage {
 			);
 
 			/**
-			 * Fires after a page cache is deleted in the storage server.
+			 * Fires after a cache entry is deleted in the storage server.
 			 *
 			 * @since 1.0.0
 			 *
@@ -438,7 +436,7 @@ final class Storage {
 			 * @param string $key The cache key.
 			 * @param array  $flags The flags associated with the cache.
 			 */
-			do_action( 'millicache_after_page_cache_deleted', $hash, $key, $flags );
+			do_action( 'millicache_entry_deleted', $hash, $key, $flags );
 
 			return true;
 		} catch ( PredisException $e ) {
@@ -624,7 +622,7 @@ final class Storage {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @param string $flag The cache flag. Supports wildcards.
+	 * @param string $flag The cache flag. Wildcards supported.
 	 * @return array<string> The cache keys associated with the flag.
 	 */
 	public function get_cache_keys_by_flag( string $flag ): array {
@@ -788,16 +786,11 @@ final class Storage {
 				);
 			}
 
-			$valid_sizes = array_filter(
-				$sizes,
-				function ( $size ) {
-					return is_numeric( $size );
-				}
-			);
+			$valid_sizes = array_filter( $sizes, 'is_numeric' );
 
 			return array(
 				'index' => count( $valid_sizes ),
-				'size' => (int) round( array_sum( $valid_sizes ) / 1024 ),
+				'size' => (int) round( (float) array_sum( $valid_sizes ) / 1024 ),
 			);
 		} catch ( PredisException $e ) {
 			error_log( 'Unable to get cache size from the storage server: ' . $e->getMessage() );
@@ -815,7 +808,7 @@ final class Storage {
 	 */
 	public function get_status(): array {
 		$status = array(
-			'connected' => $this->is_connected(),
+			'connected' => false,
 			'config' => array(
 				'host' => $this->host,
 				'port' => $this->port,
@@ -826,70 +819,71 @@ final class Storage {
 			'info' => array(),
 		);
 
-		if ( ! $status['connected'] ) {
-			try {
-				$this->client->ping();
-			} catch ( PredisException $e ) {
-				$status['error'] = $e->getMessage();
-			}
-		} else {
-			// Get the storage server config.
-			$config_keys = array(
-				'databases',
+		// Try to connect if not already connected (Predis uses lazy connections).
+		try {
+			$this->client->ping();
+			$status['connected'] = true;
+		} catch ( PredisException $e ) {
+			$status['error'] = $e->getMessage();
+			return $status;
+		}
+
+		// Get the storage server config.
+		$config_keys = array(
+			'databases',
+			'maxmemory',
+			'maxmemory-policy',
+		);
+
+		foreach ( $config_keys as $key ) {
+			$status['config'] = array_merge( $status['config'], (array) $this->client->config( 'GET', $key ) );
+		}
+
+		// Get the storage server info.
+		$info_keys = array(
+			'Memory' => array(
+				'used_memory',
+				'used_memory_peak',
+				'used_memory_human',
 				'maxmemory',
-				'maxmemory-policy',
-			);
+				'maxmemory_human',
+				'maxmemory_policy',
+			),
+			'Server' => array(
+				'redis_version',
+				'valkey_version',
+				'keydb_version',
+				'dragonfly_version',
+				'tcp_port',
+			),
+		);
 
-			foreach ( $config_keys as $key ) {
-				$status['config'] = array_merge( $status['config'], (array) $this->client->config( 'GET', $key ) );
+		foreach ( $info_keys as $section => $keys ) {
+			$info = $this->client->info( $section );
+
+			if ( ! is_array( $info ) ) {
+				continue;
 			}
 
-			// Get the storage server info.
-			$info_keys = array(
-				'Memory' => array(
-					'used_memory',
-					'used_memory_peak',
-					'used_memory_human',
-					'maxmemory',
-					'maxmemory_human',
-					'maxmemory_policy',
-				),
-				'Server' => array(
-					'redis_version',
-					'valkey_version',
-					'keydb_version',
-					'dragonfly_version',
-					'tcp_port',
-				),
-			);
-
-			foreach ( $info_keys as $section => $keys ) {
-				$info = $this->client->info( $section );
-
-				if ( ! is_array( $info ) ) {
-					continue;
-				}
-
-				foreach ( $keys as $key ) {
-					if ( isset( $info[ $section ][ $key ] ) ) {
-						$status['info'][ $section ][ $key ] = $info[ $section ][ $key ];
-					}
+			foreach ( $keys as $key ) {
+				if ( isset( $info[ $section ][ $key ] ) ) {
+					$status['info'][ $section ][ $key ] = $info[ $section ][ $key ];
 				}
 			}
+		}
 
-			// Add the server type and version.
-			$types = array(
-				'valkey_version' => 'Valkey',
-				'keydb_version' => 'KeyDB',
-				'dragonfly_version' => 'Dragonfly',
-				'redis_version' => 'Redis',
-			);
+		// Add the server type and version.
+		$types = array(
+			'valkey_version' => 'Valkey',
+			'keydb_version' => 'KeyDB',
+			'dragonfly_version' => 'Dragonfly',
+			'redis_version' => 'Redis',
+		);
 
-			foreach ( $types as $key => $type ) {
-				if ( isset( $info['Server'][ $key ] ) ) {
-					$status['info']['Server']['version'] = "$type {$info[ 'Server' ][ $key ]}";
-					break;
-				}
+		foreach ( $types as $key => $type ) {
+			if ( isset( $info['Server'][ $key ] ) ) {
+				$status['info']['Server']['version'] = "$type {$info[ 'Server' ][ $key ]}";
+				break;
 			}
 		}
 
