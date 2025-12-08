@@ -1,4 +1,4 @@
-name: E2E & MilliCache Performance
+name: E2E
 
 on:
   workflow_call:
