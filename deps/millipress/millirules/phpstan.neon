@@ -1,9 +1,0 @@
-includes:
-	- vendor/szepeviktor/phpstan-wordpress/extension.neon
-
-parameters:
-	level: 6
-	paths:
-		- src
-	phpVersion: 70400
-	treatPhpDocTypesAsCertain: false
