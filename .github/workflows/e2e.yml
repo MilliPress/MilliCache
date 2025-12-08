@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   e2e:
-    name: E2E & Performance Regression
+    name: E2E & Performance
     timeout-minutes: 25
     runs-on: ubuntu-latest
     env:
