@@ -2,10 +2,18 @@ name: CI
 
 on:
   workflow_call:
-  push:
-    branches: [main, dev]
   pull_request:
     branches: [main, dev]
+    paths:
+      - 'src/**'
+      - 'tests/unit/**'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'phpstan.neon'
+      - 'phpcs.xml'
+      - 'millicache.php'
+      - 'advanced-cache.php'
+      - 'functions.php'
 
 permissions:
   contents: read
