@@ -2,14 +2,18 @@
 /**
  * Handles the settings storage for MilliCache.
  *
+ * @link       https://www.millipress.com
+ * @since      1.0.0
+ *
  * @package    MilliCache
- * @subpackage MilliCache/includes
- * @author     Philipp Wellmer <hello@millicache.com>
+ * @subpackage Core
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Core;
 
 use MilliCache\Engine;
+use MilliCache\Engine\Utilities\ServerVars;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -17,10 +21,10 @@ use MilliCache\Engine;
  * Handles the settings storage for MilliCache.
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Core
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-class Settings {
+final class Settings {
 
 	/**
 	 * The domain for which the settings are stored.
@@ -43,7 +47,7 @@ class Settings {
 	 * @access   public
 	 */
 	public function __construct() {
-		self::$domain = (string) preg_replace( '/[^a-zA-Z0-9_\-]/', '_', Engine::get_server_var( 'HTTP_HOST' ) );
+		self::$domain = (string) preg_replace( '/[^a-zA-Z0-9_\-]/', '_', ServerVars::get( 'HTTP_HOST' ) );
 
 		if ( function_exists( 'add_action' ) ) {
 			add_action( 'init', array( $this, 'register_settings' ) );
@@ -96,6 +100,14 @@ class Settings {
 	 * @return array<array<bool|float|int|string|null|array<mixed>>> The default settings.
 	 */
 	public function get_default_settings( ?string $module = null ): array {
+
+		/**
+		 * Filters the default settings for the plugin.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param array $defaults MilliCache default settings.
+		 */
 		$defaults = apply_filters(
 			'millicache_settings_defaults',
 			array(
@@ -112,13 +124,13 @@ class Settings {
 					'grace' => MONTH_IN_SECONDS,
 					'unique' => array(),
 					'nocache_paths' => array(),
-					'nocache_cookies' => array( 'comment_author_*' ),
+					'nocache_cookies' => array( 'wp-*pass*', 'comment_author_*' ),
 					'ignore_cookies' => array( '_*' ),
 					'ignore_request_keys' => array( '_*', 'utm_*' ),
-					'skip_millicache_callback' => '',
 					'debug' => false,
 					'gzip' => true,
 				),
+				'rules' => array(),
 			)
 		);
 
@@ -206,13 +218,13 @@ class Settings {
 	 * Get settings from wp-config.php constants if they exist.
 	 *
 	 * @since    1.0.0
-	 * @access   private
+	 * @access   public
 	 *
 	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'storage').
 	 *
 	 * @return array<array<mixed>> The updated settings.
 	 */
-	private function get_settings_from_constants( ?string $module = null ): array {
+	public function get_settings_from_constants( ?string $module = null ): array {
 		$settings = $this->get_default_settings();
 
 		$assign_constant = function ( &$target, $key, $constant_prefix ) {
@@ -234,9 +246,11 @@ class Settings {
 		};
 
 		if ( $module ) {
-			foreach ( $settings as $key => $value ) {
-				$assign_constant( $settings, $key, "MC_{$module}" );
+			$module_settings = $settings[ $module ] ?? array();
+			foreach ( $module_settings as $key => $value ) {
+				$assign_constant( $module_settings, $key, "MC_{$module}" );
 			}
+			return array_filter( $module_settings );
 		} else {
 			foreach ( $settings as $module_key => $module_settings ) {
 				if ( is_array( $module_settings ) ) {
@@ -254,13 +268,13 @@ class Settings {
 	 * Get settings from the MilliCache configuration file.
 	 *
 	 * @since    1.0.0
-	 * @access   private
+	 * @access   public
 	 *
 	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'storage').
 	 *
 	 * @return array<array<mixed>> The settings from the config file.
 	 */
-	private function get_settings_from_file( ?string $module = null ): array {
+	public function get_settings_from_file( ?string $module = null ): array {
 		$config_directory = WP_CONTENT_DIR . '/settings/millicache/';
 		$config_file = $config_directory . self::$domain . '.php';
 
@@ -279,13 +293,13 @@ class Settings {
 	 * Get settings from the database.
 	 *
 	 * @since    1.0.0
-	 * @access   private
+	 * @access   public
 	 *
 	 * @param string|null $module The settings module to retrieve (e.g., 'cache', 'storage').
 	 *
 	 * @return array<array<mixed>> The settings from the database.
 	 */
-	private function get_settings_from_db( ?string $module = null ): array {
+	public function get_settings_from_db( ?string $module = null ): array {
 		if ( ! function_exists( 'get_option' ) ) {
 			return array();
 		}
@@ -351,7 +365,7 @@ class Settings {
 	 *
 	 * @return void
 	 */
-	public static function backup( string $module = null ): void {
+	public static function backup( ?string $module = null ): void {
 		$settings = new self();
 		$current_settings = $settings->get_settings( $module );
 
@@ -382,7 +396,7 @@ class Settings {
 	 *
 	 * @return bool True if the settings were restored, false otherwise.
 	 */
-	public static function restore_backup( string $module = null ): bool {
+	public static function restore_backup( ?string $module = null ): bool {
 		$backup = get_transient( 'millicache_settings_backup' );
 
 		if ( ! $backup ) {
@@ -405,7 +419,7 @@ class Settings {
 	 *
 	 * @return bool True if the settings are the default settings, false otherwise.
 	 */
-	public static function has_default_settings( string $module = null ): bool {
+	public static function has_default_settings( ?string $module = null ): bool {
 		$settings = new self();
 		return $settings->get_settings( $module, true ) === $settings->get_default_settings( $module );
 	}
@@ -520,7 +534,7 @@ class Settings {
 			foreach ( $module_settings as $key => $value ) {
 				if ( strpos( $key, 'enc_' ) === 0 ) {
 					if ( is_string( $value ) ) {
-						$settings[ $module ][ $key ] = $this->encrypt_value( $value );
+						$settings[ $module ][ $key ] = self::encrypt_value( $value );
 					}
 				}
 			}
@@ -556,19 +570,19 @@ class Settings {
 	}
 
 	/**
-	 * Encrypt the value using sodium.
+	 * Encrypt a value using sodium.
 	 *
 	 * @since 1.0.0
-	 * @access private
+	 * @access public
 	 *
 	 * @param string $value The value to encrypt.
 	 *
-	 * @return string
+	 * @return string The encrypted value prefixed with 'ENC:'.
 	 *
 	 * @throws \Exception If random bytes cannot be generated.
 	 * @throws \SodiumException If the encryption fails.
 	 */
-	private function encrypt_value( string $value ): string {
+	public static function encrypt_value( string $value ): string {
 		if ( empty( $value ) || strpos( $value, 'ENC:' ) === 0 ) {
 			return $value;
 		}
@@ -613,5 +627,255 @@ class Settings {
 
 		// Return the decrypted value or empty string if decryption failed.
 		return $decrypted ? $decrypted : '';
+	}
+
+	/**
+	 * Get a value from settings using dot notation.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param string $key      The dot notation key (e.g., 'cache.ttl').
+	 * @param mixed  $default  Default value if key not found.
+	 *
+	 * @return mixed The value at the key path, or default if not found.
+	 */
+	public function get( string $key, $default = null ) {
+		$keys = explode( '.', $key );
+		$settings = $this->get_settings();
+
+		$value = $settings;
+		foreach ( $keys as $k ) {
+			if ( ! is_array( $value ) || ! array_key_exists( $k, $value ) ) {
+				return $default;
+			}
+			$value = $value[ $k ];
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Set a nested value in settings using dot notation.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param string $key   The dot notation key (e.g., 'cache.ttl').
+	 * @param mixed  $value The value to set.
+	 *
+	 * @return bool True if the value was set successfully.
+	 */
+	public function set( string $key, $value ): bool {
+		$keys = explode( '.', $key );
+
+		if ( count( $keys ) < 2 ) {
+			return false;
+		}
+
+		$module = array_shift( $keys );
+		$settings = $this->get_settings( null, true );
+
+		// Ensure module exists.
+		if ( ! isset( $settings[ $module ] ) ) {
+			$settings[ $module ] = array();
+		}
+
+		// Navigate to the parent and set the value.
+		$ref = &$settings[ $module ];
+		$last_key = array_pop( $keys );
+
+		foreach ( $keys as $k ) {
+			if ( ! isset( $ref[ $k ] ) || ! is_array( $ref[ $k ] ) ) {
+				$ref[ $k ] = array();
+			}
+			$ref = &$ref[ $k ];
+		}
+
+		$ref[ $last_key ] = $value;
+
+		return update_option( self::$option_name, $settings );
+	}
+
+
+	/**
+	 * Import settings from an array.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param array<mixed> $settings The settings array to import.
+	 * @param bool         $merge    Whether to merge with existing settings (true) or replace entirely (false).
+	 *
+	 * @return bool True if settings were imported successfully.
+	 */
+	public function import( array $settings, bool $merge = true ): bool {
+		// Validate modules.
+		$valid_modules = array( 'storage', 'cache', 'rules' );
+		$filtered_settings = array();
+
+		foreach ( $settings as $module => $module_settings ) {
+			if ( in_array( $module, $valid_modules, true ) && is_array( $module_settings ) ) {
+				$filtered_settings[ $module ] = $module_settings;
+			}
+		}
+
+		if ( empty( $filtered_settings ) ) {
+			return false;
+		}
+
+		if ( $merge ) {
+			// Merge with existing settings.
+			$current = $this->get_settings( null, true );
+			foreach ( $filtered_settings as $module => $module_settings ) {
+				if ( ! isset( $current[ $module ] ) ) {
+					$current[ $module ] = array();
+				}
+				$current[ $module ] = array_merge( $current[ $module ], $module_settings );
+			}
+			$filtered_settings = $current;
+		}
+
+		return update_option( self::$option_name, $filtered_settings );
+	}
+
+	/**
+	 * Export settings to an array suitable for serialization.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param string|null $module The settings module to export (e.g., 'cache', 'storage').
+	 * @param bool        $include_encrypted Whether to include encrypted values (decrypted for export).
+	 *
+	 * @return array<mixed> The settings array ready for export.
+	 */
+	public function export( ?string $module = null, bool $include_encrypted = false ): array {
+		$settings = $this->get_settings( $module, true );
+
+		// Optionally decrypt sensitive values for export.
+		if ( $include_encrypted ) {
+			foreach ( $settings as $module_key => $module_settings ) {
+				if ( ! is_array( $module_settings ) ) {
+					continue;
+				}
+				foreach ( $module_settings as $key => $value ) {
+					if ( strpos( $key, 'enc_' ) === 0 && is_string( $value ) ) {
+						$settings[ $module_key ][ $key ] = self::decrypt_value( $value );
+					}
+				}
+			}
+		} else {
+			// Remove encrypted fields from export.
+			foreach ( $settings as $module_key => $module_settings ) {
+				if ( ! is_array( $module_settings ) ) {
+					continue;
+				}
+				foreach ( $module_settings as $key => $value ) {
+					if ( strpos( $key, 'enc_' ) === 0 ) {
+						unset( $settings[ $module_key ][ $key ] );
+					}
+				}
+			}
+		}
+
+		// Remove host info from export (domain-specific).
+		unset( $settings['host'] );
+
+		return $settings;
+	}
+
+	/**
+	 * Get the source of a setting value (constant, file, db, or default).
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param string $module The settings module (e.g., 'cache', 'storage').
+	 * @param string $key    The setting key within the module.
+	 *
+	 * @return string The source of the value: 'constant', 'file', 'db', or 'default'.
+	 */
+	public function get_setting_source( string $module, string $key ): string {
+		// Check if defined in constants.
+		$constant_settings = $this->get_settings_from_constants( $module );
+		if ( isset( $constant_settings[ $key ] ) ) {
+			return 'constant';
+		}
+
+		// Check if in config file.
+		$file_settings = $this->get_settings_from_file( $module );
+		if ( isset( $file_settings[ $key ] ) ) {
+			return 'file';
+		}
+
+		// Check if in database.
+		$db_settings = $this->get_settings_from_db( $module );
+		if ( isset( $db_settings[ $key ] ) || ( isset( $db_settings[0][ $key ] ) ) ) {
+			return 'db';
+		}
+
+		return 'default';
+	}
+
+	/**
+	 * Coerce a string value to its appropriate type.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param string $value The string value to coerce.
+	 *
+	 * @return mixed The coerced value (bool, int, null, or original string).
+	 */
+	public static function coerce_value( string $value ) {
+		$lower = strtolower( $value );
+
+		if ( 'true' === $lower ) {
+			return true;
+		}
+
+		if ( 'false' === $lower ) {
+			return false;
+		}
+
+		if ( 'null' === $lower ) {
+			return null;
+		}
+
+		if ( is_numeric( $value ) && strpos( $value, '.' ) === false ) {
+			return (int) $value;
+		}
+
+		if ( is_numeric( $value ) && strpos( $value, '.' ) !== false ) {
+			return (float) $value;
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Reset settings to defaults.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @param string|null $module The settings module to reset (e.g., 'cache', 'storage').
+	 *
+	 * @return bool True if settings were reset successfully.
+	 */
+	public function reset( ?string $module = null ): bool {
+		$defaults = $this->get_default_settings( $module );
+
+		if ( null === $module ) {
+			// Reset all settings.
+			return update_option( self::$option_name, $defaults );
+		}
+
+		// Reset only the specified module.
+		$settings = $this->get_settings( null, true );
+		$settings[ $module ] = $defaults;
+
+		return update_option( self::$option_name, $settings );
 	}
 }
