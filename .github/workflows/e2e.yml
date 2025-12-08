@@ -1,9 +1,8 @@
 name: E2E
 
 on:
-  workflow_call:
-  pull_request:
-    branches: [main]
+  workflow_dispatch:  # Manual trigger
+  workflow_call:      # Called by Release workflow
 
 permissions:
   contents: read
@@ -111,24 +110,30 @@ jobs:
         run: |
           if [ "$EVENT" = "pull_request" ] && [ -n "$PR_BASE" ]; then
             echo "sha=$PR_BASE" >> $GITHUB_OUTPUT
-          else
+          elif [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
             echo "sha=$BEFORE" >> $GITHUB_OUTPUT
+          else
+            # For workflow_dispatch or initial commits, use previous commit
+            echo "sha=$(git rev-parse HEAD~1 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
           fi
           echo "Base SHA: ${{ steps.base.outputs.sha }}"
 
       - name: Switch repo to BASE (no env restart)
+        if: steps.base.outputs.sha != ''
         run: |
           git fetch --prune
           git reset --hard ${{ steps.base.outputs.sha }}
 
       # If dependencies/assets differ on BASE, just rebuild; wp-env keeps running and picks up files.
       - name: Install deps + build (BASE)
+        if: steps.base.outputs.sha != ''
         run: |
           npm ci
           composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
           npm run build
 
       - name: Run MilliCache Performance Tests (BASE)
+        if: steps.base.outputs.sha != ''
         run: |
           npm run env:e2e:performance || true
           if [ -f "$WP_ARTIFACTS_PATH/performance-raw.json" ]; then
@@ -137,6 +142,7 @@ jobs:
 
       # ---------- Compare & Detect Regression ----------
       - name: Reset to original commit
+        if: steps.base.outputs.sha != ''
         run: git reset --hard $GITHUB_SHA
 
       - name: Compare performance and detect regression
