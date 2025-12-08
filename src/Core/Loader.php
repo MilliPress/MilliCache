@@ -6,7 +6,8 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage Core
+ * @author     Philipp Wellmer <hello@millipress.com>
  */
 
 namespace MilliCache\Core;
@@ -21,7 +22,7 @@ namespace MilliCache\Core;
  * run function to execute the list of actions and filters.
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage Core
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 class Loader {
