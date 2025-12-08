@@ -408,7 +408,22 @@ const destroyServer = async () => {
     try {
         console.log('Destroying the server');
         await run('docker', ['compose', ...mergeConfig.split(' '), 'down', '-v']);
-        await run('npx', ['wp-env', 'destroy', '--yes']);
+
+        // Run wp-env destroy with inherited stdio to allow interactive confirmation
+        await new Promise((resolve, reject) => {
+            const child = spawn('npx', ['wp-env', 'destroy'], {
+                shell: true,
+                stdio: 'inherit',
+            });
+            child.on('close', (code) => {
+                if (code !== 0) {
+                    reject(new Error(`wp-env destroy exited with code ${code}`));
+                } else {
+                    resolve();
+                }
+            });
+        });
+
         console.log('MilliCache Dev Server has been destroyed!');
     } catch (error) {
         console.error(`An error occurred during the destroy process: ${error.message}`);
