@@ -6,7 +6,7 @@
  * @since      1.0.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Admin
  */
 
 namespace MilliCache\Admin;
@@ -14,6 +14,8 @@ namespace MilliCache\Admin;
 use MilliCache\Core\Loader;
 use MilliCache\Core\Settings;
 use MilliCache\Engine;
+use MilliCache\Engine\Utilities\ServerVars;
+use MilliCache\MilliCache;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -21,10 +23,10 @@ use MilliCache\Engine;
  * Handles the custom REST API functionality for MilliCache plugin.
  *
  * @package    MilliCache
- * @subpackage MilliCache/includes
+ * @subpackage MilliCache/Admin
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-class RestAPI {
+final class RestAPI {
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -36,6 +38,16 @@ class RestAPI {
 	 * @var      Loader $loader Maintains and registers all hooks for the plugin.
 	 */
 	protected Loader $loader;
+
+	/**
+	 * The Engine instance.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @var      Engine $engine The Engine instance.
+	 */
+	private Engine $engine;
 
 	/**
 	 * The ID of this plugin.
@@ -64,11 +76,13 @@ class RestAPI {
 	 * @access public
 	 *
 	 * @param Loader $loader The loader class.
+	 * @param Engine $engine The Engine instance.
 	 * @param string $plugin_name The name of this plugin.
 	 * @param string $version The version of this plugin.
 	 */
-	public function __construct( Loader $loader, string $plugin_name, string $version ) {
+	public function __construct( Loader $loader, Engine $engine, string $plugin_name, string $version ) {
 		$this->loader = $loader;
+		$this->engine = $engine;
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
@@ -107,7 +121,7 @@ class RestAPI {
 				'methods' => \WP_REST_Server::CREATABLE,
 				'callback' => array( $this, 'perform_cache_action' ),
 				'permission_callback' => function () {
-					return current_user_can( 'manage_options' );
+					return current_user_can( MilliCache::get_clear_cache_capability() );
 				},
 			)
 		);
@@ -150,8 +164,25 @@ class RestAPI {
 	 */
 	public function perform_cache_action( \WP_REST_Request $request ) {
 		$action = $request->get_param( 'action' );
+
+		/**
+		 * Filters allowed REST cache actions.
+		 *
+		 * This filter lets you modify the list of permitted cache actions
+		 * for the MilliCache REST API endpoints.
+		 *
+		 * Default actions:
+		 *  - 'clear' Clear all cache.
+		 *  - 'clear_current' Clear the current view cache.
+		 *  - 'clear_targets' Clear by targets (post IDs, URLs, flags).
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param string[] $allowed_actions Array of allowed REST cache action slugs.
+		 * @return string[] Modified array of allowed REST cache actions.
+		 */
 		$allowed_actions = apply_filters(
-			'millicache_rest_allowed_cache_actions',
+			'millicache_rest_cache_allowed_actions',
 			array(
 				'clear',          // Clear all cache.
 				'clear_current',  // Clear the current view cache.
@@ -173,10 +204,10 @@ class RestAPI {
 					$is_network_admin = (bool) $request->get_param( 'is_network_admin' );
 
 					if ( $is_network_admin ) {
-						Engine::clear_cache_by_network_id();
+						$this->engine->clear()->network();
 						$message = __( 'The network cache has been cleared.', 'millicache' );
 					} else {
-						Engine::clear_cache_by_site_ids();
+						$this->engine->clear()->sites();
 						$message = __( 'The site cache has been cleared.', 'millicache' );
 					}
 
@@ -212,7 +243,7 @@ class RestAPI {
 						);
 					}
 
-					Engine::clear_cache_by_flags( $flags );
+					$this->engine->clear()->flags( $flags );
 
 					$message = __( 'The current page cache has been cleared.', 'millicache' );
 
@@ -229,7 +260,7 @@ class RestAPI {
 						);
 					}
 
-					Engine::clear_cache_by_targets( $targets );
+					$this->engine->clear()->targets( $targets );
 
 					$message = empty( $targets ) ?
 						__( 'The site cache has been cleared.', 'millicache' ) :
@@ -247,7 +278,7 @@ class RestAPI {
 			 * @param array  $params The parameters passed to the action.
 			 * @param \WP_REST_Request $request The REST API request object.
 			 */
-			do_action( 'millicache_rest_perform_cache_action', $action, $request->get_params(), $request );
+			do_action( 'millicache_rest_cache_action_performed', $action, $request->get_params(), $request );
 
 			return rest_ensure_response(
 				array(
@@ -279,8 +310,24 @@ class RestAPI {
 	 */
 	public function perform_settings_action( \WP_REST_Request $request ) {
 		$action = $request->get_param( 'action' );
+
+		/**
+		 * Filters the allowed settings actions in the MilliCache REST API.
+		 *
+		 * This filter controls which actions can be triggered via the REST endpoint
+		 * for plugin settings (e.g., resetting or restoring options).
+		 *
+		 * Default actions:
+		 *  - 'reset' Reset the settings to their default values.
+		 *  - 'restore' Restore previously saved settings (e.g., from backup).
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param string[] $allowed_actions Array of allowed REST settings action slugs.
+		 * @return string[] Modified list of allowed actions.
+		 */
 		$supported_actions = apply_filters(
-			'millicache_rest_allowed_settings_actions',
+			'millicache_rest_settings_allowed_actions',
 			array(
 				'reset',
 				'restore',
@@ -330,7 +377,7 @@ class RestAPI {
 		 * @param array  $params The parameters passed to the action.
 		 * @param \WP_REST_Request $request The REST API request object.
 		 */
-		do_action( 'millicache_rest_perform_settings_action', $action, $request->get_params(), $request );
+		do_action( 'millicache_rest_settings_action_performed', $action, $request->get_params(), $request );
 
 		return rest_ensure_response(
 			array(
@@ -356,13 +403,20 @@ class RestAPI {
 	public function get_status( \WP_REST_Request $request ): \WP_REST_Response {
 		try {
 			return new \WP_REST_Response(
+				/**
+				 * Filters the response payload of the MilliCache REST status endpoint at `/wp-json/millicache/v1/status`.
+				 *
+				 * @since 1.0.0
+				 *
+				 * @param array $status The MilliCache status summary.
+				 */
 				apply_filters(
-					'millicache_rest_status',
+					'millicache_rest_status_response',
 					array(
 						'plugin_name' => $this->plugin_name,
 						'version' => $this->version,
-						'cache' => Engine::get_status( $request->get_param( 'network' ) === 'true' ),
-						'storage' => Engine::get_storage()->get_status(),
+						'cache' => $this->engine->cache()->get_status( $request->get_param( 'network' ) === 'true' ),
+						'storage' => $this->engine->storage()->get_status(),
 						'dropin' => Admin::validate_advanced_cache_file(),
 						'settings' => array(
 							'has_defaults' => Settings::has_default_settings(),
@@ -398,17 +452,17 @@ class RestAPI {
 		}
 
 		// Only verify nonce for our plugin's endpoints.
-		$request_uri = Engine::get_server_var( 'REQUEST_URI' );
+		$request_uri = ServerVars::get( 'REQUEST_URI' );
 		if ( ! empty( $request_uri ) && str_contains( $request_uri, '/millicache/v1/' ) ) {
 
 			// Skip nonce check for non-request methods.
-			$method = Engine::get_server_var( 'REQUEST_METHOD' );
+			$method = ServerVars::get( 'REQUEST_METHOD' );
 			if ( 'GET' === $method || 'HEAD' === $method || 'OPTIONS' === $method ) {
 				return $result;
 			}
 
 			// Verify the nonce.
-			$nonce = Engine::get_server_var( 'HTTP_X_WP_NONCE' );
+			$nonce = ServerVars::get( 'HTTP_X_WP_NONCE' );
 			if ( empty( $nonce ) || ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
 				return new \WP_Error(
 					'invalid_nonce',

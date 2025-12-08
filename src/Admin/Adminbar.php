@@ -24,7 +24,7 @@ use MilliCache\MilliCache;
  * @subpackage MilliCache/admin
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-class Adminbar {
+final class Adminbar {
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -38,15 +38,27 @@ class Adminbar {
 	protected Loader $loader;
 
 	/**
+	 * The Engine instance.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 *
+	 * @var      Engine    $engine    The Engine instance.
+	 */
+	private Engine $engine;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since   1.0.0
 	 * @access public
 	 *
 	 * @param Loader $loader The loader class.
+	 * @param Engine $engine The Engine instance.
 	 */
-	public function __construct( Loader $loader ) {
+	public function __construct( Loader $loader, Engine $engine ) {
 		$this->loader = $loader;
+		$this->engine = $engine;
 
 		$this->register_hooks();
 	}
@@ -97,7 +109,7 @@ class Adminbar {
 	 * @return void
 	 */
 	public function add_adminbar_menu( \WP_Admin_Bar $wp_admin_bar ) {
-		if ( ! is_admin_bar_showing() || ! current_user_can( 'manage_options' ) ) {
+		if ( ! is_admin_bar_showing() || ! current_user_can( MilliCache::get_clear_cache_capability() ) ) {
 			return;
 		}
 
@@ -112,7 +124,7 @@ class Adminbar {
 			)
 		);
 
-		// Context-specific "Clear Current".
+		// State-specific "Clear Current".
 		$targets = array();
 		$title   = '';
 
@@ -136,7 +148,7 @@ class Adminbar {
 				}
 			}
 		} else {
-			$targets = MilliCache::get_request_flags();
+			$targets = $this->engine->flags()->get_all();
 			$title   = __( 'Clear Current View Cache', 'millicache' );
 		}
 
@@ -171,25 +183,27 @@ class Adminbar {
 			)
 		);
 
-		// Add a secondary group.
-		$wp_admin_bar->add_group(
-			array(
-				'parent' => 'millicache',
-				'id'     => 'millicache-secondary',
-				'meta'   => array(
-					'class' => 'ab-sub-secondary',
-				),
-			)
-		);
+		if ( current_user_can( 'manage_options' ) ) {
+			// Add a secondary group.
+			$wp_admin_bar->add_group(
+				array(
+					'parent' => 'millicache',
+					'id'     => 'millicache-secondary',
+					'meta'   => array(
+						'class' => 'ab-sub-secondary',
+					),
+				)
+			);
 
-		// Add the "Settings" menu with cache size.
-		$wp_admin_bar->add_menu(
-			array(
-				'parent' => 'millicache-secondary',
-				'id'     => 'millicache-settings',
-				'href'   => admin_url( 'options-general.php?page=millicache' ),
-				'title'  => Admin::get_cache_size_summary_string(),
-			)
-		);
+			// Add the "Settings" menu with cache size.
+			$wp_admin_bar->add_menu(
+				array(
+					'parent' => 'millicache-secondary',
+					'id' => 'millicache-settings',
+					'href' => admin_url( 'options-general.php?page=millicache' ),
+					'title' => Admin::get_cache_size_summary_string(),
+				)
+			);
+		}
 	}
 }
