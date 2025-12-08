@@ -53,7 +53,7 @@ test.describe('Step 8: WP-CLI Commands', () => {
 
         // Stats by flag of network 1 - should show 0 entries
         const stdout5 = await runWpCliCommand('millicache stats -- --flag=1:*');
-        expect(stdout5).toMatch(/entries\s*\|\s*0/);
+        expect(stdout5).toMatch(/entries\s+0/);
     });
 
     test('WP-CLI: MilliCache Stats JSON format', async ({ page }) => {
@@ -145,5 +145,120 @@ test.describe('Step 8: WP-CLI Commands', () => {
         // Should succeed with creating symlink or copying file
         expect(stdout).toContain('Success:');
         expect(stdout).toMatch(/symlink|Copied/i);
+    });
+
+    test('WP-CLI: MilliCache Config Get', async () => {
+        // Get all settings
+        const stdout = await runWpCliCommand('millicache config get');
+
+        // Validate output contains expected settings
+        expect(stdout).toContain('storage.host');
+        expect(stdout).toContain('storage.port');
+        expect(stdout).toContain('cache.ttl');
+        expect(stdout).toContain('cache.gzip');
+    });
+
+    test('WP-CLI: MilliCache Config Get Single Value', async () => {
+        // Get a specific setting
+        const stdout = await runWpCliCommand('millicache config get cache.ttl');
+
+        // Validate output contains the key and value
+        expect(stdout).toContain('cache.ttl');
+        expect(stdout).toMatch(/\d+/); // should contain a number
+    });
+
+    test('WP-CLI: MilliCache Config Get JSON format', async () => {
+        // Get settings in JSON format
+        const stdout = await runWpCliCommand('millicache config get -- --format=json');
+
+        // Extract JSON from output (may contain npm script prefix)
+        const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+        expect(jsonMatch).not.toBeNull();
+
+        // Parse JSON output
+        const settings = JSON.parse(jsonMatch![0]);
+
+        // Validate JSON structure
+        expect(settings).toHaveProperty('storage');
+        expect(settings).toHaveProperty('cache');
+        expect(settings.storage).toHaveProperty('host');
+        expect(settings.cache).toHaveProperty('ttl');
+    });
+
+    test('WP-CLI: MilliCache Config Get with --show-source', async () => {
+        // Get settings with source information
+        const stdout = await runWpCliCommand('millicache config get -- --show-source');
+
+        // Validate output contains source column
+        expect(stdout).toContain('source');
+        // Should show 'default' for settings not overridden
+        expect(stdout).toMatch(/default|db|file|constant/);
+    });
+
+    test('WP-CLI: MilliCache Config Set', async () => {
+        // Set a value (use grace as it's not overridden by constants in test env)
+        const stdout = await runWpCliCommand('millicache config set cache.grace 1000000');
+
+        // Should succeed
+        expect(stdout).toContain('Success');
+        expect(stdout).toContain('cache.grace');
+
+        // Verify the value was set
+        const getStdout = await runWpCliCommand('millicache config get cache.grace');
+        expect(getStdout).toContain('1000000');
+
+        // Reset the value to default (2592000)
+        await runWpCliCommand('millicache config set cache.grace 2592000');
+    });
+
+    test('WP-CLI: MilliCache Config Reset and Restore', async () => {
+        // First change a value (use gzip as it's not a constant)
+        await runWpCliCommand('millicache config set cache.gzip false');
+
+        // Verify it was set
+        const beforeReset = await runWpCliCommand('millicache config get cache.gzip');
+        expect(beforeReset).toContain('false');
+
+        // Reset with --yes to skip confirmation
+        const resetStdout = await runWpCliCommand('millicache config reset -- --yes');
+
+        // Should succeed and mention backup
+        expect(resetStdout).toContain('backup');
+        expect(resetStdout).toContain('Success');
+
+        // Verify the value was reset to default (true)
+        const getStdout = await runWpCliCommand('millicache config get cache.gzip');
+        expect(getStdout).toContain('true');
+
+        // Restore from backup
+        const restoreStdout = await runWpCliCommand('millicache config restore');
+        expect(restoreStdout).toContain('Success');
+        expect(restoreStdout).toContain('restored');
+
+        // Verify the value was restored (false)
+        const getStdout2 = await runWpCliCommand('millicache config get cache.gzip');
+        expect(getStdout2).toContain('false');
+
+        // Clean up - reset again
+        await runWpCliCommand('millicache config reset -- --yes');
+    });
+
+    test('WP-CLI: MilliCache Config Export JSON', async () => {
+        // Export settings in JSON format
+        const stdout = await runWpCliCommand('millicache config export');
+
+        // Extract JSON from output
+        const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+        expect(jsonMatch).not.toBeNull();
+
+        // Parse JSON output
+        const settings = JSON.parse(jsonMatch![0]);
+
+        // Validate structure
+        expect(settings).toHaveProperty('storage');
+        expect(settings).toHaveProperty('cache');
+
+        // Encrypted fields should be excluded
+        expect(settings.storage).not.toHaveProperty('enc_password');
     });
 });
