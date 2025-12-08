@@ -376,14 +376,12 @@ const startServer = async () => {
             writeFileSync(htaccessPath, htaccessOriginal);
         }
 
-        // Generate sample content (posts, pages, books, genres) - skip in CI
-        if (!process.env.CI) {
-            try {
-                await generateSampleContent();
-            } catch (error) {
-                console.warn(`Warning: Sample content generation failed: ${error.message}`);
-                console.warn('Continuing without sample content...');
-            }
+        // Generate sample content (posts, pages, books, genres)
+        try {
+            await generateSampleContent();
+        } catch (error) {
+            console.warn(`Warning: Sample content generation failed: ${error.message}`);
+            console.warn('Continuing without sample content...');
         }
 
         console.log('MilliCache Dev Server has been started!');
