@@ -11,7 +11,7 @@
  * Plugin URI:        https://www.millipress.com/millicache
  * Description:       The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any alternative.
 
- * Version:           1.0.0-rc.2
+ * Version:           1.0.0-rc.4
  * Network:           true
  * Author:            MilliPress Team
  * Author URI:        https://www.millipress.com/
@@ -30,7 +30,7 @@ if ( ! defined( 'WPINC' ) ) {
  *
  * @since 1.0.0
  */
-define( 'MILLICACHE_VERSION', '1.0.0-rc.2' );
+define( 'MILLICACHE_VERSION', '1.0.0-rc.4' );
 
 if ( ! defined( 'MILLICACHE_BASENAME' ) ) {
 	define( 'MILLICACHE_BASENAME', plugin_basename( __FILE__ ) );
@@ -48,6 +48,15 @@ if ( ! defined( 'MILLICACHE_BASENAME' ) ) {
  */
 if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 	require_once __DIR__ . '/vendor/autoload.php';
+}
+
+/**
+ * Load MilliPress API functions.
+ *
+ * @since 1.0.0
+ */
+if ( file_exists( __DIR__ . '/functions.php' ) ) {
+	require_once __DIR__ . '/functions.php';
 }
 
 /**
@@ -85,6 +94,15 @@ register_deactivation_hook( MILLICACHE_FILE, 'deactivate_millicache' );
 function run_millicache() {
 	$plugin = new MilliCache\MilliCache();
 	$plugin->run();
+
+	/**
+	 * Fires when MilliCache is fully loaded and ready.
+	 *
+	 * Use this hook to register custom rules, conditions, and actions.
+	 *
+	 * @since 1.1.0
+	 */
+	do_action( 'millicache_loaded' );
 }
 
 run_millicache();
