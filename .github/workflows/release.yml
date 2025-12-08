@@ -300,12 +300,9 @@ jobs:
       - name: Install production dependencies
         run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --classmap-authoritative
 
-      - name: Commit version bump
-        run: |
-          VERSION="${{ steps.meta.outputs.version }}"
-          git add millicache.php
-          git commit -m "chore(release): bump version to $VERSION" || echo "No version changes to commit"
-          git push origin ${{ github.ref_name }}
+      # Note: Version bump is included in the release tag but NOT pushed to main
+      # to avoid conflicts with branch protection. The version in main is updated
+      # manually or via PR after release if needed.
 
       - name: Create dist build
         run: |
@@ -313,6 +310,9 @@ jobs:
 
           # Export tracked files (respects .gitattributes export-ignore)
           git archive --format=tar HEAD | tar -x -C dist
+
+          # Override with version-bumped plugin file
+          cp millicache.php dist/
 
           # Add build artifacts and dependencies
           [ -d build ] && rsync -a build/ dist/build/
