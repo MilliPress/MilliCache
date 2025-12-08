@@ -12,7 +12,6 @@
 
 namespace MilliCache\Core;
 
-use MilliCache\Engine;
 use MilliCache\Engine\Utilities\ServerVars;
 
 ! defined( 'ABSPATH' ) && exit;
