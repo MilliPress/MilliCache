@@ -1,0 +1,14 @@
+/build/
+/vendor/
+/artifacts/
+node_modules/
+.phpunit.cache/
+
+# Playwright
+/tests/wp-env/plugins/*/*
+/tests/wp-env/.htaccess
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+storage.json

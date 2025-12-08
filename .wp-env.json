@@ -1,0 +1,38 @@
+{
+  "core": "WordPress/WordPress",
+  "port": 8888,
+  "config": {
+    "MC_STORAGE_HOST": "redis",
+    "MC_CACHE_DEBUG": true,
+    "WP_CACHE": true,
+    "WP_DEBUG": true,
+    "WP_DEBUG_DISPLAY": true
+  },
+  "plugins": ["."],
+  "themes": [],
+  "mappings": {
+    "wp-content/plugins": "./tests/wp-env/plugins",
+    "wp-content/mu-plugins": "./tests/wp-env/mu-plugins"
+  },
+  "env": {
+    "tests": {
+      "config": {
+        "WP_CACHE": true,
+        "MC_CACHE_TTL": 5,
+        "MC_STORAGE_DB": 1,
+        "PERFLAB_DISABLE_OBJECT_CACHE_DROPIN": false
+      },
+      "plugins": [
+        "https://downloads.wordpress.org/plugin/performance-lab.zip",
+        "https://downloads.wordpress.org/plugin/wordpress-importer.zip"
+      ],
+      "mappings": {
+        "wp-cli.yml": "./tests/wp-env/wp-cli.yml",
+        ".htaccess": "./tests/wp-env/.htaccess",
+
+        "wp-content/plugins/millicache": ".",
+        "wp-content/plugins/woocommerce": "https://downloads.wordpress.org/plugin/woocommerce.zip"
+      }
+    }
+  }
+}
