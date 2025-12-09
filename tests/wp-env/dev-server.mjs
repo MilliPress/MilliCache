@@ -125,105 +125,53 @@ const disableMultisiteInConfig = (wpConfigPath) => {
 };
 
 /**
- * Generate sample content for a single site.
+ * Import sample content for a single site using WXR import.
+ * This is much faster than individual WP-CLI commands.
  * @param {number} siteId The site ID (1 for main site, 2-5 for subsites).
  */
-const generateSiteContent = async (siteId) => {
+const importSiteContent = async (siteId) => {
     const urlFlag = siteId === 1 ? '' : `--url=localhost:8889/site${siteId}`;
-    const wpCmd = (cmd) => ['wp-env', 'run', 'tests-cli', 'wp', ...cmd.split(' '), ...(urlFlag ? [urlFlag] : [])];
 
-    // Check if content already exists
     try {
-        const postCount = await run('npx', wpCmd('post list --post_type=post --format=count'), { silent: true });
+        // Check if content already exists (> 1 because of default "Hello World" post)
+        const postCount = await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'list', '--post_type=post', '--format=count', ...(urlFlag ? [urlFlag] : [])], { silent: true });
         if (parseInt(postCount.trim()) > 1) {
             return { siteId, skipped: true };
         }
-    } catch {}
 
-    // Flush rewrite rules to ensure CPTs are registered
-    await run('npx', wpCmd('rewrite flush'), { silent: true });
+        // Install importer plugin if not already installed
+        await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'plugin', 'install', 'wordpress-importer', '--activate', ...(urlFlag ? [urlFlag] : [])], { silent: true }).catch(() => {});
 
-    // Generate posts
-    await run('npx', wpCmd('post generate --count=5 --post_type=post --post_status=publish'), { silent: true });
+        // Import the sample content WXR file
+        // The file is mounted at /var/www/html/wp-content/plugins/millicache/tests/wp-env/sample-content.xml
+        await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'import', '/var/www/html/wp-content/plugins/millicache/tests/wp-env/sample-content.xml', '--authors=create', ...(urlFlag ? [urlFlag] : [])], { silent: true });
 
-    // Create named pages (About, Contact, Services)
-    const pages = ['About', 'Contact', 'Services'];
-    await Promise.all(pages.map(title =>
-        run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'create',
-            '--post_type=page', '--post_status=publish', `--post_title="${title}"`,
-            ...(urlFlag ? [urlFlag] : [])], { silent: true }).catch(() => {})
-    ));
+        // Flush rewrite rules after import
+        await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'flush', ...(urlFlag ? [urlFlag] : [])], { silent: true }).catch(() => {});
 
-    // Create genre terms (parallel)
-    const genres = ['Fiction', 'Non-Fiction', 'Science', 'History'];
-    await Promise.all(genres.map(genre =>
-        run('npx', wpCmd(`term create genre ${genre}`), { silent: true }).catch(() => {})
-    ));
-
-    // Create sample books with assigned genres (parallel creation, then parallel term assignment)
-    const books = [
-        { title: 'Test Book One', genre: 'Fiction' },
-        { title: 'Test Book Two', genre: 'Non-Fiction' },
-        { title: 'Test Book Three', genre: 'Science' },
-    ];
-    const bookResults = await Promise.allSettled(books.map(book =>
-        run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'post', 'create',
-            '--post_type=book', '--post_status=publish', `--post_title="${book.title}"`, '--porcelain',
-            ...(urlFlag ? [urlFlag] : [])], { silent: true })
-            .then(result => ({ postId: result.trim(), genre: book.genre }))
-    ));
-    // Assign genres in parallel
-    await Promise.allSettled(
-        bookResults
-            .filter(r => r.status === 'fulfilled' && r.value?.postId)
-            .map(r => run('npx', wpCmd(`term set ${r.value.postId} genre ${r.value.genre}`), { silent: true }))
-    );
-
-    // Create navigation menu with links
-    const siteBase = siteId === 1 ? 'http://localhost:8889' : `http://localhost:8889/site${siteId}`;
-    try {
-        // Create the menu
-        const menuId = await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'menu', 'create', 'Primary', '--porcelain',
-            ...(urlFlag ? [urlFlag] : [])], { silent: true });
-        if (menuId.trim()) {
-            // Add menu items in parallel
-            const menuItems = [
-                { title: 'Home', url: `${siteBase}/` },
-                { title: 'About', url: `${siteBase}/about/` },
-                { title: 'Contact', url: `${siteBase}/contact/` },
-                { title: 'Services', url: `${siteBase}/services/` },
-                { title: 'Books', url: `${siteBase}/books/` },
-                { title: 'Sample Site', url: 'http://localhost:8889/site2/' },
-            ];
-            await Promise.allSettled(menuItems.map(item =>
-                run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'menu', 'item', 'add-custom', 'Primary',
-                    item.title, item.url, ...(urlFlag ? [urlFlag] : [])], { silent: true })
-            ));
-            // Assign menu to primary location
-            await run('npx', wpCmd('menu location assign Primary primary'), { silent: true }).catch(() => {});
-        }
-    } catch {}
-
-    return { siteId, skipped: false };
+        return { siteId, skipped: false };
+    } catch {
+        return { siteId, skipped: false, failed: true };
+    }
 };
 
 /**
- * Generate sample content on all network sites.
+ * Generate sample content on all network sites using WXR import.
  */
 const generateSampleContent = async () => {
-    console.log('Generating sample content on all network sites...');
+    console.log('Importing sample content on all network sites...');
 
-    // Generate content on all 5 sites in parallel using allSettled for resilience
-    const results = await Promise.allSettled([1, 2, 3, 4, 5].map(siteId => generateSiteContent(siteId)));
+    // Import content on all 5 sites in parallel using allSettled for resilience
+    const results = await Promise.allSettled([1, 2, 3, 4, 5].map(siteId => importSiteContent(siteId)));
 
     const successful = results.filter(r => r.status === 'fulfilled' && r.value);
-    const generated = successful.filter(r => !r.value.skipped).map(r => r.value.siteId);
+    const imported = successful.filter(r => !r.value.skipped && !r.value.failed).map(r => r.value.siteId);
     const skipped = successful.filter(r => r.value.skipped).map(r => r.value.siteId);
-    const failed = results.filter(r => r.status === 'rejected');
+    const failed = successful.filter(r => r.value.failed).map(r => r.value.siteId);
 
-    if (generated.length) console.log(`Generated content on sites: ${generated.join(', ')}`);
+    if (imported.length) console.log(`Imported content on sites: ${imported.join(', ')}`);
     if (skipped.length) console.log(`Content already exists on sites: ${skipped.join(', ')}`);
-    if (failed.length) console.warn(`Warning: Content generation failed for ${failed.length} site(s)`);
+    if (failed.length) console.warn(`Warning: Content import failed for sites: ${failed.join(', ')}`);
 };
 
 // Main function for starting the server
