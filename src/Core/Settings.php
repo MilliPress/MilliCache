@@ -192,11 +192,14 @@ final class Settings {
 		$settings = $this->get_default_settings( $module );
 
 		// Step 2: Overwrite with values from the (synced) MilliCache settings file or DB.
+		// Only merge keys that exist in the default settings to filter out obsolete keys.
 		$file_settings = $this->get_settings_from_file( $module );
 		$config_settings = $file_settings ? $file_settings : $this->get_settings_from_db( $module );
 		foreach ( $config_settings as $module_key => $module_settings ) {
 			foreach ( $module_settings as $key => $value ) {
-				$settings[ $module_key ][ $key ] = $value;
+				if ( isset( $settings[ $module_key ] ) && array_key_exists( $key, $settings[ $module_key ] ) ) {
+					$settings[ $module_key ][ $key ] = $value;
+				}
 			}
 		}
 
@@ -341,13 +344,32 @@ final class Settings {
 			}
 		}
 
-		// When constants are removed, we need to add the default settings back in.
+		// Merge with defaults: add missing keys and remove obsolete ones.
 		$default_settings = $this->get_default_settings();
 		foreach ( $default_settings as $module => $module_settings ) {
+			if ( ! isset( $settings[ $module ] ) ) {
+				$settings[ $module ] = array();
+			}
+
+			// Add missing default keys.
 			foreach ( $module_settings as $key => $value ) {
 				if ( ! isset( $settings[ $module ][ $key ] ) && ! isset( $constant_settings[ $module ][ $key ] ) ) {
 					$settings[ $module ][ $key ] = $value;
 				}
+			}
+
+			// Remove obsolete keys that no longer exist in defaults.
+			foreach ( $settings[ $module ] as $key => $value ) {
+				if ( ! array_key_exists( $key, $module_settings ) ) {
+					unset( $settings[ $module ][ $key ] );
+				}
+			}
+		}
+
+		// Remove obsolete modules that no longer exist in defaults.
+		foreach ( $settings as $module => $module_settings ) {
+			if ( ! isset( $default_settings[ $module ] ) && 'host' !== $module ) {
+				unset( $settings[ $module ] );
 			}
 		}
 
