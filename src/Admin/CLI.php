@@ -359,6 +359,41 @@ final class CLI {
 		/** @var string $password */
 		$password = $storage_settings['enc_password'] ?? '';
 
+		// translators: %1$s is the Redis host, %2$d is the port, %3$d is the database number.
+		\WP_CLI::line( sprintf( __( 'Connecting to Redis at %1$s:%2$d (database %3$d)...', 'millicache' ), $host, $port, $db ) );
+
+		// Test connection with timeout before launching interactive session.
+		$test_command = sprintf(
+			'timeout 5 redis-cli -h %s -p %d PING 2>&1',
+			escapeshellarg( $host ),
+			$port
+		);
+
+		// Add password to test command if set.
+		if ( '' !== $password ) {
+			$test_command = sprintf(
+				'timeout 5 redis-cli -h %s -p %d -a %s --no-auth-warning PING 2>&1',
+				escapeshellarg( $host ),
+				$port,
+				escapeshellarg( $password )
+			);
+		}
+
+		$test_result = trim( (string) shell_exec( $test_command ) );
+
+		if ( 'PONG' !== $test_result ) {
+			$error_msg = '' !== $test_result ? $test_result : __( 'Connection timed out', 'millicache' );
+			\WP_CLI::error(
+				sprintf(
+					// translators: %1$s is the host, %2$d is the port, %3$s is the error message.
+					__( 'Cannot connect to Redis at %1$s:%2$d - %3$s', 'millicache' ),
+					$host,
+					$port,
+					$error_msg
+				)
+			);
+		}
+
 		// Build the redis-cli command.
 		$command = sprintf(
 			'redis-cli -h %s -p %d -n %d',
@@ -372,8 +407,6 @@ final class CLI {
 			$command .= sprintf( ' -a %s --no-auth-warning', escapeshellarg( $password ) );
 		}
 
-		// translators: %1$s is the Redis host, %2$d is the port, %3$d is the database number.
-		\WP_CLI::line( sprintf( __( 'Connecting to Redis at %1$s:%2$d (database %3$d)...', 'millicache' ), $host, $port, $db ) );
 		\WP_CLI::line( __( 'Type "quit" to exit.', 'millicache' ) );
 		\WP_CLI::line( '' );
 
