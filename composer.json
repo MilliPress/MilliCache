@@ -50,7 +50,7 @@
         "test:phpstan": "phpstan analyse -c phpstan.neon --memory-limit 1G",
         "test:lint": "phpcs --standard=phpcs.xml -s",
         "test:fix": "phpcbf --standard=phpcs.xml",
-        "strauss": "@php bin/strauss.phar",
+        "strauss": "@php bin/strauss.phar -q",
         "post-install-cmd": [
             "@strauss",
             "@composer dump-autoload"

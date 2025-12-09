@@ -1,0 +1,1084 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+	xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:wp="http://wordpress.org/export/1.2/">
+<channel>
+	<title>MilliCache Test Site</title>
+	<link>http://localhost:8889</link>
+	<description>Sample content for E2E testing</description>
+	<pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate>
+	<language>en-US</language>
+	<wp:wxr_version>1.2</wp:wxr_version>
+	<wp:base_site_url>http://localhost:8889</wp:base_site_url>
+	<wp:base_blog_url>http://localhost:8889</wp:base_blog_url>
+
+	<!-- Categories -->
+	<wp:category>
+		<wp:term_id>10</wp:term_id>
+		<wp:category_nicename>performance</wp:category_nicename>
+		<wp:category_parent></wp:category_parent>
+		<wp:cat_name><![CDATA[Performance]]></wp:cat_name>
+		<wp:category_description><![CDATA[Articles about website performance optimization]]></wp:category_description>
+	</wp:category>
+	<wp:category>
+		<wp:term_id>11</wp:term_id>
+		<wp:category_nicename>tutorials</wp:category_nicename>
+		<wp:category_parent></wp:category_parent>
+		<wp:cat_name><![CDATA[Tutorials]]></wp:cat_name>
+		<wp:category_description><![CDATA[Step-by-step guides and tutorials]]></wp:category_description>
+	</wp:category>
+	<wp:category>
+		<wp:term_id>12</wp:term_id>
+		<wp:category_nicename>infrastructure</wp:category_nicename>
+		<wp:category_parent></wp:category_parent>
+		<wp:cat_name><![CDATA[Infrastructure]]></wp:cat_name>
+		<wp:category_description><![CDATA[Server and infrastructure topics]]></wp:category_description>
+	</wp:category>
+	<wp:category>
+		<wp:term_id>13</wp:term_id>
+		<wp:category_nicename>wordpress</wp:category_nicename>
+		<wp:category_parent></wp:category_parent>
+		<wp:cat_name><![CDATA[WordPress]]></wp:cat_name>
+		<wp:category_description><![CDATA[WordPress-specific content]]></wp:category_description>
+	</wp:category>
+
+	<!-- Tags -->
+	<wp:tag>
+		<wp:term_id>20</wp:term_id>
+		<wp:tag_slug>caching</wp:tag_slug>
+		<wp:tag_name><![CDATA[Caching]]></wp:tag_name>
+	</wp:tag>
+	<wp:tag>
+		<wp:term_id>21</wp:term_id>
+		<wp:tag_slug>redis</wp:tag_slug>
+		<wp:tag_name><![CDATA[Redis]]></wp:tag_name>
+	</wp:tag>
+	<wp:tag>
+		<wp:term_id>22</wp:term_id>
+		<wp:tag_slug>ttfb</wp:tag_slug>
+		<wp:tag_name><![CDATA[TTFB]]></wp:tag_name>
+	</wp:tag>
+	<wp:tag>
+		<wp:term_id>23</wp:term_id>
+		<wp:tag_slug>scalability</wp:tag_slug>
+		<wp:tag_name><![CDATA[Scalability]]></wp:tag_name>
+	</wp:tag>
+	<wp:tag>
+		<wp:term_id>24</wp:term_id>
+		<wp:tag_slug>optimization</wp:tag_slug>
+		<wp:tag_name><![CDATA[Optimization]]></wp:tag_name>
+	</wp:tag>
+	<wp:tag>
+		<wp:term_id>25</wp:term_id>
+		<wp:tag_slug>speed</wp:tag_slug>
+		<wp:tag_name><![CDATA[Speed]]></wp:tag_name>
+	</wp:tag>
+	<wp:tag>
+		<wp:term_id>26</wp:term_id>
+		<wp:tag_slug>best-practices</wp:tag_slug>
+		<wp:tag_name><![CDATA[Best Practices]]></wp:tag_name>
+	</wp:tag>
+	<wp:tag>
+		<wp:term_id>27</wp:term_id>
+		<wp:tag_slug>high-traffic</wp:tag_slug>
+		<wp:tag_name><![CDATA[High Traffic]]></wp:tag_name>
+	</wp:tag>
+
+	<!-- Genre Taxonomy Terms (for books CPT) -->
+	<wp:term>
+		<wp:term_id>30</wp:term_id>
+		<wp:term_taxonomy>genre</wp:term_taxonomy>
+		<wp:term_slug>technical</wp:term_slug>
+		<wp:term_name><![CDATA[Technical]]></wp:term_name>
+		<wp:term_description><![CDATA[Technical guides and references]]></wp:term_description>
+	</wp:term>
+	<wp:term>
+		<wp:term_id>31</wp:term_id>
+		<wp:term_taxonomy>genre</wp:term_taxonomy>
+		<wp:term_slug>fundamentals</wp:term_slug>
+		<wp:term_name><![CDATA[Fundamentals]]></wp:term_name>
+		<wp:term_description><![CDATA[Core concepts and fundamentals]]></wp:term_description>
+	</wp:term>
+	<wp:term>
+		<wp:term_id>32</wp:term_id>
+		<wp:term_taxonomy>genre</wp:term_taxonomy>
+		<wp:term_slug>advanced</wp:term_slug>
+		<wp:term_name><![CDATA[Advanced]]></wp:term_name>
+		<wp:term_description><![CDATA[Advanced topics and strategies]]></wp:term_description>
+	</wp:term>
+
+	<!-- Navigation Menu -->
+	<wp:term>
+		<wp:term_id>40</wp:term_id>
+		<wp:term_taxonomy>nav_menu</wp:term_taxonomy>
+		<wp:term_slug>primary-menu</wp:term_slug>
+		<wp:term_name><![CDATA[Primary Menu]]></wp:term_name>
+	</wp:term>
+
+	<!-- Menu Items -->
+	<item>
+		<title>Home</title>
+		<link>http://localhost:8889/</link>
+		<pubDate>Mon, 01 Jan 2024 08:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<wp:post_id>400</wp:post_id>
+		<wp:post_date>2024-01-01 08:00:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 08:00:00</wp:post_date_gmt>
+		<wp:post_name>home</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>nav_menu_item</wp:post_type>
+		<wp:menu_order>1</wp:menu_order>
+		<category domain="nav_menu" nicename="primary-menu"><![CDATA[Primary Menu]]></category>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_type</wp:meta_key>
+			<wp:meta_value>custom</wp:meta_value>
+		</wp:postmeta>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_url</wp:meta_key>
+			<wp:meta_value>http://localhost:8889/</wp:meta_value>
+		</wp:postmeta>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_menu_item_parent</wp:meta_key>
+			<wp:meta_value>0</wp:meta_value>
+		</wp:postmeta>
+	</item>
+
+	<item>
+		<title>About</title>
+		<link>http://localhost:8889/about/</link>
+		<pubDate>Mon, 01 Jan 2024 08:01:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<wp:post_id>401</wp:post_id>
+		<wp:post_date>2024-01-01 08:01:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 08:01:00</wp:post_date_gmt>
+		<wp:post_name>about-menu</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>nav_menu_item</wp:post_type>
+		<wp:menu_order>2</wp:menu_order>
+		<category domain="nav_menu" nicename="primary-menu"><![CDATA[Primary Menu]]></category>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_type</wp:meta_key>
+			<wp:meta_value>post_type</wp:meta_value>
+		</wp:postmeta>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_object</wp:meta_key>
+			<wp:meta_value>page</wp:meta_value>
+		</wp:postmeta>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_object_id</wp:meta_key>
+			<wp:meta_value>200</wp:meta_value>
+		</wp:postmeta>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_menu_item_parent</wp:meta_key>
+			<wp:meta_value>0</wp:meta_value>
+		</wp:postmeta>
+	</item>
+
+	<item>
+		<title>Books</title>
+		<link>http://localhost:8889/books/</link>
+		<pubDate>Mon, 01 Jan 2024 08:02:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<wp:post_id>402</wp:post_id>
+		<wp:post_date>2024-01-01 08:02:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 08:02:00</wp:post_date_gmt>
+		<wp:post_name>books-menu</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>nav_menu_item</wp:post_type>
+		<wp:menu_order>3</wp:menu_order>
+		<category domain="nav_menu" nicename="primary-menu"><![CDATA[Primary Menu]]></category>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_type</wp:meta_key>
+			<wp:meta_value>post_type_archive</wp:meta_value>
+		</wp:postmeta>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_object</wp:meta_key>
+			<wp:meta_value>book</wp:meta_value>
+		</wp:postmeta>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_menu_item_parent</wp:meta_key>
+			<wp:meta_value>0</wp:meta_value>
+		</wp:postmeta>
+	</item>
+
+	<item>
+		<title>Contact</title>
+		<link>http://localhost:8889/contact/</link>
+		<pubDate>Mon, 01 Jan 2024 08:03:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<wp:post_id>403</wp:post_id>
+		<wp:post_date>2024-01-01 08:03:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 08:03:00</wp:post_date_gmt>
+		<wp:post_name>contact-menu</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>nav_menu_item</wp:post_type>
+		<wp:menu_order>4</wp:menu_order>
+		<category domain="nav_menu" nicename="primary-menu"><![CDATA[Primary Menu]]></category>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_type</wp:meta_key>
+			<wp:meta_value>post_type</wp:meta_value>
+		</wp:postmeta>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_object</wp:meta_key>
+			<wp:meta_value>page</wp:meta_value>
+		</wp:postmeta>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_object_id</wp:meta_key>
+			<wp:meta_value>201</wp:meta_value>
+		</wp:postmeta>
+		<wp:postmeta>
+			<wp:meta_key>_menu_item_menu_item_parent</wp:meta_key>
+			<wp:meta_value>0</wp:meta_value>
+		</wp:postmeta>
+	</item>
+
+	<!-- Posts with Gutenberg blocks -->
+	<item>
+		<title>What is TTFB and Why You Should Care</title>
+		<link>http://localhost:8889/what-is-ttfb-and-why-you-should-care/</link>
+		<pubDate>Mon, 01 Jan 2024 10:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
+<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/ttfb-speed/1200/400" alt="TTFB and website performance illustration"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Time To First Byte (TTFB) is one of the most important metrics for website performance. Understanding TTFB can mean the difference between a fast, responsive website and one that feels sluggish to visitors.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">What is TTFB?</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>TTFB stands for Time To First Byte. It measures how long it takes from when a browser requests a page until it receives the first byte of data from the server. Think of it as the initial response time of your website.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">What Affects TTFB</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Several factors contribute to your TTFB:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list">
+<li>Server processing time (PHP execution, database queries)</li>
+<li>Network latency between user and server</li>
+<li>SSL/TLS handshake overhead</li>
+<li>Server configuration and resources</li>
+</ol>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">TTFB Benchmarks</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>What's considered a good TTFB? Here are the typical ranges:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>TTFB Range</th><th>Rating</th><th>User Experience</th></tr></thead><tbody><tr><td>Under 200ms</td><td>Excellent</td><td>Feels instant</td></tr><tr><td>200-500ms</td><td>Good</td><td>Responsive</td></tr><tr><td>500-1000ms</td><td>Needs work</td><td>Noticeable delay</td></tr><tr><td>Over 1000ms</td><td>Poor</td><td>Frustrating</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:quote -->
+<blockquote class="wp-block-quote">
+<p>"TTFB is the foundation of page speed. You can optimize everything else, but if your server is slow to respond, users will notice."</p>
+</blockquote>
+<!-- /wp:quote -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">How Caching Improves TTFB</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li><strong>Skip PHP execution</strong> - Cached pages bypass WordPress entirely</li>
+<li><strong>No database queries</strong> - Content is served directly from memory</li>
+<li><strong>Reduced server load</strong> - More resources available for uncached requests</li>
+<li><strong>Consistent performance</strong> - Response times stay fast under load</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>With full page caching, TTFB can drop from 500ms+ to under 50ms—a 10x improvement that users will immediately feel.</p>
+<!-- /wp:paragraph -->]]></content:encoded>
+		<excerpt:encoded><![CDATA[Learn what Time To First Byte means for your website and how caching dramatically improves it.]]></excerpt:encoded>
+		<wp:post_id>100</wp:post_id>
+		<wp:post_date>2024-01-01 10:00:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 10:00:00</wp:post_date_gmt>
+		<wp:post_name>what-is-ttfb-and-why-you-should-care</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>post</wp:post_type>
+		<category domain="category" nicename="tutorials"><![CDATA[Tutorials]]></category>
+		<category domain="post_tag" nicename="speed"><![CDATA[Speed]]></category>
+		<category domain="post_tag" nicename="caching"><![CDATA[Caching]]></category>
+		<category domain="post_tag" nicename="optimization"><![CDATA[Optimization]]></category>
+	</item>
+
+	<item>
+		<title>Scale Your WordPress Site for High Traffic</title>
+		<link>http://localhost:8889/scale-wordpress-high-traffic/</link>
+		<pubDate>Mon, 01 Jan 2024 11:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
+<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/scale-wordpress/1200/400" alt="Scaling WordPress for high traffic"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Every successful website eventually faces the challenge of scaling. When traffic grows, your infrastructure needs to grow with it. Here's how to prepare your WordPress site for high-traffic scenarios.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">The Scaling Challenge</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>WordPress is powerful and flexible, but out of the box it's not optimized for massive scale. Each page request typically involves:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li>Multiple database queries</li>
+<li>PHP execution</li>
+<li>Template rendering</li>
+<li>Plugin and theme processing</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>At scale, these operations multiply. A site handling 100 concurrent users has very different requirements than one handling 10,000.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Caching: Your First Line of Defense</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Full page caching is the single most effective way to handle traffic spikes. By serving pre-generated HTML pages, you eliminate the need for PHP execution and database queries on every request.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:columns -->
+<div class="wp-block-columns">
+<!-- wp:column -->
+<div class="wp-block-column">
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Without Caching</h3>
+<!-- /wp:heading -->
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li>~200-500ms response time</li>
+<li>High CPU usage</li>
+<li>Database bottleneck</li>
+<li>Limited concurrent users</li>
+</ul>
+<!-- /wp:list -->
+</div>
+<!-- /wp:column -->
+
+<!-- wp:column -->
+<div class="wp-block-column">
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">With Caching</h3>
+<!-- /wp:heading -->
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li>~10-50ms response time</li>
+<li>Minimal CPU usage</li>
+<li>Database mostly idle</li>
+<li>Thousands of concurrent users</li>
+</ul>
+<!-- /wp:list -->
+</div>
+<!-- /wp:column -->
+</div>
+<!-- /wp:columns -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Beyond Caching: Complete Scaling Strategy</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list">
+<li><strong>Implement full page caching</strong> - Essential first step</li>
+<li><strong>Use a CDN</strong> - Distribute content globally</li>
+<li><strong>Optimize your database</strong> - Proper indexing and query optimization</li>
+<li><strong>Consider horizontal scaling</strong> - Multiple servers behind a load balancer</li>
+<li><strong>Monitor everything</strong> - You can't optimize what you don't measure</li>
+</ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>With MilliCache handling your page caching, you've already addressed the biggest performance bottleneck. The rest is optimization and infrastructure planning.</p>
+<!-- /wp:paragraph -->]]></content:encoded>
+		<excerpt:encoded><![CDATA[Learn how to prepare your WordPress site for high traffic with caching and scaling strategies.]]></excerpt:encoded>
+		<wp:post_id>101</wp:post_id>
+		<wp:post_date>2024-01-01 11:00:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 11:00:00</wp:post_date_gmt>
+		<wp:post_name>scale-wordpress-high-traffic</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>post</wp:post_type>
+		<category domain="category" nicename="performance"><![CDATA[Performance]]></category>
+		<category domain="category" nicename="infrastructure"><![CDATA[Infrastructure]]></category>
+		<category domain="post_tag" nicename="scalability"><![CDATA[Scalability]]></category>
+		<category domain="post_tag" nicename="high-traffic"><![CDATA[High Traffic]]></category>
+	</item>
+
+	<item>
+		<title>Understanding Redis for WordPress</title>
+		<link>http://localhost:8889/understanding-redis-wordpress/</link>
+		<pubDate>Mon, 01 Jan 2024 12:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
+<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/redis-wordpress/1200/400" alt="Redis data store concept"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Redis is an in-memory data store that has become essential infrastructure for high-performance WordPress sites. Let's explore what Redis is and why it matters for your website.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">What is Redis?</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Redis (Remote Dictionary Server) is an open-source, in-memory data structure store. Unlike traditional databases that store data on disk, Redis keeps everything in RAM, making it incredibly fast.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Key Redis Features</h3>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li><strong>In-memory storage</strong> - Sub-millisecond response times</li>
+<li><strong>Data persistence</strong> - Optional disk backup for durability</li>
+<li><strong>Rich data types</strong> - Strings, lists, sets, hashes, and more</li>
+<li><strong>Atomic operations</strong> - Safe concurrent access</li>
+<li><strong>Built-in replication</strong> - High availability support</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Redis vs Other Solutions</h2>
+<!-- /wp:heading -->
+
+<!-- wp:table {"hasFixedLayout":true} -->
+<figure class="wp-block-table"><table class="has-fixed-layout"><thead><tr><th>Feature</th><th>Redis</th><th>Memcached</th><th>File Cache</th></tr></thead><tbody><tr><td>Speed</td><td>Excellent</td><td>Excellent</td><td>Good</td></tr><tr><td>Persistence</td><td>Yes</td><td>No</td><td>Yes</td></tr><tr><td>Data Types</td><td>Many</td><td>Strings only</td><td>Serialized</td></tr><tr><td>Clustering</td><td>Native</td><td>Client-side</td><td>N/A</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">WordPress and Redis</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>In WordPress, Redis is commonly used for:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list">
+<li><strong>Object caching</strong> - Store database query results</li>
+<li><strong>Full page caching</strong> - Store complete rendered pages</li>
+<li><strong>Session storage</strong> - User session data</li>
+<li><strong>Transients</strong> - Temporary WordPress data</li>
+</ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>MilliCache uses Redis as its primary storage backend, taking advantage of Redis's speed and reliability to deliver cached pages in milliseconds.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Getting Started with Redis</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Most managed WordPress hosts offer Redis as an add-on. For self-hosted sites, Redis installation is straightforward on most Linux distributions. Once installed, MilliCache will automatically detect and use your Redis server.</p>
+<!-- /wp:paragraph -->]]></content:encoded>
+		<excerpt:encoded><![CDATA[Discover what Redis is and why it's the preferred caching backend for high-performance WordPress sites.]]></excerpt:encoded>
+		<wp:post_id>102</wp:post_id>
+		<wp:post_date>2024-01-01 12:00:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 12:00:00</wp:post_date_gmt>
+		<wp:post_name>understanding-redis-wordpress</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>post</wp:post_type>
+		<category domain="category" nicename="infrastructure"><![CDATA[Infrastructure]]></category>
+		<category domain="category" nicename="tutorials"><![CDATA[Tutorials]]></category>
+		<category domain="post_tag" nicename="redis"><![CDATA[Redis]]></category>
+		<category domain="post_tag" nicename="caching"><![CDATA[Caching]]></category>
+	</item>
+
+	<item>
+		<title>Why Page Speed Matters for SEO</title>
+		<link>http://localhost:8889/page-speed-matters-seo/</link>
+		<pubDate>Mon, 01 Jan 2024 13:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
+<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/seo-speed/1200/400" alt="Page speed and SEO performance"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Page speed isn't just about user experience—it directly impacts your search engine rankings. Google has made site performance a ranking factor, and slow sites are penalized in search results.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Core Web Vitals</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Google's Core Web Vitals are the specific metrics that matter most for SEO:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li><strong>Largest Contentful Paint (LCP)</strong> - How fast the main content loads. Target: under 2.5 seconds</li>
+<li><strong>First Input Delay (FID)</strong> - How quickly the page responds to interaction. Target: under 100ms</li>
+<li><strong>Cumulative Layout Shift (CLS)</strong> - Visual stability of the page. Target: under 0.1</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">How Caching Improves Core Web Vitals</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Full page caching dramatically improves all three Core Web Vitals:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:columns -->
+<div class="wp-block-columns">
+<!-- wp:column -->
+<div class="wp-block-column">
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">LCP Impact</h3>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>Cached pages load 10-100x faster because they skip PHP execution entirely. Your LCP can drop from seconds to milliseconds.</p>
+<!-- /wp:paragraph -->
+</div>
+<!-- /wp:column -->
+
+<!-- wp:column -->
+<div class="wp-block-column">
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">FID Impact</h3>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>With the server responding instantly, the browser can focus on rendering and interactivity rather than waiting for data.</p>
+<!-- /wp:paragraph -->
+</div>
+<!-- /wp:column -->
+</div>
+<!-- /wp:columns -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Real-World SEO Benefits</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Sites that improve their page speed typically see:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list">
+<li>Higher search rankings for competitive keywords</li>
+<li>Lower bounce rates from organic traffic</li>
+<li>Better crawl efficiency from search engines</li>
+<li>Improved mobile search performance</li>
+</ol>
+<!-- /wp:list -->
+
+<!-- wp:quote -->
+<blockquote class="wp-block-quote">
+<p>"Speed is a ranking factor. Period. If two pages have similar content and relevance, the faster one will rank higher."</p>
+</blockquote>
+<!-- /wp:quote -->
+
+<!-- wp:paragraph -->
+<p>Investing in caching is one of the highest-ROI activities for SEO. MilliCache helps you achieve the speed metrics that search engines reward.</p>
+<!-- /wp:paragraph -->]]></content:encoded>
+		<excerpt:encoded><![CDATA[Learn how page speed affects your SEO rankings and why caching is essential for search visibility.]]></excerpt:encoded>
+		<wp:post_id>103</wp:post_id>
+		<wp:post_date>2024-01-01 13:00:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 13:00:00</wp:post_date_gmt>
+		<wp:post_name>page-speed-matters-seo</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>post</wp:post_type>
+		<category domain="category" nicename="performance"><![CDATA[Performance]]></category>
+		<category domain="post_tag" nicename="speed"><![CDATA[Speed]]></category>
+		<category domain="post_tag" nicename="optimization"><![CDATA[Optimization]]></category>
+	</item>
+
+	<item>
+		<title>Getting Started with Full Page Caching</title>
+		<link>http://localhost:8889/getting-started-full-page-caching/</link>
+		<pubDate>Mon, 01 Jan 2024 14:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
+<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/full-page-cache/1200/400" alt="Full page caching concept"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Full page caching is the most impactful performance optimization you can make for your WordPress site. This guide will help you understand how it works and what to expect.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">How Full Page Caching Works</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>When a visitor requests a page, WordPress normally:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list">
+<li>Receives the HTTP request</li>
+<li>Loads WordPress core, plugins, and theme</li>
+<li>Queries the database for content</li>
+<li>Renders the page using PHP</li>
+<li>Sends the HTML response</li>
+</ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>With full page caching, steps 2-4 are skipped entirely. The complete HTML page is stored and served directly, bypassing WordPress for cached requests.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">What Gets Cached</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Full page caching works best for:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li>Blog posts and articles</li>
+<li>Static pages (About, Contact, etc.)</li>
+<li>Archive pages and category listings</li>
+<li>Product pages for logged-out users</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">What Shouldn't Be Cached</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Some pages need to remain dynamic:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li>Shopping carts and checkout pages</li>
+<li>User account dashboards</li>
+<li>Pages with real-time data</li>
+<li>Form submission confirmations</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Measuring Success</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>After enabling caching, you should see:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>Metric</th><th>Before</th><th>After</th></tr></thead><tbody><tr><td>Time to First Byte</td><td>200-800ms</td><td>10-50ms</td></tr><tr><td>Page Load Time</td><td>2-5 seconds</td><td>Under 1 second</td></tr><tr><td>Server CPU Usage</td><td>High</td><td>Minimal</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>MilliCache makes this process automatic. Once configured, your pages are cached and served at lightning speed with no additional effort required.</p>
+<!-- /wp:paragraph -->]]></content:encoded>
+		<excerpt:encoded><![CDATA[A beginner's guide to understanding and implementing full page caching for WordPress.]]></excerpt:encoded>
+		<wp:post_id>104</wp:post_id>
+		<wp:post_date>2024-01-01 14:00:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 14:00:00</wp:post_date_gmt>
+		<wp:post_name>getting-started-full-page-caching</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>post</wp:post_type>
+		<category domain="category" nicename="tutorials"><![CDATA[Tutorials]]></category>
+		<category domain="category" nicename="performance"><![CDATA[Performance]]></category>
+		<category domain="post_tag" nicename="caching"><![CDATA[Caching]]></category>
+		<category domain="post_tag" nicename="best-practices"><![CDATA[Best Practices]]></category>
+	</item>
+
+	<!-- Pages with Gutenberg blocks -->
+	<item>
+		<title>About</title>
+		<link>http://localhost:8889/about/</link>
+		<pubDate>Mon, 01 Jan 2024 09:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"full"} -->
+<figure class="wp-block-image size-full"><img src="https://picsum.photos/seed/about-millicache/1200/500" alt="MilliCache performance"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph {"fontSize":"large"} -->
+<p class="has-large-font-size">MilliCache is a high-performance full page caching plugin for WordPress, designed for speed and simplicity.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Fast by Default</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>MilliCache stores complete HTML pages in Redis, serving them in milliseconds without any PHP execution or database queries. Your visitors get instant page loads, and your server stays cool under pressure.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Simple to Use</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>No complex configuration required. Install the plugin, connect to Redis, and you're done. MilliCache handles the rest automatically—caching pages, clearing stale content, and optimizing delivery.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Built for WordPress</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>MilliCache understands WordPress. It knows when to cache, when to clear, and when to bypass. Content updates, new comments, and setting changes automatically trigger appropriate cache updates.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:buttons {"layout":{"type":"flex","justifyContent":"center"}} -->
+<div class="wp-block-buttons">
+<!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="/contact/">Get in Touch</a></div>
+<!-- /wp:button -->
+</div>
+<!-- /wp:buttons -->]]></content:encoded>
+		<excerpt:encoded><![CDATA[Learn about MilliCache, the high-performance caching plugin for WordPress.]]></excerpt:encoded>
+		<wp:post_id>200</wp:post_id>
+		<wp:post_date>2024-01-01 09:00:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 09:00:00</wp:post_date_gmt>
+		<wp:post_name>about</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>page</wp:post_type>
+	</item>
+
+	<item>
+		<title>Contact</title>
+		<link>http://localhost:8889/contact/</link>
+		<pubDate>Mon, 01 Jan 2024 09:01:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"full"} -->
+<figure class="wp-block-image size-full"><img src="https://picsum.photos/seed/contact-support/1200/400" alt="Contact and support"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Have questions about MilliCache? We're here to help.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Support</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>For technical support, bug reports, and feature requests, please visit our GitHub repository. We actively monitor issues and respond to questions from the community.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Documentation</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Before reaching out, check our documentation for answers to common questions about installation, configuration, and troubleshooting.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Community</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Join other WordPress performance enthusiasts in our community channels. Share tips, ask questions, and learn from others who are optimizing their sites.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li>GitHub Discussions for feature ideas</li>
+<li>WordPress.org support forum</li>
+<li>Stack Overflow with the millicache tag</li>
+</ul>
+<!-- /wp:list -->]]></content:encoded>
+		<excerpt:encoded><![CDATA[Contact the MilliCache team for support and questions.]]></excerpt:encoded>
+		<wp:post_id>201</wp:post_id>
+		<wp:post_date>2024-01-01 09:01:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 09:01:00</wp:post_date_gmt>
+		<wp:post_name>contact</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>page</wp:post_type>
+	</item>
+
+	<!-- Books (Custom Post Type) with Gutenberg blocks and taxonomy terms -->
+	<item>
+		<title>WordPress Caching Fundamentals</title>
+		<link>http://localhost:8889/book/wordpress-caching-fundamentals/</link>
+		<pubDate>Mon, 01 Jan 2024 15:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
+<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/book-fundamentals/1200/600" alt="WordPress Caching Fundamentals book cover"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph {"fontSize":"large"} -->
+<p class="has-large-font-size">Everything you need to know about caching in WordPress, from basic concepts to implementation.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">About This Book</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>This comprehensive guide covers all the fundamental concepts of WordPress caching. Whether you're new to caching or looking to deepen your understanding, this book provides a solid foundation.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">What You'll Learn</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li>Different types of caching in WordPress</li>
+<li>How browsers, servers, and CDNs cache content</li>
+<li>The WordPress object cache explained</li>
+<li>Full page caching strategies</li>
+<li>Cache invalidation concepts</li>
+<li>Choosing the right caching solution</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Who This Book Is For</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>This book is perfect for WordPress developers, site administrators, and anyone responsible for website performance. No prior caching experience required.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:separator -->
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<!-- /wp:separator -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Book Details</h3>
+<!-- /wp:heading -->
+
+<!-- wp:columns -->
+<div class="wp-block-columns">
+<!-- wp:column -->
+<div class="wp-block-column">
+<!-- wp:paragraph -->
+<p><strong>Genre:</strong></p>
+<!-- /wp:paragraph -->
+<!-- wp:term-description {"taxonomy":"genre"} /-->
+</div>
+<!-- /wp:column -->
+<!-- wp:column -->
+<div class="wp-block-column">
+<!-- wp:paragraph -->
+<p><strong>Topics:</strong></p>
+<!-- /wp:paragraph -->
+<!-- wp:tag-cloud {"taxonomy":"post_tag"} /-->
+</div>
+<!-- /wp:column -->
+</div>
+<!-- /wp:columns -->]]></content:encoded>
+		<excerpt:encoded><![CDATA[A comprehensive guide to understanding WordPress caching fundamentals.]]></excerpt:encoded>
+		<wp:post_id>300</wp:post_id>
+		<wp:post_date>2024-01-01 15:00:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 15:00:00</wp:post_date_gmt>
+		<wp:post_name>wordpress-caching-fundamentals</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>book</wp:post_type>
+		<category domain="genre" nicename="fundamentals"><![CDATA[Fundamentals]]></category>
+		<category domain="post_tag" nicename="caching"><![CDATA[Caching]]></category>
+		<category domain="post_tag" nicename="best-practices"><![CDATA[Best Practices]]></category>
+	</item>
+
+	<item>
+		<title>Redis Deep Dive</title>
+		<link>http://localhost:8889/book/redis-deep-dive/</link>
+		<pubDate>Mon, 01 Jan 2024 15:01:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
+<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/book-redis/1200/600" alt="Redis Deep Dive book cover"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Master Redis from the ground up. This technical guide covers everything from basic operations to advanced patterns used in production systems.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Why Redis?</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Redis has become the standard for high-performance caching. Its speed, reliability, and rich feature set make it the preferred choice for demanding applications.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Topics Covered</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list">
+<li>Redis architecture and data structures</li>
+<li>Installation and configuration</li>
+<li>Performance tuning and optimization</li>
+<li>Persistence and durability options</li>
+<li>Replication and high availability</li>
+<li>Security best practices</li>
+<li>Monitoring and troubleshooting</li>
+</ol>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Code Examples</h2>
+<!-- /wp:heading -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code># Basic Redis operations
+SET page:/about "cached_html_content"
+GET page:/about
+EXPIRE page:/about 3600
+DEL page:/about</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>Each chapter includes practical examples and real-world scenarios to help you apply what you learn.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:separator -->
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<!-- /wp:separator -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Book Details</h3>
+<!-- /wp:heading -->
+
+<!-- wp:columns -->
+<div class="wp-block-columns">
+<!-- wp:column -->
+<div class="wp-block-column">
+<!-- wp:paragraph -->
+<p><strong>Genre:</strong></p>
+<!-- /wp:paragraph -->
+<!-- wp:term-description {"taxonomy":"genre"} /-->
+</div>
+<!-- /wp:column -->
+<!-- wp:column -->
+<div class="wp-block-column">
+<!-- wp:paragraph -->
+<p><strong>Topics:</strong></p>
+<!-- /wp:paragraph -->
+<!-- wp:tag-cloud {"taxonomy":"post_tag"} /-->
+</div>
+<!-- /wp:column -->
+</div>
+<!-- /wp:columns -->]]></content:encoded>
+		<excerpt:encoded><![CDATA[A technical deep dive into Redis for web developers and system administrators.]]></excerpt:encoded>
+		<wp:post_id>301</wp:post_id>
+		<wp:post_date>2024-01-01 15:01:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 15:01:00</wp:post_date_gmt>
+		<wp:post_name>redis-deep-dive</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>book</wp:post_type>
+		<category domain="genre" nicename="technical"><![CDATA[Technical]]></category>
+		<category domain="post_tag" nicename="redis"><![CDATA[Redis]]></category>
+		<category domain="post_tag" nicename="optimization"><![CDATA[Optimization]]></category>
+	</item>
+
+	<item>
+		<title>Scaling WordPress to Millions</title>
+		<link>http://localhost:8889/book/scaling-wordpress-millions/</link>
+		<pubDate>Mon, 01 Jan 2024 15:02:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
+<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/book-scaling/1200/600" alt="Scaling WordPress to Millions book cover"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Learn the strategies and techniques used by the world's largest WordPress sites. This advanced guide covers everything you need to know about scaling WordPress for massive traffic.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Beyond the Basics</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>When your site grows beyond what a single server can handle, you need a different approach. This book covers the advanced patterns and architectures that power high-traffic WordPress installations.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Advanced Topics</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li>Load balancing and horizontal scaling</li>
+<li>Database optimization and replication</li>
+<li>CDN configuration and edge caching</li>
+<li>Microservices architecture with WordPress</li>
+<li>Handling traffic spikes and viral content</li>
+<li>Infrastructure automation and DevOps</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Real Numbers</h2>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>Traffic Level</th><th>Infrastructure</th><th>Caching Strategy</th></tr></thead><tbody><tr><td>100K/month</td><td>Single server</td><td>Full page cache</td></tr><tr><td>1M/month</td><td>2-3 servers + CDN</td><td>Multi-layer caching</td></tr><tr><td>10M+/month</td><td>Auto-scaling cluster</td><td>Edge + origin caching</td></tr></tbody></table></figure>
+<!-- /wp:table -->
+
+<!-- wp:separator -->
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<!-- /wp:separator -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Book Details</h3>
+<!-- /wp:heading -->
+
+<!-- wp:columns -->
+<div class="wp-block-columns">
+<!-- wp:column -->
+<div class="wp-block-column">
+<!-- wp:paragraph -->
+<p><strong>Genre:</strong></p>
+<!-- /wp:paragraph -->
+<!-- wp:term-description {"taxonomy":"genre"} /-->
+</div>
+<!-- /wp:column -->
+<!-- wp:column -->
+<div class="wp-block-column">
+<!-- wp:paragraph -->
+<p><strong>Topics:</strong></p>
+<!-- /wp:paragraph -->
+<!-- wp:tag-cloud {"taxonomy":"post_tag"} /-->
+</div>
+<!-- /wp:column -->
+</div>
+<!-- /wp:columns -->]]></content:encoded>
+		<excerpt:encoded><![CDATA[Advanced strategies for scaling WordPress to handle millions of visitors.]]></excerpt:encoded>
+		<wp:post_id>302</wp:post_id>
+		<wp:post_date>2024-01-01 15:02:00</wp:post_date>
+		<wp:post_date_gmt>2024-01-01 15:02:00</wp:post_date_gmt>
+		<wp:post_name>scaling-wordpress-millions</wp:post_name>
+		<wp:status>publish</wp:status>
+		<wp:post_type>book</wp:post_type>
+		<category domain="genre" nicename="advanced"><![CDATA[Advanced]]></category>
+		<category domain="post_tag" nicename="scalability"><![CDATA[Scalability]]></category>
+		<category domain="post_tag" nicename="high-traffic"><![CDATA[High Traffic]]></category>
+	</item>
+
+</channel>
+</rss>
