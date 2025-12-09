@@ -819,9 +819,6 @@ final class CLI {
 	 * [--show-source]
 	 * : Show where each value comes from (constant, file, db, default).
 	 *
-	 * [--encrypt]
-	 * : Encrypt the value before storing (for sensitive data).
-	 *
 	 * [--file=<path>]
 	 * : File path for export/import operations.
 	 *
@@ -842,8 +839,8 @@ final class CLI {
 	 *     # Set a value
 	 *     wp millicache config set cache.ttl 3600
 	 *
-	 *     # Set an encrypted value
-	 *     wp millicache config set storage.enc_password mysecret --encrypt
+	 *     # Set a sensitive value (enc_* fields are automatically encrypted)
+	 *     wp millicache config set storage.enc_password mysecret
 	 *
 	 *     # Reset all settings
 	 *     wp millicache config reset
@@ -1021,7 +1018,6 @@ final class CLI {
 
 		$key = $args[0];
 		$value = $args[1];
-		$encrypt = isset( $assoc_args['encrypt'] );
 
 		$settings_obj = new Settings();
 
@@ -1046,19 +1042,17 @@ final class CLI {
 		// Coerce value type.
 		$typed_value = Settings::coerce_value( $value );
 
-		// Encrypt if requested.
-		if ( $encrypt && is_string( $typed_value ) ) {
-			$typed_value = Settings::encrypt_value( $typed_value );
-		}
+		// Set the value (enc_* fields are automatically encrypted by Settings).
+		// Check if this is an encrypted field (key contains enc_ after the module prefix).
+		$is_encrypted_field = isset( $setting_key ) && strpos( $setting_key, 'enc_' ) === 0;
 
-		// Set the value.
 		if ( $settings_obj->set( $key, $typed_value ) ) {
 			\WP_CLI::success(
 				sprintf(
 				// translators: %1$s is the key, %2$s is the value.
 					__( 'Set "%1$s" to "%2$s".', 'millicache' ),
 					$key,
-					$encrypt ? '***' : $this->format_value( $typed_value )
+					$is_encrypted_field ? '***' : $this->format_value( $typed_value )
 				)
 			);
 		} else {
