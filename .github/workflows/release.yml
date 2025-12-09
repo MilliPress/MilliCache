@@ -15,7 +15,7 @@ on:
       draft:
         description: 'Publish as draft?'
         required: false
-        default: false
+        default: true
         type: boolean
 
 permissions:
