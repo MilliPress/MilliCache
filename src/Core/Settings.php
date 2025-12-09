@@ -498,7 +498,8 @@ final class Settings {
 
 		// Generate the content for the configuration file.
 		$config_content = "<?php\n";
-		$config_content .= "// Auto-generated configuration for MilliCache plugin\n";
+		$config_content .= "// Auto-generated configuration for MilliCache\n";
+		$config_content .= "defined( 'ABSPATH' ) || exit;\n\n";
 		$config_content .= 'return ' . var_export( $settings, true ) . ";\n";
 
 		// Write the content to the configuration file.
