@@ -1,0 +1,41 @@
+<?php return array(
+    'root' => array(
+        'name' => 'millipress/millicache',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => 'd4d6a09021a2a0d38bd72926236cb1a6887998db',
+        'type' => 'wordpress-plugin',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => false,
+    ),
+    'versions' => array(
+        'millipress/millicache' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => 'd4d6a09021a2a0d38bd72926236cb1a6887998db',
+            'type' => 'wordpress-plugin',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'millipress/millirules' => array(
+            'pretty_version' => 'v0.4.0',
+            'version' => '0.4.0.0',
+            'reference' => 'abfff73aa3c5ad0f6401f9a46af0bc79fce89df1',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../millipress/millirules',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'predis/predis' => array(
+            'pretty_version' => 'v2.4.1',
+            'version' => '2.4.1.0',
+            'reference' => '07105e050622ed80bd60808367ced9e379f31530',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../predis/predis',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+    ),
+);
