@@ -514,8 +514,7 @@ final class Engine {
 	 *
 	 * @return RulesManager The rules manager instance.
 	 */
-	public function rules(): RulesManager
-	{
+	public function rules(): RulesManager {
 		if ( ! $this->rules_manager ) {
 			$this->rules_manager = new RulesManager();
 		}
