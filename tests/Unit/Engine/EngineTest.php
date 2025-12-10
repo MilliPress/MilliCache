@@ -341,7 +341,7 @@ describe( 'Engine', function () {
 
 		it( 'network runs without error', function () {
 			$engine = Engine::instance();
-			$engine->clear()->network( 1 );
+			$engine->clear()->networks( 1 );
 
 			expect( true )->toBeTrue();
 		} );

@@ -166,7 +166,7 @@ final class CLI {
 		if ( '' !== $assoc_args['network'] ) {
 			$network_ids = array_map( 'intval', explode( ',', $assoc_args['network'] ) );
 			foreach ( $network_ids as $network_id ) {
-				$clear->network( $network_id, $expire );
+				$clear->networks( $network_id, $expire );
 			}
 			$messages[] = sprintf(
 				// translators: %s is the number of cleared network IDs.
