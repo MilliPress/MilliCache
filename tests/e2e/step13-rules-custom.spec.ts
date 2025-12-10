@@ -45,7 +45,7 @@ test.describe('Step 13: Custom Rules', () => {
                 for (const path of paths) {
                     await frontend.goto(path);
                     const response = await frontend.reload();
-                    await expect(response).toBeCacheHit();
+                    expect(response).toBeCacheHit();
                 }
             });
         });
@@ -146,7 +146,7 @@ test.describe('Step 13: Custom Rules', () => {
             await clearCache('*');
             await frontend.goto('/');
             const response = await frontend.reload();
-            await expect(response).toBeCacheHit();
+            expect(response).toBeCacheHit();
         });
     });
 
@@ -160,7 +160,7 @@ test.describe('Step 13: Custom Rules', () => {
             const response = await frontend.reload();
 
             // If default rules are active, page should be cached
-            await expect(response).toBeCacheHit();
+            expect(response).toBeCacheHit();
         });
 
         test('Default WordPress rules are active', async ({ page }) => {
@@ -173,7 +173,7 @@ test.describe('Step 13: Custom Rules', () => {
             // Prime the cache first (as anonymous)
             await frontend.goto('/');
             const hitResponse = await frontend.reload();
-            await expect(hitResponse).toBeCacheHit();
+            expect(hitResponse).toBeCacheHit();
 
             // Now set a WordPress logged-in cookie pattern
             await page.context().addCookies([
@@ -187,7 +187,7 @@ test.describe('Step 13: Custom Rules', () => {
 
             // With auth cookie, should NOT serve cached content (miss or bypass)
             const response = await frontend.goto('/');
-            await expect(response).toHaveCacheStatus(['miss', 'bypass']);
+            expect(response).toHaveCacheStatus(['miss', 'bypass']);
 
             // Clean up
             await page.context().clearCookies();
