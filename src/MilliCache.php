@@ -118,7 +118,7 @@ final class MilliCache {
 		$this->loader = new Loader();
 		$this->engine = Engine::instance();
 
-		new CLI( $this->loader, $this->engine, $this->plugin_name, $this->version );
+		new CLI( $this->plugin_name );
 		new Admin( $this->loader, $this->engine, $this->plugin_name, $this->version );
 	}
 
