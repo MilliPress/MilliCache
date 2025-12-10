@@ -5,6 +5,7 @@ php*.*              export-ignore
 playwright.*        export-ignore
 composer.lock       export-ignore
 bin/                export-ignore
+docs/               export-ignore
 assets/             export-ignore
 tests/              export-ignore
 node_modules/       export-ignore
