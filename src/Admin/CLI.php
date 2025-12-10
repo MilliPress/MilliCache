@@ -169,8 +169,8 @@ final class CLI {
 				$clear->network( $network_id, $expire );
 			}
 			$messages[] = sprintf(
-				// translators: %s is a comma-separated list of network IDs.
-				esc_html__( 'Network cache cleared for networks: %s', 'millicache' ),
+				// translators: %s is the number of cleared network IDs.
+				esc_html__( 'Cleared cache for %s networks.', 'millicache' ),
 				implode( ', ', $network_ids )
 			);
 		}
@@ -182,9 +182,9 @@ final class CLI {
 				$clear->sites( $site_id, null, $expire );
 			}
 			$messages[] = sprintf(
-				// translators: %s is a comma-separated list of site IDs.
-				esc_html__( 'Site cache cleared for sites: %s', 'millicache' ),
-				implode( ', ', $site_ids )
+				// translators: %s is the number of cleared site IDs.
+				esc_html__( 'Cleared cache for %s sites.', 'millicache' ),
+				count( $site_ids )
 			);
 		}
 
@@ -195,9 +195,9 @@ final class CLI {
 				$clear->posts( $post_id, $expire );
 			}
 			$messages[] = sprintf(
-				// translators: %s is a comma-separated list of post IDs.
+				// translators: %s is the number of cleared post-IDs.
 				esc_html__( 'Cleared cache for %s posts.', 'millicache' ),
-				count($post_ids)
+				count( $post_ids )
 			);
 		}
 
@@ -208,9 +208,9 @@ final class CLI {
 				$clear->urls( $url, $expire );
 			}
 			$messages[] = sprintf(
-				// translators: %s is a comma-separated list of URLs.
-				esc_html__( 'URL cache cleared for: %s', 'millicache' ),
-				implode( ', ', $urls )
+				// translators: %s is the number of cleared URLs.
+				esc_html__( 'Cleared cache for %s URLs.', 'millicache' ),
+				count( $urls )
 			);
 		}
 
@@ -221,9 +221,9 @@ final class CLI {
 				$clear->flags( $flag, $expire, false );
 			}
 			$messages[] = sprintf(
-				// translators: %s is a comma-separated list of flags.
-				esc_html__( 'Cache cleared for flags: %s', 'millicache' ),
-				implode( ', ', $flags )
+				// translators: %s is the number of cleared flags.
+				esc_html__( 'Cleared cache for %s flags.', 'millicache' ),
+				count( $flags )
 			);
 		}
 
