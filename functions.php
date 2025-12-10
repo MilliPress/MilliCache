@@ -26,6 +26,7 @@ if ( ! function_exists( 'millicache' ) ) {
 	 * via helper functions or for complex chained operations.
 	 *
 	 * Example usage:
+	 *
 	 *     // Access storage backend directly
 	 *     millicache()->storage()->get_status();
 	 *
