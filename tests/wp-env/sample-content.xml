@@ -116,11 +116,7 @@
 		<link>http://localhost:8889/hello-world/</link>
 		<pubDate>Mon, 01 Jan 2024 10:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/ttfb-speed/1200/400" alt="TTFB and website performance illustration"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Time To First Byte (TTFB) is one of the most important metrics for website performance. Understanding TTFB can mean the difference between a fast, responsive website and one that feels sluggish to visitors.</p>
 <!-- /wp:paragraph -->
 
@@ -201,11 +197,7 @@
 		<link>http://localhost:8889/scale-wordpress-high-traffic/</link>
 		<pubDate>Mon, 01 Jan 2024 11:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/scale-wordpress/1200/400" alt="Scaling WordPress for high traffic"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Every successful website eventually faces the challenge of scaling. When traffic grows, your infrastructure needs to grow with it. Here's how to prepare your WordPress site for high-traffic scenarios.</p>
 <!-- /wp:paragraph -->
 
@@ -309,11 +301,7 @@
 		<link>http://localhost:8889/understanding-redis-wordpress/</link>
 		<pubDate>Mon, 01 Jan 2024 12:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/redis-wordpress/1200/400" alt="Redis data store concept"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Redis is an in-memory data store that has become essential infrastructure for high-performance WordPress sites. Let's explore what Redis is and why it matters for your website.</p>
 <!-- /wp:paragraph -->
 
@@ -393,11 +381,7 @@
 		<link>http://localhost:8889/page-speed-matters-seo/</link>
 		<pubDate>Mon, 01 Jan 2024 13:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/seo-speed/1200/400" alt="Page speed and SEO performance"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Page speed isn't just about user experience—it directly impacts your search engine rankings. Google has made site performance a ranking factor, and slow sites are penalized in search results.</p>
 <!-- /wp:paragraph -->
 
@@ -494,11 +478,7 @@
 		<link>http://localhost:8889/getting-started-full-page-caching/</link>
 		<pubDate>Mon, 01 Jan 2024 14:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/full-page-cache/1200/400" alt="Full page caching concept"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Full page caching is the most impactful performance optimization you can make for your WordPress site. This guide will help you understand how it works and what to expect.</p>
 <!-- /wp:paragraph -->
 
@@ -592,11 +572,7 @@
 		<link>http://localhost:8889/sample-page/</link>
 		<pubDate>Mon, 01 Jan 2024 09:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"full"} -->
-<figure class="wp-block-image size-full"><img src="https://picsum.photos/seed/about-millicache/1200/500" alt="MilliCache performance"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph {"fontSize":"large"} -->
+		<content:encoded><![CDATA[<!-- wp:paragraph {"fontSize":"large"} -->
 <p class="has-large-font-size">MilliCache is a high-performance full page caching plugin for WordPress, designed for speed and simplicity.</p>
 <!-- /wp:paragraph -->
 
@@ -645,11 +621,7 @@
 		<link>http://localhost:8889/contact/</link>
 		<pubDate>Mon, 01 Jan 2024 09:01:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"full"} -->
-<figure class="wp-block-image size-full"><img src="https://picsum.photos/seed/contact-support/1200/400" alt="Contact and support"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Have questions about MilliCache? We're here to help.</p>
 <!-- /wp:paragraph -->
 
@@ -699,11 +671,7 @@
 		<link>http://localhost:8889/book/wordpress-caching-fundamentals/</link>
 		<pubDate>Mon, 01 Jan 2024 15:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/book-fundamentals/1200/600" alt="WordPress Caching Fundamentals book cover"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph {"fontSize":"large"} -->
+		<content:encoded><![CDATA[<!-- wp:paragraph {"fontSize":"large"} -->
 <p class="has-large-font-size">Everything you need to know about caching in WordPress, from basic concepts to implementation.</p>
 <!-- /wp:paragraph -->
 
@@ -783,11 +751,7 @@
 		<link>http://localhost:8889/book/redis-deep-dive/</link>
 		<pubDate>Mon, 01 Jan 2024 15:01:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/book-redis/1200/600" alt="Redis Deep Dive book cover"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Master Redis from the ground up. This technical guide covers everything from basic operations to advanced patterns used in production systems.</p>
 <!-- /wp:paragraph -->
 
@@ -876,11 +840,7 @@ DEL page:/about</code></pre>
 		<link>http://localhost:8889/book/scaling-wordpress-millions/</link>
 		<pubDate>Mon, 01 Jan 2024 15:02:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/book-scaling/1200/600" alt="Scaling WordPress to Millions book cover"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Learn the strategies and techniques used by the world's largest WordPress sites. This advanced guide covers everything you need to know about scaling WordPress for massive traffic.</p>
 <!-- /wp:paragraph -->
 
