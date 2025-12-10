@@ -319,6 +319,17 @@ const startServer = async () => {
             if (existing.length) console.log(`Sites already exist or skipped: ${existing.join(', ')}`);
         }
 
+        // Reconfigure permalinks after multisite setup (multisite conversion changes them to /blog/%postname%/)
+        // Use option update instead of rewrite structure because the latter doesn't work in multisite
+        console.log('Reconfiguring permalinks after multisite setup...');
+        try {
+            await retry(() => run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'option', 'update', 'permalink_structure', '/%postname%/'], { silent: true }), 3, 1000);
+            await run('npx', ['wp-env', 'run', 'tests-cli', 'wp', 'rewrite', 'flush', '--hard'], { silent: true }).catch(() => {});
+            console.log('Permalinks reconfigured for tests-cli');
+        } catch (error) {
+            console.warn(`Warning: Failed to reconfigure permalinks: ${error.message}`);
+        }
+
         // Restore original .htaccess (WordPress overwrites it during permalink setup)
         if (htaccessOriginal) {
             writeFileSync(htaccessPath, htaccessOriginal);
