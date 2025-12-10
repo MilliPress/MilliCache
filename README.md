@@ -235,19 +235,19 @@ For instance, if you want to group all posts containing a particular Gutenberg b
    Instead of clearing the entire cache, you can clear only the entries with the custom flag:
    ```bash
    # Single site - clear all pages with the custom block
-   wp millicache clear --flags="block:my-custom/block"
-   
+   wp millicache clear --flag="block:my-custom/block"
+
    # Single site - clear all posts and home page
-   wp millicache clear --flags="post:123,home"
-   
+   wp millicache clear --flag="post:123,home"
+
    # Multisite - clear all posts on site 1
-   wp millicache clear --flags="1:post:*"
-   
+   wp millicache clear --flag="1:post:*"
+
    # Multisite - clear home pages across all sites
-   wp millicache clear --flags="*:home"
-   
+   wp millicache clear --flag="*:home"
+
    # Multinetwork - clear all content on network 2, site 3
-   wp millicache clear --flags="2:3:*"
+   wp millicache clear --flag="2:3:*"
    ```
 
 This way, you efficiently manage your cache by only refreshing the parts that need updating, saving resources, 
@@ -535,9 +535,9 @@ Clear the cache for specific flags, post-IDs, URLs, site IDs, or network IDs.
 The optional `--expire` flag can be used to regenerate the cache entries in the background on the next request.
 
 ```bash
-$ wp millicache clear [--flags="<flags>"] [--ids="<post_ids>"] [--urls="<urls>"] [--sites="<site_ids>"] [--networks="<network_ids>"] [--expire] 
+$ wp millicache clear [--flag="<flag>"] [--id="<id>"] [--url="<url>"] [--site="<site>"] [--network="<network>"] [--expire]
 ```
-`--flags` [supports wildcards](#wildcards) and can be a single flag or an array of flags separated by a comma as for `--ids`, `--urls`, `--sites` and `--networks`.
+`--flag` [supports wildcards](#wildcards) and can be a single flag or a comma-separated list of flags, as with `--id`, `--url`, `--site` and `--network`.
 
 ---
 
