@@ -14,7 +14,7 @@
 
 namespace MilliCache\Rules;
 
-use MilliCache\Deps\MilliRules\Rules;
+use MilliCache\Engine;
 
 /**
  * Class WordPress
@@ -93,7 +93,7 @@ final class WordPress {
 	 * @return void
 	 */
 	private static function register_logged_in_rule(): void {
-		Rules::create( 'millicache:wp:logged-in' )
+		Engine::instance()->rules()->create( 'millicache:wp:logged-in' )
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
@@ -114,7 +114,7 @@ final class WordPress {
 	 * @return void
 	 */
 	private static function register_response_code_rule(): void {
-		Rules::create( 'millicache:wp:response:code' )
+		Engine::instance()->rules()->create( 'millicache:wp:response:code' )
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
@@ -135,7 +135,7 @@ final class WordPress {
 	 * @return void
 	 */
 	private static function register_donotcachepage_rule(): void {
-		Rules::create( 'millicache:wp:const:donotcachepage' )
+		Engine::instance()->rules()->create( 'millicache:wp:const:donotcachepage' )
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
@@ -156,7 +156,7 @@ final class WordPress {
 	 * @return void
 	 */
 	private static function register_cron_rule(): void {
-		Rules::create( 'millicache:wp:const:doing-cron' )
+		Engine::instance()->rules()->create( 'millicache:wp:const:doing-cron' )
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
@@ -177,7 +177,7 @@ final class WordPress {
 	 * @return void
 	 */
 	private static function register_ajax_rule(): void {
-		Rules::create( 'millicache:wp:const:doing-ajax' )
+		Engine::instance()->rules()->create( 'millicache:wp:const:doing-ajax' )
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()

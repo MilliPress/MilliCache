@@ -17,7 +17,6 @@ namespace MilliCache\Rules;
 use MilliCache\Engine;
 use MilliCache\Engine\Cache\Config;
 use MilliCache\Deps\MilliRules\Context;
-use MilliCache\Deps\MilliRules\Rules;
 
 /**
  * Class Bootstrap
@@ -78,7 +77,7 @@ final class Bootstrap {
 	 */
 	private static function register_wp_cache_rule(): void {
 		// Check WP_CACHE constant.
-		Rules::create( 'millicache:const:wp-cache', 'php' )
+		Engine::instance()->rules()->create( 'millicache:const:wp-cache', 'php' )
 			->order( -10 )
 			->when()
 				->constant( 'WP_CACHE', true, '!=' )
@@ -96,7 +95,7 @@ final class Bootstrap {
 	 */
 	private static function register_rest_request_rule(): void {
 		// Check REST request.
-		Rules::create( 'millicache:request:rest', 'php' )
+		Engine::instance()->rules()->create( 'millicache:request:rest', 'php' )
 			->order( -10 )
 			->when()
 				->constant( 'REST_REQUEST', true )
@@ -114,7 +113,7 @@ final class Bootstrap {
 	 */
 	private static function register_xmlrpc_request_rule(): void {
 		// Check XML-RPC request.
-		Rules::create( 'millicache:request:xmlrpc', 'php' )
+		Engine::instance()->rules()->create( 'millicache:request:xmlrpc', 'php' )
 			->order( -10 )
 			->when()
 				->constant( 'XMLRPC_REQUEST', true )
@@ -132,7 +131,7 @@ final class Bootstrap {
 	 */
 	private static function register_file_request_rule(): void {
 		// Check file request (static assets).
-		Rules::create( 'millicache:request:file', 'php' )
+		Engine::instance()->rules()->create( 'millicache:request:file', 'php' )
 			->order( -10 )
 			->when()
 				->custom(
@@ -161,7 +160,7 @@ final class Bootstrap {
 	 */
 	private static function register_request_method_rule(): void {
 		// Check the request method (only GET/HEAD).
-		Rules::create( 'millicache:request:check-method', 'php' )
+		Engine::instance()->rules()->create( 'millicache:request:check-method', 'php' )
 			->order( -10 )
 			->when_none()
 				->request_method( 'GET' )
@@ -180,7 +179,7 @@ final class Bootstrap {
 	 */
 	private static function register_cli_request_rule(): void {
 		// Check CLI request.
-		Rules::create( 'millicache:request:cli', 'php' )
+		Engine::instance()->rules()->create( 'millicache:request:cli', 'php' )
 			->order( -10 )
 			->when()
 				->custom(
@@ -204,7 +203,7 @@ final class Bootstrap {
 	 */
 	private static function register_wp_json_request_rule(): void {
 		// Check WP-JSON request.
-		Rules::create( 'millicache:request:wp-json', 'php' )
+		Engine::instance()->rules()->create( 'millicache:request:wp-json', 'php' )
 			->order( -10 )
 			->when()
 				->request_url( '*wp-json*' )
@@ -223,7 +222,7 @@ final class Bootstrap {
 	 */
 	private static function register_ttl_check_rule( Config $config ): void {
 		// Check TTL is configured.
-		Rules::create( 'millicache:config:ttl-not-set', 'php' )
+		Engine::instance()->rules()->create( 'millicache:config:ttl-not-set', 'php' )
 			->order( -10 )
 			->when()
 				->custom(
@@ -256,7 +255,7 @@ final class Bootstrap {
 		}
 
 		// Build rule using fluent API.
-		$builder = Rules::create( 'millicache:config:nocache-cookies', 'php' )
+		$builder = Engine::instance()->rules()->create( 'millicache:config:nocache-cookies', 'php' )
 			->order( 0 )
 			->when_any(); // Any cookie match triggers.
 
@@ -291,7 +290,7 @@ final class Bootstrap {
 		}
 
 		// Build rule using fluent API.
-		$builder = Rules::create( 'millicache:config:nocache-paths', 'php' )
+		$builder = Engine::instance()->rules()->create( 'millicache:config:nocache-paths', 'php' )
 			->order( 0 )
 			->when_any();
 

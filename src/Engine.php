@@ -26,6 +26,7 @@ use MilliCache\Engine\Response\Processor as ResponseProcessor;
 use MilliCache\Engine\Response\State;
 use MilliCache\Engine\Utilities\Multisite;
 use MilliCache\Rules\Bootstrap as BootstrapRules;
+use MilliCache\Rules\Manager as RulesManager;
 use MilliCache\Rules\RequestFlags;
 use MilliCache\Rules\WordPress as WordPressRules;
 
@@ -111,6 +112,16 @@ final class Engine {
 	 * @var Options|null The override manager instance.
 	 */
 	private ?Options $options = null;
+
+	/**
+	 * Rules manager for fluent API access.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var RulesManager|null The rules manager instance.
+	 */
+	private ?RulesManager $rules_manager = null;
 
 	/**
 	 * Cache handler.
@@ -302,7 +313,7 @@ final class Engine {
 	 * Initialize MilliRules and register MilliCache rules.
 	 *
 	 * Initializes the MilliRules package system with PHP package for early execution,
-	 * registers namespaces and defers WP package loading until WordPress is ready.
+	 * registers namespaces, and defers WP package loading until WordPress is ready.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -382,7 +393,7 @@ final class Engine {
 	}
 
 	/**
-	 * Get config instance.
+	 * Get a config instance.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -408,7 +419,7 @@ final class Engine {
 	}
 
 	/**
-	 * Get storage instance.
+	 * Get a storage instance.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -423,7 +434,7 @@ final class Engine {
 	}
 
 	/**
-	 * Get multisite instance.
+	 * Get a multisite instance.
 	 *
 	 * @since    1.0.0
 	 * @access   private
@@ -438,7 +449,7 @@ final class Engine {
 	}
 
 	/**
-	 * Get flag manager instance.
+	 * Get a flag manager instance.
 	 *
 	 * @since 1.0.0
 	 * @access public
@@ -453,7 +464,7 @@ final class Engine {
 	}
 
 	/**
-	 * Get headers manager instance.
+	 * Get a headers manager instance.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -468,7 +479,7 @@ final class Engine {
 	}
 
 	/**
-	 * Get override manager instance.
+	 * Get a override manager instance.
 	 *
 	 * @since 1.0.0
 	 * @access public
@@ -483,7 +494,36 @@ final class Engine {
 	}
 
 	/**
-	 * Get cache manager instance.
+	 * Get rules manager for fluent API access.
+	 *
+	 * Provides access to the MilliRules API via a fluent interface.
+	 *
+	 * Example usage:
+	 * ```php
+	 * millicache()->rules()->create('my:custom-rule', 'wp')
+	 *     ->order(10)
+	 *     ->when()
+	 *         ->is_singular('post')
+	 *     ->then()
+	 *         ->set_ttl(7200)
+	 *     ->register();
+	 * ```
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return RulesManager The rules manager instance.
+	 */
+	public function rules(): RulesManager
+	{
+		if ( ! $this->rules_manager ) {
+			$this->rules_manager = new RulesManager();
+		}
+		return $this->rules_manager;
+	}
+
+	/**
+	 * Get a cache manager instance.
 	 *
 	 * @since 1.0.0
 	 * @access public
@@ -501,7 +541,7 @@ final class Engine {
 	}
 
 	/**
-	 * Get invalidation manager instance.
+	 * Get a invalidation manager instance.
 	 *
 	 * @return InvalidationManager The clearing manager instance.
 	 * @since 1.0.0
@@ -523,7 +563,7 @@ final class Engine {
 	}
 
 	/**
-	 * Get request manager instance.
+	 * Get a request manager instance.
 	 *
 	 * @return RequestProcessor The request manager instance.
 	 * @since 1.0.0
@@ -559,7 +599,7 @@ final class Engine {
 	/**
 	 * Get cache clearing interface.
 	 *
-	 * Provides fluent API for cache invalidation operations.
+	 * Provides a fluent API for cache invalidation operations.
 	 * Example: Engine::instance()->clear()->by_targets($targets)
 	 *
 	 * @since 1.0.0
