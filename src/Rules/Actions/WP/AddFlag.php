@@ -14,7 +14,6 @@
 
 namespace MilliCache\Rules\Actions\WP;
 
-use MilliCache\Engine;
 use MilliCache\Deps\MilliRules\Actions\BaseAction;
 use MilliCache\Deps\MilliRules\Context;
 
@@ -49,6 +48,6 @@ class AddFlag extends BaseAction {
 		$flag = $this->get_arg( 0 )->string();
 
 		// Call Engine's flag manager to add the flag.
-		Engine::instance()->flags()->add( $flag );
+		millicache()->flags()->add( $flag );
 	}
 }

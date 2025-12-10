@@ -17,7 +17,6 @@ namespace MilliCache\Rules;
 
 use MilliCache\Deps\MilliRules\Context;
 use MilliCache\Deps\MilliRules\Rules;
-use MilliCache\Engine;
 
 /**
  * Class RequestFlags
@@ -259,7 +258,7 @@ final class RequestFlags {
 						}
 
 						if ( ! empty( $date_parts ) ) {
-							Engine::instance()->flags()->add( 'archive:' . implode( ':', $date_parts ) );
+							millicache()->flags()->add( 'archive:' . implode( ':', $date_parts ) );
 						}
 					}
 				)
@@ -325,7 +324,7 @@ final class RequestFlags {
 						if ( is_array( $custom_flags ) && ! empty( $custom_flags ) ) {
 							foreach ( $custom_flags as $flag ) {
 								if ( is_string( $flag ) && '' !== $flag ) {
-									Engine::instance()->flags()->add( $flag );
+									millicache()->flags()->add( $flag );
 								}
 							}
 						}

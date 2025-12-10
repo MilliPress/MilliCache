@@ -644,6 +644,12 @@ final class Engine {
 			);
 		}
 
+		// Load helper functions early, so they're available before WordPress loads.
+		$functions_file = dirname( __DIR__ ) . '/functions.php';
+		if ( file_exists( $functions_file ) ) {
+			require_once $functions_file;
+		}
+
 		$this->autoloaded = true;
 	}
 }
