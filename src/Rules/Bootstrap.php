@@ -14,7 +14,6 @@
 
 namespace MilliCache\Rules;
 
-use MilliCache\Engine;
 use MilliCache\Engine\Cache\Config;
 use MilliCache\Deps\MilliRules\Context;
 use MilliCache\Deps\MilliRules\Rules;
@@ -55,7 +54,7 @@ final class Bootstrap {
 	 * @return void
 	 */
 	public static function register(): void {
-		$config = Engine::instance()->config();
+		$config = millicache()->config();
 
 		self::register_wp_cache_rule();
 		self::register_rest_request_rule();

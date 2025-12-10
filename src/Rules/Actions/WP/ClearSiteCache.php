@@ -14,7 +14,6 @@
 
 namespace MilliCache\Rules\Actions\WP;
 
-use MilliCache\Engine;
 use MilliCache\Deps\MilliRules\Actions\BaseAction;
 use MilliCache\Deps\MilliRules\Context;
 
@@ -57,6 +56,6 @@ class ClearSiteCache extends BaseAction {
 		$expire = $this->get_arg( 2, false )->bool();
 
 		// Call Engine to clear cache for specified site(s) or current site.
-		Engine::instance()->clear()->sites( $site_ids, $network_id, $expire );
+		millicache()->clear()->sites( $site_ids, $network_id, $expire );
 	}
 }

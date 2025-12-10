@@ -16,7 +16,6 @@ namespace MilliCache\Rules\Actions\WP;
 
 use MilliCache\Deps\MilliRules\Actions\BaseAction;
 use MilliCache\Deps\MilliRules\Context;
-use MilliCache\Engine;
 
 /**
  * Class ClearCacheAction
@@ -55,6 +54,6 @@ class ClearCache extends BaseAction {
 		$expire = $this->get_arg( 1, false )->bool();
 
 		// Call Engine to clear cache for specified targets.
-		Engine::instance()->clear()->targets( $targets, $expire );
+		millicache()->clear()->targets( $targets, $expire );
 	}
 }

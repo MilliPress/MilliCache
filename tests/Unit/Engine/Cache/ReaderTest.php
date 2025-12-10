@@ -267,12 +267,4 @@ describe('Reader', function () {
 		});
 	});
 
-	describe('output', function () {
-		it('outputs cache content and exits', function () {
-			// This test is skipped because the Reader::output() method calls exit(),
-			// which would terminate the entire test suite. Testing exit() behavior
-			// is not possible in unit tests without process isolation.
-			$this->markTestSkipped('Cannot test exit() behavior in unit tests');
-		});
-	});
 });

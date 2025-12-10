@@ -110,7 +110,7 @@ final class Manager {
 	}
 
 	/**
-	 * Clear cache by mixed targets.
+	 * Clear cache by mixed target(s).
 	 *
 	 * Accepts URLs, post-IDs, or flags and clears appropriate cache entries.
 	 *
@@ -155,7 +155,7 @@ final class Manager {
 	}
 
 	/**
-	 * Clear cache by URLs.
+	 * Clear cache by URL(s).
 	 *
 	 * @since 1.0.0
 	 *
@@ -184,7 +184,7 @@ final class Manager {
 	}
 
 	/**
-	 * Clear cache by post-IDs.
+	 * Clear cache by post-ID(s).
 	 *
 	 * @since 1.0.0
 	 *
@@ -214,7 +214,7 @@ final class Manager {
 	}
 
 	/**
-	 * Clear cache by flags.
+	 * Clear cache by flag(s).
 	 *
 	 * @since 1.0.0
 	 *
@@ -243,7 +243,7 @@ final class Manager {
 	}
 
 	/**
-	 * Clear cache for entire sites.
+	 * Clear cache for entire site(s).
 	 *
 	 * @since 1.0.0
 	 *
@@ -272,24 +272,28 @@ final class Manager {
 	}
 
 	/**
-	 * Clear cache for entire network.
+	 * Clear cache for entire network(s).
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int|null $network_id Network ID (null for current).
-	 * @param bool     $expire     Expire (true) or delete (false).
-	 * @return self    For fluent chaining.
+	 * @param int|array<int>|null $network_ids Network ID(s) (null for current).
+	 * @param bool                $expire      Expire (true) or delete (false).
+	 * @return self For fluent chaining.
 	 */
-	public function network( ?int $network_id = null, bool $expire = false ): self {
-		$site_ids = $this->resolver->resolve_network_to_sites( $network_id );
+	public function networks( $network_ids = null, bool $expire = false ): self {
+		$network_ids = ! is_array( $network_ids ) ? array( $network_ids ) : $network_ids;
 
-		foreach ( $site_ids as $site_id ) {
-			$this->sites( $site_id, $network_id, $expire );
+		foreach ( $network_ids as $network_id ) {
+			$site_ids = $this->resolver->resolve_network_to_sites( $network_id );
+
+			foreach ( $site_ids as $site_id ) {
+				$this->sites( $site_id, $network_id, $expire );
+			}
 		}
 
 		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
-			do_action( 'millicache_cleared_by_network_id', $network_id, $expire );
+			do_action( 'millicache_cleared_by_networks', $network_ids, $expire );
 		}
 
 		return $this;
@@ -307,7 +311,7 @@ final class Manager {
 		$network_ids = $this->resolver->get_all_networks();
 
 		foreach ( $network_ids as $network_id ) {
-			$this->network( $network_id, $expire );
+			$this->networks( $network_id, $expire );
 		}
 
 		// Fire WordPress action.

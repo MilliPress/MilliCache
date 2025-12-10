@@ -60,22 +60,27 @@ describe( 'PatternMatcher', function () {
 
 	describe( 'regex matching', function () {
 		it( 'matches regex patterns', function () {
-			expect( PatternMatcher::match( 'test123', '/test\d+/' ) )->toBeTrue();
-			expect( PatternMatcher::match( 'testabc', '/test\d+/' ) )->toBeFalse();
+			expect( PatternMatcher::match( 'test123', '#test\d+#' ) )->toBeTrue();
+			expect( PatternMatcher::match( 'testabc', '#test\d+#' ) )->toBeFalse();
 		} );
 
 		it( 'handles complex regex', function () {
-			expect( PatternMatcher::match( 'user@example.com', '/^[\w\.-]+@[\w\.-]+\.\w+$/' ) )->toBeTrue();
-			expect( PatternMatcher::match( 'invalid-email', '/^[\w\.-]+@[\w\.-]+\.\w+$/' ) )->toBeFalse();
+			expect( PatternMatcher::match( 'user@example.com', '#^[\w\.-]+@[\w\.-]+\.\w+$#' ) )->toBeTrue();
+			expect( PatternMatcher::match( 'invalid-email', '#^[\w\.-]+@[\w\.-]+\.\w+$#' ) )->toBeFalse();
 		} );
 
 		it( 'handles invalid regex gracefully', function () {
 			// Suppress preg_match warning during test.
 			set_error_handler( fn() => true, E_WARNING );
-			$result = PatternMatcher::match( 'test', '/[/' );
+			$result = PatternMatcher::match( 'test', '#[#' );
 			restore_error_handler();
 
 			expect( $result )->toBeFalse();
+		} );
+
+		it( 'matches paths with slashes without escaping', function () {
+			expect( PatternMatcher::match( '/download-abc123', '#/download-[a-z0-9]+$#' ) )->toBeTrue();
+			expect( PatternMatcher::match( '/api/v1/users', '#^/api/v\d+/#' ) )->toBeTrue();
 		} );
 	} );
 

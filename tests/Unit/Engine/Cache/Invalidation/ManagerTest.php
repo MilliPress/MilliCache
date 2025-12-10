@@ -537,7 +537,7 @@ describe( 'Invalidation Manager', function () {
 				$multisite
 			);
 
-			$handler->network( 1 );
+			$handler->networks( 1 );
 
 			expect( count( $handler->get_queue()->get_delete_queue() ) )->toBeGreaterThan( 0 );
 		} );
@@ -556,12 +556,12 @@ describe( 'Invalidation Manager', function () {
 				$multisite
 			);
 
-			$handler->network( 1 );
+			$handler->networks( 1 );
 
 			expect( count( $handler->get_queue()->get_delete_queue() ) )->toBe( 3 );
 		} );
 
-		it( 'fires millicache_cleared_by_network_id action', function () {
+		it( 'fires millicache_cleared_by_networks action', function () {
 			global $test_is_multisite, $test_networks, $test_sites;
 			$test_is_multisite = true;
 			$test_networks = array( 1 );
@@ -575,7 +575,7 @@ describe( 'Invalidation Manager', function () {
 				$multisite
 			);
 
-			$handler->network();
+			$handler->networks();
 
 			expect( true )->toBeTrue(); // Action fired
 		} );

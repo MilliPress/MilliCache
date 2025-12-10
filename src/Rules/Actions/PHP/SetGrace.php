@@ -14,7 +14,6 @@
 
 namespace MilliCache\Rules\Actions\PHP;
 
-use MilliCache\Engine;
 use MilliCache\Deps\MilliRules\Actions\BaseAction;
 use MilliCache\Deps\MilliRules\Context;
 
@@ -49,6 +48,6 @@ class SetGrace extends BaseAction {
 		$grace = $this->get_arg( 0 )->int();
 
 		// Set grace override.
-		Engine::instance()->options()->set_grace( $grace );
+		millicache()->options()->set_grace( $grace );
 	}
 }

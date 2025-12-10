@@ -30,7 +30,7 @@ export async function getCategoryUrl(slug = 'uncategorized'): Promise<string> {
  */
 export async function clearCache(flags = '') {
     const stdout = await runWpCliCommand(
-        flags ? `millicache clear -- --flags="${flags}"` : 'millicache clear'
+        flags ? `millicache clear -- --flag="${flags}"` : 'millicache clear'
     );
     expect(stdout).toContain('Success');
 }

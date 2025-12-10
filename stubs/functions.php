@@ -6,6 +6,14 @@
  */
 
 /**
+ * Get the MilliCache Engine instance.
+ *
+ * @return \MilliCache\Engine The Engine instance.
+ */
+function millicache(): \MilliCache\Engine {
+}
+
+/**
  * Clear cache by given Targets.
  *
  * @param string|array<string|int> $targets The targets (Flags, Post-IDs or URLs) to clear the cache for.

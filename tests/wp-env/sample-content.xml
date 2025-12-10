@@ -110,142 +110,13 @@
 		<wp:term_description><![CDATA[Advanced topics and strategies]]></wp:term_description>
 	</wp:term>
 
-	<!-- Navigation Menu -->
-	<wp:term>
-		<wp:term_id>40</wp:term_id>
-		<wp:term_taxonomy>nav_menu</wp:term_taxonomy>
-		<wp:term_slug>primary-menu</wp:term_slug>
-		<wp:term_name><![CDATA[Primary Menu]]></wp:term_name>
-	</wp:term>
-
-	<!-- Menu Items -->
-	<item>
-		<title>Home</title>
-		<link>http://localhost:8889/</link>
-		<pubDate>Mon, 01 Jan 2024 08:00:00 +0000</pubDate>
-		<dc:creator><![CDATA[admin]]></dc:creator>
-		<wp:post_id>400</wp:post_id>
-		<wp:post_date>2024-01-01 08:00:00</wp:post_date>
-		<wp:post_date_gmt>2024-01-01 08:00:00</wp:post_date_gmt>
-		<wp:post_name>home</wp:post_name>
-		<wp:status>publish</wp:status>
-		<wp:post_type>nav_menu_item</wp:post_type>
-		<wp:menu_order>1</wp:menu_order>
-		<category domain="nav_menu" nicename="primary-menu"><![CDATA[Primary Menu]]></category>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_type</wp:meta_key>
-			<wp:meta_value>custom</wp:meta_value>
-		</wp:postmeta>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_url</wp:meta_key>
-			<wp:meta_value>http://localhost:8889/</wp:meta_value>
-		</wp:postmeta>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_menu_item_parent</wp:meta_key>
-			<wp:meta_value>0</wp:meta_value>
-		</wp:postmeta>
-	</item>
-
-	<item>
-		<title>About</title>
-		<link>http://localhost:8889/about/</link>
-		<pubDate>Mon, 01 Jan 2024 08:01:00 +0000</pubDate>
-		<dc:creator><![CDATA[admin]]></dc:creator>
-		<wp:post_id>401</wp:post_id>
-		<wp:post_date>2024-01-01 08:01:00</wp:post_date>
-		<wp:post_date_gmt>2024-01-01 08:01:00</wp:post_date_gmt>
-		<wp:post_name>about-menu</wp:post_name>
-		<wp:status>publish</wp:status>
-		<wp:post_type>nav_menu_item</wp:post_type>
-		<wp:menu_order>2</wp:menu_order>
-		<category domain="nav_menu" nicename="primary-menu"><![CDATA[Primary Menu]]></category>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_type</wp:meta_key>
-			<wp:meta_value>post_type</wp:meta_value>
-		</wp:postmeta>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_object</wp:meta_key>
-			<wp:meta_value>page</wp:meta_value>
-		</wp:postmeta>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_object_id</wp:meta_key>
-			<wp:meta_value>200</wp:meta_value>
-		</wp:postmeta>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_menu_item_parent</wp:meta_key>
-			<wp:meta_value>0</wp:meta_value>
-		</wp:postmeta>
-	</item>
-
-	<item>
-		<title>Books</title>
-		<link>http://localhost:8889/books/</link>
-		<pubDate>Mon, 01 Jan 2024 08:02:00 +0000</pubDate>
-		<dc:creator><![CDATA[admin]]></dc:creator>
-		<wp:post_id>402</wp:post_id>
-		<wp:post_date>2024-01-01 08:02:00</wp:post_date>
-		<wp:post_date_gmt>2024-01-01 08:02:00</wp:post_date_gmt>
-		<wp:post_name>books-menu</wp:post_name>
-		<wp:status>publish</wp:status>
-		<wp:post_type>nav_menu_item</wp:post_type>
-		<wp:menu_order>3</wp:menu_order>
-		<category domain="nav_menu" nicename="primary-menu"><![CDATA[Primary Menu]]></category>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_type</wp:meta_key>
-			<wp:meta_value>post_type_archive</wp:meta_value>
-		</wp:postmeta>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_object</wp:meta_key>
-			<wp:meta_value>book</wp:meta_value>
-		</wp:postmeta>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_menu_item_parent</wp:meta_key>
-			<wp:meta_value>0</wp:meta_value>
-		</wp:postmeta>
-	</item>
-
-	<item>
-		<title>Contact</title>
-		<link>http://localhost:8889/contact/</link>
-		<pubDate>Mon, 01 Jan 2024 08:03:00 +0000</pubDate>
-		<dc:creator><![CDATA[admin]]></dc:creator>
-		<wp:post_id>403</wp:post_id>
-		<wp:post_date>2024-01-01 08:03:00</wp:post_date>
-		<wp:post_date_gmt>2024-01-01 08:03:00</wp:post_date_gmt>
-		<wp:post_name>contact-menu</wp:post_name>
-		<wp:status>publish</wp:status>
-		<wp:post_type>nav_menu_item</wp:post_type>
-		<wp:menu_order>4</wp:menu_order>
-		<category domain="nav_menu" nicename="primary-menu"><![CDATA[Primary Menu]]></category>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_type</wp:meta_key>
-			<wp:meta_value>post_type</wp:meta_value>
-		</wp:postmeta>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_object</wp:meta_key>
-			<wp:meta_value>page</wp:meta_value>
-		</wp:postmeta>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_object_id</wp:meta_key>
-			<wp:meta_value>201</wp:meta_value>
-		</wp:postmeta>
-		<wp:postmeta>
-			<wp:meta_key>_menu_item_menu_item_parent</wp:meta_key>
-			<wp:meta_value>0</wp:meta_value>
-		</wp:postmeta>
-	</item>
-
 	<!-- Posts with Gutenberg blocks -->
 	<item>
 		<title>What is TTFB and Why You Should Care</title>
-		<link>http://localhost:8889/what-is-ttfb-and-why-you-should-care/</link>
+		<link>http://localhost:8889/hello-world/</link>
 		<pubDate>Mon, 01 Jan 2024 10:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/ttfb-speed/1200/400" alt="TTFB and website performance illustration"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Time To First Byte (TTFB) is one of the most important metrics for website performance. Understanding TTFB can mean the difference between a fast, responsive website and one that feels sluggish to visitors.</p>
 <!-- /wp:paragraph -->
 
@@ -309,10 +180,10 @@
 <p>With full page caching, TTFB can drop from 500ms+ to under 50ms—a 10x improvement that users will immediately feel.</p>
 <!-- /wp:paragraph -->]]></content:encoded>
 		<excerpt:encoded><![CDATA[Learn what Time To First Byte means for your website and how caching dramatically improves it.]]></excerpt:encoded>
-		<wp:post_id>100</wp:post_id>
+		<wp:post_id>1</wp:post_id>
 		<wp:post_date>2024-01-01 10:00:00</wp:post_date>
 		<wp:post_date_gmt>2024-01-01 10:00:00</wp:post_date_gmt>
-		<wp:post_name>what-is-ttfb-and-why-you-should-care</wp:post_name>
+		<wp:post_name>hello-world</wp:post_name>
 		<wp:status>publish</wp:status>
 		<wp:post_type>post</wp:post_type>
 		<category domain="category" nicename="tutorials"><![CDATA[Tutorials]]></category>
@@ -326,11 +197,7 @@
 		<link>http://localhost:8889/scale-wordpress-high-traffic/</link>
 		<pubDate>Mon, 01 Jan 2024 11:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/scale-wordpress/1200/400" alt="Scaling WordPress for high traffic"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Every successful website eventually faces the challenge of scaling. When traffic grows, your infrastructure needs to grow with it. Here's how to prepare your WordPress site for high-traffic scenarios.</p>
 <!-- /wp:paragraph -->
 
@@ -434,11 +301,7 @@
 		<link>http://localhost:8889/understanding-redis-wordpress/</link>
 		<pubDate>Mon, 01 Jan 2024 12:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/redis-wordpress/1200/400" alt="Redis data store concept"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Redis is an in-memory data store that has become essential infrastructure for high-performance WordPress sites. Let's explore what Redis is and why it matters for your website.</p>
 <!-- /wp:paragraph -->
 
@@ -518,11 +381,7 @@
 		<link>http://localhost:8889/page-speed-matters-seo/</link>
 		<pubDate>Mon, 01 Jan 2024 13:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/seo-speed/1200/400" alt="Page speed and SEO performance"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Page speed isn't just about user experience—it directly impacts your search engine rankings. Google has made site performance a ranking factor, and slow sites are penalized in search results.</p>
 <!-- /wp:paragraph -->
 
@@ -619,11 +478,7 @@
 		<link>http://localhost:8889/getting-started-full-page-caching/</link>
 		<pubDate>Mon, 01 Jan 2024 14:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/full-page-cache/1200/400" alt="Full page caching concept"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Full page caching is the most impactful performance optimization you can make for your WordPress site. This guide will help you understand how it works and what to expect.</p>
 <!-- /wp:paragraph -->
 
@@ -714,14 +569,10 @@
 	<!-- Pages with Gutenberg blocks -->
 	<item>
 		<title>About</title>
-		<link>http://localhost:8889/about/</link>
+		<link>http://localhost:8889/sample-page/</link>
 		<pubDate>Mon, 01 Jan 2024 09:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"full"} -->
-<figure class="wp-block-image size-full"><img src="https://picsum.photos/seed/about-millicache/1200/500" alt="MilliCache performance"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph {"fontSize":"large"} -->
+		<content:encoded><![CDATA[<!-- wp:paragraph {"fontSize":"large"} -->
 <p class="has-large-font-size">MilliCache is a high-performance full page caching plugin for WordPress, designed for speed and simplicity.</p>
 <!-- /wp:paragraph -->
 
@@ -757,10 +608,10 @@
 </div>
 <!-- /wp:buttons -->]]></content:encoded>
 		<excerpt:encoded><![CDATA[Learn about MilliCache, the high-performance caching plugin for WordPress.]]></excerpt:encoded>
-		<wp:post_id>200</wp:post_id>
+		<wp:post_id>2</wp:post_id>
 		<wp:post_date>2024-01-01 09:00:00</wp:post_date>
 		<wp:post_date_gmt>2024-01-01 09:00:00</wp:post_date_gmt>
-		<wp:post_name>about</wp:post_name>
+		<wp:post_name>sample-page</wp:post_name>
 		<wp:status>publish</wp:status>
 		<wp:post_type>page</wp:post_type>
 	</item>
@@ -770,11 +621,7 @@
 		<link>http://localhost:8889/contact/</link>
 		<pubDate>Mon, 01 Jan 2024 09:01:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"full"} -->
-<figure class="wp-block-image size-full"><img src="https://picsum.photos/seed/contact-support/1200/400" alt="Contact and support"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Have questions about MilliCache? We're here to help.</p>
 <!-- /wp:paragraph -->
 
@@ -824,11 +671,7 @@
 		<link>http://localhost:8889/book/wordpress-caching-fundamentals/</link>
 		<pubDate>Mon, 01 Jan 2024 15:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/book-fundamentals/1200/600" alt="WordPress Caching Fundamentals book cover"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph {"fontSize":"large"} -->
+		<content:encoded><![CDATA[<!-- wp:paragraph {"fontSize":"large"} -->
 <p class="has-large-font-size">Everything you need to know about caching in WordPress, from basic concepts to implementation.</p>
 <!-- /wp:paragraph -->
 
@@ -908,11 +751,7 @@
 		<link>http://localhost:8889/book/redis-deep-dive/</link>
 		<pubDate>Mon, 01 Jan 2024 15:01:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/book-redis/1200/600" alt="Redis Deep Dive book cover"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Master Redis from the ground up. This technical guide covers everything from basic operations to advanced patterns used in production systems.</p>
 <!-- /wp:paragraph -->
 
@@ -1001,11 +840,7 @@ DEL page:/about</code></pre>
 		<link>http://localhost:8889/book/scaling-wordpress-millions/</link>
 		<pubDate>Mon, 01 Jan 2024 15:02:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
-		<content:encoded><![CDATA[<!-- wp:image {"sizeSlug":"large"} -->
-<figure class="wp-block-image size-large"><img src="https://picsum.photos/seed/book-scaling/1200/600" alt="Scaling WordPress to Millions book cover"/></figure>
-<!-- /wp:image -->
-
-<!-- wp:paragraph -->
+		<content:encoded><![CDATA[<!-- wp:paragraph -->
 <p>Learn the strategies and techniques used by the world's largest WordPress sites. This advanced guide covers everything you need to know about scaling WordPress for massive traffic.</p>
 <!-- /wp:paragraph -->
 

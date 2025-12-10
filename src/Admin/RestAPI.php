@@ -204,7 +204,7 @@ final class RestAPI {
 					$is_network_admin = (bool) $request->get_param( 'is_network_admin' );
 
 					if ( $is_network_admin ) {
-						$this->engine->clear()->network();
+						$this->engine->clear()->networks();
 						$message = __( 'The network cache has been cleared.', 'millicache' );
 					} else {
 						$this->engine->clear()->sites();

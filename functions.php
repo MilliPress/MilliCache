@@ -11,7 +11,39 @@
 
 ! defined( 'ABSPATH' ) && exit;
 
-use MilliCache\Engine;
+if ( ! function_exists( 'millicache' ) ) {
+	/**
+	 * Get the MilliCache Engine instance for advanced usage.
+	 *
+	 * This is an advanced method that provides direct access to the Engine
+	 * singleton. For common tasks, prefer the simpler helper functions:
+	 *
+	 * - millipress_clear_cache() - Clear cache by flags, post-IDs, or URLs
+	 * - millipress_add_flag() - Add a cache flag to the current request
+	 * - millipress_set_ttl() - Set cache TTL for the current request
+	 *
+	 * Use millicache() when you need access to Engine methods not exposed
+	 * via helper functions or for complex chained operations.
+	 *
+	 * Example usage:
+	 *
+	 *     // Access storage backend directly
+	 *     millicache()->storage()->get_status();
+	 *
+	 *     // Read configuration
+	 *     millicache()->config()->get('storage.backend');
+	 *
+	 *     // Chain multiple invalidation operations
+	 *     millicache()->clear()->posts([1, 2])->flags(['custom'])->execute_queue();
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return \MilliCache\Engine The MilliCache Engine instance.
+	 */
+	function millicache(): \MilliCache\Engine {
+		return \MilliCache\Engine::instance();
+	}
+}
 
 /**
  * Clear cache by given Flags, Post-IDs or URLs.
@@ -23,7 +55,7 @@ use MilliCache\Engine;
  * @return void
  */
 function millipress_clear_cache( $targets, bool $expire = false ): void {
-	Engine::instance()->clear()->targets( $targets, $expire );
+	millicache()->clear()->targets( $targets, $expire );
 }
 
 /**
@@ -36,7 +68,7 @@ function millipress_clear_cache( $targets, bool $expire = false ): void {
  * @return void
  */
 function millipress_clear_cache_by_urls( $urls, bool $expire = false ): void {
-	Engine::instance()->clear()->urls( $urls, $expire );
+	millicache()->clear()->urls( $urls, $expire );
 }
 
 /**
@@ -49,7 +81,7 @@ function millipress_clear_cache_by_urls( $urls, bool $expire = false ): void {
  * @return void
  */
 function millipress_clear_cache_by_post_ids( $post_ids, bool $expire = false ): void {
-	Engine::instance()->clear()->posts( $post_ids, $expire );
+	millicache()->clear()->posts( $post_ids, $expire );
 }
 
 /**
@@ -63,7 +95,7 @@ function millipress_clear_cache_by_post_ids( $post_ids, bool $expire = false ): 
  * @return void
  */
 function millipress_clear_cache_by_flags( $flags, bool $expire = false, bool $add_prefix = true ): void {
-	Engine::instance()->clear()->flags( $flags, $expire, $add_prefix );
+	millicache()->clear()->flags( $flags, $expire, $add_prefix );
 }
 
 /**
@@ -77,7 +109,7 @@ function millipress_clear_cache_by_flags( $flags, bool $expire = false, bool $ad
  * @return void
  */
 function millipress_clear_cache_by_site_ids( $site_ids = null, ?int $network_id = null, bool $expire = false ): void {
-	Engine::instance()->clear()->sites( $site_ids, $network_id, $expire );
+	millicache()->clear()->sites( $site_ids, $network_id, $expire );
 }
 
 /**
@@ -90,7 +122,7 @@ function millipress_clear_cache_by_site_ids( $site_ids = null, ?int $network_id 
  * @return void
  */
 function millipress_clear_cache_by_network_id( ?int $network_id = null, bool $expire = false ): void {
-	Engine::instance()->clear()->network( $network_id, $expire );
+	millicache()->clear()->networks( $network_id, $expire );
 }
 
 /**
@@ -102,7 +134,7 @@ function millipress_clear_cache_by_network_id( ?int $network_id = null, bool $ex
  * @return void
  */
 function millipress_reset_cache( bool $expire = false ): void {
-	Engine::instance()->clear()->all( $expire );
+	millicache()->clear()->all( $expire );
 }
 
 /**
@@ -118,7 +150,7 @@ function millipress_reset_cache( bool $expire = false ): void {
  * @return void
  */
 function millipress_add_flag( string $flag ): void {
-	Engine::instance()->flags()->add( $flag );
+	millicache()->flags()->add( $flag );
 }
 
 /**
@@ -130,7 +162,7 @@ function millipress_add_flag( string $flag ): void {
  * @return void
  */
 function millipress_remove_flag( string $flag ): void {
-	Engine::instance()->flags()->remove( $flag );
+	millicache()->flags()->remove( $flag );
 }
 
 /**
@@ -146,7 +178,7 @@ function millipress_remove_flag( string $flag ): void {
  * @return string The prefix string (empty string for non-multisite).
  */
 function millipress_get_flag_prefix( $site_id = null, $network_id = null ): string {
-	return Engine::instance()->flags()->get_prefix( $site_id, $network_id );
+	return millicache()->flags()->get_prefix( $site_id, $network_id );
 }
 
 /**
@@ -163,7 +195,7 @@ function millipress_get_flag_prefix( $site_id = null, $network_id = null ): stri
  * @return array<string> Array of prefixed flags.
  */
 function millipress_prefix_flags( $flags, $site_id = null, $network_id = null ): array {
-	return Engine::instance()->flags()->prefix( $flags, $site_id, $network_id );
+	return millicache()->flags()->prefix( $flags, $site_id, $network_id );
 }
 
 /**
@@ -181,7 +213,7 @@ function millipress_prefix_flags( $flags, $site_id = null, $network_id = null ):
  * @return void
  */
 function millipress_set_ttl( int $ttl ): void {
-	Engine::instance()->options()->set_ttl( $ttl );
+	millicache()->options()->set_ttl( $ttl );
 }
 
 /**
@@ -199,5 +231,5 @@ function millipress_set_ttl( int $ttl ): void {
  * @return void
  */
 function millipress_set_grace( int $grace ): void {
-	Engine::instance()->options()->set_grace( $grace );
+	millicache()->options()->set_grace( $grace );
 }

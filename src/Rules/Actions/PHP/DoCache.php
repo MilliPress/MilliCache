@@ -14,7 +14,6 @@
 
 namespace MilliCache\Rules\Actions\PHP;
 
-use MilliCache\Engine;
 use MilliCache\Deps\MilliRules\Actions\BaseAction;
 use MilliCache\Deps\MilliRules\Context;
 
@@ -50,6 +49,6 @@ class DoCache extends BaseAction {
 		$reason       = $this->get_arg( 1, $should_cache ? 'Rule action: do_cache() -> (cache)' : 'Rule action: do_cache(false) -> (do not cache)' )->string();
 
 		// Set cache decision.
-		Engine::instance()->options()->set_cache_decision( $should_cache, $reason );
+		millicache()->options()->set_cache_decision( $should_cache, $reason );
 	}
 }

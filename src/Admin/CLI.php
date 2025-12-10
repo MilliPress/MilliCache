@@ -106,19 +106,19 @@ final class CLI {
 	 *
 	 * ## OPTIONS
 	 *
-	 * [--ids=<ids>]
+	 * [--id=<id>]
 	 * : Comma separated list of post IDs.
 	 *
-	 * [--urls=<urls>]
+	 * [--url=<url>]
 	 * : Comma separated list of URLs.
 	 *
-	 * [--flags=<flags>]
+	 * [--flag=<flag>]
 	 * : Comma separated list of flags.
 	 *
-	 * [--sites=<sites>]
+	 * [--site=<site>]
 	 * : Comma separated list of site IDs.
 	 *
-	 * [--networks=<networks>]
+	 * [--network=<network>]
 	 * : Comma separated list of network IDs.
 	 *
 	 * [--expire=<expire>]
@@ -126,7 +126,7 @@ final class CLI {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp millicache clear --ids=1,2,3
+	 *     wp millicache clear --id=1,2,3
 	 *
 	 * @when after_wp_load
 	 *
@@ -141,19 +141,19 @@ final class CLI {
 		$assoc_args = wp_parse_args(
 			$assoc_args,
 			array(
-				'ids'       => '',
-				'urls'      => '',
-				'flags'     => '',
-				'sites'     => '',
-				'networks'  => '',
-				'expire'    => false,
+				'id'      => '',
+				'url'     => '',
+				'flag'    => '',
+				'site'    => '',
+				'network' => '',
+				'expire'  => false,
 			)
 		);
 
 		$expire = (bool) $assoc_args['expire'];
 
 		// Clear the full cache if no arguments are given.
-		if ( '' === $assoc_args['ids'] && '' === $assoc_args['urls'] && '' === $assoc_args['flags'] && '' === $assoc_args['sites'] && '' === $assoc_args['networks'] ) {
+		if ( '' === $assoc_args['id'] && '' === $assoc_args['url'] && '' === $assoc_args['flag'] && '' === $assoc_args['site'] && '' === $assoc_args['network'] ) {
 			$this->engine->clear()->all( $expire )->execute_queue();
 			\WP_CLI::success( is_multisite() ? esc_html__( 'Network cache cleared.', 'millicache' ) : esc_html__( 'Site cache cleared.', 'millicache' ) );
 			return;
@@ -163,67 +163,67 @@ final class CLI {
 		$messages = array();
 
 		// Queue network cache clearing.
-		if ( '' !== $assoc_args['networks'] ) {
-			$network_ids = array_map( 'intval', explode( ',', $assoc_args['networks'] ) );
+		if ( '' !== $assoc_args['network'] ) {
+			$network_ids = array_map( 'intval', explode( ',', $assoc_args['network'] ) );
 			foreach ( $network_ids as $network_id ) {
-				$clear->network( $network_id, $expire );
+				$clear->networks( $network_id, $expire );
 			}
 			$messages[] = sprintf(
-				// translators: %s is a comma-separated list of network IDs.
-				esc_html__( 'Network cache cleared for networks: %s', 'millicache' ),
+				// translators: %s is the number of cleared network IDs.
+				esc_html__( 'Cleared cache for %s networks.', 'millicache' ),
 				implode( ', ', $network_ids )
 			);
 		}
 
 		// Queue site cache clearing.
-		if ( '' !== $assoc_args['sites'] ) {
-			$site_ids = array_map( 'intval', explode( ',', $assoc_args['sites'] ) );
+		if ( '' !== $assoc_args['site'] ) {
+			$site_ids = array_map( 'intval', explode( ',', $assoc_args['site'] ) );
 			foreach ( $site_ids as $site_id ) {
 				$clear->sites( $site_id, null, $expire );
 			}
 			$messages[] = sprintf(
-				// translators: %s is a comma-separated list of site IDs.
-				esc_html__( 'Site cache cleared for sites: %s', 'millicache' ),
-				implode( ', ', $site_ids )
+				// translators: %s is the number of cleared site IDs.
+				esc_html__( 'Cleared cache for %s sites.', 'millicache' ),
+				count( $site_ids )
 			);
 		}
 
 		// Queue cache clearing by post-IDs.
-		if ( '' !== $assoc_args['ids'] ) {
-			$post_ids = array_map( 'intval', explode( ',', $assoc_args['ids'] ) );
+		if ( '' !== $assoc_args['id'] ) {
+			$post_ids = array_map( 'intval', explode( ',', $assoc_args['id'] ) );
 			foreach ( $post_ids as $post_id ) {
 				$clear->posts( $post_id, $expire );
 			}
 			$messages[] = sprintf(
-				// translators: %s is a comma-separated list of post IDs.
-				esc_html__( 'Post cache cleared for IDs: %s', 'millicache' ),
-				implode( ', ', $post_ids )
+				// translators: %s is the number of cleared post-IDs.
+				esc_html__( 'Cleared cache for %s posts.', 'millicache' ),
+				count( $post_ids )
 			);
 		}
 
 		// Queue cache clearing by URLs.
-		if ( '' !== $assoc_args['urls'] ) {
-			$urls = array_map( 'trim', explode( ',', $assoc_args['urls'] ) );
+		if ( '' !== $assoc_args['url'] ) {
+			$urls = array_map( 'trim', explode( ',', $assoc_args['url'] ) );
 			foreach ( $urls as $url ) {
 				$clear->urls( $url, $expire );
 			}
 			$messages[] = sprintf(
-				// translators: %s is a comma-separated list of URLs.
-				esc_html__( 'URL cache cleared for: %s', 'millicache' ),
-				implode( ', ', $urls )
+				// translators: %s is the number of cleared URLs.
+				esc_html__( 'Cleared cache for %s URLs.', 'millicache' ),
+				count( $urls )
 			);
 		}
 
 		// Queue cache clearing by flags.
-		if ( '' !== $assoc_args['flags'] ) {
-			$flags = array_map( 'trim', explode( ',', $assoc_args['flags'] ) );
+		if ( '' !== $assoc_args['flag'] ) {
+			$flags = array_map( 'trim', explode( ',', $assoc_args['flag'] ) );
 			foreach ( $flags as $flag ) {
 				$clear->flags( $flag, $expire, false );
 			}
 			$messages[] = sprintf(
-				// translators: %s is a comma-separated list of flags.
-				esc_html__( 'Cache cleared for flags: %s', 'millicache' ),
-				implode( ', ', $flags )
+				// translators: %s is the number of cleared flags.
+				esc_html__( 'Cleared cache for %s flags.', 'millicache' ),
+				count( $flags )
 			);
 		}
 
@@ -819,9 +819,6 @@ final class CLI {
 	 * [--show-source]
 	 * : Show where each value comes from (constant, file, db, default).
 	 *
-	 * [--encrypt]
-	 * : Encrypt the value before storing (for sensitive data).
-	 *
 	 * [--file=<path>]
 	 * : File path for export/import operations.
 	 *
@@ -842,8 +839,8 @@ final class CLI {
 	 *     # Set a value
 	 *     wp millicache config set cache.ttl 3600
 	 *
-	 *     # Set an encrypted value
-	 *     wp millicache config set storage.enc_password mysecret --encrypt
+	 *     # Set a sensitive value (enc_* fields are automatically encrypted)
+	 *     wp millicache config set storage.enc_password mysecret
 	 *
 	 *     # Reset all settings
 	 *     wp millicache config reset
@@ -1021,7 +1018,6 @@ final class CLI {
 
 		$key = $args[0];
 		$value = $args[1];
-		$encrypt = isset( $assoc_args['encrypt'] );
 
 		$settings_obj = new Settings();
 
@@ -1046,19 +1042,17 @@ final class CLI {
 		// Coerce value type.
 		$typed_value = Settings::coerce_value( $value );
 
-		// Encrypt if requested.
-		if ( $encrypt && is_string( $typed_value ) ) {
-			$typed_value = Settings::encrypt_value( $typed_value );
-		}
+		// Set the value (enc_* fields are automatically encrypted by Settings).
+		// Check if this is an encrypted field (key contains enc_ after the module prefix).
+		$is_encrypted_field = isset( $setting_key ) && strpos( $setting_key, 'enc_' ) === 0;
 
-		// Set the value.
 		if ( $settings_obj->set( $key, $typed_value ) ) {
 			\WP_CLI::success(
 				sprintf(
 				// translators: %1$s is the key, %2$s is the value.
 					__( 'Set "%1$s" to "%2$s".', 'millicache' ),
 					$key,
-					$encrypt ? '***' : $this->format_value( $typed_value )
+					$is_encrypted_field ? '***' : $this->format_value( $typed_value )
 				)
 			);
 		} else {

@@ -14,7 +14,6 @@
 
 namespace MilliCache\Rules\Actions\PHP;
 
-use MilliCache\Engine;
 use MilliCache\Deps\MilliRules\Actions\BaseAction;
 use MilliCache\Deps\MilliRules\Context;
 
@@ -49,6 +48,6 @@ class SetTtl extends BaseAction {
 		$ttl = $this->get_arg( 0 )->int();
 
 		// Set TTL override.
-		Engine::instance()->options()->set_ttl( $ttl );
+		millicache()->options()->set_ttl( $ttl );
 	}
 }
