@@ -106,19 +106,19 @@ final class CLI {
 	 *
 	 * ## OPTIONS
 	 *
-	 * [--ids=<ids>]
+	 * [--id=<id>]
 	 * : Comma separated list of post IDs.
 	 *
-	 * [--urls=<urls>]
+	 * [--url=<url>]
 	 * : Comma separated list of URLs.
 	 *
-	 * [--flags=<flags>]
+	 * [--flag=<flag>]
 	 * : Comma separated list of flags.
 	 *
-	 * [--sites=<sites>]
+	 * [--site=<site>]
 	 * : Comma separated list of site IDs.
 	 *
-	 * [--networks=<networks>]
+	 * [--network=<network>]
 	 * : Comma separated list of network IDs.
 	 *
 	 * [--expire=<expire>]
@@ -126,7 +126,7 @@ final class CLI {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp millicache clear --ids=1,2,3
+	 *     wp millicache clear --id=1,2,3
 	 *
 	 * @when after_wp_load
 	 *
@@ -141,19 +141,19 @@ final class CLI {
 		$assoc_args = wp_parse_args(
 			$assoc_args,
 			array(
-				'ids'       => '',
-				'urls'      => '',
-				'flags'     => '',
-				'sites'     => '',
-				'networks'  => '',
-				'expire'    => false,
+				'id'      => '',
+				'url'     => '',
+				'flag'    => '',
+				'site'    => '',
+				'network' => '',
+				'expire'  => false,
 			)
 		);
 
 		$expire = (bool) $assoc_args['expire'];
 
 		// Clear the full cache if no arguments are given.
-		if ( '' === $assoc_args['ids'] && '' === $assoc_args['urls'] && '' === $assoc_args['flags'] && '' === $assoc_args['sites'] && '' === $assoc_args['networks'] ) {
+		if ( '' === $assoc_args['id'] && '' === $assoc_args['url'] && '' === $assoc_args['flag'] && '' === $assoc_args['site'] && '' === $assoc_args['network'] ) {
 			$this->engine->clear()->all( $expire )->execute_queue();
 			\WP_CLI::success( is_multisite() ? esc_html__( 'Network cache cleared.', 'millicache' ) : esc_html__( 'Site cache cleared.', 'millicache' ) );
 			return;
@@ -163,8 +163,8 @@ final class CLI {
 		$messages = array();
 
 		// Queue network cache clearing.
-		if ( '' !== $assoc_args['networks'] ) {
-			$network_ids = array_map( 'intval', explode( ',', $assoc_args['networks'] ) );
+		if ( '' !== $assoc_args['network'] ) {
+			$network_ids = array_map( 'intval', explode( ',', $assoc_args['network'] ) );
 			foreach ( $network_ids as $network_id ) {
 				$clear->network( $network_id, $expire );
 			}
@@ -176,8 +176,8 @@ final class CLI {
 		}
 
 		// Queue site cache clearing.
-		if ( '' !== $assoc_args['sites'] ) {
-			$site_ids = array_map( 'intval', explode( ',', $assoc_args['sites'] ) );
+		if ( '' !== $assoc_args['site'] ) {
+			$site_ids = array_map( 'intval', explode( ',', $assoc_args['site'] ) );
 			foreach ( $site_ids as $site_id ) {
 				$clear->sites( $site_id, null, $expire );
 			}
@@ -189,21 +189,21 @@ final class CLI {
 		}
 
 		// Queue cache clearing by post-IDs.
-		if ( '' !== $assoc_args['ids'] ) {
-			$post_ids = array_map( 'intval', explode( ',', $assoc_args['ids'] ) );
+		if ( '' !== $assoc_args['id'] ) {
+			$post_ids = array_map( 'intval', explode( ',', $assoc_args['id'] ) );
 			foreach ( $post_ids as $post_id ) {
 				$clear->posts( $post_id, $expire );
 			}
 			$messages[] = sprintf(
 				// translators: %s is a comma-separated list of post IDs.
-				esc_html__( 'Post cache cleared for IDs: %s', 'millicache' ),
-				implode( ', ', $post_ids )
+				esc_html__( 'Cleared cache for %s posts.', 'millicache' ),
+				count($post_ids)
 			);
 		}
 
 		// Queue cache clearing by URLs.
-		if ( '' !== $assoc_args['urls'] ) {
-			$urls = array_map( 'trim', explode( ',', $assoc_args['urls'] ) );
+		if ( '' !== $assoc_args['url'] ) {
+			$urls = array_map( 'trim', explode( ',', $assoc_args['url'] ) );
 			foreach ( $urls as $url ) {
 				$clear->urls( $url, $expire );
 			}
@@ -215,8 +215,8 @@ final class CLI {
 		}
 
 		// Queue cache clearing by flags.
-		if ( '' !== $assoc_args['flags'] ) {
-			$flags = array_map( 'trim', explode( ',', $assoc_args['flags'] ) );
+		if ( '' !== $assoc_args['flag'] ) {
+			$flags = array_map( 'trim', explode( ',', $assoc_args['flag'] ) );
 			foreach ( $flags as $flag ) {
 				$clear->flags( $flag, $expire, false );
 			}
