@@ -104,6 +104,7 @@ export class FrontendPage {
         }
 
         // Return sorted for determinism
+        // @ts-ignore
         return [...new Set(hrefs)].sort();
     }
 
