@@ -73,7 +73,22 @@ jobs:
       - name: Get previous tag
         id: previous
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          NEW_TAG="${{ steps.meta.outputs.tag }}"
+
+          # Get all version tags sorted by semver, find the one before the new tag
+          # This works regardless of git ancestry (important for orphan dist branches)
+          PREV_TAG=$(git tag -l 'v[0-9]*' | sort -V | grep -B1 "^${NEW_TAG}$" | head -1)
+
+          # If new tag doesn't exist yet, get the latest tag
+          if [ -z "$PREV_TAG" ] || [ "$PREV_TAG" = "$NEW_TAG" ]; then
+            PREV_TAG=$(git tag -l 'v[0-9]*' | sort -V | tail -1)
+          fi
+
+          # Don't use new tag as previous
+          if [ "$PREV_TAG" = "$NEW_TAG" ]; then
+            PREV_TAG=""
+          fi
+
           echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
 
           if [ -n "$PREV_TAG" ]; then
