@@ -16,7 +16,7 @@ use MilliCache\Admin\CLI\Config;
 use MilliCache\Admin\CLI\Fix;
 use MilliCache\Admin\CLI\Stats;
 use MilliCache\Admin\CLI\Status;
-use MilliCache\Admin\CLI\Storage;
+use MilliCache\Admin\CLI\StorageCLI;
 use MilliCache\Admin\CLI\Test;
 
 ! defined( 'ABSPATH' ) && exit;
@@ -88,7 +88,7 @@ final class CLI {
 		\WP_CLI::add_command( "{$this->plugin_name} fix", Fix::class );
 		\WP_CLI::add_command( "{$this->plugin_name} stats", Stats::class );
 		\WP_CLI::add_command( "{$this->plugin_name} status", Status::class );
-		\WP_CLI::add_command( "{$this->plugin_name} storage", Storage::class );
+		\WP_CLI::add_command( "{$this->plugin_name} cli", StorageCLI::class );
 		\WP_CLI::add_command( "{$this->plugin_name} test", Test::class );
 	}
 }
