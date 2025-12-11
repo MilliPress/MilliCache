@@ -11,8 +11,6 @@
 
 namespace MilliCache\Admin\CLI;
 
-use MilliCache\Core\Settings;
-
 ! defined( 'ABSPATH' ) && exit;
 
 /**
@@ -48,8 +46,7 @@ final class Test {
 		\WP_CLI::line( __( 'Testing Redis connection...', 'millicache' ) );
 		\WP_CLI::line( '' );
 
-		$settings = new Settings();
-		$storage_settings = $settings->get_settings( 'storage' );
+		$storage_settings = millicache()->get_settings( 'storage' );
 
 		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
 		/** @var string $host */

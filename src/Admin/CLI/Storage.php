@@ -11,8 +11,6 @@
 
 namespace MilliCache\Admin\CLI;
 
-use MilliCache\Core\Settings;
-
 ! defined( 'ABSPATH' ) && exit;
 
 /**
@@ -52,8 +50,7 @@ final class Storage {
 		}
 
 		// Get storage settings.
-		$settings = new Settings();
-		$storage_settings = $settings->get_settings( 'storage' );
+		$storage_settings = millicache()->get_settings( 'storage' );
 
 		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
 		/** @var string $host */
@@ -111,7 +108,7 @@ final class Storage {
 			$db
 		);
 
-		// Add password if set.
+		// Add a password if set.
 		if ( '' !== $password ) {
 			$command .= sprintf( ' -a %s --no-auth-warning', escapeshellarg( $password ) );
 		}
