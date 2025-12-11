@@ -1,6 +1,6 @@
 {
     "name": "millipress/millicache",
-    "description": "The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any alternative.",
+    "description": "WordPress Full-Page Cache based on Rules & Flags. Delivers flexible, scalable caching workflows backed by Redis and ValKey in-memory stores.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "authors": [

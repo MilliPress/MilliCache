@@ -20,7 +20,7 @@ namespace MilliCache\Admin\CLI;
  * @subpackage MilliCache/Admin/CLI
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-final class Storage {
+final class StorageCLI {
 
 	/**
 	 * Open an interactive Redis CLI connection.
@@ -65,10 +65,10 @@ final class Storage {
 		/** @var string $password */
 		$password = $storage_settings['enc_password'] ?? '';
 
-		// translators: %1$s is the Redis host, %2$d is the port, %3$d is the database number.
-		\WP_CLI::line( sprintf( __( 'Connecting to Redis at %1$s:%2$d (database %3$d)...', 'millicache' ), $host, $port, $db ) );
+		// translators: %1$s is the Storage DB number, %2$d is the host, %3$d is the port.
+		\WP_CLI::line( sprintf( __( 'Connecting to database %1$d at %2$s:%3$d...', 'millicache' ), $db, $host, $port ) );
 
-		// Test connection with timeout before launching interactive session.
+		// Test connection with timeout before launching an interactive session.
 		$test_command = sprintf(
 			'timeout 5 redis-cli -h %s -p %d PING 2>&1',
 			escapeshellarg( $host ),
@@ -91,7 +91,7 @@ final class Storage {
 			$error_msg = '' !== $test_result ? $test_result : __( 'Connection timed out', 'millicache' );
 			\WP_CLI::error(
 				sprintf(
-					// translators: %1$s is the host, %2$d is the port, %3$s is the error message.
+				// translators: %1$s is the host, %2$d is the port, %3$s is the error message.
 					__( 'Cannot connect to Redis at %1$s:%2$d - %3$s', 'millicache' ),
 					$host,
 					$port,

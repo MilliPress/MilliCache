@@ -498,12 +498,12 @@ final class Config {
 			\WP_CLI::error( __( 'No valid settings found in file.', 'millicache' ) );
 		}
 
-		// Confirm unless --yes flag is provided.
+		// Confirm unless --yes a flag is provided.
 		if ( ! $yes ) {
 			\WP_CLI::confirm( __( 'Are you sure you want to import these settings?', 'millicache' ) );
 		}
 
-		// Create backup first.
+		// Create a backup first.
 		Settings::backup();
 		\WP_CLI::line( __( 'Created settings backup.', 'millicache' ) );
 
