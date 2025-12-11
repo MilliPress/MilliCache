@@ -139,11 +139,28 @@ jobs:
           PREV_TAG="${{ steps.previous.outputs.tag }}"
           REPO="${{ github.repository }}"
 
-          # Get commits since last tag
+          # Get commits since last release
+          # Note: Release tags point to orphan dist branches, not main.
+          # We need to find the main branch commit at the time of the previous release.
           if [ -z "$PREV_TAG" ]; then
             RANGE="HEAD"
           else
-            RANGE="${PREV_TAG}..HEAD"
+            # Get the previous release creation timestamp
+            PREV_RELEASE_TIME=$(gh api "repos/${REPO}/releases/tags/${PREV_TAG}" --jq '.created_at' 2>/dev/null || echo "")
+
+            if [ -n "$PREV_RELEASE_TIME" ]; then
+              # Find the commit on main at that time
+              PREV_COMMIT=$(gh api "repos/${REPO}/commits?sha=main&until=${PREV_RELEASE_TIME}&per_page=1" --jq '.[0].sha' 2>/dev/null || echo "")
+            fi
+
+            if [ -n "$PREV_COMMIT" ]; then
+              RANGE="${PREV_COMMIT}..HEAD"
+              echo "Using commit range: ${PREV_COMMIT:0:7}..HEAD (based on ${PREV_TAG} release time)"
+            else
+              # Fallback: try using tag directly (works if tags are on main ancestry)
+              RANGE="${PREV_TAG}..HEAD"
+              echo "Fallback: using tag range ${PREV_TAG}..HEAD"
+            fi
           fi
 
           # Initialize changelog sections
