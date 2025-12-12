@@ -130,17 +130,17 @@ test.describe('Step 8: WP-CLI Commands', () => {
         expect(stdout).toContain('All tests passed');
     });
 
-    test('WP-CLI: MilliCache Fix', async () => {
-        // Run fix command
-        const stdout = await runWpCliCommand('millicache fix');
+    test('WP-CLI: MilliCache Drop-In', async () => {
+        // Run drop command
+        const stdout = await runWpCliCommand('millicache drop');
 
         // Should either succeed with symlink already configured or create new one
         expect(stdout).toMatch(/Success:|symlink/i);
     });
 
-    test('WP-CLI: MilliCache Fix --force', async () => {
-        // Run fix command with force flag
-        const stdout = await runWpCliCommand('millicache fix -- --force');
+    test('WP-CLI: MilliCache Drop-In --force', async () => {
+        // Run drop command with the force flag
+        const stdout = await runWpCliCommand('millicache drop -- --force');
 
         // Should succeed with creating symlink or copying file
         expect(stdout).toContain('Success:');
