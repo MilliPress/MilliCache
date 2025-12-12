@@ -100,6 +100,29 @@ final class Settings {
 	 */
 	public function get_default_settings( ?string $module = null ): array {
 
+		$defaults = array(
+			'storage' => array(
+				'host' => '127.0.0.1',
+				'port' => 6379,
+				'enc_password' => '',
+				'db' => 0,
+				'persistent' => true,
+				'prefix' => 'mll',
+			),
+			'cache' => array(
+				'ttl' => DAY_IN_SECONDS,
+				'grace' => MONTH_IN_SECONDS,
+				'unique' => array(),
+				'nocache_paths' => array(),
+				'nocache_cookies' => array( 'wp-*pass*', 'comment_author_*' ),
+				'ignore_cookies' => array( '_*' ),
+				'ignore_request_keys' => array( '_*', 'utm_*' ),
+				'debug' => false,
+				'gzip' => true,
+			),
+			'rules' => array(),
+		);
+
 		/**
 		 * Filters the default settings for the plugin.
 		 *
@@ -107,31 +130,9 @@ final class Settings {
 		 *
 		 * @param array $defaults MilliCache default settings.
 		 */
-		$defaults = apply_filters(
-			'millicache_settings_defaults',
-			array(
-				'storage' => array(
-					'host' => '127.0.0.1',
-					'port' => 6379,
-					'enc_password' => '',
-					'db' => 0,
-					'persistent' => true,
-					'prefix' => 'mll',
-				),
-				'cache' => array(
-					'ttl' => DAY_IN_SECONDS,
-					'grace' => MONTH_IN_SECONDS,
-					'unique' => array(),
-					'nocache_paths' => array(),
-					'nocache_cookies' => array( 'wp-*pass*', 'comment_author_*' ),
-					'ignore_cookies' => array( '_*' ),
-					'ignore_request_keys' => array( '_*', 'utm_*' ),
-					'debug' => false,
-					'gzip' => true,
-				),
-				'rules' => array(),
-			)
-		);
+		if ( function_exists( 'apply_filters' ) ) {
+			$defaults = apply_filters( 'millicache_settings_defaults', $defaults );
+		}
 
 		if ( $module ) {
 			return isset( $defaults[ $module ] ) ? $defaults[ $module ] : array();
