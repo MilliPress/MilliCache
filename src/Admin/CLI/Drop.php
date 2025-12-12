@@ -1,6 +1,6 @@
 <?php
 /**
- * CLI command for fixing advanced-cache.php drop-in.
+ * CLI command for creating and fixing advanced-cache.php drop-in.
  *
  * @link       https://www.millipress.com
  * @since      1.0.0
@@ -16,13 +16,13 @@ use MilliCache\Admin\Admin;
 ! defined( 'ABSPATH' ) && exit;
 
 /**
- * Fix command.
+ * Drop command.
  *
  * @package    MilliCache
  * @subpackage MilliCache/Admin/CLI
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-final class Fix {
+final class Drop {
 
 	/**
 	 * Fix or reinstall the advanced-cache.php drop-in.
@@ -39,8 +39,8 @@ final class Fix {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp millicache fix
-	 *     wp millicache fix --force
+	 *     wp millicache drop
+	 *     wp millicache drop --force
 	 *
 	 * @when after_wp_load
 	 *
@@ -55,7 +55,7 @@ final class Fix {
 		$destination = WP_CONTENT_DIR . '/advanced-cache.php';
 		$source = MILLICACHE_DIR . '/advanced-cache.php';
 
-		// Check current status.
+		// Check the current status.
 		if ( file_exists( $destination ) && ! $force ) {
 			$info = Admin::validate_advanced_cache_file();
 			if ( ! empty( $info ) && 'symlink' === $info['type'] ) {

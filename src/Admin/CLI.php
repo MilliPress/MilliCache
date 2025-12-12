@@ -13,7 +13,7 @@ namespace MilliCache\Admin;
 
 use MilliCache\Admin\CLI\Clear;
 use MilliCache\Admin\CLI\Config;
-use MilliCache\Admin\CLI\Fix;
+use MilliCache\Admin\CLI\Drop;
 use MilliCache\Admin\CLI\Stats;
 use MilliCache\Admin\CLI\Status;
 use MilliCache\Admin\CLI\StorageCLI;
@@ -85,7 +85,7 @@ final class CLI {
 	private function register_commands(): void {
 		\WP_CLI::add_command( "{$this->plugin_name} clear", Clear::class );
 		\WP_CLI::add_command( "{$this->plugin_name} config", Config::class );
-		\WP_CLI::add_command( "{$this->plugin_name} fix", Fix::class );
+		\WP_CLI::add_command( "{$this->plugin_name} drop", Drop::class );
 		\WP_CLI::add_command( "{$this->plugin_name} stats", Stats::class );
 		\WP_CLI::add_command( "{$this->plugin_name} status", Status::class );
 		\WP_CLI::add_command( "{$this->plugin_name} cli", StorageCLI::class );
