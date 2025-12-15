@@ -110,8 +110,8 @@ final class Settings {
 				'prefix' => 'mll',
 			),
 			'cache' => array(
-				'ttl' => DAY_IN_SECONDS,
-				'grace' => MONTH_IN_SECONDS,
+				'ttl' => defined( 'DAY_IN_SECONDS' ) ? DAY_IN_SECONDS : 86400,
+				'grace' => defined( 'MONTH_IN_SECONDS' ) ? MONTH_IN_SECONDS : 2592000,
 				'unique' => array(),
 				'nocache_paths' => array(),
 				'nocache_cookies' => array( 'wp-*pass*', 'comment_author_*' ),
