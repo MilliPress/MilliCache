@@ -200,12 +200,15 @@ foreach ( Rules::all() as $rule ) {
 To change the behavior of a built-in rule, you can unregister them or create your own with the **same ID**:
 
 ```php
-// Unregister a built-in rule to completely remove its behavior
-Rules::unregister( 'millicache:wp:const:doing-ajax' );
+add_action('template_redirect', function() {
+    // Unregister a built-in rule to completely remove its behavior
+    Rules::unregister( 'millicache:wp:const:doing-ajax' );
+});
 
 // Override the logged-in user bypass to allow caching for subscribers
 Rules::create( 'millicache:wp:logged-in' )  // Same ID as built-in
-    ->on( 'template_redirect', 20 )
+    ->on( 'template_redirect', 20 )         // Same hook & priority as built-in
+    ->order( 10 )                           // Higher order to run after built-in
     ->when()
         ->is_user_logged_in()
         ->custom( 'is-editor-or-higher', function() {
