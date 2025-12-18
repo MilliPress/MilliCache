@@ -79,6 +79,35 @@ jobs:
           zip -rq "../millicache-${{ inputs.tag }}.zip" .
           cd ..
 
+      - name: Update tag to include built dependencies
+        run: |
+          TAG="${{ inputs.tag }}"
+          ORIGINAL_SHA=$(git rev-parse HEAD)
+
+          # Stash current state
+          git stash --include-untracked || true
+
+          # Create orphan branch for dist
+          git switch --orphan "dist/${TAG}"
+          git rm -rf . >/dev/null 2>&1 || true
+
+          # Move dist contents to root
+          rsync -a dist/ . --remove-source-files
+          rm -rf dist/
+
+          # Commit the dist build
+          git add -A
+          git commit -m "Release ${TAG}"
+
+          # Update the tag to point to this commit (with built deps)
+          git tag -f "${TAG}" -m "Release ${TAG}"
+          git push origin "refs/tags/${TAG}" --force
+
+          echo "Tag ${TAG} updated to include built dependencies"
+
+          # Return to original commit
+          git checkout "${ORIGINAL_SHA}"
+
       - name: Create or update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
