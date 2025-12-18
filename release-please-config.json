@@ -2,11 +2,12 @@
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "pull-request-header": "",
   "pull-request-footer": "",
-  "prerelease": true,
-  "prerelease-type": "rc",
   "packages": {
     ".": {
       "release-type": "simple",
+      "prerelease": true,
+      "prerelease-type": "rc",
+      "versioning": "prerelease",
       "component": "millicache",
       "changelog-path": "docs/01-getting-started/30-changelog.md",
       "extra-files": [
