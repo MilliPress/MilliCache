@@ -16,16 +16,7 @@ on:
       - 'functions.php'
   pull_request:
     branches: [main, dev]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'composer.json'
-      - 'composer.lock'
-      - 'phpstan.neon'
-      - 'phpcs.xml'
-      - 'millicache.php'
-      - 'advanced-cache.php'
-      - 'functions.php'
+    # No paths filter - always run CI on PRs to catch issues before merge
 
 permissions:
   contents: read
