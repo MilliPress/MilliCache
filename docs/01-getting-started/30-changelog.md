@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-rc.6](https://github.com/MilliPress/MilliCache/compare/v1.0.0-rc.5...v1.0.0-rc.6) (2025-12-18)
+
+
+### Bug Fixes
+
+* **ci:** Always run CI on pull requests ([94eff02](https://github.com/MilliPress/MilliCache/commit/94eff022b928a1089c699da04c2a2a23942ecb34))
+* correct path to Predis autoloader in deps directory ([#37](https://github.com/MilliPress/MilliCache/issues/37)) ([bb5a6dc](https://github.com/MilliPress/MilliCache/commit/bb5a6dc9419bb6e25a4d4f4568505354f555d34a))
+* **release:** Update release notes with performance results ([0424924](https://github.com/MilliPress/MilliCache/commit/0424924ad6390e5162b82e197c8a3c5f60a48a20))
+* **release:** Update tag to include built dependencies for Composer ([3e6de16](https://github.com/MilliPress/MilliCache/commit/3e6de16473a9e10d3017ebfc62529dd5f17ef274))
+
+
+### Refactoring
+
+* **deps:** Move runtime dependencies to dev-deps ([191f3d1](https://github.com/MilliPress/MilliCache/commit/191f3d1aa8f4a026d78a7618afdd68ecd88a40c3))
+
 ## [1.0.0-rc.5](https://github.com/MilliPress/MilliCache/compare/v1.0.0-rc.4...v1.0.0-rc.5) (2025-12-18)
 
 
