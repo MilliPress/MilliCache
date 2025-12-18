@@ -25,7 +25,6 @@ jobs:
         uses: googleapis/release-please-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          skip-github-release: true
 
   # Gate: Run CI before building release
   ci:
@@ -143,42 +142,19 @@ jobs:
           echo "Dist contents:"
           ls -la dist/
 
-      - name: Create release tag on orphan dist branch
-        run: |
-          TAG="${{ needs.release-please.outputs.tag_name }}"
-
-          # Delete the tag created by Release Please (if it exists)
-          git push origin --delete "refs/tags/${TAG}" 2>/dev/null || true
-          git tag -d "${TAG}" 2>/dev/null || true
-
-          # Create orphan branch for dist
-          git switch --orphan "dist/${TAG}"
-          git rm -rf . >/dev/null 2>&1 || true
-
-          # Move dist contents to root
-          rsync -a dist/ . --remove-source-files
-          rm -rf dist/
-
-          # Commit and tag
-          git add -A
-          git commit -m "Release ${TAG}"
-          git tag -a "${TAG}" -m "Release ${TAG}"
-          git push origin "refs/tags/${TAG}"
-
       - name: Create release archive
         run: |
-          TAG="${{ needs.release-please.outputs.tag_name }}"
-          zip -rq "millicache-${TAG}.zip" . -x ".git/*"
+          cd dist
+          zip -rq "../millicache-${{ needs.release-please.outputs.tag_name }}.zip" .
+          cd ..
 
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ needs.release-please.outputs.tag_name }}
-          name: ${{ needs.release-please.outputs.tag_name }}
-          body_path: /tmp/changelog.md
-          files: millicache-${{ needs.release-please.outputs.tag_name }}.zip
+      - name: Upload release asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ needs.release-please.outputs.tag_name }}" \
+            "millicache-${{ needs.release-please.outputs.tag_name }}.zip" \
+            --clobber
 
       - name: Release summary
         run: |
