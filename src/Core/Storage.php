@@ -177,7 +177,7 @@ class Storage {
 	 */
 	private function connect(): bool {
 		if ( ! self::is_available() ) {
-			require_once dirname( __DIR__, 2 ) . '/src/Deps/Predis/Autoloader.php';
+			require_once dirname( __DIR__, 2 ) . '/deps/predis/predis/src/Autoloader.php';
 		}
 
 		try {
