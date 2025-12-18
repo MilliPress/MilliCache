@@ -156,6 +156,18 @@ jobs:
             "millicache-${{ needs.release-please.outputs.tag_name }}.zip" \
             --clobber
 
+      - name: Update release notes with performance results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f /tmp/changelog.md ] && [ -s /tmp/changelog.md ]; then
+            gh release edit "${{ needs.release-please.outputs.tag_name }}" \
+              --notes-file /tmp/changelog.md
+            echo "Release notes updated with performance results"
+          else
+            echo "No changelog file found, skipping release notes update"
+          fi
+
       - name: Release summary
         run: |
           TAG="${{ needs.release-please.outputs.tag_name }}"
