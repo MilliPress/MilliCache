@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-rc.6](https://github.com/MilliPress/MilliCache/compare/v1.0.0-rc.5...v1.0.0-rc.6) (2025-12-18)
+
+
+### Bug Fixes
+
+* **lint:** Add period to inline comment for PHPCS compliance ([ecc1b29](https://github.com/MilliPress/MilliCache/commit/ecc1b29e3b6b0f7fc8e056818f4299910f767494))
+
 ## [1.0.0-rc.5](https://github.com/MilliPress/MilliCache/compare/v1.0.0-rc.5...v1.0.0-rc.5) (2025-12-18)
 
 
