@@ -168,6 +168,6 @@ Works with any Redis-compatible server:
 
 Ready to get started? Continue to:
 
-- [Installation & Quick Start](20-installation.md) — Install and configure MilliCache
+- [Installation & Quick Start](./20-installation.md) — Install and configure MilliCache
 - [Cache Flags](../03-cache-flags/01-introduction.md) — Understand targeted invalidation
 - [Rules](../04-rules/01-introduction.md) — Control caching behavior
