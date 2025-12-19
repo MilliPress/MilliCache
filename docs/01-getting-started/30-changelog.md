@@ -1,3 +1,9 @@
+---
+title: 'MilliCache Changelog'
+post_excerpt: 'Version-by-version breakdown of new features, bug fixes, refactoring, and API changes in MilliCache.'
+menu_order: 30
+---
+
 # Changelog
 
 ## [1.0.0-rc.5](https://github.com/MilliPress/MilliCache/compare/v1.0.0-rc.4...v1.0.0-rc.5) (2025-12-19)
@@ -59,19 +65,3 @@
 * **introduction:** Update link format for installation guide ([4d182f3](https://github.com/MilliPress/MilliCache/commit/4d182f382decfa5c67d3c89a3d1a729c46a306d2))
 * **rules:** Unregister built-in rule on template redirect to prevent conflicts ([6c0bb48](https://github.com/MilliPress/MilliCache/commit/6c0bb486004445f466496f99336f3cf828e5b394))
 * Update README with new architecture and features ([7a61242](https://github.com/MilliPress/MilliCache/commit/7a61242cd387e1618e2e97b9387d5dae544a3e69))
-
-
-### Miscellaneous
-
-* **release:** Reset for rc.5 release test ([1e988ac](https://github.com/MilliPress/MilliCache/commit/1e988ac696930ea70b28832843d6618d73b50c2f))
-* **release:** Set next version ([369d647](https://github.com/MilliPress/MilliCache/commit/369d647fde4d07b348afe9fd5f73c9e0ce9be09c))
-
-## Changelog
-
----
-title: 'MilliCache Changelog'
-post_excerpt: 'Version-by-version breakdown of new features, bug fixes, refactoring, and API changes in MilliCache.'
-menu_order: 30
----
-
-## Changelog
