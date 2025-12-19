@@ -152,6 +152,9 @@ jobs:
         run: |
           TAG="${{ needs.release-please.outputs.tag_name }}"
 
+          # Move dist to temp location (outside git working tree)
+          mv dist /tmp/dist-build
+
           # Stash current state
           git stash --include-untracked || true
 
@@ -160,8 +163,8 @@ jobs:
           git rm -rf . >/dev/null 2>&1 || true
 
           # Move dist contents to root
-          rsync -a dist/ . --remove-source-files
-          rm -rf dist/
+          rsync -a /tmp/dist-build/ . --remove-source-files
+          rm -rf /tmp/dist-build/
 
           # Commit the dist build
           git add -A
