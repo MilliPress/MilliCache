@@ -189,7 +189,7 @@ if (beforeStats) {
 }
 
 // Generate Markdown output
-let markdown = `## MilliCache Performance Results\n\n`;
+let markdown = `### Performance Results\n\n`;
 
 if (ttfbSpeedup > 1) {
     markdown += `Loading **${ttfbSpeedup.toFixed(1)}x faster** with MilliCache!\n\n`;
