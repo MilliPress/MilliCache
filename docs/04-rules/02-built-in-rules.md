@@ -21,10 +21,9 @@ These run first and bypass caching for non-cacheable scenarios:
 | `millicache:const:wp-cache`       | `WP_CACHE !== true`          | Bypass |
 | `millicache:request:check-method` | Method not GET/HEAD          | Bypass |
 | `millicache:request:cli`          | Running in WP-CLI            | Bypass |
-| `millicache:request:rest`         | `REST_REQUEST` is true       | Bypass |
 | `millicache:request:xmlrpc`       | `XMLRPC_REQUEST` is true     | Bypass |
 | `millicache:request:file`         | URL ends with file extension | Bypass |
-| `millicache:request:wp-json`      | URL contains `wp-json`       | Bypass |
+| `millicache:request:rest`         | URL contains `wp-json`       | Bypass |
 | `millicache:config:ttl-not-set`   | TTL is 0 or negative         | Bypass |
 
 ### Configuration-Based Rules (Order 0)

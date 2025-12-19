@@ -57,12 +57,11 @@ final class Bootstrap {
 		$config = millicache()->config();
 
 		self::register_wp_cache_rule();
-		self::register_rest_request_rule();
 		self::register_xmlrpc_request_rule();
 		self::register_file_request_rule();
 		self::register_request_method_rule();
 		self::register_cli_request_rule();
-		self::register_wp_json_request_rule();
+		self::register_rest_request_rule();
 		self::register_ttl_check_rule( $config );
 		self::register_nocache_cookies( $config );
 		self::register_nocache_paths( $config );
@@ -83,24 +82,6 @@ final class Bootstrap {
 				->constant( 'WP_CACHE', true, '!=' )
 			->then()
 				->do_cache( false, 'MilliCache: WP_CACHE not enabled' )
-			->register();
-	}
-
-	/**
-	 * Register REST request check rule.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return void
-	 */
-	private static function register_rest_request_rule(): void {
-		// Check REST request.
-		Rules::create( 'millicache:request:rest', 'php' )
-			->order( -10 )
-			->when()
-				->constant( 'REST_REQUEST', true )
-			->then()
-				->do_cache( false, 'MilliCache: REST request' )
 			->register();
 	}
 
@@ -195,20 +176,22 @@ final class Bootstrap {
 	}
 
 	/**
-	 * Register WP-JSON request check rule.
+	 * Register REST API request check rule.
+	 *
+	 * Detects REST API requests by checking for 'wp-json' in the URL.
+	 * This runs early (before WordPress loads) to avoid unnecessary processing.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
-	private static function register_wp_json_request_rule(): void {
-		// Check WP-JSON request.
-		Rules::create( 'millicache:request:wp-json', 'php' )
+	private static function register_rest_request_rule(): void {
+		Rules::create( 'millicache:request:rest', 'php' )
 			->order( -10 )
 			->when()
 				->request_url( '*wp-json*' )
 			->then()
-				->do_cache( false, 'MilliCache: WP-JSON request' )
+				->do_cache( false, 'MilliCache: REST API request' )
 			->register();
 	}
 
