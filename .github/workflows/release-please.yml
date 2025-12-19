@@ -78,8 +78,14 @@ jobs:
           npm run build
           rm -rf node_modules
 
-      - name: Install production dependencies
-        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --classmap-authoritative
+      - name: Install dependencies and build prefixed packages
+        run: |
+          # Install all dependencies (including dev) to get millirules and predis
+          composer install --no-interaction --prefer-dist
+
+          # Strauss runs via post-install-cmd and prefixes packages into deps/
+          # Now reinstall without dev to clean vendor/ for production
+          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --classmap-authoritative
 
       - name: Download performance results
         uses: actions/download-artifact@v4
