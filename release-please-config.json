@@ -8,7 +8,7 @@
       "release-type": "simple",
       "prerelease": false,
       "prerelease-type": "rc",
-      "versioning": "prerelease",
+      "versioning": "default",
       "component": "millicache",
       "changelog-path": "docs/01-getting-started/30-changelog.md",
       "extra-files": [
