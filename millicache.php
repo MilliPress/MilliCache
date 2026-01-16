@@ -12,6 +12,8 @@
  * Description:       The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any alternative.
 
  * Version:           1.0.0-rc.4 x-release-please-version
+ * Requires at least: 6.6
+ * Requires PHP:      7.4
  * Network:           true
  * Author:            MilliPress Team
  * Author URI:        https://www.millipress.com/

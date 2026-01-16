@@ -62,7 +62,7 @@ Full documentation is available in the [`docs/`](docs/) folder:
 ## Requirements
 
 - PHP 7.4+ (8.x recommended)
-- WordPress 5.6+
+- WordPress 6.6+
 - Redis-compatible server ([Redis](https://redis.io/), [ValKey](https://valkey.io/), [KeyDB](https://keydb.dev/), or [Dragonfly](https://dragonflydb.io/))
 
 ## Testing

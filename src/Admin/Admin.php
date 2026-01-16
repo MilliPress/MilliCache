@@ -13,7 +13,6 @@ namespace MilliCache\Admin;
 
 use MilliCache\Core\Loader;
 use MilliCache\Engine;
-use MilliCache\MilliCache;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
