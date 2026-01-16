@@ -24,6 +24,8 @@ use MilliCache\Core\Settings;
  */
 final class Config {
 
+	use OutputTrait;
+
 	/**
 	 * Manage MilliCache configuration.
 	 *
@@ -154,15 +156,17 @@ final class Config {
 	 * @return void
 	 */
 	private function get( array $args, array $assoc_args ): void {
-		$key = $args[0] ?? '';
-		$module = $assoc_args['module'] ?? null;
-		$format = $assoc_args['format'] ?? 'table';
+		$key         = $args[0] ?? '';
+		$module      = $assoc_args['module'] ?? null;
+		$format      = $assoc_args['format'] ?? 'table';
 		$show_source = isset( $assoc_args['show-source'] );
 
 		$settings_obj = new Settings();
+		$raw_settings = null;
+		$items        = array();
 
-		// Get a specific key.
 		if ( '' !== $key ) {
+			// Get a specific key.
 			$value = $settings_obj->get( $key );
 
 			if ( null === $value ) {
@@ -175,77 +179,82 @@ final class Config {
 				);
 			}
 
-			$parts = explode( '.', $key );
-			$module_key = $parts[0];
-			$setting_key = $parts[1] ?? '';
+			$raw_settings = array( $key => $value );
+			$has_sub_key  = strpos( $key, '.' ) !== false;
 
-			if ( 'json' === $format ) {
-				\WP_CLI::line( (string) wp_json_encode( array( $key => $value ), JSON_PRETTY_PRINT ) );
-			} elseif ( 'yaml' === $format ) {
-				\WP_CLI::line( sprintf( '%s: %s', $key, $this->format_value( $value ) ) );
+			if ( is_array( $value ) && ! $has_sub_key ) {
+				// Module-level key (e.g., "storage") - flatten to individual settings.
+				$items = $this->flatten_settings( array( $key => $value ), $settings_obj, $show_source );
 			} else {
-				$row = array(
-					'key'   => $key,
-					'value' => $this->format_value( $value ),
-				);
-				if ( $show_source && '' !== $setting_key ) {
-					$row['source'] = $settings_obj->get_setting_source( $module_key, $setting_key );
-				}
-				$columns = $show_source ? array( 'key', 'value', 'source' ) : array( 'key', 'value' );
-				\WP_CLI\Utils\format_items( 'table', array( $row ), $columns );
-			}
-			return;
-		}
-
-		// Get all settings (optionally filtered by module).
-		$settings = $settings_obj->get_settings( $module );
-
-		if ( $module ) {
-			// Single module - flatten for display.
-			$items = array();
-			foreach ( $settings as $key_name => $value ) {
-				$row = array(
-					'key'   => "$module.$key_name",
-					'value' => $this->format_value( $value ),
-				);
-				if ( $show_source ) {
-					$row['source'] = $settings_obj->get_setting_source( $module, $key_name );
-				}
-				$items[] = $row;
+				// Single scalar setting.
+				$items[] = $this->build_row( $key, $value, $settings_obj, $show_source );
 			}
 		} else {
-			// All modules - flatten nested structure.
-			$items = array();
-			foreach ( $settings as $module_key => $module_settings ) {
-				if ( ! is_array( $module_settings ) ) {
-					continue;
-				}
-				foreach ( $module_settings as $key_name => $value ) {
-					$row = array(
-						'key'   => "$module_key.$key_name",
-						'value' => $this->format_value( $value ),
-					);
-					if ( $show_source ) {
-						$row['source'] = $settings_obj->get_setting_source( $module_key, $key_name );
-					}
-					$items[] = $row;
-				}
+			// Get all settings (optionally filtered by module).
+			$raw_settings = $settings_obj->get_settings( $module );
+
+			if ( $module ) {
+				// Module filter - wrap for consistent flattening.
+				$items = $this->flatten_settings( array( $module => $raw_settings ), $settings_obj, $show_source );
+			} else {
+				$items = $this->flatten_settings( $raw_settings, $settings_obj, $show_source );
 			}
 		}
 
-		// Output based on format.
-		if ( 'json' === $format ) {
-			\WP_CLI::line( (string) wp_json_encode( $settings, JSON_PRETTY_PRINT ) );
-		} elseif ( 'yaml' === $format ) {
-			$yaml = '';
-			foreach ( $items as $item ) {
-				$yaml .= sprintf( "%s: %s\n", $item['key'], $item['value'] );
+		$columns = $show_source ? array( 'key', 'value', 'source' ) : array( 'key', 'value' );
+		$this->output_items( $items, $raw_settings, $format, $columns );
+	}
+
+	/**
+	 * Build a single row for display.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string   $full_key     The full dot-notation key.
+	 * @param mixed    $value        The setting value.
+	 * @param Settings $settings_obj The settings instance.
+	 * @param bool     $show_source  Whether to include source info.
+	 * @return array<string, string> The row data.
+	 */
+	private function build_row( string $full_key, $value, Settings $settings_obj, bool $show_source ): array {
+		$row = array(
+			'key'   => $full_key,
+			'value' => $this->format_value( $value ),
+		);
+
+		if ( $show_source ) {
+			$parts = explode( '.', $full_key );
+			if ( count( $parts ) >= 2 ) {
+				$row['source'] = $settings_obj->get_setting_source( $parts[0], $parts[1] );
 			}
-			\WP_CLI::line( $yaml );
-		} else {
-			$columns = $show_source ? array( 'key', 'value', 'source' ) : array( 'key', 'value' );
-			\WP_CLI\Utils\format_items( 'table', $items, $columns );
 		}
+
+		return $row;
+	}
+
+	/**
+	 * Flatten nested settings into rows.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array<string, mixed> $settings     The nested settings array.
+	 * @param Settings             $settings_obj The settings instance.
+	 * @param bool                 $show_source  Whether to include source info.
+	 * @return array<int, array<string, string>> The flattened rows.
+	 */
+	private function flatten_settings( array $settings, Settings $settings_obj, bool $show_source ): array {
+		$items = array();
+
+		foreach ( $settings as $module_key => $module_settings ) {
+			if ( ! is_array( $module_settings ) ) {
+				continue;
+			}
+			foreach ( $module_settings as $key_name => $value ) {
+				$items[] = $this->build_row( "$module_key.$key_name", $value, $settings_obj, $show_source );
+			}
+		}
+
+		return $items;
 	}
 
 	/**
@@ -514,33 +523,5 @@ final class Config {
 		} else {
 			\WP_CLI::error( __( 'Failed to import settings.', 'millicache' ) );
 		}
-	}
-
-	/**
-	 * Format a value for display.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param mixed $value The value to format.
-	 * @return string The formatted value.
-	 */
-	private function format_value( $value ): string {
-		if ( is_bool( $value ) ) {
-			return $value ? 'true' : 'false';
-		}
-
-		if ( null === $value ) {
-			return 'null';
-		}
-
-		if ( is_array( $value ) ) {
-			return (string) wp_json_encode( $value );
-		}
-
-		if ( is_scalar( $value ) ) {
-			return (string) $value;
-		}
-
-		return (string) wp_json_encode( $value );
 	}
 }

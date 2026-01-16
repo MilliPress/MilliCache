@@ -62,7 +62,7 @@ Error: Connection refused [tcp://127.0.0.1:6379]
 
 4. **Verify configuration:**
    ```bash
-   wp millicache config get --module=storage
+   wp millicache config get storage
    ```
 
 ### Authentication Failed
@@ -81,7 +81,7 @@ Error: NOAUTH Authentication required
 
 2. **Re-set password:**
    ```bash
-   wp millicache config set storage.enc_password "your-password" --encrypt
+   wp millicache config set storage.enc_password "your-password"
    ```
 
 3. **Test Redis password directly:**

@@ -24,6 +24,8 @@ use MilliCache\Admin\Admin;
  */
 final class Stats {
 
+	use OutputTrait;
+
 	/**
 	 * Get cache statistics.
 	 *
@@ -80,24 +82,7 @@ final class Stats {
 		);
 
 		// Output based on format.
-		if ( 'json' === $format ) {
-			\WP_CLI::line( (string) wp_json_encode( $stats, JSON_PRETTY_PRINT ) );
-		} elseif ( 'yaml' === $format ) {
-			$yaml = '';
-			foreach ( $stats as $key => $value ) {
-				$yaml .= sprintf( "%s: %s\n", $key, $value );
-			}
-			\WP_CLI::line( $yaml );
-		} else {
-			// Table format.
-			$items = array();
-			foreach ( $stats as $key => $value ) {
-				$items[] = array(
-					'property' => $key,
-					'value'    => $value,
-				);
-			}
-			\WP_CLI\Utils\format_items( 'table', $items, array( 'property', 'value' ) );
-		}
+		$items = $this->build_rows_from_array( $stats, 'property', 'value' );
+		$this->output_items( $items, $stats, $format, array( 'property', 'value' ) );
 	}
 }

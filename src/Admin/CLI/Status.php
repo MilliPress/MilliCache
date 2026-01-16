@@ -24,6 +24,8 @@ use MilliCache\Admin\Admin;
  */
 final class Status {
 
+	use OutputTrait;
+
 	/**
 	 * Show the plugin and cache status.
 	 *
@@ -111,24 +113,7 @@ final class Status {
 		$status['cache_size'] = $cache_size['size_human'];
 
 		// Output based on format.
-		if ( 'json' === $format ) {
-			\WP_CLI::line( (string) wp_json_encode( $status, JSON_PRETTY_PRINT ) );
-		} elseif ( 'yaml' === $format ) {
-			$yaml = '';
-			foreach ( $status as $key => $value ) {
-				$yaml .= sprintf( "%s: %s\n", $key, $value );
-			}
-			\WP_CLI::line( $yaml );
-		} else {
-			// Table format.
-			$items = array();
-			foreach ( $status as $key => $value ) {
-				$items[] = array(
-					'property' => $key,
-					'status'   => $value,
-				);
-			}
-			\WP_CLI\Utils\format_items( 'table', $items, array( 'property', 'status' ) );
-		}
+		$items = $this->build_rows_from_array( $status, 'property', 'status' );
+		$this->output_items( $items, $status, $format, array( 'property', 'status' ) );
 	}
 }
