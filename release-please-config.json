@@ -6,7 +6,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
-      "prerelease": true,
+      "prerelease": false,
       "prerelease-type": "rc",
       "versioning": "prerelease",
       "component": "millicache",
