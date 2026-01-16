@@ -141,8 +141,9 @@ test.describe('Step 12: Cache Flag Generation', () => {
             // Flags should have different site prefixes (numbers may vary based on blog IDs)
             if (site1Headers.flags && site2Headers.flags) {
                 // Extract site prefix from flags (format: "N:flag" where N is blog ID)
-                const site1Prefix = site1Headers.flags.match(/^(\d+):/)?.[1];
-                const site2Prefix = site2Headers.flags.match(/^(\d+):/)?.[1];
+                // Use non-anchored regex since flags can appear in any order (url: flag may come first)
+                const site1Prefix = site1Headers.flags.match(/(\d+):(home|archive)/)?.[1];
+                const site2Prefix = site2Headers.flags.match(/(\d+):(home|archive)/)?.[1];
 
                 // Both should have prefixes and they should be different
                 expect(site1Prefix).toBeTruthy();

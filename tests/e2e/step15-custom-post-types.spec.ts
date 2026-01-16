@@ -89,7 +89,10 @@ test.describe('Step 15: Custom Post Types', () => {
         }) => {
             const frontend = new FrontendPage(page);
 
-            // Prime the Hello World post cache
+            // Clear cache first to ensure a fresh state (5-second TTL can cause stale entries)
+            await clearCache('*');
+
+            // Prime the Hello World post-cache
             await page.context().clearCookies();
             await frontend.goto('/hello-world/');
             const cachedResponse = await frontend.reload();
