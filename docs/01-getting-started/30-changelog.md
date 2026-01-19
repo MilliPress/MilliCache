@@ -6,6 +6,14 @@ menu_order: 30
 
 # Changelog
 
+## [1.0.1](https://github.com/MilliPress/MilliCache/compare/v1.0.0...v1.0.1) (2026-01-19)
+
+
+### Bug Fixes
+
+* **admin:** Change cache size calculations to use bytes instead of kilobytes ([eb6a46c](https://github.com/MilliPress/MilliCache/commit/eb6a46c60e90bde15ea21699bc38f77f62be011b))
+* **release:** Use PAT for last-release-sha update and revert v1.0.1 ([60d29fd](https://github.com/MilliPress/MilliCache/commit/60d29fded68adafb1c21070f6415f14f252d1b70))
+
 ## [1.0.0](https://github.com/MilliPress/MilliCache/compare/v1.0.0-rc.5...v1.0.0) (2026-01-16)
 
 
