@@ -225,12 +225,18 @@ jobs:
 
       - name: Update last-release-sha for Release Please
         env:
-          TAG: ${{ needs.release-please.outputs.tag_name }}
           RELEASE_SHA: ${{ needs.release-please.outputs.sha }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
-          # Switch to main and pull latest
+          # Configure git to use the release token (PAT) for pushing
+          git remote set-url origin "https://x-access-token:${RELEASE_TOKEN}@github.com/${REPO}.git"
+
+          # Fresh checkout of main to avoid git state issues from previous steps
+          git fetch origin main
           git checkout main
-          git pull origin main
+          git reset --hard origin/main
 
           # Update the config with the release merge commit SHA
           # This tells Release Please where to find commits since last release,
