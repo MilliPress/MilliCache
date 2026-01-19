@@ -227,12 +227,7 @@ jobs:
         env:
           RELEASE_SHA: ${{ needs.release-please.outputs.sha }}
           TAG: ${{ needs.release-please.outputs.tag_name }}
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          REPO: ${{ github.repository }}
         run: |
-          # Configure git to use the release token (PAT) for pushing
-          git remote set-url origin "https://x-access-token:${RELEASE_TOKEN}@github.com/${REPO}.git"
-
           # Fresh checkout of main to avoid git state issues from previous steps
           git fetch origin main
           git checkout main
