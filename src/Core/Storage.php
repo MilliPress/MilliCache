@@ -756,7 +756,7 @@ class Storage {
 	 * @access public
 	 *
 	 * @param string $flag Get cache by flag. Supports wildcards.
-	 * @return false|array{index: int, size: int} The number of cache keys & the size of the cache in kilobytes.
+	 * @return false|array{index: int, size: int} The number of cache keys and the size of the cache in bytes.
 	 */
 	public function get_cache_size( string $flag = '' ) {
 		try {
@@ -790,7 +790,7 @@ class Storage {
 
 			return array(
 				'index' => count( $valid_sizes ),
-				'size' => (int) round( (float) array_sum( $valid_sizes ) / 1024 ),
+				'size' => (int) array_sum( $valid_sizes ),
 			);
 		} catch ( PredisException $e ) {
 			error_log( 'Unable to get cache size from the storage server: ' . $e->getMessage() );

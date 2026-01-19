@@ -67,9 +67,9 @@ final class Stats {
 		$format = $assoc_args['format'] ?? 'table';
 		$size = Admin::get_cache_size( $flag, true );
 
-		// Calculate average size.
+		// Calculate average size (size is in bytes).
 		$avg_size = $size['index'] > 0 ? (int) ( $size['size'] / $size['index'] ) : 0;
-		$avg_size_human = (string) size_format( $avg_size, $avg_size > 1024 ? 2 : 0 );
+		$avg_size_human = (string) size_format( $avg_size, $avg_size > 1048576 ? 2 : 0 );
 
 		// Build stats data.
 		$stats = array(

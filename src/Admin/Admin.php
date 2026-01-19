@@ -392,12 +392,15 @@ final class Admin {
 			}
 		}
 
+		// Get size in bytes.
+		$bytes = $size['size'] ?? 0;
+
 		return array(
 			'index' => $size['index'] ?? 0,
-			'size' => $size['size'] ?? 0,
+			'size' => $bytes,
 			'size_human' => (string) size_format(
-				$size['size'] ?? 0,
-				( $size['size'] ?? 0 ) > 1024 ? 2 : 0
+				$bytes,
+				$bytes > 1048576 ? 2 : 0
 			),
 		);
 	}
