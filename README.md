@@ -1,23 +1,24 @@
 # MilliCache
 
-[![e2e-Tests](https://github.com/MilliPress/MilliCache/actions/workflows/playwright.yml/badge.svg)](https://github.com/MilliPress/MilliCache/actions/workflows/playwright.yml)
+[![CI](https://github.com/MilliPress/MilliCache/actions/workflows/ci.yml/badge.svg)](https://github.com/MilliPress/MilliCache/actions/workflows/ci.yml)
+[![e2e-Tests](https://github.com/MilliPress/MilliCache/actions/workflows/e2e.yml/badge.svg)](https://github.com/MilliPress/MilliCache/actions/workflows/e2e.yml)
 
 **High-performance full-page caching for WordPress** using Redis, ValKey, KeyDB, or Dragonfly.
 
-MilliCache stores complete HTML pages in memory and serves them in under 10ms — without loading WordPress. Combined with intelligent cache flags and flexible rules, it's designed for sites that need both speed and control.
-
-> [!IMPORTANT]
-> This plugin is approaching a stable release. Please [report any issues](https://github.com/MilliPress/MilliCache/issues/new) you encounter.
+MilliCache stores complete HTML pages in memory and serves them in milliseconds — without loading WordPress. 
+Combined with intelligent cache flags and flexible rules, it's designed for scaling sites that need both speed and control.
 
 ## Key Features
 
-- **Lightning Fast** — In-memory caching with sub-10ms response times
+- **Lightning Fast** — In-memory caching with blazing fast response times
 - **[Cache Flags](docs/03-cache-flags/01-introduction.md)** — Tag pages for precise, targeted cache invalidation
 - **[Flexible Rules](docs/04-rules/01-introduction.md)** — Control caching behavior with condition-based rules
-- **Multisite Ready** — Per-site isolation, network-wide management
-- **Horizontal Scaling** — Multiple web servers can share a single Redis instance
+- **Multisite Native** — Per-site isolation, network-wide management
+- **Built to Scale** — Multiple web servers can share a single Redis instance
 - **WP-CLI Integration** — Full command-line cache management
 - **[Multiple Backends](docs/08-storage-backends/01-overview.md)** — Redis, ValKey, KeyDB, or Dragonfly
+
+Learn more on [millipress.com](https://millipress.com/millicache), where you also find the [full documentation](https://millipress.com/docs/millicache).
 
 ## Quick Start
 
@@ -45,25 +46,25 @@ MilliCache stores complete HTML pages in memory and serves them in under 10ms �
 
 ## Documentation
 
-Full documentation is available in the [`docs/`](docs/) folder:
+Full documentation is available on [millipress.com/docs/millicache](https://millipress.com/docs/millicache):
 
 | Section                                                        | Description                            |
 |----------------------------------------------------------------|----------------------------------------|
-| [Getting Started](docs/01-getting-started/10-introduction.md)  | Introduction and installation          |
-| [Configuration](docs/02-configuration/01-overview.md)          | Settings and constants reference       |
-| [Cache Flags](docs/03-cache-flags/01-introduction.md)          | Targeted cache invalidation            |
-| [Rules](docs/04-rules/01-introduction.md)                      | Condition-based caching control        |
-| [Usage](docs/05-usage/10-how-caching-works.md)                 | How caching works, clearing, multisite |
-| [WP-CLI](docs/06-wp-cli/01-commands.md)                        | Command-line reference                 |
-| [Developers](docs/07-developers/10-architecture.md)            | Architecture, hooks, API               |
-| [Storage Backends](docs/08-storage-backends/01-overview.md)    | Redis, ValKey, KeyDB, Dragonfly        |
-| [Troubleshooting](docs/09-troubleshooting/01-common-issues.md) | Common issues and FAQ                  |
+| [Getting Started](https://millipress.com/docs/millicache/01-getting-started/10-introduction/)  | Introduction and installation          |
+| [Configuration](https://millipress.com/docs/millicache/02-configuration/01-overview/)          | Settings and constants reference       |
+| [Cache Flags](https://millipress.com/docs/millicache/03-cache-flags/01-introduction/)          | Targeted cache invalidation            |
+| [Rules](https://millipress.com/docs/millicache/04-rules/01-introduction/)                      | Condition-based caching control        |
+| [Usage](https://millipress.com/docs/millicache/05-usage/10-how-caching-works/)                 | How caching works, clearing, multisite |
+| [WP-CLI](https://millipress.com/docs/millicache/06-wp-cli/01-commands/)                        | Command-line reference                 |
+| [Developers](https://millipress.com/docs/millicache/07-developers/10-architecture/)            | Architecture, hooks, API               |
+| [Storage Backends](https://millipress.com/docs/millicache/08-storage-backends/01-overview/)    | Redis, ValKey, KeyDB, Dragonfly        |
+| [Troubleshooting](https://millipress.com/docs/millicache/09-troubleshooting/01-common-issues/) | Common issues and FAQ                  |
 
 ## Requirements
 
 - PHP 7.4+ (8.x recommended)
 - WordPress 6.6+
-- Redis-compatible server ([Redis](https://redis.io/), [ValKey](https://valkey.io/), [KeyDB](https://keydb.dev/), or [Dragonfly](https://dragonflydb.io/))
+- Redis-compatible server ([ValKey](https://valkey.io/), [Redis](https://redis.io/), [KeyDB](https://keydb.dev/), or [Dragonfly](https://dragonflydb.io/))
 
 ## Testing
 
@@ -100,4 +101,4 @@ MilliCache was initially inspired by:
 
 ## License
 
-[GPLv2 or later](LICENSE)
+[GPLv2 or later](LICENSE.txt)
