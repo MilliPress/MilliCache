@@ -132,7 +132,6 @@ const GeneralSettings = () => {
 					</Flex>
 					<FlexItem style={ { flexGrow: 0 } }>
 						<ToggleControl
-							__nextHasNoMarginBottom
 							label={
 								<LabelWithTooltip
 									label={ __( 'Persistent Storage Connection', 'millicache' ) }
@@ -334,7 +333,6 @@ const GeneralSettings = () => {
 						</FlexItem>
 					</Flex>
 					<ToggleControl
-						__nextHasNoMarginBottom
 						label={
 							<LabelWithTooltip
 								label={ __( 'Enable Gzip Compression', 'millicache' ) }
@@ -348,7 +346,6 @@ const GeneralSettings = () => {
 						}
 					/>
 					<ToggleControl
-						__nextHasNoMarginBottom
 						label={
 							<LabelWithTooltip
 								label={ __( 'Enable Debugging', 'millicache' ) }
@@ -363,7 +360,6 @@ const GeneralSettings = () => {
 					/>
                     <FormTokenField
                         __next40pxDefaultSize
-                        __nextHasNoMarginBottom
                         label={
                             <LabelWithTooltip
                                 label={ __( 'No-Cache Paths', 'millicache' ) }
@@ -384,7 +380,6 @@ const GeneralSettings = () => {
                     />
                     <FormTokenField
                         __next40pxDefaultSize
-                        __nextHasNoMarginBottom
                         label={
                             <LabelWithTooltip
                                 label={ __( 'No-Cache Cookies', 'millicache' ) }
@@ -405,7 +400,6 @@ const GeneralSettings = () => {
                     />
 					<FormTokenField
 						__next40pxDefaultSize
-						__nextHasNoMarginBottom
 						label={
 							<LabelWithTooltip
 								label={ __( 'Ignored Cookies', 'millicache' ) }
@@ -426,7 +420,6 @@ const GeneralSettings = () => {
 					/>
 					<FormTokenField
 						__next40pxDefaultSize
-						__nextHasNoMarginBottom
 						label={
 							<LabelWithTooltip
 								label={ __( 'Ignored Request Keys', 'millicache' ) }

@@ -51,7 +51,6 @@ const ClearCacheModal = ( { isModalOpen, onRequestClose } ) => {
 					<FlexItem>
 						<FormTokenField
 							__next40pxDefaultSize
-							__nextHasNoMarginBottom
 							label={ __(
 								'Targets to clear (Optional)',
 								'millicache'
