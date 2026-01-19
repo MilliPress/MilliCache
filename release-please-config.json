@@ -14,7 +14,13 @@
       "extra-files": [
         {
           "type": "generic",
-          "path": "millicache.php"
+          "path": "millicache.php",
+          "regex": "\\* Version:\\s+(?<version>\\d+\\.\\d+\\.\\d+)"
+        },
+        {
+          "type": "generic",
+          "path": "millicache.php",
+          "regex": "define\\( 'MILLICACHE_VERSION', '(?<version>\\d+\\.\\d+\\.\\d+)' \\)"
         }
       ],
       "changelog-sections": [
