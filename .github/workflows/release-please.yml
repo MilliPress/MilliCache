@@ -207,10 +207,11 @@ jobs:
           fi
 
       - name: Release summary
+        env:
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+          VERSION: ${{ needs.release-please.outputs.version }}
+          REPO: ${{ github.repository }}
         run: |
-          TAG="${{ needs.release-please.outputs.tag_name }}"
-          VERSION="${{ needs.release-please.outputs.version }}"
-
           {
             echo "## Release ${TAG} Published"
             echo ""
@@ -219,5 +220,27 @@ jobs:
             echo "| Version | ${VERSION} |"
             echo "| Tag | ${TAG} |"
             echo ""
-            echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/${TAG})"
+            echo "[View Release](https://github.com/${REPO}/releases/tag/${TAG})"
           } >> $GITHUB_STEP_SUMMARY
+
+      - name: Update last-release-sha for Release Please
+        env:
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+          RELEASE_SHA: ${{ needs.release-please.outputs.sha }}
+        run: |
+          # Switch to main and pull latest
+          git checkout main
+          git pull origin main
+
+          # Update the config with the release merge commit SHA
+          # This tells Release Please where to find commits since last release,
+          # since the tag now points to an orphan commit with built dependencies
+          jq --arg sha "$RELEASE_SHA" '.["last-release-sha"] = $sha' \
+             release-please-config.json > tmp.json && mv tmp.json release-please-config.json
+
+          # Commit and push
+          git add release-please-config.json
+          git commit -m "chore(release): Update last-release-sha after ${TAG}"
+          git push origin main
+
+          echo "Updated last-release-sha to ${RELEASE_SHA}"
