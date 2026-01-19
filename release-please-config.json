@@ -3,6 +3,7 @@
   "pull-request-header": " ",
   "pull-request-footer": " ",
   "include-component-in-tag": false,
+  "last-release-sha": "f0d788ca4f43c5763bd6116ab1fdba764e92e62d",
   "packages": {
     ".": {
       "release-type": "simple",
