@@ -11,7 +11,7 @@
  * Plugin URI:        https://www.millipress.com/millicache
  * Description:       The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any alternative.
 
- * Version:           1.0.2
+ * Version:           1.0.1
  * Requires at least: 6.6
  * Requires PHP:      7.4
  * Network:           true
@@ -32,7 +32,7 @@ if ( ! defined( 'WPINC' ) ) {
  *
  * @since 1.0.0
  */
-define( 'MILLICACHE_VERSION', '1.0.2' );
+define( 'MILLICACHE_VERSION', '1.0.1' );
 
 if ( ! defined( 'MILLICACHE_BASENAME' ) ) {
 	define( 'MILLICACHE_BASENAME', plugin_basename( __FILE__ ) );

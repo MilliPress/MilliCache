@@ -6,25 +6,6 @@ menu_order: 30
 
 # Changelog
 
-## [1.0.2](https://github.com/MilliPress/MilliCache/compare/v1.0.1...v1.0.2) (2026-01-31)
-
-
-### Bug Fixes
-
-* **deps:** Downgrade @types/node to v20 for WordPress compatibility ([ebbd454](https://github.com/MilliPress/MilliCache/commit/ebbd45468ed7399af12e4db6f288ab88ea1b637e))
-* **release:** Remove x-release-please-version annotations from source ([e80ada4](https://github.com/MilliPress/MilliCache/commit/e80ada43b357029b33f8e913cc285d565fedfa08))
-
-
-### Refactoring
-
-* **millicache:** Remove unused millicache_loaded action hook ([d230e5d](https://github.com/MilliPress/MilliCache/commit/d230e5d337328425ace8055013f785676f3ad59a))
-* **ui:** Remove deprecated __nextHasNoMarginBottom props ([4919375](https://github.com/MilliPress/MilliCache/commit/491937547e918a003add743e70251b5cb35245f5))
-
-
-### CI
-
-* Run E2E tests on pull requests for pre-merge visibility ([93c437c](https://github.com/MilliPress/MilliCache/commit/93c437c67485f399f11509c8f4ef47c2e93a3d1f))
-
 ## [1.0.1](https://github.com/MilliPress/MilliCache/compare/v1.0.0...v1.0.1) (2026-01-19)
 
 
