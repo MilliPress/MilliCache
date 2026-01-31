@@ -25,6 +25,8 @@ jobs:
         uses: googleapis/release-please-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          # Don't create tag/release automatically - we create it after tests pass
+          skip-github-release: true
 
   # Gate: Run CI before building release
   ci:
@@ -95,8 +97,10 @@ jobs:
         continue-on-error: true
 
       - name: Extract release notes for current version
+        env:
+          VERSION: ${{ needs.release-please.outputs.version }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
         run: |
-          VERSION="${{ needs.release-please.outputs.version }}"
           CHANGELOG_PATH="docs/01-getting-started/30-changelog.md"
 
           # Extract only the current version's changelog section
@@ -113,10 +117,10 @@ jobs:
 
             # If nothing was extracted, use a fallback
             if [ ! -s /tmp/changelog.md ]; then
-              echo "## ${{ needs.release-please.outputs.tag_name }}" > /tmp/changelog.md
+              echo "## ${TAG_NAME}" > /tmp/changelog.md
             fi
           else
-            echo "## ${{ needs.release-please.outputs.tag_name }}" > /tmp/changelog.md
+            echo "## ${TAG_NAME}" > /tmp/changelog.md
           fi
 
           echo "Release notes for version $VERSION:"
@@ -149,15 +153,18 @@ jobs:
           ls -la dist/
 
       - name: Create release archive
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
         run: |
           cd dist
-          zip -rq "../millicache-${{ needs.release-please.outputs.tag_name }}.zip" .
+          zip -rq "../millicache-${TAG_NAME}.zip" .
           cd ..
 
-      - name: Update tag to include built dependencies
+      - name: Create tag on orphan branch with built dependencies
+        env:
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+          RELEASE_SHA: ${{ needs.release-please.outputs.sha }}
         run: |
-          TAG="${{ needs.release-please.outputs.tag_name }}"
-
           # Move dist and zip to temp location (outside git working tree)
           mv dist /tmp/dist-build
           mv "millicache-${TAG}.zip" /tmp/
@@ -177,34 +184,26 @@ jobs:
           git add -A
           git commit -m "Release ${TAG}"
 
-          # Update the tag to point to this commit (with built deps)
-          git tag -f "${TAG}" -m "Release ${TAG}"
-          git push origin "refs/tags/${TAG}" --force
+          # Create the tag pointing to this commit (with built deps)
+          git tag "${TAG}" -m "Release ${TAG}"
+          git push origin "refs/tags/${TAG}"
 
-          echo "Tag ${TAG} updated to include built dependencies"
+          echo "Tag ${TAG} created pointing to orphan branch with built dependencies"
 
           # Return to original branch
-          git checkout ${{ needs.release-please.outputs.sha }}
+          git checkout "$RELEASE_SHA"
 
-      - name: Upload release asset
+      - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
         run: |
-          gh release upload "${{ needs.release-please.outputs.tag_name }}" \
-            "/tmp/millicache-${{ needs.release-please.outputs.tag_name }}.zip" \
-            --clobber
+          gh release create "${TAG}" \
+            "/tmp/millicache-${TAG}.zip" \
+            --title "${TAG}" \
+            --notes-file /tmp/changelog.md
 
-      - name: Update release notes with performance results
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ -f /tmp/changelog.md ] && [ -s /tmp/changelog.md ]; then
-            gh release edit "${{ needs.release-please.outputs.tag_name }}" \
-              --notes-file /tmp/changelog.md
-            echo "Release notes updated with performance results"
-          else
-            echo "No changelog file found, skipping release notes update"
-          fi
+          echo "GitHub Release created: ${TAG}"
 
       - name: Release summary
         env:
