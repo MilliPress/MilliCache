@@ -3,6 +3,8 @@ name: E2E
 on:
   workflow_dispatch:  # Manual trigger
   workflow_call:      # Called by Release workflow
+  pull_request:       # Run on PRs to catch issues before merge
+    branches: [main]
 
 permissions:
   contents: read
