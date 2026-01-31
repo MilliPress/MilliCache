@@ -5,7 +5,7 @@
   "license": "GPL-2.0-or-later",
   "devDependencies": {
     "@playwright/test": "^1.58.0",
-    "@types/node": "^25.0.10",
+    "@types/node": "^20.17.10",
     "@wordpress/e2e-test-utils-playwright": "1.38.0",
     "@wordpress/env": "^10.38.0",
     "@wordpress/scripts": "^31.3.0",
