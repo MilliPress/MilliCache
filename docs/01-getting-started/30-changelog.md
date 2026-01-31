@@ -6,15 +6,6 @@ menu_order: 30
 
 # Changelog
 
-## [1.0.2](https://github.com/MilliPress/MilliCache/compare/v1.0.1...v1.0.2) (2026-01-31)
-
-
-### Bug Fixes
-
-* **ci:** Gate tag/release creation behind CI and E2E tests ([ff6968a](https://github.com/MilliPress/MilliCache/commit/ff6968a1e3f5e8055d59892ee38dbb311cb72bfb))
-* **deps:** Downgrade @types/node to v20 for WordPress compatibility ([ebbd454](https://github.com/MilliPress/MilliCache/commit/ebbd45468ed7399af12e4db6f288ab88ea1b637e))
-* **release:** Remove x-release-please-version annotations from source ([e80ada4](https://github.com/MilliPress/MilliCache/commit/e80ada43b357029b33f8e913cc285d565fedfa08))
-
 ## [1.0.1](https://github.com/MilliPress/MilliCache/compare/v1.0.0...v1.0.1) (2026-01-19)
 
 
