@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.0.3](https://github.com/MilliPress/MilliCache/compare/v1.0.2...v1.0.3) (2026-01-31)
+
+
+### Bug Fixes
+
+* **deps:** Downgrade @types/node to v20 for WordPress compatibility ([ebbd454](https://github.com/MilliPress/MilliCache/commit/ebbd45468ed7399af12e4db6f288ab88ea1b637e))
+
 ## [1.0.2](https://github.com/MilliPress/MilliCache/compare/v1.0.1...v1.0.2) (2026-01-31)
 
 
