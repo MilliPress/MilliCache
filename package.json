@@ -4,15 +4,15 @@
   "author": "Philipp Wellmer <hello@millipress.com>",
   "license": "GPL-2.0-or-later",
   "devDependencies": {
-    "@playwright/test": "^1.58.0",
-    "@types/node": "^20.17.10",
-    "@wordpress/e2e-test-utils-playwright": "1.38.0",
-    "@wordpress/env": "^10.38.0",
-    "@wordpress/scripts": "^31.3.0",
+    "@playwright/test": "^1.58.1",
+    "@types/node": "^25.2.0",
+    "@wordpress/e2e-test-utils-playwright": "1.39.0",
+    "@wordpress/env": "^10.39.0",
+    "@wordpress/scripts": "^31.4.0",
     "dotenv": "^17.2.3"
   },
   "dependencies": {
-    "@wordpress/components": "^32.0.0",
+    "@wordpress/components": "^32.1.0",
     "@wordpress/dom-ready": "^4.10.0",
     "@wordpress/element": "^6.10.0",
     "@wordpress/i18n": "^6.11.0",
