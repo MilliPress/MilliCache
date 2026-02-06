@@ -17,6 +17,7 @@ namespace MilliCache;
 use MilliCache\Admin\Admin;
 use MilliCache\Admin\CLI;
 use MilliCache\Core\Loader;
+use MilliCache\Core\Updater;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -120,6 +121,7 @@ final class MilliCache {
 
 		new CLI( $this->plugin_name );
 		new Admin( $this->loader, $this->engine, $this->plugin_name, $this->version );
+		new Updater( $this->loader );
 	}
 
 	/**
