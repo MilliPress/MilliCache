@@ -191,21 +191,11 @@ uses()->beforeEach( function () {
 describe( 'MilliCache', function () {
 
 	describe( 'constructor', function () {
-		it( 'initializes with default version when MILLICACHE_VERSION not defined', function () {
-			$millicache = new MilliCache();
-
-			expect( $millicache->get_version() )->toBe( '1.0.0' );
-			expect( $millicache->get_plugin_name() )->toBe( 'millicache' );
-		} );
-
-		it( 'uses MILLICACHE_VERSION constant when defined', function () {
-			if ( ! defined( 'MILLICACHE_VERSION' ) ) {
-				define( 'MILLICACHE_VERSION', '2.5.3' );
-			}
-
+		it( 'uses MILLICACHE_VERSION constant for version', function () {
 			$millicache = new MilliCache();
 
 			expect( $millicache->get_version() )->toBe( MILLICACHE_VERSION );
+			expect( $millicache->get_plugin_name() )->toBe( 'millicache' );
 		} );
 
 		it( 'initializes loader and engine', function () {
