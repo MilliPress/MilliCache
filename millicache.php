@@ -34,7 +34,7 @@ if ( ! defined( 'WPINC' ) ) {
  *
  * @since 1.0.0
  */
-define( 'MILLICACHE_VERSION', '1.1.0' ); // x-release-please-version
+define( 'MILLICACHE_VERSION', '1.1.0' ); // x-release-please-version.
 
 if ( ! defined( 'MILLICACHE_BASENAME' ) ) {
 	define( 'MILLICACHE_BASENAME', plugin_basename( __FILE__ ) );
