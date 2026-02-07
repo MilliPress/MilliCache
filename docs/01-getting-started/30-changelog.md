@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.1.0](https://github.com/MilliPress/MilliCache/compare/v1.0.2...v1.1.0) (2026-02-07)
+
+
+### Features
+
+* **updater:** Add plugin update checker for seamless updates with WordPress update system ([a9fc17a](https://github.com/MilliPress/MilliCache/commit/a9fc17ad9a5fdbcf77f27ad198ce74851d5bf145))
+
 ## [1.0.2](https://github.com/MilliPress/MilliCache/compare/v1.0.1...v1.0.2) (2026-01-31)
 
 Maintenance release with internal CI and build improvements.
