@@ -1,6 +1,6 @@
 ---
 title: 'WP-CLI Commands'
-post_excerpt: 'Complete reference for all MilliCache WP-CLI commands including cache management, configuration, and diagnostics.'
+post_excerpt: 'Full WP-CLI reference for MilliCache: wp millicache clear, stats, status, test, drop, config, and cli. Includes flags, usage examples, and output formats.'
 menu_order: 10
 ---
 

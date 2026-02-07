@@ -1,6 +1,6 @@
 ---
-title: 'Introduction to Cache Flags'
-post_excerpt: 'Understand why cache flags are the key to efficient, targeted cache invalidation in MilliCache.'
+title: 'Cache Flags: Targeted Invalidation'
+post_excerpt: 'Cache flags let you tag pages with labels like post:123 and clear only related entries instead of flushing the entire cache. MilliCache assigns flags automatically.'
 menu_order: 10
 ---
 

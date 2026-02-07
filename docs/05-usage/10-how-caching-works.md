@@ -1,6 +1,6 @@
 ---
-title: 'How Caching Works'
-post_excerpt: 'Understand how MilliCache intercepts requests, stores responses, and serves cached content for maximum performance.'
+title: 'How Full-Page Caching Works'
+post_excerpt: 'MilliCache intercepts requests via the advanced-cache.php drop-in before WordPress loads. Learn the full request lifecycle, cache storage, and stale-while-revalidate flow.'
 menu_order: 10
 ---
 

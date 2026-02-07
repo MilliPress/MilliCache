@@ -1,6 +1,6 @@
 ---
 title: 'Installation & Quick Start'
-post_excerpt: 'Install MilliCache and get caching working in 5 minutes with browser or CLI verification.'
+post_excerpt: 'Install MilliCache on WordPress with Composer, configure Redis in wp-config.php, and verify caching works — all in under 5 minutes using browser headers or WP-CLI.'
 menu_order: 20
 ---
 

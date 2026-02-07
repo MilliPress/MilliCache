@@ -1,6 +1,6 @@
 ---
-title: 'Built-in Rules'
-post_excerpt: 'Reference for all built-in caching rules in MilliCache, including bootstrap and WordPress phase rules.'
+title: 'Built-in Caching Rules'
+post_excerpt: 'Reference of default MilliCache rules: logged-in user bypass, REST API exclusion, POST request handling, and more. Includes the priority system and available conditions.'
 menu_order: 20
 ---
 

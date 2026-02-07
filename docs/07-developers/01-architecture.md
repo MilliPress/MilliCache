@@ -1,6 +1,6 @@
 ---
-title: 'Architecture'
-post_excerpt: 'Understand the MilliCache architecture including component structure, request flow, and key classes.'
+title: 'Plugin Architecture'
+post_excerpt: 'MilliCache architecture overview for developers: Engine, Storage, Cache Manager, Rules integration, and the advanced-cache.php drop-in request flow.'
 menu_order: 10
 ---
 

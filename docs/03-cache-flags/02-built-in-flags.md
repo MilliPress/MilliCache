@@ -1,6 +1,6 @@
 ---
-title: 'Built-in Flags'
-post_excerpt: 'Reference for all flags automatically assigned by MilliCache based on page type and content.'
+title: 'Built-in Cache Flags'
+post_excerpt: 'MilliCache automatically assigns cache flags for posts, pages, archives, categories, tags, date archives, feeds, and the homepage. Full reference with multisite prefixes.'
 menu_order: 20
 ---
 

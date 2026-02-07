@@ -1,6 +1,6 @@
 ---
-title: 'Multisite'
-post_excerpt: 'Configure and manage MilliCache in WordPress Multisite environments with per-site isolation and network-wide control.'
+title: 'WordPress Multisite Caching'
+post_excerpt: 'MilliCache supports WordPress Multisite with per-site cache isolation, network-wide clearing, and subdomain or subdirectory handling. Network-activate for full control.'
 menu_order: 30
 ---
 

@@ -1,6 +1,6 @@
 ---
-title: 'Custom Flags'
-post_excerpt: 'Create custom cache flags for your specific needs and learn flag design patterns for efficient cache management.'
+title: 'Custom Cache Flags'
+post_excerpt: 'Create custom cache flags via PHP filters, rules, or helper functions. Includes wildcard patterns and design patterns for hierarchical and feature-based cache tagging.'
 menu_order: 30
 ---
 

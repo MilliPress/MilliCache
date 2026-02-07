@@ -1,6 +1,6 @@
 ---
-title: 'Rule Examples'
-post_excerpt: 'Practical examples of custom caching rules for common WordPress scenarios.'
+title: 'Caching Rule Examples & Recipes'
+post_excerpt: 'Ready-to-use MilliCache rule examples: WooCommerce cart bypass, membership sites, content-type TTL, A/B testing, geolocation, and more using the MilliRules fluent API.'
 menu_order: 30
 ---
 

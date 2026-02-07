@@ -1,6 +1,6 @@
 ---
-title: 'Introduction to Rules'
-post_excerpt: 'Understand how MilliCache rules provide condition-based caching control for maximum flexibility.'
+title: 'Rules Engine: Conditional Caching'
+post_excerpt: 'MilliCache rules control when and how pages are cached using a fluent PHP API. Set TTL, grace periods, and exclusions per condition across two execution phases.'
 menu_order: 10
 ---
 

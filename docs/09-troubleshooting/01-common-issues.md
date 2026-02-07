@@ -1,6 +1,6 @@
 ---
 title: 'Troubleshooting'
-post_excerpt: 'Solutions for common MilliCache issues including connection problems, caching failures, and performance issues.'
+post_excerpt: 'Diagnose and fix common MilliCache issues: Redis connection failures, pages not caching, drop-in conflicts, stale content, and multisite problems with WP-CLI diagnostics.'
 menu_order: 10
 ---
 

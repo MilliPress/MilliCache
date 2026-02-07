@@ -1,6 +1,6 @@
 ---
-title: 'Storage Backends'
-post_excerpt: 'Overview of Redis-compatible storage backends for MilliCache including configuration and recommendations.'
+title: 'Storage Backends: Redis, ValKey, KeyDB & Dragonfly'
+post_excerpt: 'MilliCache works with Redis, ValKey, KeyDB, and Dragonfly. Compare backends, configure connections, set memory limits, and choose the right server for your WordPress site.'
 menu_order: 10
 ---
 

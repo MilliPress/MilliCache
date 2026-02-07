@@ -1,6 +1,6 @@
 ---
-title: 'Hooks & Filters'
-post_excerpt: 'Complete reference of all MilliCache action hooks and filters for ext-nding and integrating with the plugin.'
+title: 'Action Hooks & Filters'
+post_excerpt: 'Complete reference of all MilliCache WordPress hooks and filters: cache storage, clearing events, REST API, settings, flag assignment, and capability checks.'
 menu_order: 30
 ---
 

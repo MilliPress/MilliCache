@@ -1,6 +1,6 @@
 ---
-title: 'Constants Reference'
-post_excerpt: 'Complete reference of all MilliCache configuration constants for wp-config.php.'
+title: 'Configuration Constants Reference'
+post_excerpt: 'Complete reference of all MilliCache PHP constants for wp-config.php — Redis connection, TTL, cache exclusions, stale-while-revalidate, and storage settings.'
 menu_order: 20
 ---
 

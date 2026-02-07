@@ -1,6 +1,6 @@
 ---
-title: 'Cache Clearing'
-post_excerpt: 'Learn how to clear the MilliCache cache manually, automatically, and programmatically using flags and targets.'
+title: 'Cache Clearing & Invalidation'
+post_excerpt: 'Clear the MilliCache cache via admin bar, WP-CLI, PHP functions, or REST API. Supports flag-based targeted invalidation and automatic clearing on content changes.'
 menu_order: 20
 ---
 
