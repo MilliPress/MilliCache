@@ -151,7 +151,7 @@ jobs:
       - name: Create release archive
         run: |
           cd dist
-          zip -rq "../millicache-${{ needs.release-please.outputs.tag_name }}.zip" .
+          zip -rq "../millicache.zip" .
           cd ..
 
       - name: Update tag to include built dependencies
@@ -160,7 +160,7 @@ jobs:
 
           # Move dist and zip to temp location (outside git working tree)
           mv dist /tmp/dist-build
-          mv "millicache-${TAG}.zip" /tmp/
+          mv millicache.zip /tmp/
 
           # Stash current state
           git stash --include-untracked || true
@@ -191,7 +191,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "${{ needs.release-please.outputs.tag_name }}" \
-            "/tmp/millicache-${{ needs.release-please.outputs.tag_name }}.zip" \
+            "/tmp/millicache.zip" \
             --clobber
 
       - name: Update release notes with performance results
