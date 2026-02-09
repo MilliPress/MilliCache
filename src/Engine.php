@@ -566,9 +566,9 @@ final class Engine {
 	 *
 	 * @return RequestProcessor The request manager instance.
 	 * @since 1.0.0
-	 * @access private
+	 * @access public
 	 */
-	private function request(): RequestProcessor {
+	public function request(): RequestProcessor {
 		if ( ! $this->request_processor ) {
 			$this->request_processor = new RequestProcessor( $this->config() );
 		}
