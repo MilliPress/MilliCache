@@ -34,15 +34,13 @@ test.describe('Step 9: Plugins Compatibility', () => {
             const frontend = new FrontendPage(anonPage);
 
             try {
+                // Clear WooCommerce cookies that were set on the first load
+                await anonContext.clearCookies();
                 // Product Page - prime the cache
                 await frontend.goto('/product/test-product/');
-                // Clear WooCommerce cookies that were set on first load
-                await anonContext.clearCookies();
-                // Prime again after clearing cookies
-                await frontend.reload();
-                // Third request should be a cache hit
+                // The next request should be a cache hit
                 const productResponse = await frontend.reload();
-                await expect(productResponse).toBeCacheHit();
+                expect(productResponse).toBeCacheHit();
             } finally {
                 await anonPage.close();
                 await anonContext.close();

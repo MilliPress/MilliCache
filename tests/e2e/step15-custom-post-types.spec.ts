@@ -6,7 +6,7 @@ import { FrontendPage } from './pages';
  * Step 15: Custom Post Type Tests
  *
  * Tests for caching behavior with custom post types.
- * Plugin-specific CPT tests (e.g., WooCommerce products) are in step9-plugins.spec.ts
+ * Plugin-specific CPT tests (e.g., WooCommerce products) are in step09-plugins.spec.ts
  */
 test.describe('Step 15: Custom Post Types', () => {
     test.beforeAll(async () => {

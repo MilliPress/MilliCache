@@ -88,7 +88,7 @@ test.describe('Step 13: Custom Rules', () => {
 
     test.describe('Cache TTL Behavior', () => {
         test('Cache should expire based on TTL', async ({ page }) => {
-            // This is tested in step4, but we verify the rule is working
+            // This is tested in step04, but we verify the rule is working
             const frontend = new FrontendPage(page);
             await clearCache('*');
 
