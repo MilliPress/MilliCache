@@ -203,7 +203,7 @@ Rules::create( 'mysite:geo-flag', 'php' )
     ->then()
         ->custom_action( function() {
             $country = $_SERVER['HTTP_CF_IPCOUNTRY'] ?? 'XX';
-            millipress_add_flag( 'geo:' . strtolower( $country ) );
+            millicache_add_flag( 'geo:' . strtolower( $country ) );
         } )
     ->register();
 ```
@@ -238,7 +238,7 @@ Rules::create( 'mysite:mobile-flag', 'php' )
         } )
     ->then()
         ->custom_action( function() {
-            millipress_add_flag( 'device:mobile' );
+            millicache_add_flag( 'device:mobile' );
         } )
     ->register();
 
@@ -251,7 +251,7 @@ Rules::create( 'mysite:desktop-flag', 'php' )
         } )
     ->then()
         ->custom_action( function() {
-            millipress_add_flag( 'device:desktop' );
+            millicache_add_flag( 'device:desktop' );
         } )
     ->register();
 ```

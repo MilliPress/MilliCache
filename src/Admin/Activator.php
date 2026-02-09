@@ -54,8 +54,8 @@ final class Activator {
 	 * @return   void
 	 */
 	private static function schedule_events() {
-		if ( ! wp_next_scheduled( 'millipress_nightly' ) ) {
-			wp_schedule_event( strtotime( 'tomorrow 3AM' ), 'daily', 'millipress_nightly' );
+		if ( ! wp_next_scheduled( 'millicache_nightly' ) ) {
+			wp_schedule_event( strtotime( 'tomorrow 3AM' ), 'daily', 'millicache_nightly' );
 		}
 	}
 

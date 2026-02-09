@@ -148,7 +148,7 @@ final class MilliCache {
 		}
 
 		// Cron events.
-		$this->loader->add_action( 'millipress_nightly', $this, 'cleanup_expired_flags' );
+		$this->loader->add_action( 'millicache_nightly', $this, 'cleanup_expired_flags' );
 	}
 
 	/**

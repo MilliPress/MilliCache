@@ -128,14 +128,14 @@ describe( 'Deactivator', function () {
 	} );
 
 	describe( 'unschedule_events behavior', function () {
-		it( 'clears the millipress_nightly hook', function () {
+		it( 'clears the millicache_nightly hook', function () {
 			global $test_wp_clear_scheduled_hook_called;
 
 			$method = new ReflectionMethod( Deactivator::class, 'unschedule_events' );
 			$method->setAccessible( true );
 			$method->invoke( null );
 
-			expect( $test_wp_clear_scheduled_hook_called )->toBe( 'millipress_nightly' );
+			expect( $test_wp_clear_scheduled_hook_called )->toBe( 'millicache_nightly' );
 		} );
 	} );
 } );

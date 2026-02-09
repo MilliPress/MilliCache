@@ -37,13 +37,13 @@ Add flags dynamically during template rendering:
 ```php
 // In your theme's template file
 if ( is_product() ) {
-    millipress_add_flag( 'woo:product' );
-    millipress_add_flag( 'woo:product:' . get_the_ID() );
+    millicache_add_flag( 'woo:product' );
+    millicache_add_flag( 'woo:product:' . get_the_ID() );
 }
 
 // Based on custom logic
 if ( get_field( 'show_pricing_table' ) ) {
-    millipress_add_flag( 'feature:pricing' );
+    millicache_add_flag( 'feature:pricing' );
 }
 ```
 
@@ -72,7 +72,7 @@ Sometimes you need to remove a built-in flag:
 ```php
 // Via PHP function
 if ( is_front_page() && get_option( 'custom_homepage' ) ) {
-    millipress_remove_flag( 'home' );
+    millicache_remove_flag( 'home' );
 }
 ```
 
@@ -111,16 +111,16 @@ wp millicache clear --flag="*:home"
 
 ```php
 // Clear by flags
-millipress_clear_cache_by_flags( ['home', 'archive:post'] );
+millicache_clear_cache_by_flags( ['home', 'archive:post'] );
 
 // Clear with wildcard
-millipress_clear_cache_by_flags( 'product:*' );
+millicache_clear_cache_by_flags( 'product:*' );
 
 // Expire instead of delete (serves stale while regenerating)
-millipress_clear_cache_by_flags( 'home', true );
+millicache_clear_cache_by_flags( 'home', true );
 
 // Mixed targets (flags, post IDs, URLs)
-millipress_clear_cache( [
+millicache_clear_cache( [
     'home',                             // Flag
     'post:123',                         // Flag
     123,                                // Post ID
@@ -165,10 +165,10 @@ $flags[] = 'product:category:5';         // Products in category 5
 $flags[] = 'product:5:sku:ABC123';       // Specific product variant
 
 // Clear all products
-millipress_clear_cache_by_flags( 'product:*' );
+millicache_clear_cache_by_flags( 'product:*' );
 
 // Clear category only
-millipress_clear_cache_by_flags( 'product:category:5' );
+millicache_clear_cache_by_flags( 'product:category:5' );
 ```
 
 ### Feature Flags
@@ -191,7 +191,7 @@ add_filter( 'millicache_flags_for_request', function( $flags ) {
 } );
 
 // When pricing engine updates, clear all affected pages
-millipress_clear_cache_by_flags( 'feature:dynamic-pricing' );
+millicache_clear_cache_by_flags( 'feature:dynamic-pricing' );
 ```
 
 ### WooCommerce Integration
@@ -218,7 +218,7 @@ add_filter( 'millicache_flags_for_request', function( $flags ) {
 } );
 
 // Clear all sale items when sale ends
-millipress_clear_cache_by_flags( 'woo:sale' );
+millicache_clear_cache_by_flags( 'woo:sale' );
 ```
 
 ### Time-Based Flags
@@ -238,7 +238,7 @@ add_filter( 'millicache_flags_for_request', function( $flags ) {
 
 // Clear yesterday's cached content via cron
 $yesterday = date( 'Y-m-d', strtotime( '-1 day' ) );
-millipress_clear_cache_by_flags( "date:{$yesterday}" );
+millicache_clear_cache_by_flags( "date:{$yesterday}" );
 ```
 
 ## Best Practices
@@ -276,10 +276,10 @@ Instead of tracking exact flags, use patterns:
 
 ```php
 // Good: Use wildcard
-millipress_clear_cache_by_flags( 'product:*' );
+millicache_clear_cache_by_flags( 'product:*' );
 
 // Avoid: Listing every flag
-millipress_clear_cache_by_flags( ['product:1', 'product:2', 'product:3', ...] );
+millicache_clear_cache_by_flags( ['product:1', 'product:2', 'product:3', ...] );
 ```
 
 ### Document Your Flag Taxonomy

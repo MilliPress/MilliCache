@@ -409,7 +409,7 @@ add_filter( 'millicache_flags_for_request', function( $flags ) {
 // Clear when the ACF field changes
 add_action( 'acf/save_post', function( $post_id ) {
     if ( get_field( 'enable_dynamic_content', $post_id ) ) {
-        millipress_clear_cache_by_flags( [ 'acf:dynamic' ] );
+        millicache_clear_cache_by_flags( [ 'acf:dynamic' ] );
     }
 } );
 ```

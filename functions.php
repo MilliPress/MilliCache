@@ -18,9 +18,9 @@ if ( ! function_exists( 'millicache' ) ) {
 	 * This is an advanced method that provides direct access to the Engine
 	 * singleton. For common tasks, prefer the simpler helper functions:
 	 *
-	 * - millipress_clear_cache() - Clear cache by flags, post-IDs, or URLs
-	 * - millipress_add_flag() - Add a cache flag to the current request
-	 * - millipress_set_ttl() - Set cache TTL for the current request
+	 * - millicache_clear_cache() - Clear cache by flags, post-IDs, or URLs
+	 * - millicache_add_flag() - Add a cache flag to the current request
+	 * - millicache_set_ttl() - Set cache TTL for the current request
 	 *
 	 * Use millicache() when you need access to Engine methods not exposed
 	 * via helper functions or for complex chained operations.
@@ -54,7 +54,7 @@ if ( ! function_exists( 'millicache' ) ) {
  * @param bool                     $expire Expire cache if set to true, or delete by default.
  * @return void
  */
-function millipress_clear_cache( $targets, bool $expire = false ): void {
+function millicache_clear_cache( $targets, bool $expire = false ): void {
 	millicache()->clear()->targets( $targets, $expire );
 }
 
@@ -67,7 +67,7 @@ function millipress_clear_cache( $targets, bool $expire = false ): void {
  * @param bool                 $expire Expire cache if set to true, or delete by default.
  * @return void
  */
-function millipress_clear_cache_by_urls( $urls, bool $expire = false ): void {
+function millicache_clear_cache_by_urls( $urls, bool $expire = false ): void {
 	millicache()->clear()->urls( $urls, $expire );
 }
 
@@ -80,7 +80,7 @@ function millipress_clear_cache_by_urls( $urls, bool $expire = false ): void {
  * @param bool           $expire Expire cache if set to true, or delete by default.
  * @return void
  */
-function millipress_clear_cache_by_post_ids( $post_ids, bool $expire = false ): void {
+function millicache_clear_cache_by_post_ids( $post_ids, bool $expire = false ): void {
 	millicache()->clear()->posts( $post_ids, $expire );
 }
 
@@ -94,7 +94,7 @@ function millipress_clear_cache_by_post_ids( $post_ids, bool $expire = false ): 
  * @param bool                 $add_prefix Add the flag prefix to the flags.
  * @return void
  */
-function millipress_clear_cache_by_flags( $flags, bool $expire = false, bool $add_prefix = true ): void {
+function millicache_clear_cache_by_flags( $flags, bool $expire = false, bool $add_prefix = true ): void {
 	millicache()->clear()->flags( $flags, $expire, $add_prefix );
 }
 
@@ -108,7 +108,7 @@ function millipress_clear_cache_by_flags( $flags, bool $expire = false, bool $ad
  * @param bool           $expire Expire cache if set to true, or delete by default.
  * @return void
  */
-function millipress_clear_cache_by_site_ids( $site_ids = null, ?int $network_id = null, bool $expire = false ): void {
+function millicache_clear_cache_by_site_ids( $site_ids = null, ?int $network_id = null, bool $expire = false ): void {
 	millicache()->clear()->sites( $site_ids, $network_id, $expire );
 }
 
@@ -121,7 +121,7 @@ function millipress_clear_cache_by_site_ids( $site_ids = null, ?int $network_id 
  * @param bool     $expire Expire cache.
  * @return void
  */
-function millipress_clear_cache_by_network_id( ?int $network_id = null, bool $expire = false ): void {
+function millicache_clear_cache_by_network_id( ?int $network_id = null, bool $expire = false ): void {
 	millicache()->clear()->networks( $network_id, $expire );
 }
 
@@ -133,7 +133,7 @@ function millipress_clear_cache_by_network_id( ?int $network_id = null, bool $ex
  * @param bool $expire Expire cache.
  * @return void
  */
-function millipress_reset_cache( bool $expire = false ): void {
+function millicache_reset_cache( bool $expire = false ): void {
 	millicache()->clear()->all( $expire );
 }
 
@@ -149,7 +149,7 @@ function millipress_reset_cache( bool $expire = false ): void {
  * @param string $flag The flag name (e.g., 'post:123', 'custom-flag').
  * @return void
  */
-function millipress_add_flag( string $flag ): void {
+function millicache_add_flag( string $flag ): void {
 	millicache()->flags()->add( $flag );
 }
 
@@ -161,7 +161,7 @@ function millipress_add_flag( string $flag ): void {
  * @param string $flag The flag name to remove.
  * @return void
  */
-function millipress_remove_flag( string $flag ): void {
+function millicache_remove_flag( string $flag ): void {
 	millicache()->flags()->remove( $flag );
 }
 
@@ -177,7 +177,7 @@ function millipress_remove_flag( string $flag ): void {
  * @param int|string|null $network_id Network ID (null for current).
  * @return string The prefix string (empty string for non-multisite).
  */
-function millipress_get_flag_prefix( $site_id = null, $network_id = null ): string {
+function millicache_get_flag_prefix( $site_id = null, $network_id = null ): string {
 	return millicache()->flags()->get_prefix( $site_id, $network_id );
 }
 
@@ -194,7 +194,7 @@ function millipress_get_flag_prefix( $site_id = null, $network_id = null ): stri
  * @param int|string|null      $network_id Network ID (null for current).
  * @return array<string> Array of prefixed flags.
  */
-function millipress_prefix_flags( $flags, $site_id = null, $network_id = null ): array {
+function millicache_prefix_flags( $flags, $site_id = null, $network_id = null ): array {
 	return millicache()->flags()->prefix( $flags, $site_id, $network_id );
 }
 
@@ -212,7 +212,7 @@ function millipress_prefix_flags( $flags, $site_id = null, $network_id = null ):
  * @param int $ttl Time-to-live in seconds (must be positive).
  * @return void
  */
-function millipress_set_ttl( int $ttl ): void {
+function millicache_set_ttl( int $ttl ): void {
 	millicache()->options()->set_ttl( $ttl );
 }
 
@@ -230,6 +230,6 @@ function millipress_set_ttl( int $ttl ): void {
  * @param int $grace Grace period in seconds (must be non-negative, 0 to disable).
  * @return void
  */
-function millipress_set_grace( int $grace ): void {
+function millicache_set_grace( int $grace ): void {
 	millicache()->options()->set_grace( $grace );
 }

@@ -84,11 +84,11 @@ Use the helper function to handle prefixes correctly:
 
 ```php
 // Prefix flags with the current site's prefix
-$prefix = millipress_get_flag_prefix( ['home', 'post:123'] );
+$prefix = millicache_get_flag_prefix( ['home', 'post:123'] );
 // Returns: ['home', 'post:123'] (single site), ['2:home', '2:post:123'] (multisite), or ['1:2:home', '1:2:post:123'] (multi-network)
 
 // Prefix flags for a specific site
-$flags = millipress_prefix_flags( ['home', 'post:123'], $site_id = 2 );
+$flags = millicache_prefix_flags( ['home', 'post:123'], $site_id = 2 );
 // Returns: ['2:home', '2:post:123'] in multisite
 ```
 

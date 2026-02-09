@@ -57,7 +57,7 @@ final class Deactivator {
 	 * @return   void
 	 */
 	private static function unschedule_events() {
-		wp_clear_scheduled_hook( 'millipress_nightly' );
+		wp_clear_scheduled_hook( 'millicache_nightly' );
 	}
 
 	/**

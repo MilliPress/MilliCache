@@ -169,7 +169,7 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array<mixed> The MilliPress Settings.
+	 * @var array<mixed> The MilliCache Settings.
 	 */
 	private array $settings;
 

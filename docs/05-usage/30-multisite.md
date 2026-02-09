@@ -128,23 +128,23 @@ Without arguments from the main site context, clears all cache.
 
 ```php
 // Clear specific sites
-millipress_clear_cache_by_site_ids( [ 1, 2, 3 ] );
+millicache_clear_cache_by_site_ids( [ 1, 2, 3 ] );
 
 // Clear sites in a specific network
-millipress_clear_cache_by_site_ids( [ 1, 2 ], 1 );
+millicache_clear_cache_by_site_ids( [ 1, 2 ], 1 );
 
 // Expire instead of delete
-millipress_clear_cache_by_site_ids( [ 1, 2 ], null, true );
+millicache_clear_cache_by_site_ids( [ 1, 2 ], null, true );
 ```
 
 ### Clear by Network
 
 ```php
 // Clear the entire network
-millipress_clear_cache_by_network_id( 1 );
+millicache_clear_cache_by_network_id( 1 );
 
 // Expire instead of delete
-millipress_clear_cache_by_network_id( 1, true );
+millicache_clear_cache_by_network_id( 1, true );
 ```
 
 ### Prefix Flags
@@ -153,11 +153,11 @@ millipress_clear_cache_by_network_id( 1, true );
 $flags = [ 'post:123', 'home' ];
 
 // Prefix for current site
-$prefixed = millipress_prefix_flags( $flags );
+$prefixed = millicache_prefix_flags( $flags );
 // Result: [ '2:post:123', '2:home' ]
 
 // Prefix for specific site
-$prefixed = millipress_prefix_flags( $flags, 3 );
+$prefixed = millicache_prefix_flags( $flags, 3 );
 // Result: [ '3:post:123', '3:home' ]
 ```
 
@@ -211,7 +211,7 @@ If using domain mapping (third-party domains pointing to subsites):
 
 ```php
 // Clear site 3, regardless of which domains point to it
-millipress_clear_cache_by_site_ids( [ 3 ] );
+millicache_clear_cache_by_site_ids( [ 3 ] );
 ```
 
 ## Best Practices

@@ -141,34 +141,34 @@ MilliCache provides helper functions in `functions.php`:
 
 ```php
 // Clear all cache
-millipress_reset_cache();
-millipress_reset_cache( true ); // Expire instead of delete
+millicache_reset_cache();
+millicache_reset_cache( true ); // Expire instead of delete
 
 // Clear by post-IDs
-millipress_clear_cache_by_post_ids( [ 1, 2, 3 ] );
-millipress_clear_cache_by_post_ids( [ 1, 2, 3 ], true ); // Expire
+millicache_clear_cache_by_post_ids( [ 1, 2, 3 ] );
+millicache_clear_cache_by_post_ids( [ 1, 2, 3 ], true ); // Expire
 
 // Clear by URLs
-millipress_clear_cache_by_urls( [
+millicache_clear_cache_by_urls( [
     'https://example.com/page-1/',
     'https://example.com/page-2/',
 ] );
 
 // Clear by flags
-millipress_clear_cache_by_flags( [ 'post:123', 'home' ] );
-millipress_clear_cache_by_flags( [ 'post:123' ], true ); // Expire
-millipress_clear_cache_by_flags( [ 'post:123' ], false, true ); // Add site prefix
+millicache_clear_cache_by_flags( [ 'post:123', 'home' ] );
+millicache_clear_cache_by_flags( [ 'post:123' ], true ); // Expire
+millicache_clear_cache_by_flags( [ 'post:123' ], false, true ); // Add site prefix
 
 // Clear by mixed targets (Post-IDs, Flags & URLs)
-millipress_clear_cache( 'post:123' ); // Single flag
-millipress_clear_cache( [ 1, 'home', 'https://example.com/page-1/' ] ); // Multiple flags
+millicache_clear_cache( 'post:123' ); // Single flag
+millicache_clear_cache( [ 1, 'home', 'https://example.com/page-1/' ] ); // Multiple flags
 
 // Multisite: Clear by site IDs
-millipress_clear_cache_by_site_ids( [ 1, 2 ] );
-millipress_clear_cache_by_site_ids( [ 1, 2 ], 1 ); // Specific network
+millicache_clear_cache_by_site_ids( [ 1, 2 ] );
+millicache_clear_cache_by_site_ids( [ 1, 2 ], 1 ); // Specific network
 
 // Multisite: Clear by network
-millipress_clear_cache_by_network_id( 1 );
+millicache_clear_cache_by_network_id( 1 );
 ```
 
 ### Hooks for Custom Clearing
@@ -178,12 +178,12 @@ Clear cache in response to custom events:
 ```php
 // Clear cache when a custom option changes
 add_action( 'update_option_my_custom_option', function() {
-    millipress_reset_cache();
+    millicache_reset_cache();
 } );
 
 // Clear specific posts when the ACF field updates
 add_action( 'acf/save_post', function( $post_id ) {
-    millipress_clear_cache_by_post_ids( [ $post_id ] );
+    millicache_clear_cache_by_post_ids( [ $post_id ] );
 } );
 ```
 
@@ -234,10 +234,10 @@ Clear only what's necessary:
 
 ```php
 // Good: Clear specific content
-millipress_clear_cache_by_post_ids( [ $post_id ] );
+millicache_clear_cache_by_post_ids( [ $post_id ] );
 
 // Avoid: Clear everything
-millipress_reset_cache();
+millicache_reset_cache();
 ```
 
 ### 2. Prefer Expire Over Delete
@@ -245,7 +245,7 @@ millipress_reset_cache();
 For non-critical updates, expire instead of delete:
 
 ```php
-millipress_clear_cache_by_post_ids( [ $post_id ], true ); // expire = true
+millicache_clear_cache_by_post_ids( [ $post_id ], true ); // expire = true
 ```
 
 ### 3. Batch Related Clears
@@ -259,7 +259,7 @@ $flags = [
     'home',
     'archive:post',
 ];
-millipress_clear_cache_by_flags( $flags );
+millicache_clear_cache_by_flags( $flags );
 ```
 
 ### 4. Use Custom Flags for Cross-Cutting Concerns
@@ -276,7 +276,7 @@ add_filter( 'millicache_flags_for_request', function( $flags ) {
 } );
 
 // Clear all promotion pages when the sale ends
-millipress_clear_cache_by_flags( [ 'promo:summer-sale' ] );
+millicache_clear_cache_by_flags( [ 'promo:summer-sale' ] );
 ```
 
 ## Next Steps

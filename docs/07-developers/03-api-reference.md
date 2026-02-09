@@ -14,12 +14,12 @@ All functions are defined in `functions.php` and are available when the MilliCac
 
 ### Cache Clearing Functions
 
-#### millipress_reset_cache()
+#### millicache_reset_cache()
 
 Clear all cache entries.
 
 ```php
-millipress_reset_cache( bool $expire = false ): bool
+millicache_reset_cache( bool $expire = false ): bool
 ```
 
 **Parameters:**
@@ -30,20 +30,20 @@ millipress_reset_cache( bool $expire = false ): bool
 **Example:**
 ```php
 // Delete all cache immediately
-millipress_reset_cache();
+millicache_reset_cache();
 
 // Expire all cache (serve stale while regenerating)
-millipress_reset_cache( true );
+millicache_reset_cache( true );
 ```
 
 ---
 
-#### millipress_clear_cache()
+#### millicache_clear_cache()
 
 Clear cache by mixed targets.
 
 ```php
-millipress_clear_cache( string|array $targets, bool $expire = false ): bool
+millicache_clear_cache( string|array $targets, bool $expire = false ): bool
 ```
 
 **Parameters:**
@@ -55,23 +55,23 @@ millipress_clear_cache( string|array $targets, bool $expire = false ): bool
 **Example:**
 ```php
 // Clear by single flag
-millipress_clear_cache( 'home' );
+millicache_clear_cache( 'home' );
 
 // Clear by multiple targets
-millipress_clear_cache( [ 'post:123', 'home', 'archive:post' ] );
+millicache_clear_cache( [ 'post:123', 'home', 'archive:post' ] );
 
 // Clear by URL
-millipress_clear_cache( 'https://example.com/about/' );
+millicache_clear_cache( 'https://example.com/about/' );
 ```
 
 ---
 
-#### millipress_clear_cache_by_urls()
+#### millicache_clear_cache_by_urls()
 
 Clear cache by URLs.
 
 ```php
-millipress_clear_cache_by_urls( array $urls, bool $expire = false ): bool
+millicache_clear_cache_by_urls( array $urls, bool $expire = false ): bool
 ```
 
 **Parameters:**
@@ -82,7 +82,7 @@ millipress_clear_cache_by_urls( array $urls, bool $expire = false ): bool
 
 **Example:**
 ```php
-millipress_clear_cache_by_urls( [
+millicache_clear_cache_by_urls( [
     'https://example.com/',
     'https://example.com/about/',
     'https://example.com/contact/',
@@ -91,12 +91,12 @@ millipress_clear_cache_by_urls( [
 
 ---
 
-#### millipress_clear_cache_by_post_ids()
+#### millicache_clear_cache_by_post_ids()
 
 Clear cache by post IDs.
 
 ```php
-millipress_clear_cache_by_post_ids( array $post_ids, bool $expire = false ): bool
+millicache_clear_cache_by_post_ids( array $post_ids, bool $expire = false ): bool
 ```
 
 **Parameters:**
@@ -107,20 +107,20 @@ millipress_clear_cache_by_post_ids( array $post_ids, bool $expire = false ): boo
 
 **Example:**
 ```php
-millipress_clear_cache_by_post_ids( [ 1, 2, 3 ] );
+millicache_clear_cache_by_post_ids( [ 1, 2, 3 ] );
 
 // With expiration
-millipress_clear_cache_by_post_ids( [ 123 ], true );
+millicache_clear_cache_by_post_ids( [ 123 ], true );
 ```
 
 ---
 
-#### millipress_clear_cache_by_flags()
+#### millicache_clear_cache_by_flags()
 
 Clear cache by flags.
 
 ```php
-millipress_clear_cache_by_flags(
+millicache_clear_cache_by_flags(
     array $flags,
     bool $expire = false,
     bool $add_prefix = false
@@ -137,20 +137,20 @@ millipress_clear_cache_by_flags(
 **Example:**
 ```php
 // Clear by flags
-millipress_clear_cache_by_flags( [ 'home', 'archive:post' ] );
+millicache_clear_cache_by_flags( [ 'home', 'archive:post' ] );
 
 // With site prefix (multisite)
-millipress_clear_cache_by_flags( [ 'home' ], false, true );
+millicache_clear_cache_by_flags( [ 'home' ], false, true );
 ```
 
 ---
 
-#### millipress_clear_cache_by_site_ids()
+#### millicache_clear_cache_by_site_ids()
 
 Clear cache by site IDs (multisite).
 
 ```php
-millipress_clear_cache_by_site_ids(
+millicache_clear_cache_by_site_ids(
     array $site_ids,
     int $network_id = null,
     bool $expire = false
@@ -167,20 +167,20 @@ millipress_clear_cache_by_site_ids(
 **Example:**
 ```php
 // Clear specific sites
-millipress_clear_cache_by_site_ids( [ 1, 2, 3 ] );
+millicache_clear_cache_by_site_ids( [ 1, 2, 3 ] );
 
 // Clear sites in specific network
-millipress_clear_cache_by_site_ids( [ 1, 2 ], 1 );
+millicache_clear_cache_by_site_ids( [ 1, 2 ], 1 );
 ```
 
 ---
 
-#### millipress_clear_cache_by_network_id()
+#### millicache_clear_cache_by_network_id()
 
 Clear cache for entire network (multisite).
 
 ```php
-millipress_clear_cache_by_network_id( int $network_id, bool $expire = false ): bool
+millicache_clear_cache_by_network_id( int $network_id, bool $expire = false ): bool
 ```
 
 **Parameters:**
@@ -191,19 +191,19 @@ millipress_clear_cache_by_network_id( int $network_id, bool $expire = false ): b
 
 **Example:**
 ```php
-millipress_clear_cache_by_network_id( 1 );
+millicache_clear_cache_by_network_id( 1 );
 ```
 
 ---
 
 ### Flag Management Functions
 
-#### millipress_add_flag()
+#### millicache_add_flag()
 
 Add a flag to the current request.
 
 ```php
-millipress_add_flag( string $flag ): void
+millicache_add_flag( string $flag ): void
 ```
 
 **Parameters:**
@@ -213,19 +213,19 @@ millipress_add_flag( string $flag ): void
 ```php
 // In theme or plugin
 if ( is_product() ) {
-    millipress_add_flag( 'woo:product' );
-    millipress_add_flag( 'woo:product:' . get_the_ID() );
+    millicache_add_flag( 'woo:product' );
+    millicache_add_flag( 'woo:product:' . get_the_ID() );
 }
 ```
 
 ---
 
-#### millipress_remove_flag()
+#### millicache_remove_flag()
 
 Remove a flag from the current request.
 
 ```php
-millipress_remove_flag( string $flag ): void
+millicache_remove_flag( string $flag ): void
 ```
 
 **Parameters:**
@@ -235,18 +235,18 @@ millipress_remove_flag( string $flag ): void
 ```php
 // Remove home flag from the custom homepage
 if ( is_front_page() && get_option( 'custom_homepage' ) ) {
-    millipress_remove_flag( 'home' );
+    millicache_remove_flag( 'home' );
 }
 ```
 
 ---
 
-#### millipress_prefix_flags()
+#### millicache_prefix_flags()
 
 Add prefix to multiple flags.
 
 ```php
-millipress_prefix_flags(
+millicache_prefix_flags(
     array $flags,
     int $site_id = null,
     int $network_id = null
@@ -263,7 +263,7 @@ millipress_prefix_flags(
 **Example:**
 ```php
 $flags = [ 'post:123', 'home' ];
-$prefixed = millipress_prefix_flags( $flags, 2 );
+$prefixed = millicache_prefix_flags( $flags, 2 );
 // Result: [ '2:post:123', '2:home' ]
 ```
 
@@ -271,12 +271,12 @@ $prefixed = millipress_prefix_flags( $flags, 2 );
 
 ### Cache Configuration Functions
 
-#### millipress_set_ttl()
+#### millicache_set_ttl()
 
 Override TTL for current request.
 
 ```php
-millipress_set_ttl( int $ttl ): void
+millicache_set_ttl( int $ttl ): void
 ```
 
 **Parameters:**
@@ -286,18 +286,18 @@ millipress_set_ttl( int $ttl ): void
 ```php
 // Short TTL for dynamic page
 if ( is_page( 'live-scores' ) ) {
-    millipress_set_ttl( 60 );  // 1 minute
+    millicache_set_ttl( 60 );  // 1 minute
 }
 ```
 
 ---
 
-#### millipress_set_grace()
+#### millicache_set_grace()
 
 Override grace period for current request.
 
 ```php
-millipress_set_grace( int $grace ): void
+millicache_set_grace( int $grace ): void
 ```
 
 **Parameters:**
@@ -307,7 +307,7 @@ millipress_set_grace( int $grace ): void
 ```php
 // Long grace for important pages
 if ( is_front_page() ) {
-    millipress_set_grace( 86400 * 7 );  // 7 days
+    millicache_set_grace( 86400 * 7 );  // 7 days
 }
 ```
 
@@ -471,7 +471,7 @@ add_filter( 'millicache_flags_for_request', function( $flags ) {
 
 // Clear membership content when the level changes
 add_action( 'membership_level_changed', function( $user_id, $new_level ) {
-    millipress_clear_cache_by_flags( [
+    millicache_clear_cache_by_flags( [
         'membership:level:' . $new_level
     ] );
 }, 10, 2 );
@@ -479,7 +479,7 @@ add_action( 'membership_level_changed', function( $user_id, $new_level ) {
 // Short TTL for dynamic membership pages
 add_action( 'template_redirect', function() {
     if ( is_page( 'member-dashboard' ) ) {
-        millipress_set_ttl( 300 );  // 5 minutes
+        millicache_set_ttl( 300 );  // 5 minutes
     }
 } );
 
@@ -488,7 +488,7 @@ add_action( 'rest_api_init', function() {
     register_rest_route( 'my-plugin/v1', '/clear-membership-cache', [
         'methods'  => 'POST',
         'callback' => function() {
-            millipress_clear_cache_by_flags( [ 'membership:*' ] );
+            millicache_clear_cache_by_flags( [ 'membership:*' ] );
             return [ 'success' => true ];
         },
         'permission_callback' => function() {
@@ -523,7 +523,7 @@ function clear_category_cache( $category_id ) {
         $flags[] = "post:{$post_id}";
     }
 
-    millipress_clear_cache_by_flags( array_unique( $flags ) );
+    millicache_clear_cache_by_flags( array_unique( $flags ) );
 }
 ```
 
