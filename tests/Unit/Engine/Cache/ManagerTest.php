@@ -168,15 +168,6 @@ describe('Handler', function () {
 	});
 
 	describe('cache_output', function () {
-		beforeEach(function () {
-			// Mock http_response_code() behavior
-			if (!function_exists('http_response_code')) {
-				function http_response_code($code = null) {
-					return $code ?? 200;
-				}
-			}
-		});
-
 		it('caches output successfully', function () {
 			$output = '<html>Test</html>';
 			$flags = array('flag1');
@@ -186,16 +177,17 @@ describe('Handler', function () {
 				->once()
 				->andReturn(true);
 
-			$result = $this->handler->cache_output('hash', $output, $flags);
+			$result = $this->handler->cache_output('hash', $output, $flags, 200, array());
 
 			expect($result['cached'])->toBeTrue();
 			expect($result['reason'])->toBe('');
 		});
 
 		it('does not cache 5xx responses', function () {
-			// Note: Cannot easily mock http_response_code in tests
-			// This test validates the method structure
-			expect($this->handler)->toBeInstanceOf(Manager::class);
+			$result = $this->handler->cache_output('hash', '<html>', array(), 500, array());
+
+			expect($result['cached'])->toBeFalse();
+			expect($result['reason'])->toBe('Server error response');
 		});
 
 		it('includes custom TTL and grace', function () {
@@ -217,6 +209,8 @@ describe('Handler', function () {
 			$result = $this->handler->cache_output(
 				'hash',
 				$output,
+				array(),
+				200,
 				array(),
 				7200, // Custom TTL
 				1200  // Custom grace
@@ -245,6 +239,8 @@ describe('Handler', function () {
 				'hash',
 				$output,
 				array(),
+				200,
+				array(),
 				null,
 				null,
 				$debug
@@ -257,7 +253,7 @@ describe('Handler', function () {
 			$this->storage->shouldReceive('is_available')->andReturn(true);
 			$this->storage->shouldReceive('perform_cache')->andReturn(false);
 
-			$result = $this->handler->cache_output('hash', '<html>', array());
+			$result = $this->handler->cache_output('hash', '<html>', array(), 200, array());
 
 			expect($result['cached'])->toBeFalse();
 			expect($result['reason'])->toBe('Storage failed');

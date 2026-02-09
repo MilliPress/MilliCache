@@ -184,15 +184,18 @@ final class Manager {
 	}
 
 	/**
-	 * Create and store cache entry from output buffer.
+	 * Create and store cache entry.
 	 *
-	 * Convenience method that combines create_entry, compress, and store.
+	 * Single storage path for all consumers. Validates status and headers,
+	 * creates the entry, compresses, and stores it.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param string                   $hash         The request hash.
-	 * @param string                   $output       The output buffer content.
+	 * @param string                   $output       The response body.
 	 * @param array<string>            $flags        Flags to associate with cache.
+	 * @param int                      $status       HTTP status code.
+	 * @param array<string>            $headers      Response headers in "Key: Value" format.
 	 * @param int|null                 $custom_ttl   Custom TTL override.
 	 * @param int|null                 $custom_grace Custom grace override.
 	 * @param array<string,mixed>|null $debug        Debug data.
@@ -202,18 +205,12 @@ final class Manager {
 		string $hash,
 		string $output,
 		array $flags,
+		int $status,
+		array $headers,
 		?int $custom_ttl = null,
 		?int $custom_grace = null,
 		?array $debug = null
 	): array {
-		// Get current HTTP status.
-		$status = http_response_code();
-
-		// Ensure status is an int (http_response_code returns int|false, but also true in some edge cases).
-		if ( false === $status || true === $status ) {
-			$status = 200;
-		}
-
 		// Check if we should cache based on status.
 		$status_check = $this->writer->should_cache( $status );
 		if ( ! $status_check['cacheable'] ) {
@@ -223,8 +220,8 @@ final class Manager {
 			);
 		}
 
-		// Process response headers.
-		$header_check = $this->writer->process_headers();
+		// Validate response headers.
+		$header_check = $this->writer->validate_headers( $headers );
 		if ( ! $header_check['cacheable'] ) {
 			return array(
 				'cached' => false,

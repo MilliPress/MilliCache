@@ -80,20 +80,23 @@ final class Writer {
 	}
 
 	/**
-	 * Process response headers and check if caching is allowed.
+	 * Validate provided headers and check if caching is allowed.
 	 *
-	 * Checks for Set-Cookie headers that would prevent caching.
+	 * Checks for Set-Cookie headers that would prevent caching and
+	 * filters out MilliCache internal headers. Each header must be
+	 * in "Key: Value" format (as returned by headers_list()).
 	 *
-	 * @since 1.0.0
+	 * @since 1.2.0
 	 *
+	 * @param array<string> $headers Raw headers in "Key: Value" format.
 	 * @return array{cacheable: bool, reason: string, headers: array<string>} Array with cacheable flag, reason, and filtered headers.
 	 */
-	public function process_headers(): array {
-		$cacheable       = true;
-		$reason          = '';
+	public function validate_headers( array $headers ): array {
+		$cacheable        = true;
+		$reason           = '';
 		$filtered_headers = array();
 
-		foreach ( headers_list() as $header ) {
+		foreach ( $headers as $header ) {
 			list($key, $value) = explode( ':', $header, 2 );
 			$key   = strtolower( $key );
 			$value = trim( $value );
