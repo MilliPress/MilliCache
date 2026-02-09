@@ -6,6 +6,19 @@ menu_order: 30
 
 # Changelog
 
+## [1.2.0](https://github.com/MilliPress/MilliCache/compare/v1.1.0...v1.2.0) (2026-02-09)
+
+
+### Features
+
+* **cache:** Make cache pipeline accept explicit status and headers ([c309054](https://github.com/MilliPress/MilliCache/commit/c30905436708261eff048a1fad3e8b7bf7346a27))
+* **engine:** Move middleware methods to their natural classes ([c6f47d3](https://github.com/MilliPress/MilliCache/commit/c6f47d3dd4277b3943e950cd444f0d1427269a73))
+
+
+### Bug Fixes
+
+* **release:** Use stable zip filename for WordPress compatibility ([3ce7cdc](https://github.com/MilliPress/MilliCache/commit/3ce7cdca7a111c504fd3ffdbe3417acf54be581b))
+
 ## [1.1.0](https://github.com/MilliPress/MilliCache/compare/v1.0.2...v1.1.0) (2026-02-07)
 
 
