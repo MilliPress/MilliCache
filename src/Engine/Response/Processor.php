@@ -129,13 +129,12 @@ final class Processor {
 		}
 
 		// Get all flags for this request.
-		$flags = $this->flags->get_all();
-		$flags[] = 'url:' . $this->request_manager->get_url_hash();
-		$flags = array_unique( $flags );
+		$flags = $this->collect_flags();
 
-		// If no flags set, use fallback site flag.
-		if ( count( $flags ) <= 1 ) {
-			$flags[] = $this->flags->get_key( 'flag' );
+		// Get current HTTP status.
+		$status = http_response_code();
+		if ( false === $status || true === $status ) {
+			$status = 200;
 		}
 
 		// Get TTL/grace options and debug data from context.
@@ -148,6 +147,8 @@ final class Processor {
 			$this->state->get_request_hash(),
 			$output,
 			$flags,
+			$status,
+			headers_list(),
 			$custom_ttl,
 			$custom_grace,
 			$debug
@@ -158,7 +159,7 @@ final class Processor {
 			$this->headers->set_status( 'bypass' );
 		}
 
-		// Add reason header if available.
+		// Add a reason header if available.
 		if ( ! empty( $result['reason'] ) ) {
 			$this->headers->set_reason( $result['reason'] );
 		}
@@ -189,7 +190,7 @@ final class Processor {
 			return $state;
 		}
 
-		// Update context with regenerate flag.
+		// Update context with a regenerate flag.
 		if ( $result['regenerate'] ) {
 			$state = $state->with_fcgi_regenerate( true );
 		}
@@ -217,6 +218,71 @@ final class Processor {
 
 		// Mark cache as served.
 		return $state->with_cache_served();
+	}
+
+	/**
+	 * Store a response in the cache.
+	 *
+	 * Framework-independent entry point for caching a response. Unlike the
+	 * internal output buffering path (process_output_buffer), this method
+	 * accepts pre-built response data — suitable for middleware integrations
+	 * (e.g., Laravel, Acorn) that already have the response in the hand.
+	 *
+	 * Headers must be in "Key: Value" string format, e.g.:
+	 *     ['Content-Type: text/html', 'X-Custom: value']
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param string        $output       The response body.
+	 * @param array<string> $headers      Response headers in "Key: Value" format.
+	 * @param int           $status       HTTP status code.
+	 * @param int|null      $custom_ttl   Optional TTL override in seconds.
+	 * @param int|null      $custom_grace Optional grace period override in seconds.
+	 * @return array{cached: bool, reason: string} Result with cached flag and reason.
+	 */
+	public function store(
+		string $output,
+		array $headers,
+		int $status,
+		?int $custom_ttl = null,
+		?int $custom_grace = null
+	): array {
+		$hash = $this->request_manager->get_hasher()->get_hash();
+		if ( ! $hash ) {
+			$hash = $this->request_manager->process();
+		}
+
+		return $this->cache_manager->cache_output(
+			$hash,
+			$output,
+			$this->collect_flags(),
+			$status,
+			$headers,
+			$custom_ttl,
+			$custom_grace
+		);
+	}
+
+	/**
+	 * Collect and prepare flags for cache storage.
+	 *
+	 * Gathers all flags accumulated during request processing,
+	 * adds the URL hash flag, and ensures a fallback flag exists.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @return array<string> Prepared flags for cache storage.
+	 */
+	private function collect_flags(): array {
+		$flags   = $this->flags->get_all();
+		$flags[] = 'url:' . $this->request_manager->get_url_hash();
+		$flags   = array_unique( $flags );
+
+		if ( count( $flags ) <= 1 ) {
+			$flags[] = $this->flags->get_key( 'flag' );
+		}
+
+		return $flags;
 	}
 
 	/**
