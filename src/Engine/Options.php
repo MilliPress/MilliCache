@@ -134,6 +134,21 @@ final class Options {
 	}
 
 	/**
+	 * Check if the current request should be cached.
+	 *
+	 * Read-only check based on the cache decision set by rules.
+	 * Returns true when no decision has been made (default to cache)
+	 * or when the decision is explicitly true.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @return bool True, if caching should proceed, false to skip.
+	 */
+	public function should_cache(): bool {
+		return ! $this->cache_decision || $this->cache_decision['decision'];
+	}
+
+	/**
 	 * Check if any options are set.
 	 *
 	 * @since 1.0.0
