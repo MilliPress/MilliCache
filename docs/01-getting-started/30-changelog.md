@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.2.1](https://github.com/MilliPress/MilliCache/compare/v1.2.0...v1.2.1) (2026-02-11)
+
+
+### Bug Fixes
+
+* **dependencies:** Update millirules and gitignore composer.lock ([7f59eb3](https://github.com/MilliPress/MilliCache/commit/7f59eb3b0c4d16e2dd756daa0e96dbaa627ed03a))
+
 ## [1.2.0](https://github.com/MilliPress/MilliCache/compare/v1.1.0...v1.2.0) (2026-02-09)
 
 
