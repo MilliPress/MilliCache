@@ -28,6 +28,10 @@
           "section": "Performance"
         },
         {
+          "type": "deps",
+          "section": "Dependencies"
+        },
+        {
           "type": "refactor",
           "section": "Refactoring",
           "hidden": true

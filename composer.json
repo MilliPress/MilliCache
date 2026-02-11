@@ -13,7 +13,7 @@
         "php": ">=7.4"
     },
     "require-dev": {
-        "millipress/millirules": "^0.6.0",
+        "millipress/millirules": "^0.7.0",
         "predis/predis": "^2.2",
         "wp-coding-standards/wpcs": "^3.0",
         "phpcompatibility/phpcompatibility-wp": "*",
