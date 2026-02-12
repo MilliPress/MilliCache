@@ -130,6 +130,45 @@ describe( 'Options', function () {
 		} );
 	} );
 
+	describe( 'is_caching_allowed', function () {
+		it( 'returns true when no decision has been made', function () {
+			$options = new Options();
+
+			expect( $options->is_caching_allowed() )->toBeTrue();
+		} );
+
+		it( 'returns true when decision is explicitly true', function () {
+			$options = new Options();
+			$options->set_cache_decision( true, 'cache-enabled' );
+
+			expect( $options->is_caching_allowed() )->toBeTrue();
+		} );
+
+		it( 'returns false when decision is false', function () {
+			$options = new Options();
+			$options->set_cache_decision( false, 'user-logged-in' );
+
+			expect( $options->is_caching_allowed() )->toBeFalse();
+		} );
+
+		it( 'reflects the latest decision after update', function () {
+			$options = new Options();
+			$options->set_cache_decision( false, 'first' );
+			expect( $options->is_caching_allowed() )->toBeFalse();
+
+			$options->set_cache_decision( true, 'second' );
+			expect( $options->is_caching_allowed() )->toBeTrue();
+		} );
+
+		it( 'returns true after reset', function () {
+			$options = new Options();
+			$options->set_cache_decision( false, 'blocked' );
+			$options->reset();
+
+			expect( $options->is_caching_allowed() )->toBeTrue();
+		} );
+	} );
+
 	describe( 'multiple options', function () {
 		it( 'can set multiple options together', function () {
 			$options = new Options();

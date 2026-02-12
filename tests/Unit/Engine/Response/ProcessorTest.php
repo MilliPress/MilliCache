@@ -9,6 +9,7 @@
  */
 
 use MilliCache\Engine\Cache\Config;
+use MilliCache\Engine\Options;
 use MilliCache\Engine\Response\State;
 use MilliCache\Engine\Response\Headers;
 use MilliCache\Engine\Response\Processor;
@@ -71,38 +72,23 @@ describe( 'ResponseManager', function () {
 		} );
 
 		it( 'check_cache_decision logic with bypass', function () {
-			$context = State::create( 'test-hash' )
-				->with_cache_decision( false, 'no-cache' );
+			$options = new Options();
+			$options->set_cache_decision( false, 'no-cache' );
 
-			$decision = $context->get_cache_decision();
-
-			// Simulate check logic.
-			$should_cache = ! ( $decision && ! $decision['decision'] );
-
-			expect( $should_cache )->toBeFalse();
+			expect( $options->is_caching_allowed() )->toBeFalse();
 		} );
 
 		it( 'check_cache_decision logic with allow', function () {
-			$context = State::create( 'test-hash' )
-				->with_cache_decision( true, 'cache-enabled' );
+			$options = new Options();
+			$options->set_cache_decision( true, 'cache-enabled' );
 
-			$decision = $context->get_cache_decision();
-
-			// Simulate check logic.
-			$should_cache = ! ( $decision && ! $decision['decision'] );
-
-			expect( $should_cache )->toBeTrue();
+			expect( $options->is_caching_allowed() )->toBeTrue();
 		} );
 
 		it( 'check_cache_decision logic with no decision', function () {
-			$context = State::create( 'test-hash' );
+			$options = new Options();
 
-			$decision = $context->get_cache_decision();
-
-			// Simulate check logic.
-			$should_cache = ! ( $decision && ! $decision['decision'] );
-
-			expect( $should_cache )->toBeTrue();
+			expect( $options->is_caching_allowed() )->toBeTrue();
 		} );
 	} );
 
