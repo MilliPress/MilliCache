@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.2.2](https://github.com/MilliPress/MilliCache/compare/v1.2.1...v1.2.2) (2026-02-12)
+
+
+### Refactoring
+
+* **api:** Rename Options::should_cache() to is_caching_allowed() ([60f8a47](https://github.com/MilliPress/MilliCache/commit/60f8a47404e5487a0fb48b82b7f149c0f202ee82))
+
 ## [1.2.1](https://github.com/MilliPress/MilliCache/compare/v1.2.0...v1.2.1) (2026-02-11)
 
 
