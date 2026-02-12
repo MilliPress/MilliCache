@@ -33,8 +33,7 @@
         },
         {
           "type": "refactor",
-          "section": "Refactoring",
-          "hidden": true
+          "section": "Refactoring"
         },
         {
           "type": "docs",

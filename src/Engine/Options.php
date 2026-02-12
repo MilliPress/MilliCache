@@ -140,7 +140,7 @@ final class Options {
 	 * Returns true when no decision has been made (default to cache)
 	 * or when the decision is explicitly true.
 	 *
-	 * @since 1.2.1
+	 * @since 1.2.2
 	 *
 	 * @return bool True, if caching is allowed, false to skip.
 	 */
