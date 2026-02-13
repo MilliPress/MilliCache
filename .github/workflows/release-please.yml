@@ -52,13 +52,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ needs.release-please.outputs.sha }}
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -136,7 +129,7 @@ jobs:
           # Add built JS assets (excluded by .gitattributes export-ignore)
           [ -d build ] && rsync -a build/ dist/build/
 
-          # Download Strauss (bin/ is export-ignore, so we fetch it directly)
+          # Download Strauss for namespace scoping
           mkdir -p dist/bin
           curl -sL https://github.com/BrianHenryIE/strauss/releases/download/0.26.5/strauss.phar -o dist/bin/strauss.phar
 
@@ -168,44 +161,12 @@ jobs:
           zip -rq "../millicache.zip" .
           cd ..
 
-      - name: Update tag to include built dependencies
-        run: |
-          TAG="${{ needs.release-please.outputs.tag_name }}"
-
-          # Move dist and zip to temp location (outside git working tree)
-          mv dist /tmp/dist-build
-          mv millicache.zip /tmp/
-
-          # Stash current state
-          git stash --include-untracked || true
-
-          # Create orphan branch for dist
-          git switch --orphan "dist/${TAG}"
-          git rm -rf . >/dev/null 2>&1 || true
-
-          # Move dist contents to root
-          rsync -a /tmp/dist-build/ . --remove-source-files
-          rm -rf /tmp/dist-build/
-
-          # Commit the dist build
-          git add -A
-          git commit -m "Release ${TAG}"
-
-          # Update the tag to point to this commit (with built deps)
-          git tag -f "${TAG}" -m "Release ${TAG}"
-          git push origin "refs/tags/${TAG}" --force
-
-          echo "Tag ${TAG} updated to include built dependencies"
-
-          # Return to original branch
-          git checkout ${{ needs.release-please.outputs.sha }}
-
       - name: Upload release asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "${{ needs.release-please.outputs.tag_name }}" \
-            "/tmp/millicache.zip" \
+            millicache.zip \
             --clobber
 
       - name: Update release notes with performance results
@@ -236,26 +197,3 @@ jobs:
             echo ""
             echo "[View Release](https://github.com/${REPO}/releases/tag/${TAG})"
           } >> $GITHUB_STEP_SUMMARY
-
-      - name: Update last-release-sha for Release Please
-        env:
-          RELEASE_SHA: ${{ needs.release-please.outputs.sha }}
-          TAG: ${{ needs.release-please.outputs.tag_name }}
-        run: |
-          # Fresh checkout of main to avoid git state issues from previous steps
-          git fetch origin main
-          git checkout main
-          git reset --hard origin/main
-
-          # Update the config with the release merge commit SHA
-          # This tells Release Please where to find commits since last release,
-          # since the tag now points to an orphan commit with built dependencies
-          jq --arg sha "$RELEASE_SHA" '.["last-release-sha"] = $sha' \
-             release-please-config.json > tmp.json && mv tmp.json release-please-config.json
-
-          # Commit and push
-          git add release-please-config.json
-          git commit -m "chore(release): Update last-release-sha after ${TAG}"
-          git push origin main
-
-          echo "Updated last-release-sha to ${RELEASE_SHA}"
