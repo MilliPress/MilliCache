@@ -13,8 +13,8 @@ namespace MilliCache;
 
 use MilliCache\Core\Settings;
 use MilliCache\Core\Storage;
-use MilliCache\Deps\MilliRules\MilliRules;
-use MilliCache\Deps\MilliRules\Rules;
+use MilliRules\MilliRules;
+use MilliRules\Rules;
 use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Invalidation\Manager as InvalidationManager;
 use MilliCache\Engine\Cache\Manager as CacheManager;

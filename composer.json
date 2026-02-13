@@ -10,11 +10,11 @@
         }
     ],
     "require": {
-        "php": ">=7.4"
+        "php": ">=7.4",
+        "millipress/millirules": "^0.7.0",
+        "predis/predis": "^2.2"
     },
     "require-dev": {
-        "millipress/millirules": "^0.7.0",
-        "predis/predis": "^2.2",
         "wp-coding-standards/wpcs": "^3.0",
         "phpcompatibility/phpcompatibility-wp": "*",
         "php-stubs/wp-cli-stubs": "^2.10",
@@ -30,10 +30,7 @@
     "autoload": {
         "psr-4": {
             "MilliCache\\": "src/"
-        },
-        "classmap": [
-            "deps/"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {
@@ -50,15 +47,6 @@
         "test:phpstan": "phpstan analyse -c phpstan.neon --memory-limit 1G",
         "test:lint": "phpcs --standard=phpcs.xml -s",
         "test:fix": "phpcbf --standard=phpcs.xml",
-        "strauss": "@php bin/strauss.phar -q",
-        "post-install-cmd": [
-            "@strauss",
-            "@composer dump-autoload"
-        ],
-        "post-update-cmd": [
-            "@strauss",
-            "@composer dump-autoload"
-        ],
         "cghooks": [
             "vendor/bin/cghooks"
         ]
@@ -77,6 +65,7 @@
             "namespace_prefix": "MilliCache\\Deps\\",
             "classmap_prefix": "MilliCache_",
             "classmap_output": false,
+            "update_call_sites": true,
             "delete_vendor_packages": true,
             "packages": [
                 "predis/predis",

@@ -15,8 +15,8 @@
 
 namespace MilliCache\Rules;
 
-use MilliCache\Deps\MilliRules\Context;
-use MilliCache\Deps\MilliRules\Rules;
+use MilliRules\Context;
+use MilliRules\Rules;
 
 /**
  * Class RequestFlags
