@@ -6,6 +6,23 @@ menu_order: 30
 
 # Changelog
 
+## [1.3.0](https://github.com/MilliPress/MilliCache/compare/v1.2.2...v1.3.0) (2026-02-13)
+
+
+### Features
+
+* **deps:** Enable shared namespaces for Composer installs ([7e96a5d](https://github.com/MilliPress/MilliCache/commit/7e96a5d32772079a21041fbd3afc8bee643a0c29))
+
+
+### Bug Fixes
+
+* Include stubs in release archives for IDE support ([634ae3c](https://github.com/MilliPress/MilliCache/commit/634ae3cd0d1cfa2ffefe979b139fd1687db106f7))
+
+
+### Refactoring
+
+* **deps:** Move Strauss scoping from source-level to build-time only ([#71](https://github.com/MilliPress/MilliCache/issues/71)) ([2953654](https://github.com/MilliPress/MilliCache/commit/2953654d2846fdf87f6cb861a46a31f5c22e0d71))
+
 ## [1.2.2](https://github.com/MilliPress/MilliCache/compare/v1.2.1...v1.2.2) (2026-02-12)
 
 
