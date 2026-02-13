@@ -15,7 +15,7 @@ use MilliCache\Rules\Actions\WP\AddFlag;
 use MilliCache\Rules\Actions\WP\RemoveFlag;
 use MilliCache\Rules\Actions\WP\ClearCache;
 use MilliCache\Rules\Actions\WP\ClearSiteCache;
-use MilliCache\Deps\MilliRules\Context;
+use MilliRules\Context;
 
 /**
  * Note: The Action classes require Engine which is a final class.
@@ -31,7 +31,7 @@ describe( 'Rule Actions', function () {
 
 		it( 'extends BaseAction', function () {
 			$reflection = new ReflectionClass( DoCache::class );
-			expect( $reflection->isSubclassOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( $reflection->isSubclassOf( 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
 		} );
 
 		it( 'has get_type method', function () {
@@ -56,7 +56,7 @@ describe( 'Rule Actions', function () {
 
 		it( 'extends BaseAction', function () {
 			$reflection = new ReflectionClass( SetTtl::class );
-			expect( $reflection->isSubclassOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( $reflection->isSubclassOf( 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
 		} );
 
 		it( 'has get_type method', function () {
@@ -81,7 +81,7 @@ describe( 'Rule Actions', function () {
 
 		it( 'extends BaseAction', function () {
 			$reflection = new ReflectionClass( SetGrace::class );
-			expect( $reflection->isSubclassOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( $reflection->isSubclassOf( 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
 		} );
 
 		it( 'has get_type method', function () {
@@ -106,7 +106,7 @@ describe( 'Rule Actions', function () {
 
 		it( 'extends BaseAction', function () {
 			$reflection = new ReflectionClass( AddFlag::class );
-			expect( $reflection->isSubclassOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( $reflection->isSubclassOf( 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
 		} );
 
 		it( 'has get_type method', function () {
@@ -131,7 +131,7 @@ describe( 'Rule Actions', function () {
 
 		it( 'extends BaseAction', function () {
 			$reflection = new ReflectionClass( RemoveFlag::class );
-			expect( $reflection->isSubclassOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( $reflection->isSubclassOf( 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
 		} );
 
 		it( 'has get_type method', function () {
@@ -156,7 +156,7 @@ describe( 'Rule Actions', function () {
 
 		it( 'extends BaseAction', function () {
 			$reflection = new ReflectionClass( ClearCache::class );
-			expect( $reflection->isSubclassOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( $reflection->isSubclassOf( 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
 		} );
 
 		it( 'has get_type method', function () {
@@ -181,7 +181,7 @@ describe( 'Rule Actions', function () {
 
 		it( 'extends BaseAction', function () {
 			$reflection = new ReflectionClass( ClearSiteCache::class );
-			expect( $reflection->isSubclassOf( 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( $reflection->isSubclassOf( 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
 		} );
 
 		it( 'has get_type method', function () {
@@ -201,16 +201,16 @@ describe( 'Rule Actions', function () {
 
 	describe( 'Action Interface Consistency', function () {
 		it( 'all PHP actions extend BaseAction', function () {
-			expect( is_subclass_of( DoCache::class, 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
-			expect( is_subclass_of( SetTtl::class, 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
-			expect( is_subclass_of( SetGrace::class, 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( is_subclass_of( DoCache::class, 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( is_subclass_of( SetTtl::class, 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( is_subclass_of( SetGrace::class, 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
 		} );
 
 		it( 'all WP actions extend BaseAction', function () {
-			expect( is_subclass_of( AddFlag::class, 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
-			expect( is_subclass_of( RemoveFlag::class, 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
-			expect( is_subclass_of( ClearCache::class, 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
-			expect( is_subclass_of( ClearSiteCache::class, 'MilliCache\Deps\MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( is_subclass_of( AddFlag::class, 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( is_subclass_of( RemoveFlag::class, 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( is_subclass_of( ClearCache::class, 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( is_subclass_of( ClearSiteCache::class, 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
 		} );
 
 		it( 'all actions have unique type identifiers', function () {

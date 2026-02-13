@@ -78,15 +78,6 @@ jobs:
           npm run build
           rm -rf node_modules
 
-      - name: Install dependencies and build prefixed packages
-        run: |
-          # Install all dependencies (including dev) to get millirules and predis
-          composer install --no-interaction --prefer-dist
-
-          # Strauss runs via post-install-cmd and prefixes packages into deps/
-          # Now reinstall without dev to clean vendor/ for production
-          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --classmap-authoritative
-
       - name: Download performance results
         uses: actions/download-artifact@v7
         with:
@@ -95,8 +86,10 @@ jobs:
         continue-on-error: true
 
       - name: Extract release notes for current version
+        env:
+          VERSION: ${{ needs.release-please.outputs.version }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
         run: |
-          VERSION="${{ needs.release-please.outputs.version }}"
           CHANGELOG_PATH="docs/01-getting-started/30-changelog.md"
 
           # Extract only the current version's changelog section
@@ -113,10 +106,10 @@ jobs:
 
             # If nothing was extracted, use a fallback
             if [ ! -s /tmp/changelog.md ]; then
-              echo "## ${{ needs.release-please.outputs.tag_name }}" > /tmp/changelog.md
+              echo "## ${TAG_NAME}" > /tmp/changelog.md
             fi
           else
-            echo "## ${{ needs.release-please.outputs.tag_name }}" > /tmp/changelog.md
+            echo "## ${TAG_NAME}" > /tmp/changelog.md
           fi
 
           echo "Release notes for version $VERSION:"
@@ -140,10 +133,28 @@ jobs:
           # Export tracked files (respects .gitattributes export-ignore)
           git archive --format=tar HEAD | tar -x -C dist
 
-          # Add build artifacts and dependencies
+          # Add built JS assets (excluded by .gitattributes export-ignore)
           [ -d build ] && rsync -a build/ dist/build/
-          [ -d vendor ] && rsync -a vendor/ dist/vendor/
-          [ -d deps ] && rsync -a deps/ dist/deps/
+
+          # Download Strauss (bin/ is export-ignore, so we fetch it directly)
+          mkdir -p dist/bin
+          curl -sL https://github.com/BrianHenryIE/strauss/releases/download/0.26.5/strauss.phar -o dist/bin/strauss.phar
+
+          # Install production dependencies in the isolated dist directory
+          composer install --no-dev --no-interaction --prefer-dist --working-dir=dist
+
+          # Run Strauss to scope dependencies (rewrites source files in dist/)
+          (cd dist && php bin/strauss.phar -q)
+
+          # Add deps/ classmap to the dist composer.json for the scoped packages
+          jq '.autoload.classmap = ["deps/"]' dist/composer.json > dist/composer.json.tmp \
+            && mv dist/composer.json.tmp dist/composer.json
+
+          # Regenerate autoloader with scoped deps/ classmap
+          composer dump-autoload --no-dev --optimize --classmap-authoritative --working-dir=dist
+
+          # Remove build tools from dist (not needed in the release)
+          rm -rf dist/bin
 
           echo "Dist contents:"
           ls -la dist/

@@ -14,8 +14,8 @@
 
 namespace MilliCache\Rules\Actions\WP;
 
-use MilliCache\Deps\MilliRules\Actions\BaseAction;
-use MilliCache\Deps\MilliRules\Context;
+use MilliRules\Actions\BaseAction;
+use MilliRules\Context;
 
 /**
  * Class RemoveFlagAction

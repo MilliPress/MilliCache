@@ -13,11 +13,11 @@
 namespace MilliCache\Core;
 
 use MilliCache\Engine;
-use MilliCache\Deps\Predis;
-use MilliCache\Deps\Predis\Autoloader;
-use MilliCache\Deps\Predis\Client;
-use MilliCache\Deps\Predis\Connection\ConnectionException;
-use MilliCache\Deps\Predis\PredisException;
+use Predis;
+use Predis\Autoloader;
+use Predis\Client;
+use Predis\Connection\ConnectionException;
+use Predis\PredisException;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -128,7 +128,7 @@ class Storage {
 	 * @return bool Whether the storage server is available.
 	 */
 	public static function is_available(): bool {
-		return class_exists( '\MilliCache\Deps\Predis\Autoloader' );
+		return class_exists( '\Predis\Autoloader' );
 	}
 
 	/**

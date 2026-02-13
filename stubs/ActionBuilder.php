@@ -8,7 +8,7 @@
  * @package MilliCache
  */
 
-namespace MilliCache\Deps\MilliRules\Builders;
+namespace MilliRules\Builders;
 
 /**
  * ActionBuilder with MilliCache action stubs

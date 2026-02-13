@@ -47,13 +47,11 @@ jobs:
           npm run build
           rm -rf node_modules
 
-      - name: Install production dependencies
-        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --classmap-authoritative
-
       - name: Extract version from tag
         id: version
+        env:
+          TAG: ${{ inputs.tag }}
         run: |
-          TAG="${{ inputs.tag }}"
           VERSION="${TAG#v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
@@ -65,24 +63,49 @@ jobs:
           # Export tracked files (respects .gitattributes export-ignore)
           git archive --format=tar HEAD | tar -x -C dist
 
-          # Add build artifacts and dependencies
+          # Add built JS assets (excluded by .gitattributes export-ignore)
           [ -d build ] && rsync -a build/ dist/build/
-          [ -d vendor ] && rsync -a vendor/ dist/vendor/
-          [ -d deps ] && rsync -a deps/ dist/deps/
+
+          # Download Strauss (bin/ is export-ignore, so we fetch it directly)
+          mkdir -p dist/bin
+          curl -sL https://github.com/BrianHenryIE/strauss/releases/download/0.26.5/strauss.phar -o dist/bin/strauss.phar
+
+          # Install production dependencies in the isolated dist directory
+          composer install --no-dev --no-interaction --prefer-dist --working-dir=dist
+
+          # Run Strauss to scope dependencies (rewrites source files in dist/)
+          (cd dist && php bin/strauss.phar -q)
+
+          # Add deps/ classmap to the dist composer.json for the scoped packages
+          jq '.autoload.classmap = ["deps/"]' dist/composer.json > dist/composer.json.tmp \
+            && mv dist/composer.json.tmp dist/composer.json
+
+          # Regenerate autoloader with scoped deps/ classmap
+          composer dump-autoload --no-dev --optimize --classmap-authoritative --working-dir=dist
+
+          # Remove build tools from dist (not needed in the release)
+          rm -rf dist/bin
 
           echo "Dist contents:"
           ls -la dist/
 
       - name: Create release archive
+        env:
+          TAG: ${{ inputs.tag }}
         run: |
           cd dist
-          zip -rq "../millicache-${{ inputs.tag }}.zip" .
+          zip -rq "../millicache-${TAG}.zip" .
           cd ..
 
       - name: Update tag to include built dependencies
+        env:
+          TAG: ${{ inputs.tag }}
         run: |
-          TAG="${{ inputs.tag }}"
           ORIGINAL_SHA=$(git rev-parse HEAD)
+
+          # Move dist and zip to temp location (outside git working tree)
+          mv dist /tmp/dist-build
+          mv "millicache-${TAG}.zip" /tmp/
 
           # Stash current state
           git stash --include-untracked || true
@@ -92,8 +115,8 @@ jobs:
           git rm -rf . >/dev/null 2>&1 || true
 
           # Move dist contents to root
-          rsync -a dist/ . --remove-source-files
-          rm -rf dist/
+          rsync -a /tmp/dist-build/ . --remove-source-files
+          rm -rf /tmp/dist-build/
 
           # Commit the dist build
           git add -A
@@ -114,7 +137,7 @@ jobs:
           tag_name: ${{ inputs.tag }}
           name: ${{ inputs.tag }}
           body: "Release ${{ steps.version.outputs.version }}"
-          files: millicache-${{ inputs.tag }}.zip
+          files: /tmp/millicache-${{ inputs.tag }}.zip
           prerelease: ${{ contains(inputs.tag, 'rc') || contains(inputs.tag, 'beta') || contains(inputs.tag, 'alpha') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

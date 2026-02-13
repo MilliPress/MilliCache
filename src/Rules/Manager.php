@@ -14,7 +14,7 @@
 
 namespace MilliCache\Rules;
 
-use MilliCache\Deps\MilliRules\Rules;
+use MilliRules\Rules;
 
 /**
  * Class Manager
