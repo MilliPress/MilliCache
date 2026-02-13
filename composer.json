@@ -47,11 +47,6 @@
         "test:phpstan": "phpstan analyse -c phpstan.neon --memory-limit 1G",
         "test:lint": "phpcs --standard=phpcs.xml -s",
         "test:fix": "phpcbf --standard=phpcs.xml",
-        "strauss": "@php bin/strauss.phar -q",
-        "build:scope": [
-            "@strauss",
-            "@composer dump-autoload"
-        ],
         "cghooks": [
             "vendor/bin/cghooks"
         ]
