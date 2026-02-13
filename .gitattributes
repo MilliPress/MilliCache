@@ -7,7 +7,6 @@ composer.lock               export-ignore
 README.md                   export-ignore
 release-please-config.json  export-ignore
 docs/                       export-ignore
-stubs/                      export-ignore
 assets/                     export-ignore
 tests/                      export-ignore
 node_modules/               export-ignore
