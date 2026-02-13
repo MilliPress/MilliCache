@@ -146,6 +146,9 @@ jobs:
           # Run Strauss to scope dependencies (rewrites source files in dist/)
           (cd dist && php bin/strauss.phar -q)
 
+          # Scope stub namespaces to match scoped dependencies
+          sed -i 's/namespace MilliRules\\Builders;/namespace MilliCache\\Deps\\MilliRules\\Builders;/' dist/stubs/*.php
+
           # Add deps/ classmap to the dist composer.json for the scoped packages
           jq '.autoload.classmap = ["deps/"]' dist/composer.json > dist/composer.json.tmp \
             && mv dist/composer.json.tmp dist/composer.json
