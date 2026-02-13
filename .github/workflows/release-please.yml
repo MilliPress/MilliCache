@@ -24,7 +24,7 @@ jobs:
         id: release
         uses: googleapis/release-please-action@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_TOKEN }}
 
   # Build and publish the release (CI/E2E already passed on the PR)
   build-release:
