@@ -26,24 +26,10 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  # Gate: Run CI before building release
-  ci:
-    name: Run CI
-    needs: release-please
-    if: ${{ needs.release-please.outputs.release_created }}
-    uses: ./.github/workflows/ci.yml
-
-  # Gate: Run E2E after CI passes
-  e2e:
-    name: Run E2E
-    needs: [release-please, ci]
-    if: ${{ needs.release-please.outputs.release_created }}
-    uses: ./.github/workflows/e2e.yml
-
-  # Build and publish the release after all gates pass
+  # Build and publish the release (CI/E2E already passed on the PR)
   build-release:
     name: Build & Release
-    needs: [release-please, ci, e2e]
+    needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
 
