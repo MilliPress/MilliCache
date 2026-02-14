@@ -212,6 +212,10 @@ final class Engine {
 		// Initialize autoloader first.
 		$this->autoload();
 
+		// Register action namespaces.
+		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\PHP', 'PHP' );
+		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\WP', 'WP' );
+
 		// Store settings.
 		$settings = $settings ?? new Settings();
 		$this->settings = $settings->get_settings();
@@ -323,10 +327,6 @@ final class Engine {
 	private function register_rules(): void {
 		// Initialize MilliRules with the PHP package for early execution.
 		MilliRules::init( array( 'PHP' ) );
-
-		// Register action namespaces for auto-resolution.
-		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\PHP', 'PHP' );
-		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\WP', 'WP' );
 
 		// Rules that execute before WordPress loads.
 		BootstrapRules::register();
