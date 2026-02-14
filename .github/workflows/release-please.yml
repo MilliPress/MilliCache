@@ -26,10 +26,16 @@ jobs:
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
 
-  # Build and publish the release (CI/E2E already passed on the PR)
+  e2e:
+    name: E2E Gate
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    uses: ./.github/workflows/e2e.yml
+    secrets: inherit
+
   build-release:
     name: Build & Release
-    needs: release-please
+    needs: [release-please, e2e]
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
 
