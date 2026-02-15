@@ -156,22 +156,40 @@ jobs:
       - name: Upload release asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
         run: |
-          gh release upload "${{ needs.release-please.outputs.tag_name }}" \
+          gh release upload "$TAG_NAME" \
             millicache.zip \
             --clobber
 
       - name: Update release notes with performance results
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
         run: |
           if [ -f /tmp/changelog.md ] && [ -s /tmp/changelog.md ]; then
-            gh release edit "${{ needs.release-please.outputs.tag_name }}" \
+            gh release edit "$TAG_NAME" \
               --notes-file /tmp/changelog.md
             echo "Release notes updated with performance results"
           else
             echo "No changelog file found, skipping release notes update"
           fi
+
+  publish-release:
+    name: Publish Release
+    needs: [release-please, build-release]
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Promote draft to published
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          gh release edit "$TAG_NAME" \
+            --repo "${{ github.repository }}" \
+            --draft=false
 
       - name: Release summary
         env:
