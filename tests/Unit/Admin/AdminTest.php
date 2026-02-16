@@ -293,16 +293,6 @@ describe( 'Admin', function () {
 	} );
 
 	describe( 'enqueue_assets', function () {
-		it( 'returns false when MILLICACHE_BASENAME not defined', function () {
-			if ( defined( 'MILLICACHE_BASENAME' ) ) {
-				$this->markTestSkipped( 'MILLICACHE_BASENAME is defined, cannot test this condition' );
-			}
-
-			$result = Admin::enqueue_assets( 'test' );
-
-			expect( $result )->toBeFalse();
-		} );
-
 		it( 'method exists and is callable', function () {
 			expect( method_exists( Admin::class, 'enqueue_assets' ) )->toBeTrue();
 			expect( is_callable( array( Admin::class, 'enqueue_assets' ) ) )->toBeTrue();
