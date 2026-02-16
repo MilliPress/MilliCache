@@ -134,21 +134,6 @@ final class Options {
 	}
 
 	/**
-	 * Check if caching is allowed for the current request.
-	 *
-	 * Read-only check based on the cache decision set by rules.
-	 * Returns true when no decision has been made (default to cache)
-	 * or when the decision is explicitly true.
-	 *
-	 * @since 1.2.2
-	 *
-	 * @return bool True, if caching is allowed, false to skip.
-	 */
-	public function is_caching_allowed(): bool {
-		return ! $this->cache_decision || $this->cache_decision['decision'];
-	}
-
-	/**
 	 * Check if any options are set.
 	 *
 	 * @since 1.0.0

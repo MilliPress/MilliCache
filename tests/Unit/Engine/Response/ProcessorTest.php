@@ -70,26 +70,6 @@ describe( 'ResponseManager', function () {
 				'reason'   => 'force-cache',
 			) );
 		} );
-
-		it( 'check_cache_decision logic with bypass', function () {
-			$options = new Options();
-			$options->set_cache_decision( false, 'no-cache' );
-
-			expect( $options->is_caching_allowed() )->toBeFalse();
-		} );
-
-		it( 'check_cache_decision logic with allow', function () {
-			$options = new Options();
-			$options->set_cache_decision( true, 'cache-enabled' );
-
-			expect( $options->is_caching_allowed() )->toBeTrue();
-		} );
-
-		it( 'check_cache_decision logic with no decision', function () {
-			$options = new Options();
-
-			expect( $options->is_caching_allowed() )->toBeTrue();
-		} );
 	} );
 
 	describe( 'context integration', function () {

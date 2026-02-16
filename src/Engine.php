@@ -352,11 +352,9 @@ final class Engine {
 	 * Check cache decision and set appropriate headers.
 	 *
 	 * @since 1.0.0
-	 * @access private
-	 *
 	 * @return bool True if caching should proceed, false to bypass.
 	 */
-	private function check_cache_decision(): bool {
+	public function check_cache_decision(): bool {
 		$decision = $this->options()->get_cache_decision();
 
 		if ( ! empty( $decision['reason'] ) ) {
