@@ -26,6 +26,13 @@ jobs:
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
 
+      - name: Convert release to draft
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+        run: gh release edit "$TAG_NAME" --draft --repo "${{ github.repository }}"
+
   e2e:
     name: E2E Gate
     needs: release-please

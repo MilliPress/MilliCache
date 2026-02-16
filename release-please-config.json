@@ -6,7 +6,6 @@
   "packages": {
     ".": {
       "release-type": "simple",
-      "draft": true,
       "prerelease": false,
       "versioning": "default",
       "component": "millicache",
