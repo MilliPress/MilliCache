@@ -86,7 +86,7 @@ final class Writer {
 	 * filters out MilliCache internal headers. Each header must be
 	 * in "Key: Value" format (as returned by headers_list()).
 	 *
-	 * @since 1.2.0
+	 * @since 1.0.0
 	 *
 	 * @param array<string> $headers Raw headers in "Key: Value" format.
 	 * @return array{cacheable: bool, reason: string, headers: array<string>} Array with cacheable flag, reason, and filtered headers.

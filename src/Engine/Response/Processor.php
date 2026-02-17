@@ -231,7 +231,7 @@ final class Processor {
 	 * Headers must be in "Key: Value" string format, e.g.:
 	 *     ['Content-Type: text/html', 'X-Custom: value']
 	 *
-	 * @since 1.2.0
+	 * @since 1.0.0
 	 *
 	 * @param string        $output       The response body.
 	 * @param array<string> $headers      Response headers in "Key: Value" format.
@@ -269,7 +269,7 @@ final class Processor {
 	 * Gathers all flags accumulated during request processing,
 	 * adds the URL hash flag, and ensures a fallback flag exists.
 	 *
-	 * @since 1.2.0
+	 * @since 1.0.0
 	 *
 	 * @return array<string> Prepared flags for cache storage.
 	 */

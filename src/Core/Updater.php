@@ -6,7 +6,7 @@
  * for new plugin versions, enabling seamless updates for GitHub-distributed plugins.
  *
  * @link       https://www.millipress.com
- * @since      1.0.2
+ * @since      1.0.0
  *
  * @package    MilliCache
  * @subpackage Core
@@ -24,7 +24,7 @@ namespace MilliCache\Core;
  * into WordPress's native update transient, providing one-click updates
  * for plugins distributed via GitHub Releases.
  *
- * @since      1.1.0
+ * @since      1.0.0
  * @package    MilliCache
  * @subpackage Core
  * @author     Philipp Wellmer <hello@millipress.com>
@@ -34,7 +34,7 @@ final class Updater {
 	/**
 	 * Remote endpoint URL for plugin update information.
 	 *
-	 * @since 1.1.0
+	 * @since 1.0.0
 	 * @var   string
 	 */
 	private const ENDPOINT_URL = 'https://millipress.com/api/plugins/millicache/info';
@@ -42,7 +42,7 @@ final class Updater {
 	/**
 	 * Transient key for caching remote update info.
 	 *
-	 * @since 1.1.0
+	 * @since 1.0.0
 	 * @var   string
 	 */
 	private const TRANSIENT_KEY = 'millicache_update_info';
@@ -50,7 +50,7 @@ final class Updater {
 	/**
 	 * Cache duration in seconds (12 hours).
 	 *
-	 * @since 1.1.0
+	 * @since 1.0.0
 	 * @var   int
 	 */
 	private const CACHE_DURATION = 43200;
@@ -58,7 +58,7 @@ final class Updater {
 	/**
 	 * Initialize the updater and register hooks.
 	 *
-	 * @since  1.1.0
+	 * @since  1.0.0
 	 * @access public
 	 *
 	 * @param Loader $loader The plugin hook loader.
@@ -67,7 +67,7 @@ final class Updater {
 		/**
 		 * Filters whether update checks are enabled.
 		 *
-		 * @since 1.1.0
+		 * @since 1.0.0
 		 *
 		 * @param bool $enabled Whether to enable update checks. Default true.
 		 */
@@ -83,7 +83,7 @@ final class Updater {
 	/**
 	 * Inject update data into the WordPress update transient.
 	 *
-	 * @since  1.1.0
+	 * @since  1.0.0
 	 * @access public
 	 *
 	 * @param  mixed $transient The update_plugins transient data.
@@ -138,7 +138,7 @@ final class Updater {
 	/**
 	 * Serve plugin information for the "View Details" modal.
 	 *
-	 * @since  1.1.0
+	 * @since  1.0.0
 	 * @access public
 	 *
 	 * @param  false|object|array<mixed> $result The result object or array. Default false.
@@ -192,7 +192,7 @@ final class Updater {
 	/**
 	 * Clear the cached update info when WordPress force-checks.
 	 *
-	 * @since  1.1.0
+	 * @since  1.0.0
 	 * @access public
 	 *
 	 * @return void
@@ -204,7 +204,7 @@ final class Updater {
 	/**
 	 * Fetch and cache remote plugin information.
 	 *
-	 * @since  1.1.0
+	 * @since  1.0.0
 	 * @access private
 	 *
 	 * @return object|null The decoded remote info, or null on failure.

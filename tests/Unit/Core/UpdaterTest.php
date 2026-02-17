@@ -3,7 +3,7 @@
  * Tests for Updater class.
  *
  * @link       https://www.millipress.com
- * @since      1.0.2
+ * @since      1.0.0
  *
  * @package    MilliCache
  */
