@@ -381,6 +381,6 @@ DEL [matching keys]
 
 ## Next Steps
 
-- [Custom Rules](20-custom-rules.md) - Extend the rules engine
-- [Hooks & Filters](30-hooks-filters.md) - All available hooks
-- [API Reference](40-api-reference.md) - Function documentation
+- [Hooks & Filters](02-hooks-filters.md) - All available hooks
+- [API Reference](03-api-reference.md) - Function documentation
+- [Rules Introduction](../04-rules/01-introduction.md) - Extend the rules engine

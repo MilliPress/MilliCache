@@ -529,6 +529,6 @@ function clear_category_cache( $category_id ) {
 
 ## Next Steps
 
-- [Hooks & Filters](30-hooks-filters.md) - Extension points
-- [Architecture](10-architecture.md) - Internal structure
-- [Custom Rules](20-custom-rules.md) - Rules engine
+- [Hooks & Filters](02-hooks-filters.md) - Extension points
+- [Architecture](01-architecture.md) - Internal structure
+- [Rules Introduction](../04-rules/01-introduction.md) - Rules engine

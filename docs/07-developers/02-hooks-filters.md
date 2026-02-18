@@ -429,6 +429,6 @@ add_filter( 'millicache_clear_cache_capability', function( $capability ) {
 
 ## Next Steps
 
-- [API Reference](40-api-reference.md) - Function documentation
-- [Custom Rules](20-custom-rules.md) - Extend the rules engine
-- [Architecture](10-architecture.md) - Internal structure
+- [API Reference](03-api-reference.md) - Function documentation
+- [Architecture](01-architecture.md) - Internal structure
+- [Rules Introduction](../04-rules/01-introduction.md) - Extend the rules engine

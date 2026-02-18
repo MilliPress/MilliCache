@@ -110,7 +110,7 @@ X-MilliCache-Flags: home,post:1,post:2,post:3
 
 >[!TIP]
 > Use the MilliCache browser extension for easy flag inspection:
-> [Get the MilliCache Browser Extension](https://github.com/MilliPress/millicache-firefox-ext/releases/latest)
+> [Get the MilliCache Browser Extension](https://github.com/MilliPress/millicache-browser-ext/releases/latest)
 
 ### WP-CLI
 
