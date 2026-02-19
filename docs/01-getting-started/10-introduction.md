@@ -153,6 +153,14 @@ Works with any Redis-compatible server:
 - **KeyDB** — Multithreaded, higher throughput
 - **Dragonfly** — Modern, memory efficient
 
+## Using Acorn / Roots?
+
+If you're running MilliCache on a [Roots](https://roots.io/) stack with Acorn, check out the [Acorn MilliCache](https://millipress.com/docs/acorn-millicache/) companion package. It adds a Laravel middleware that automatically stores Acorn route responses in MilliCache's Redis cache — no extra configuration needed.
+
+```bash
+composer require millipress/acorn-millicache
+```
+
 ## Requirements
 
 | Component  | Requirement                                |
