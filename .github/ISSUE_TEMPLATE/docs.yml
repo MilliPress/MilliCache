@@ -1,0 +1,37 @@
+name: Documentation Issue
+description: Report missing, incorrect, or unclear documentation.
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Before opening an issue**, consider submitting a PR directly — we love community contributions! All documentation lives in the [`/docs`](https://github.com/MilliPress/MilliCache/tree/main/docs) folder and is easy to edit right on GitHub. Only open an issue here if the fix is beyond what you can tackle yourself.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - Missing documentation
+        - Incorrect information
+        - Unclear or confusing
+        - Typo or formatting
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Where
+      description: Link to the page or section, or describe where the issue is.
+      placeholder: "e.g. README > Installation section"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What needs to change
+      description: Describe what's wrong or missing and what it should say.
+    validations:
+      required: true
