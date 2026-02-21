@@ -1,6 +1,6 @@
 import { __ } from '@wordpress/i18n';
 import { Animate, ProgressBar, TabPanel, Panel, Button } from '@wordpress/components';
-import { warning } from '@wordpress/icons';
+import { caution } from '@wordpress/icons';
 import { Icon } from '@wordpress/components';
 import { useSettings } from './context/Settings.jsx';
 import Header from './partials/Header.jsx';
@@ -28,7 +28,7 @@ const MilliCacheUI = () => {
 			{/* Error Icon */}
 			<div style={{ marginBottom: '24px' }}>
 				<Icon
-					icon={warning}
+					icon={caution}
 					size={48}
 					style={{
 						color: '#dc3232',
