@@ -461,10 +461,7 @@ describe( 'MilliCache', function () {
 		it( 'runs without error', function () {
 			$millicache = new MilliCache();
 
-			// Suppress Redis connection warning during test.
-			set_error_handler( fn() => true, E_WARNING );
-			$millicache->cleanup_expired_flags();
-			restore_error_handler();
+			suppressing_errors( fn() => $millicache->cleanup_expired_flags() );
 
 			// If we got here without exception, the method works.
 			expect( true )->toBeTrue();

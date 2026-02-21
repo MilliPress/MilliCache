@@ -153,6 +153,27 @@ if ( ! function_exists( 'delete_site_transient' ) ) {
 // Set up autoloading.
 require_once __DIR__ . '/../vendor/autoload.php';
 
+/**
+ * Run a callback with error_log output and PHP warnings suppressed.
+ *
+ * Useful for tests that intentionally trigger error paths (e.g. Redis
+ * connection failures) where error_log() output would cause PHPUnit
+ * to mark the test as risky.
+ *
+ * @param callable(): mixed $fn The callback to execute.
+ * @return mixed The callback's return value.
+ */
+function suppressing_errors( callable $fn ): mixed {
+	$prev_log = ini_set( 'error_log', '/dev/null' );
+	set_error_handler( fn() => true, E_WARNING );
+	try {
+		return $fn();
+	} finally {
+		restore_error_handler();
+		ini_set( 'error_log', $prev_log ?: '' );
+	}
+}
+
 // Close Mockery after each test to prevent memory leaks and test pollution.
 uses()
 	->afterEach( function () {
