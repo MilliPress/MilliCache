@@ -110,6 +110,23 @@ final class Manager {
 	}
 
 	/**
+	 * Add flags to the clearing queue.
+	 *
+	 * @since 1.0.3
+	 *
+	 * @param array<string> $flags      Flags to enqueue.
+	 * @param bool          $expire     Expire (true) or delete (false).
+	 * @param bool          $add_prefix Whether to add the multisite prefix.
+	 */
+	private function enqueue_flags( array $flags, bool $expire, bool $add_prefix = true ): void {
+		if ( $expire ) {
+			$this->queue->add_to_expire( $flags, $add_prefix );
+		} else {
+			$this->queue->add_to_delete( $flags, $add_prefix );
+		}
+	}
+
+	/**
 	 * Clear cache by mixed target(s).
 	 *
 	 * Accepts URLs, post-IDs, or flags and clears appropriate cache entries.
@@ -173,12 +190,8 @@ final class Manager {
 			$flags = array_merge( $flags, $this->resolver->resolve_url( $url ) );
 		}
 
-		// Add to flusher queue.
-		if ( $expire ) {
-			$this->queue->add_to_expire( $flags, false );
-		} else {
-			$this->queue->add_to_delete( $flags, false );
-		}
+		// Add to the clearer queue.
+		$this->enqueue_flags( $flags, $expire, false );
 
 		return $this;
 	}
@@ -202,8 +215,8 @@ final class Manager {
 			$flags = array_merge( $flags, $this->resolver->resolve_post_id( $post_id ) );
 		}
 
-		// Add to clearer queue.
-		$this->flags( $flags, $expire );
+		// Add to the clearer queue.
+		$this->enqueue_flags( $flags, $expire );
 
 		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
@@ -220,19 +233,15 @@ final class Manager {
 	 *
 	 * @param string|array<string> $flags      Flag(s) to clear.
 	 * @param bool                 $expire     Expire (true) or delete (false).
-	 * @param bool                 $add_prefix Whether to add multisite prefix.
+	 * @param bool                 $add_prefix Whether to add the multisite prefix.
 	 * @return self                For fluent chaining.
 	 */
 	public function flags( $flags, bool $expire = false, bool $add_prefix = true ): self {
 		// Convert to array.
 		$flags = is_string( $flags ) ? array( $flags ) : $flags;
 
-		// Add to flusher queue.
-		if ( $expire ) {
-			$this->queue->add_to_expire( $flags, $add_prefix );
-		} else {
-			$this->queue->add_to_delete( $flags, $add_prefix );
-		}
+		// Add to the clearer queue.
+		$this->enqueue_flags( $flags, $expire, $add_prefix );
 
 		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
@@ -243,7 +252,7 @@ final class Manager {
 	}
 
 	/**
-	 * Clear cache for entire site(s).
+	 * Clear cache for the entire site (s).
 	 *
 	 * @since 1.0.0
 	 *
@@ -256,12 +265,8 @@ final class Manager {
 		// Resolve sites to flags.
 		$flags = $this->resolver->resolve_site_ids( $site_ids, $network_id );
 
-		// Add to flusher queue (no prefix, already includes site prefix with wildcard).
-		if ( $expire ) {
-			$this->queue->add_to_expire( $flags, false );
-		} else {
-			$this->queue->add_to_delete( $flags, false );
-		}
+		// Add to the clearer queue.
+		$this->enqueue_flags( $flags, $expire, false );
 
 		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
