@@ -102,6 +102,16 @@ class Storage {
 	private bool $persistent;
 
 	/**
+	 * Whether the host is a Unix socket path.
+	 *
+	 * @since    1.2.0
+	 * @access   private
+	 *
+	 * @var      bool    $is_socket    Whether the host is a Unix socket path.
+	 */
+	private bool $is_socket;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since 1.0.0
@@ -165,6 +175,8 @@ class Storage {
 				$this->$key = $value;
 			}
 		}
+
+		$this->is_socket = strpos( $this->host, '/' ) === 0;
 	}
 
 	/**
@@ -192,11 +204,12 @@ class Storage {
 			// Initialize the storage server.
 			$this->client = new Client(
 				array(
-					'scheme' => 'tcp',
-					'host' => $this->host,
-					'port' => $this->port,
-					'password' => $this->enc_password,
-					'database' => $this->db,
+					'scheme'     => $this->is_socket ? 'unix' : 'tcp',
+					'host'       => $this->is_socket ? null : $this->host,
+					'port'       => $this->is_socket ? null : $this->port,
+					'path'       => $this->is_socket ? $this->host : null,
+					'password'   => $this->enc_password,
+					'database'   => $this->db,
 					'persistent' => $this->persistent,
 				)
 			);

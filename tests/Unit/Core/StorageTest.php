@@ -100,6 +100,22 @@ describe( 'Storage', function () {
 			// Storage should handle connection failure gracefully.
 			expect( $storage )->toBeInstanceOf( Storage::class );
 		} );
+
+		it( 'constructs with a Unix socket path without error', function () {
+			$settings = array(
+				'host' => '/var/run/redis/redis.sock',
+				'port' => 0,
+				'enc_password' => '',
+				'db' => 0,
+				'prefix' => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			// Storage should initialize with the unix scheme without throwing.
+			expect( $storage )->toBeInstanceOf( Storage::class );
+		} );
 	} );
 
 	describe( 'set operations', function () {

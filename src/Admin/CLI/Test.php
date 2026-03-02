@@ -46,24 +46,25 @@ final class Test {
 		\WP_CLI::line( __( 'Testing Redis connection...', 'millicache' ) );
 		\WP_CLI::line( '' );
 
-		$storage_settings = millicache()->get_settings( 'storage' );
+		$settings = millicache()->get_settings( 'storage' );
+		$host     = is_string( $settings['host'] ?? null ) ? $settings['host'] : '127.0.0.1';
+		$port     = is_int( $settings['port'] ?? null ) ? $settings['port'] : 6379;
 
-		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
-		/** @var string $host */
-		$host = $storage_settings['host'] ?? '127.0.0.1';
-		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
-		/** @var int $port */
-		$port = $storage_settings['port'] ?? 6379;
+		if ( strpos( $host, '/' ) === 0 ) {
+			// translators: %s is the Unix socket path.
+			\WP_CLI::line( sprintf( __( 'Server: %s (socket)', 'millicache' ), $host ) );
+		} else {
+			// translators: %1$s is the Redis host, %2$d is the port.
+			\WP_CLI::line( sprintf( __( 'Server: %1$s:%2$d', 'millicache' ), $host, $port ) );
+		}
 
-		// translators: %1$s is the Redis host, %2$d is the port.
-		\WP_CLI::line( sprintf( __( 'Server: %1$s:%2$d', 'millicache' ), $host, $port ) );
 		\WP_CLI::line( '' );
 
 		$tests = array();
 		$all_passed = true;
 
 		// Test 1: Connection.
-		$storage = millicache()->storage();
+		$storage        = millicache()->storage();
 		$storage_status = $storage->get_status();
 
 		if ( $storage_status['connected'] ) {

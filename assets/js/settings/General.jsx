@@ -47,7 +47,7 @@ const GeneralSettings = () => {
 								label={
 									<LabelWithTooltip
 										label={ __( 'Server Host', 'millicache' ) }
-										tooltip={ __( 'The hostname or IP address of your Redis, Valkey, KeyDB, or other compatible server. Typically "localhost" or "127.0.0.1" for local servers.', 'millicache' ) }
+										tooltip={ __( 'The hostname, IP address or socket path of your Redis, Valkey, or other compatible server. Typically "localhost" or "127.0.0.1" for local servers, or a socket path like "/tmp/redis.sock".', 'millicache' ) }
 									/>
 								}
 								value={

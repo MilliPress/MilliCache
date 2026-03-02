@@ -32,7 +32,7 @@ final class StorageCLI {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp millicache storage
+	 *     wp millicache cli
 	 *
 	 * @when after_wp_load
 	 *
@@ -65,22 +65,34 @@ final class StorageCLI {
 		/** @var string $password */
 		$password = $storage_settings['enc_password'] ?? '';
 
-		// translators: %1$s is the Storage DB number, %2$d is the host, %3$d is the port.
-		\WP_CLI::line( sprintf( __( 'Connecting to database %1$d at %2$s:%3$d...', 'millicache' ), $db, $host, $port ) );
+		$is_socket = str_starts_with( $host, '/' );
 
-		// Test connection with timeout before launching an interactive session.
-		$test_command = sprintf(
-			'timeout 5 redis-cli -h %s -p %d PING 2>&1',
-			escapeshellarg( $host ),
-			$port
+		\WP_CLI::line(
+			sprintf(
+				$is_socket
+				// translators: %1$d is the database number, %2$s is the socket path.
+				? __( 'Connecting to database %1$d at %2$s...', 'millicache' )
+				// translators: %1$d is the database number, %2$s is the host, %3$d is the port.
+				: __( 'Connecting to database %1$d at %2$s:%3$d...', 'millicache' ),
+				$db,
+				$host,
+				$port
+			)
 		);
 
-		// Add password to test command if set.
+		// Build the redis-cli host/socket flags.
+		$host_flags = $is_socket
+			? sprintf( '-s %s', escapeshellarg( $host ) )
+			: sprintf( '-h %s -p %d', escapeshellarg( $host ), $port );
+
+		// Test connection with timeout before launching an interactive session.
+		$test_command = sprintf( 'timeout 5 redis-cli %s PING 2>&1', $host_flags );
+
+		// Add the password to the test command if set.
 		if ( '' !== $password ) {
 			$test_command = sprintf(
-				'timeout 5 redis-cli -h %s -p %d -a %s --no-auth-warning PING 2>&1',
-				escapeshellarg( $host ),
-				$port,
+				'timeout 5 redis-cli %s -a %s --no-auth-warning PING 2>&1',
+				$host_flags,
 				escapeshellarg( $password )
 			);
 		}
@@ -91,22 +103,16 @@ final class StorageCLI {
 			$error_msg = '' !== $test_result ? $test_result : __( 'Connection timed out', 'millicache' );
 			\WP_CLI::error(
 				sprintf(
-				// translators: %1$s is the host, %2$d is the port, %3$s is the error message.
-					__( 'Cannot connect to Redis at %1$s:%2$d - %3$s', 'millicache' ),
-					$host,
-					$port,
+					// translators: %1$s is the host or socket path, %2$s is the error message.
+					__( 'Cannot connect to Redis at %1$s - %2$s', 'millicache' ),
+					$is_socket ? $host : "$host:$port",
 					$error_msg
 				)
 			);
 		}
 
 		// Build the redis-cli command.
-		$command = sprintf(
-			'redis-cli -h %s -p %d -n %d',
-			escapeshellarg( $host ),
-			$port,
-			$db
-		);
+		$command = sprintf( 'redis-cli %s -n %d', $host_flags, $db );
 
 		// Add a password if set.
 		if ( '' !== $password ) {
