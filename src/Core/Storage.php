@@ -848,8 +848,13 @@ class Storage {
 			'maxmemory-policy',
 		);
 
-		foreach ( $config_keys as $key ) {
-			$status['config'] = array_merge( $status['config'], (array) $this->client->config( 'GET', $key ) );
+		try {
+			foreach ( $config_keys as $key ) {
+				$status['config'] = array_merge( $status['config'], (array) $this->client->config( 'GET', $key ) );
+			}
+		} catch ( PredisException $e ) {
+			// CONFIG may be disabled on managed Redis. Skip gracefully.
+			unset( $e );
 		}
 
 		// Get the storage server info.
