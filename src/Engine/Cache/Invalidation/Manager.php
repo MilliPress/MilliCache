@@ -160,10 +160,9 @@ final class Manager {
 			} elseif ( $this->resolver->is_post_id( $target_str ) ) {
 				$this->posts( (int) $target, $expire );
 			} else {
-				// Flag - limit to current site if not network admin.
-				$add_prefix = $this->multisite->is_enabled() &&
-							  function_exists( 'is_network_admin' ) &&
-							  ! is_network_admin();
+				// Flag — only prefix if not already site-scoped.
+				$prefix     = $this->multisite->get_flag_prefix();
+				$add_prefix = '' !== $prefix && strpos( $target_str, $prefix ) !== 0;
 				$this->flags( $target_str, $expire, $add_prefix );
 			}
 		}
