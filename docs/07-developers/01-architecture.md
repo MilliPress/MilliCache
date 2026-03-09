@@ -161,16 +161,18 @@ $storage->get_status();
 
 ### Settings
 
-Configuration management with multi-source resolution.
+Configuration management via MilliBase, accessed through the Engine singleton.
 
-**File:** `src/Core/Settings.php`
+**Access:** `Settings::instance()` returns a `\MilliBase\Settings` instance.
 
 ```php
-$settings = new \MilliCache\Core\Settings();
+use MilliCache\Core\Settings;
+
+$settings = Settings::instance();
 
 // Get settings
-$ttl = $settings->get( 'cache.ttl' );
-$all = $settings->get_settings( 'cache' );
+$ttl   = $settings->get( 'cache.ttl' );
+$cache = $settings->get( 'cache' );
 
 // Set settings
 $settings->set( 'cache.ttl', 3600 );
