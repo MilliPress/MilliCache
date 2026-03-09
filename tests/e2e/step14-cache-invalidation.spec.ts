@@ -97,21 +97,25 @@ test.describe('Step 14: Cache Invalidation', () => {
 
     test.describe('Post Deletion Invalidation', () => {
         let deleteTestPostId: number | null = null;
-        const deleteTestSlug = 'deletion-test-post';
+        let deleteTestSlug: string | null = null;
 
         test('Create a post for deletion test', async ({
-            admin,
-            editor,
+            requestUtils,
             page,
         }) => {
-            await admin.createNewPost({
-                postType: 'post',
-                title: 'Deletion Test Post',
-                content: 'This post will be deleted.',
-                showWelcomeGuide: false,
+            // Use REST API to create the post so we control the exact slug
+            const post = await requestUtils.rest({
+                method: 'POST',
+                path: '/wp/v2/posts',
+                params: {
+                    title: 'Deletion Test Post',
+                    content: 'This post will be deleted.',
+                    status: 'publish',
+                },
             });
 
-            deleteTestPostId = await editor.publishPost();
+            deleteTestPostId = post.id;
+            deleteTestSlug = post.slug;
 
             // Prime the cache
             await page.context().clearCookies();
@@ -123,10 +127,9 @@ test.describe('Step 14: Cache Invalidation', () => {
 
         test('Deleting post should result in 404', async ({
             requestUtils,
-            editor,
             page,
         }) => {
-            if (!deleteTestPostId) {
+            if (!deleteTestPostId || !deleteTestSlug) {
                 test.skip();
                 return;
             }
