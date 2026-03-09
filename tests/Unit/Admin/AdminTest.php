@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for Admin class.
+ * Tests for Admin and Utils classes.
  *
  * @link       https://www.millipress.com
  * @since      1.0.0
@@ -9,6 +9,7 @@
  */
 
 use MilliCache\Admin\Admin;
+use MilliCache\Admin\Utils;
 
 // Mock WordPress functions.
 if ( ! function_exists( 'is_network_admin' ) ) {
@@ -124,36 +125,36 @@ uses()->beforeEach( function () {
  * that cannot be mocked with overload (causes test pollution across files).
  * These tests focus on pure unit tests that don't require Engine.
  */
-describe( 'Admin', function () {
+describe( 'Utils', function () {
 
 	describe( 'class structure', function () {
 		it( 'class exists', function () {
-			expect( class_exists( Admin::class ) )->toBeTrue();
+			expect( class_exists( Utils::class ) )->toBeTrue();
 		} );
 
 		it( 'is a final class', function () {
-			$reflection = new ReflectionClass( Admin::class );
+			$reflection = new ReflectionClass( Utils::class );
 			expect( $reflection->isFinal() )->toBeTrue();
 		} );
 
-		it( 'has add_notice static method', function () {
+		it( 'has add_notice static method on Admin', function () {
 			expect( method_exists( Admin::class, 'add_notice' ) )->toBeTrue();
 		} );
 
 		it( 'has get_cache_size static method', function () {
-			expect( method_exists( Admin::class, 'get_cache_size' ) )->toBeTrue();
+			expect( method_exists( Utils::class, 'get_cache_size' ) )->toBeTrue();
 		} );
 
 		it( 'has get_cache_size_summary_string static method', function () {
-			expect( method_exists( Admin::class, 'get_cache_size_summary_string' ) )->toBeTrue();
+			expect( method_exists( Utils::class, 'get_cache_size_summary_string' ) )->toBeTrue();
 		} );
 
 		it( 'has enqueue_assets static method', function () {
-			expect( method_exists( Admin::class, 'enqueue_assets' ) )->toBeTrue();
+			expect( method_exists( Utils::class, 'enqueue_assets' ) )->toBeTrue();
 		} );
 
 		it( 'has validate_advanced_cache_file static method', function () {
-			expect( method_exists( Admin::class, 'validate_advanced_cache_file' ) )->toBeTrue();
+			expect( method_exists( Utils::class, 'validate_advanced_cache_file' ) )->toBeTrue();
 		} );
 	} );
 
@@ -215,7 +216,7 @@ describe( 'Admin', function () {
 				'size'  => 1024,
 			);
 
-			$result = Admin::get_cache_size( 'test' );
+			$result = Utils::get_cache_size( 'test' );
 
 			expect( $result['index'] )->toBe( 10 );
 			expect( $result['size'] )->toBe( 1024 );
@@ -225,21 +226,21 @@ describe( 'Admin', function () {
 		it( 'formats size correctly for bytes', function () {
 			global $test_site_transients;
 			$test_site_transients['millicache_size_test1'] = array( 'index' => 1, 'size' => 500 );
-			$result1 = Admin::get_cache_size( 'test1' );
+			$result1 = Utils::get_cache_size( 'test1' );
 			expect( $result1['size_human'] )->toBe( '500 B' );
 		} );
 
 		it( 'formats size correctly for KB', function () {
 			global $test_site_transients;
 			$test_site_transients['millicache_size_test2'] = array( 'index' => 1, 'size' => 5120 );
-			$result2 = Admin::get_cache_size( 'test2' );
+			$result2 = Utils::get_cache_size( 'test2' );
 			expect( $result2['size_human'] )->toBe( '5 KB' );
 		} );
 
 		it( 'formats size correctly for MB', function () {
 			global $test_site_transients;
 			$test_site_transients['millicache_size_test3'] = array( 'index' => 1, 'size' => 5242880 );
-			$result3 = Admin::get_cache_size( 'test3' );
+			$result3 = Utils::get_cache_size( 'test3' );
 			expect( $result3['size_human'] )->toBe( '5 MB' );
 		} );
 	} );
@@ -247,14 +248,14 @@ describe( 'Admin', function () {
 	describe( 'get_cache_size_summary_string', function () {
 		it( 'returns empty cache message when size is zero', function () {
 			$size = array( 'index' => 0, 'size' => 0, 'size_human' => '0 B' );
-			$result = Admin::get_cache_size_summary_string( $size );
+			$result = Utils::get_cache_size_summary_string( $size );
 
 			expect( $result )->toBe( 'No cached pages' );
 		} );
 
 		it( 'returns formatted string for single page', function () {
 			$size = array( 'index' => 1, 'size' => 1024, 'size_human' => '1 KB' );
-			$result = Admin::get_cache_size_summary_string( $size );
+			$result = Utils::get_cache_size_summary_string( $size );
 
 			expect( $result )->toContain( '1' );
 			expect( $result )->toContain( 'page' );
@@ -263,7 +264,7 @@ describe( 'Admin', function () {
 
 		it( 'returns formatted string for multiple pages', function () {
 			$size = array( 'index' => 10, 'size' => 10240, 'size_human' => '10 KB' );
-			$result = Admin::get_cache_size_summary_string( $size );
+			$result = Utils::get_cache_size_summary_string( $size );
 
 			expect( $result )->toContain( '10' );
 			expect( $result )->toContain( 'pages' );
@@ -273,52 +274,29 @@ describe( 'Admin', function () {
 
 	describe( 'get_file_version', function () {
 		it( 'method exists and is callable', function () {
-			expect( method_exists( Admin::class, 'get_file_version' ) )->toBeTrue();
-			expect( is_callable( array( Admin::class, 'get_file_version' ) ) )->toBeTrue();
+			expect( method_exists( Utils::class, 'get_file_version' ) )->toBeTrue();
+			expect( is_callable( array( Utils::class, 'get_file_version' ) ) )->toBeTrue();
 		} );
 	} );
 
 	describe( 'validate_advanced_cache_file', function () {
 		it( 'returns empty array when file does not exist', function () {
-			$result = Admin::validate_advanced_cache_file();
+			$result = Utils::validate_advanced_cache_file();
 
 			// Since WP_CONTENT_DIR might not be defined in tests, we just check the method is callable.
 			expect( is_array( $result ) )->toBeTrue();
 		} );
 
 		it( 'method exists and is callable', function () {
-			expect( method_exists( Admin::class, 'validate_advanced_cache_file' ) )->toBeTrue();
-			expect( is_callable( array( Admin::class, 'validate_advanced_cache_file' ) ) )->toBeTrue();
+			expect( method_exists( Utils::class, 'validate_advanced_cache_file' ) )->toBeTrue();
+			expect( is_callable( array( Utils::class, 'validate_advanced_cache_file' ) ) )->toBeTrue();
 		} );
 	} );
 
 	describe( 'enqueue_assets', function () {
 		it( 'method exists and is callable', function () {
-			expect( method_exists( Admin::class, 'enqueue_assets' ) )->toBeTrue();
-			expect( is_callable( array( Admin::class, 'enqueue_assets' ) ) )->toBeTrue();
-		} );
-	} );
-
-	describe( 'undefined_cache_notice', function () {
-		it( 'adds notice when WP_CACHE is false', function () {
-			if ( ! defined( 'WP_CACHE' ) ) {
-				define( 'WP_CACHE', false );
-			}
-
-			Admin::undefined_cache_notice();
-
-			$reflection = new ReflectionClass( Admin::class );
-			$property = $reflection->getProperty( 'notices' );
-			$property->setAccessible( true );
-			$notices = $property->getValue();
-
-			expect( count( $notices ) )->toBeGreaterThan( 0 );
-			expect( $notices[0]['type'] )->toBe( 'warning' );
-		} );
-
-		it( 'method exists and is callable', function () {
-			expect( method_exists( Admin::class, 'undefined_cache_notice' ) )->toBeTrue();
-			expect( is_callable( array( Admin::class, 'undefined_cache_notice' ) ) )->toBeTrue();
+			expect( method_exists( Utils::class, 'enqueue_assets' ) )->toBeTrue();
+			expect( is_callable( array( Utils::class, 'enqueue_assets' ) ) )->toBeTrue();
 		} );
 	} );
 

@@ -12,6 +12,7 @@
 
 namespace MilliCache\Core;
 
+use MilliBase\Settings as BaseSettings;
 use MilliCache\Engine;
 use Predis;
 use Predis\Autoloader;
@@ -182,7 +183,7 @@ class Storage {
 		foreach ( $settings as $key => $value ) {
 			if ( property_exists( $this, $key ) ) {
 				if ( is_string( $value ) && strpos( $value, 'ENC:' ) === 0 ) {
-					$value = Settings::decrypt_value( $value );
+					$value = BaseSettings::decrypt_value( $value );
 				}
 
 				$this->$key = $value;

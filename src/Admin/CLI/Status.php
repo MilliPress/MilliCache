@@ -11,7 +11,7 @@
 
 namespace MilliCache\Admin\CLI;
 
-use MilliCache\Admin\Admin;
+use MilliCache\Admin\Utils;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -71,7 +71,7 @@ final class Status {
 		$status['wp_cache'] = defined( 'WP_CACHE' ) && WP_CACHE ? 'enabled' : 'disabled';
 
 		// Advanced-cache.php status.
-		$dropin_info = Admin::validate_advanced_cache_file();
+		$dropin_info = Utils::validate_advanced_cache_file();
 		if ( empty( $dropin_info ) ) {
 			$status['advanced_cache'] = 'missing';
 		} else {
@@ -108,7 +108,7 @@ final class Status {
 
 		// Cache statistics.
 		$flag = millicache()->flags()->get_prefix( is_multisite() && is_network_admin() ? '*' : null ) . '*';
-		$cache_size = Admin::get_cache_size( $flag, true );
+		$cache_size = Utils::get_cache_size( $flag, true );
 		$status['cache_entries'] = $cache_size['index'];
 		$status['cache_size'] = $cache_size['size_human'];
 

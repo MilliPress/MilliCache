@@ -89,7 +89,7 @@ final class Adminbar {
 	 * @access   public
 	 */
 	public function enqueue_adminbar_assets() {
-		if ( Admin::enqueue_assets( 'adminbar', array( 'wp-api-fetch' ) ) ) {
+		if ( Utils::enqueue_assets( 'adminbar', array( 'wp-api-fetch' ) ) ) {
 			$context = array(
 				'rest_url' => esc_url_raw( rest_url( 'millicache/v1/cache' ) ),
 				'is_network_admin' => is_network_admin(),
@@ -201,7 +201,7 @@ final class Adminbar {
 					'parent' => 'millicache-secondary',
 					'id' => 'millicache-settings',
 					'href' => admin_url( 'options-general.php?page=millicache' ),
-					'title' => Admin::get_cache_size_summary_string(),
+					'title' => Utils::get_cache_size_summary_string(),
 				)
 			);
 		}

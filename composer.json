@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": ">=7.4",
+        "millipress/millibase": "^1.0.0",
         "millipress/millirules": "^0.7.0",
         "predis/predis": "^3.0"
     },
@@ -70,7 +71,8 @@
             "packages": [
                 "predis/predis",
                 "psr/http-message",
-                "millipress/millirules"
+                "millipress/millirules",
+                "millipress/millibase"
             ]
         },
         "hooks": {

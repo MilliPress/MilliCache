@@ -11,7 +11,7 @@
 
 namespace MilliCache\Admin\CLI;
 
-use MilliCache\Admin\Admin;
+use MilliCache\Admin\Utils;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -65,7 +65,7 @@ final class Stats {
 	public function __invoke( array $args, array $assoc_args ): void {
 		$flag = $assoc_args['flag'] ?? '*';
 		$format = $assoc_args['format'] ?? 'table';
-		$size = Admin::get_cache_size( $flag, true );
+		$size = Utils::get_cache_size( $flag, true );
 
 		// Calculate average size (size is in bytes).
 		$avg_size = $size['index'] > 0 ? (int) ( $size['size'] / $size['index'] ) : 0;

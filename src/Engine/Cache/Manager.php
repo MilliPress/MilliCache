@@ -12,7 +12,7 @@
 
 namespace MilliCache\Engine\Cache;
 
-use MilliCache\Admin\Admin;
+use MilliCache\Admin\Utils;
 use MilliCache\Core\Storage;
 use MilliCache\Engine;
 
@@ -277,6 +277,6 @@ final class Manager {
 			'ignore_request_keys' => $this->config->ignore_request_keys,
 		);
 
-		return array_merge( $cache, Admin::get_cache_size( $flag, true ) );
+		return array_merge( $cache, Utils::get_cache_size( $flag, true ) );
 	}
 }

@@ -73,8 +73,8 @@ final class Deactivator {
 		$plugin_file = MILLICACHE_DIR . '/advanced-cache.php';
 
 		if ( file_exists( $dropin_file ) ) {
-			$dropin_version = Admin::get_file_version( $dropin_file );
-			$plugin_version = Admin::get_file_version( $plugin_file );
+			$dropin_version = Utils::get_file_version( $dropin_file );
+			$plugin_version = Utils::get_file_version( $plugin_file );
 
 			// Delete the advanced-cache.php file if it is a symlink or if the version is equal or lower than the plugin version.
 			if ( is_link( $dropin_file ) || ( $dropin_version && $plugin_version && version_compare( $dropin_version, $plugin_version ) <= 0 ) ) {

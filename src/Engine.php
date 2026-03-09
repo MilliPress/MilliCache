@@ -169,7 +169,7 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var array<mixed> The MilliCache Settings.
+	 * @var array<mixed>
 	 */
 	private array $settings;
 
@@ -186,12 +186,11 @@ final class Engine {
 	/**
 	 * Constructor with dependency injection.
 	 *
-	 * @param Settings|null            $settings          Settings Processor.
 	 * @param Storage|null             $storage           Storage.
 	 * @param Multisite|null           $multisite         Multisite.
 	 * @param Config|null              $config            Config.
 	 * @param Flags|null               $flag_manager      Flag Processor.
-	 * @param RequestProcessor|null    $request_manager Request Processor.
+	 * @param RequestProcessor|null    $request_manager   Request Processor.
 	 * @param CacheManager|null        $cache_manager     Cache Processor.
 	 * @param InvalidationManager|null $clearing_manager  Clearing Processor.
 	 *
@@ -200,7 +199,6 @@ final class Engine {
 	 * @access public
 	 */
 	public function __construct(
-		?Settings $settings = null,
 		?Storage $storage = null,
 		?Multisite $multisite = null,
 		?Config $config = null,
@@ -216,11 +214,10 @@ final class Engine {
 		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\PHP', 'PHP' );
 		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\WP', 'WP' );
 
-		// Store settings.
-		$settings = $settings ?? new Settings();
-		$this->settings = $settings->get_settings();
+		// Resolve settings array.
+		$this->settings = Settings::instance()->get();
 
-		// Store injected dependencies (for testing).
+		// Cache injected dependencies (for testing).
 		$this->storage = $storage;
 		$this->multisite = $multisite;
 		$this->config = $config;
@@ -237,7 +234,7 @@ final class Engine {
 	 * Get the Engine instance.
 	 *
 	 * Creates a new instance with default dependencies if one doesn't exist.
-	 * For testing with custom dependencies, create Engine instance directly
+	 * For testing with custom dependencies, create an Engine instance directly
 	 * via constructor before calling instance().
 	 *
 	 * @since 1.0.0
@@ -380,7 +377,7 @@ final class Engine {
 	 */
 	public function get_settings( ?string $module = null ): array {
 		if ( ! isset( $this->settings ) ) {
-			$this->settings = ( new Settings() )->get_settings();
+			$this->settings = Settings::instance()->get();
 		}
 
 		if ( $module ) {

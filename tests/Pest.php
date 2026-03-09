@@ -74,6 +74,12 @@ if ( ! function_exists( 'apply_filters' ) ) {
 	}
 }
 
+if ( ! function_exists( 'did_action' ) ) {
+	function did_action( $hook ) {
+		return 0;
+	}
+}
+
 if ( ! function_exists( 'trailingslashit' ) ) {
 	function trailingslashit( $value ) {
 		return rtrim( $value, '/' ) . '/';

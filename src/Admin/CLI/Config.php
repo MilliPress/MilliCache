@@ -11,6 +11,7 @@
 
 namespace MilliCache\Admin\CLI;
 
+use MilliBase\Settings as BaseSettings;
 use MilliCache\Core\Settings;
 
 ! defined( 'ABSPATH' ) && exit;
@@ -54,9 +55,6 @@ final class Config {
 	 * [<value>]
 	 * : The value to set (for 'set' subcommand).
 	 *
-	 * [--module=<module>]
-	 * : Filter by module (storage, cache, rules).
-	 *
 	 * [--format=<format>]
 	 * : Output format for get/export.
 	 * ---
@@ -80,6 +78,9 @@ final class Config {
 	 *
 	 *     # Get all settings
 	 *     wp millicache config get
+	 *
+	 *     # Get all settings for a module
+	 *     wp millicache config get storage
 	 *
 	 *     # Get a specific value
 	 *     wp millicache config get cache.ttl
@@ -157,17 +158,16 @@ final class Config {
 	 */
 	private function get( array $args, array $assoc_args ): void {
 		$key         = $args[0] ?? '';
-		$module      = $assoc_args['module'] ?? null;
 		$format      = $assoc_args['format'] ?? 'table';
 		$show_source = isset( $assoc_args['show-source'] );
 
-		$settings_obj = new Settings();
+		$settings     = Settings::instance();
 		$raw_settings = null;
 		$items        = array();
 
 		if ( '' !== $key ) {
-			// Get a specific key.
-			$value = $settings_obj->get( $key );
+			// Get a specific key or module (e.g., "cache.ttl" or "storage").
+			$value = $settings->get( $key );
 
 			if ( null === $value ) {
 				\WP_CLI::error(
@@ -184,21 +184,15 @@ final class Config {
 
 			if ( is_array( $value ) && ! $has_sub_key ) {
 				// Module-level key (e.g., "storage") - flatten to individual settings.
-				$items = $this->flatten_settings( array( $key => $value ), $settings_obj, $show_source );
+				$items = $this->flatten_settings( array( $key => $value ), $settings, $show_source );
 			} else {
 				// Single scalar setting.
-				$items[] = $this->build_row( $key, $value, $settings_obj, $show_source );
+				$items[] = $this->build_row( $key, $value, $settings, $show_source );
 			}
 		} else {
-			// Get all settings (optionally filtered by module).
-			$raw_settings = $settings_obj->get_settings( $module );
-
-			if ( $module ) {
-				// Module filter - wrap for consistent flattening.
-				$items = $this->flatten_settings( array( $module => $raw_settings ), $settings_obj, $show_source );
-			} else {
-				$items = $this->flatten_settings( $raw_settings, $settings_obj, $show_source );
-			}
+			// Get all settings.
+			$raw_settings = $settings->get();
+			$items        = $this->flatten_settings( $raw_settings, $settings, $show_source );
 		}
 
 		$columns = $show_source ? array( 'key', 'value', 'source' ) : array( 'key', 'value' );
@@ -210,13 +204,13 @@ final class Config {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string   $full_key     The full dot-notation key.
-	 * @param mixed    $value        The setting value.
-	 * @param Settings $settings_obj The settings instance.
-	 * @param bool     $show_source  Whether to include source info.
+	 * @param string $full_key    The full dot-notation key.
+	 * @param mixed  $value       The setting value.
+	 * @param BaseSettings $settings    The Settings instance.
+	 * @param bool              $show_source Whether to include source info.
 	 * @return array<string, string> The row data.
 	 */
-	private function build_row( string $full_key, $value, Settings $settings_obj, bool $show_source ): array {
+	private function build_row( string $full_key, $value, BaseSettings $settings, bool $show_source ): array {
 		$row = array(
 			'key'   => $full_key,
 			'value' => $this->format_value( $value ),
@@ -225,7 +219,7 @@ final class Config {
 		if ( $show_source ) {
 			$parts = explode( '.', $full_key );
 			if ( count( $parts ) >= 2 ) {
-				$row['source'] = $settings_obj->get_setting_source( $parts[0], $parts[1] );
+				$row['source'] = $settings->get_source( $parts[0], $parts[1] );
 			}
 		}
 
@@ -237,20 +231,20 @@ final class Config {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string, mixed> $settings     The nested settings array.
-	 * @param Settings             $settings_obj The settings instance.
-	 * @param bool                 $show_source  Whether to include source info.
+	 * @param array<string, mixed> $data        The nested settings array.
+	 * @param BaseSettings    $settings    The Settings instance.
+	 * @param bool                 $show_source Whether to include source info.
 	 * @return array<int, array<string, string>> The flattened rows.
 	 */
-	private function flatten_settings( array $settings, Settings $settings_obj, bool $show_source ): array {
+	private function flatten_settings( array $data, BaseSettings $settings, bool $show_source ): array {
 		$items = array();
 
-		foreach ( $settings as $module_key => $module_settings ) {
+		foreach ( $data as $module_key => $module_settings ) {
 			if ( ! is_array( $module_settings ) ) {
 				continue;
 			}
 			foreach ( $module_settings as $key_name => $value ) {
-				$items[] = $this->build_row( "$module_key.$key_name", $value, $settings_obj, $show_source );
+				$items[] = $this->build_row( "$module_key.$key_name", $value, $settings, $show_source );
 			}
 		}
 
@@ -274,14 +268,14 @@ final class Config {
 		$key = $args[0];
 		$value = $args[1];
 
-		$settings_obj = new Settings();
+		$settings = Settings::instance();
 
 		// Check if the key is defined by a constant.
 		$parts = explode( '.', $key );
 		if ( count( $parts ) >= 2 ) {
 			$module = $parts[0];
 			$setting_key = $parts[1];
-			$source = $settings_obj->get_setting_source( $module, $setting_key );
+			$source = $settings->get_source( $module, $setting_key );
 
 			if ( 'constant' === $source ) {
 				\WP_CLI::error(
@@ -295,13 +289,13 @@ final class Config {
 		}
 
 		// Coerce value type.
-		$typed_value = Settings::coerce_value( $value );
+		$typed_value = BaseSettings::coerce_value( $value );
 
-		// Set the value (Settings automatically encrypt enc_* fields).
+		// Set the value (Settings automatically encrypts enc_* fields).
 		// Check if this is an encrypted field (the key contains enc_ after the module prefix).
 		$is_encrypted_field = isset( $setting_key ) && strpos( $setting_key, 'enc_' ) === 0;
 
-		if ( $settings_obj->set( $key, $typed_value ) ) {
+		if ( $settings->set( $key, $typed_value ) ) {
 			\WP_CLI::success(
 				sprintf(
 					// translators: %1$s is the key, %2$s is the value.
@@ -344,13 +338,14 @@ final class Config {
 			\WP_CLI::confirm( $message );
 		}
 
+		$settings = Settings::instance();
+
 		// Create a backup first.
-		Settings::backup( $module );
+		$settings->backup( $module );
 		\WP_CLI::line( __( 'Created settings backup.', 'millicache' ) );
 
 		// Reset settings.
-		$settings_obj = new Settings();
-		if ( $settings_obj->reset( $module ) ) {
+		if ( $settings->reset( $module ) ) {
 			if ( $module ) {
 				\WP_CLI::success(
 					sprintf(
@@ -376,11 +371,13 @@ final class Config {
 	 * @return void
 	 */
 	private function restore( array $assoc_args ): void {
-		if ( ! Settings::has_backup() ) {
+		$settings = Settings::instance();
+
+		if ( ! $settings->has_backup() ) {
 			\WP_CLI::error( __( 'No backup found. Backups are created when using "config reset".', 'millicache' ) );
 		}
 
-		if ( Settings::restore_backup() ) {
+		if ( $settings->restore_backup() ) {
 			\WP_CLI::success( __( 'Settings restored from backup.', 'millicache' ) );
 		} else {
 			\WP_CLI::error( __( 'Failed to restore settings from backup.', 'millicache' ) );
@@ -399,13 +396,13 @@ final class Config {
 		$format = $assoc_args['format'] ?? 'json';
 		$file = $assoc_args['file'] ?? '';
 
-		$settings_obj = new Settings();
-		$settings = $settings_obj->export();
+		$settings = Settings::instance();
+		$exported = $settings->export();
 
 		// Format output.
 		if ( 'yaml' === $format ) {
 			$output = '';
-			foreach ( $settings as $module => $module_settings ) {
+			foreach ( $exported as $module => $module_settings ) {
 				$output .= "$module:\n";
 				if ( is_array( $module_settings ) ) {
 					foreach ( $module_settings as $key => $value ) {
@@ -414,10 +411,10 @@ final class Config {
 				}
 			}
 		} elseif ( 'php' === $format ) {
-			$output = "<?php\nreturn " . var_export( $settings, true ) . ";\n";
+			$output = "<?php\nreturn " . var_export( $exported, true ) . ";\n";
 		} else {
 			// JSON (default).
-			$output = (string) wp_json_encode( $settings, JSON_PRETTY_PRINT );
+			$output = (string) wp_json_encode( $exported, JSON_PRETTY_PRINT );
 		}
 
 		// Write to file or stdout.
@@ -484,26 +481,26 @@ final class Config {
 			);
 		}
 
-		$settings = array();
+		$import_settings = array();
 
 		if ( 'php' === $extension ) {
-			$settings = include $file;
+			$import_settings = include $file;
 		} elseif ( 'json' === $extension ) {
-			$settings = json_decode( $content, true );
-			if ( null === $settings ) {
+			$import_settings = json_decode( $content, true );
+			if ( null === $import_settings ) {
 				\WP_CLI::error( __( 'Invalid JSON file.', 'millicache' ) );
 			}
 		} elseif ( 'yaml' === $extension || 'yml' === $extension ) {
 			\WP_CLI::error( __( 'YAML import requires the symfony/yaml package. Use JSON or PHP format.', 'millicache' ) );
 		} else {
 			// Try JSON first, then PHP.
-			$settings = json_decode( $content, true );
-			if ( null === $settings ) {
+			$import_settings = json_decode( $content, true );
+			if ( null === $import_settings ) {
 				\WP_CLI::error( __( 'Could not parse file. Use JSON or PHP format.', 'millicache' ) );
 			}
 		}
 
-		if ( ! is_array( $settings ) || empty( $settings ) ) {
+		if ( ! is_array( $import_settings ) || empty( $import_settings ) ) {
 			\WP_CLI::error( __( 'No valid settings found in file.', 'millicache' ) );
 		}
 
@@ -512,13 +509,14 @@ final class Config {
 			\WP_CLI::confirm( __( 'Are you sure you want to import these settings?', 'millicache' ) );
 		}
 
+		$settings = Settings::instance();
+
 		// Create a backup first.
-		Settings::backup();
+		$settings->backup();
 		\WP_CLI::line( __( 'Created settings backup.', 'millicache' ) );
 
 		// Import settings.
-		$settings_obj = new Settings();
-		if ( $settings_obj->import( $settings ) ) {
+		if ( $settings->import( $import_settings ) ) {
 			\WP_CLI::success( __( 'Settings imported successfully.', 'millicache' ) );
 		} else {
 			\WP_CLI::error( __( 'Failed to import settings.', 'millicache' ) );

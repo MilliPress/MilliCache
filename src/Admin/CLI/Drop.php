@@ -11,7 +11,7 @@
 
 namespace MilliCache\Admin\CLI;
 
-use MilliCache\Admin\Admin;
+use MilliCache\Admin\Utils;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -57,7 +57,7 @@ final class Drop {
 
 		// Check the current status.
 		if ( file_exists( $destination ) && ! $force ) {
-			$info = Admin::validate_advanced_cache_file();
+			$info = Utils::validate_advanced_cache_file();
 			if ( ! empty( $info ) && 'symlink' === $info['type'] ) {
 				$target = readlink( $destination );
 				if ( $target === $source ) {

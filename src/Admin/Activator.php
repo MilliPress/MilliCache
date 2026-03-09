@@ -11,8 +11,6 @@
 
 namespace MilliCache\Admin;
 
-use MilliCache\Core\Settings;
-
 ! defined( 'ABSPATH' ) && exit;
 
 /**
@@ -42,7 +40,7 @@ final class Activator {
 		self::schedule_events();
 
 		// Set the option autoload to false.
-		wp_set_option_autoload( Settings::$option_name, false );
+		wp_set_option_autoload( 'millicache', false );
 	}
 
 	/**
@@ -71,8 +69,8 @@ final class Activator {
 
 		if ( ! is_writable( WP_CONTENT_DIR ) ) {
 			Admin::add_notice(
-				'error',
-				__( 'The wp-content directory is not writable. Please make sure that the directory is writable and try again or manually copy advanced-cache.php from the plugin folder.', 'millicache' )
+				__( 'The wp-content directory is not writable. Please make sure that the directory is writable and try again or manually copy advanced-cache.php from the plugin folder.', 'millicache' ),
+				'error'
 			);
 
 			return;
@@ -90,8 +88,8 @@ final class Activator {
 					unlink( $destination );
 				}
 			} else {
-				$source_version = Admin::get_file_version( $source_file );
-				$destination_version = Admin::get_file_version( $destination );
+				$source_version = Utils::get_file_version( $source_file );
+				$destination_version = Utils::get_file_version( $destination );
 
 				if ( $source_version && $destination_version ) {
 					if ( version_compare( $source_version, $destination_version ) > 0 ) {
