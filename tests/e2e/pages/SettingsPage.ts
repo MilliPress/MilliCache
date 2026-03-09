@@ -9,8 +9,8 @@ export class SettingsPage {
     readonly admin: Admin;
 
     private static readonly SELECTORS = {
-        settingsPanel: '#millicache-settings .components-panel',
-        settingsTab: '#tab-panel-0-settings',
+        settingsPanel: '#millicache-settings [role="tablist"]',
+        settingsTab: '[role="tab"]:has-text("Settings")',
         gracePeriodLabel: 'span:has-text("Grace Period")',
         ttlLabel: 'span:has-text("Cache TTL")',
         saveButton: 'button:has-text("Save Settings")',

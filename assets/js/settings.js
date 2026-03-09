@@ -1,17 +1,15 @@
-import domReady from '@wordpress/dom-ready';
-import { createRoot } from '@wordpress/element';
-import _MilliCacheUI from './settings/_MilliCacheUI.jsx';
-import { SnackbarProvider } from './settings/context/Snackbar.jsx';
-import { SettingsProvider } from './settings/context/Settings.jsx';
+/**
+ * MilliCache — Custom components for the MilliBase-powered settings page.
+ *
+ * Registers plugin-specific UI components (Status tab, Clear Cache button)
+ * via the MilliBase global registry. The package handles the rest.
+ */
+
+import StatusTab from './settings/tabs/Status.jsx';
+import ClearCacheButton from './settings/partials/ClearCacheButton.jsx';
 
 import '../css/settings.scss';
 
-domReady( () => {
-	createRoot( document.getElementById( 'millicache-settings' ) ).render(
-		<SnackbarProvider>
-			<SettingsProvider>
-				<_MilliCacheUI />
-			</SettingsProvider>
-		</SnackbarProvider>
-	);
-} );
+// Register custom tab components.
+window.MilliBase.registerComponent( 'MilliCacheStatus', StatusTab );
+window.MilliBase.registerComponent( 'MilliCacheClearButton', ClearCacheButton );

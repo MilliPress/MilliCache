@@ -1,6 +1,4 @@
 #millicache-settings {
-	padding-bottom: 100px;
-
 	table.widefat {
 		margin-bottom: 20px;
 	}
@@ -16,22 +14,9 @@
 		}
 	}
 
-	.millicache-actions-dropdown {
+	.millibase-actions-dropdown {
 		vertical-align: top;
 		margin-left: -1px;
-	}
-
-	.millicache-settings-progress {
-		--wp-components-color-foreground: var(--wp-admin-theme-color, #3858e9);
-		width: 100%;
-		margin-bottom: -1.5px;
-	}
-
-	.millicache-settings-snacks {
-		position: fixed;
-		bottom: 20px;
-		left: 20px;
-		z-index: 9999;
 	}
 
 	.components-external-link {

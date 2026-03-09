@@ -1,10 +1,7 @@
-import { Spinner, Notice, PanelBody } from '@wordpress/components';
+import { Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { useSettings } from './context/Settings.jsx';
 
-const StatusTab = () => {
-	const { error, status, isLoading } = useSettings();
-
+const StatusTab = ( { status, isLoading } ) => {
 	const connectionInfo = {
 		[ __( 'Status', 'millicache' ) ]: status.storage?.connected
 			? __( 'Connected', 'millicache' )
@@ -49,68 +46,39 @@ const StatusTab = () => {
 			status.storage?.info?.Memory?.maxmemory_policy ?? 'N/A',
 	};
 
+	const renderTable = ( data ) => (
+		<table className="widefat striped fixed" cellSpacing="0">
+			<tbody>
+				{ Object.entries( data ).map( ( [ key, value ] ) => (
+					<tr key={ key }>
+						<td>
+							<strong>{ key }:</strong>
+						</td>
+						<td>
+							<code>{ value }</code>
+						</td>
+					</tr>
+				) ) }
+			</tbody>
+		</table>
+	);
+
 	return (
-		<PanelBody>
+		<div style={ { padding: '0 16px' } }>
 			{ isLoading && <Spinner /> }
-			{ error && <Notice status="error">{ error }</Notice> }
 			{ status && (
 				<>
 					<h2>{ __( 'Connection', 'millicache' ) }</h2>
-					<table className="widefat striped fixed" cellSpacing="0">
-						<tbody>
-							{ Object.entries( connectionInfo ).map(
-								( [ key, value ] ) => (
-									<tr key={ key }>
-										<td>
-											<strong>{ key }:</strong>
-										</td>
-										<td>
-											<code>{ value }</code>
-										</td>
-									</tr>
-								)
-							) }
-						</tbody>
-					</table>
+					{ renderTable( connectionInfo ) }
 
 					<h2>{ __( 'Cache', 'millicache' ) }</h2>
-					<table className="widefat striped fixed" cellSpacing="0">
-						<tbody>
-							{ Object.entries( cacheInfo ).map(
-								( [ key, value ] ) => (
-									<tr key={ key }>
-										<td>
-											<strong>{ key }:</strong>
-										</td>
-										<td>
-											<code>{ value }</code>
-										</td>
-									</tr>
-								)
-							) }
-						</tbody>
-					</table>
+					{ renderTable( cacheInfo ) }
 
 					<h2>{ __( 'Storage Server', 'millicache' ) }</h2>
-					<table className="widefat striped fixed" cellSpacing="0">
-						<tbody>
-							{ Object.entries( storageInfo ).map(
-								( [ key, value ] ) => (
-									<tr key={ key }>
-										<td>
-											<strong>{ key }:</strong>
-										</td>
-										<td>
-											<code>{ value }</code>
-										</td>
-									</tr>
-								)
-							) }
-						</tbody>
-					</table>
+					{ renderTable( storageInfo ) }
 				</>
 			) }
-		</PanelBody>
+		</div>
 	);
 };
 
