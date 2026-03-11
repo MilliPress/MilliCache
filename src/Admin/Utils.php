@@ -34,18 +34,24 @@ final class Utils {
 	 * @since    1.0.0
 	 * @access   public static
 	 *
-	 * @param string        $asset_name      The asset name without extension.
-	 * @param array<string> $js_deps         An array of JavaScript dependencies to include.
-	 * @param array<string> $css_deps        An array of CSS dependencies to include.
+	 * @param string        $asset_name  The asset name without extension.
+	 * @param array<string> $js_deps     An array of JavaScript dependencies to include.
+	 * @param array<string> $css_deps    An array of CSS dependencies to include.
+	 * @param string        $basename    Plugin basename for asset resolution.
+	 *                                   Defaults to MILLICACHE_BASENAME.
 	 *
 	 * @return bool True if assets were successfully enqueued, false otherwise.
 	 */
-	public static function enqueue_assets( string $asset_name, array $js_deps = array(), array $css_deps = array() ): bool {
-		if ( ! defined( 'MILLICACHE_BASENAME' ) ) {
+	public static function enqueue_assets( string $asset_name, array $js_deps = array(), array $css_deps = array(), string $basename = '' ): bool {
+		if ( ! $basename && ! defined( 'MILLICACHE_BASENAME' ) ) {
 			return false;
 		}
 
-		$asset_file = plugin_dir_path( WP_PLUGIN_DIR . '/' . MILLICACHE_BASENAME ) . '/build/' . $asset_name . '.asset.php';
+		if ( ! $basename ) {
+			$basename = MILLICACHE_BASENAME;
+		}
+
+		$asset_file = plugin_dir_path( WP_PLUGIN_DIR . '/' . $basename ) . '/build/' . $asset_name . '.asset.php';
 
 		if ( ! file_exists( $asset_file ) ) {
 			return false;
@@ -53,18 +59,16 @@ final class Utils {
 
 		$asset = include $asset_file;
 
-		// Enqueue the styles.
 		wp_enqueue_style(
 			"millicache-{$asset_name}",
-			plugins_url( 'build/' . $asset_name . '.css', MILLICACHE_BASENAME ),
+			plugins_url( 'build/' . $asset_name . '.css', $basename ),
 			$css_deps,
 			$asset['version']
 		);
 
-		// Enqueue the script.
 		wp_enqueue_script(
 			"millicache-{$asset_name}",
-			plugins_url( 'build/' . $asset_name . '.js', MILLICACHE_BASENAME ),
+			plugins_url( 'build/' . $asset_name . '.js', $basename ),
 			array_merge( $asset['dependencies'], $js_deps ),
 			$asset['version'],
 			array( 'in_footer' => true )

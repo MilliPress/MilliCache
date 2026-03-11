@@ -5,6 +5,8 @@
  * @package MilliCache
  */
 
+define( 'MILLICACHE_BASENAME', '' );
+
 /**
  * Get the MilliCache Engine instance.
  *

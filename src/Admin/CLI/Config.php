@@ -204,10 +204,10 @@ final class Config {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $full_key    The full dot-notation key.
-	 * @param mixed  $value       The setting value.
+	 * @param string       $full_key    The full dot-notation key.
+	 * @param mixed        $value       The setting value.
 	 * @param BaseSettings $settings    The Settings instance.
-	 * @param bool              $show_source Whether to include source info.
+	 * @param bool         $show_source Whether to include source info.
 	 * @return array<string, string> The row data.
 	 */
 	private function build_row( string $full_key, $value, BaseSettings $settings, bool $show_source ): array {
@@ -232,7 +232,7 @@ final class Config {
 	 * @since 1.0.0
 	 *
 	 * @param array<string, mixed> $data        The nested settings array.
-	 * @param BaseSettings    $settings    The Settings instance.
+	 * @param BaseSettings         $settings    The Settings instance.
 	 * @param bool                 $show_source Whether to include source info.
 	 * @return array<int, array<string, string>> The flattened rows.
 	 */
