@@ -120,6 +120,28 @@ define( 'MC_STORAGE_PREFIX', 'mll' );
 
 Prefix for all cache keys in Redis. Use different prefixes to share Redis between sites.
 
+### MC_STORAGE_SCHEME
+
+```php
+define( 'MC_STORAGE_SCHEME', 'tcp' );
+```
+
+| Property  | Value        |
+|-----------|--------------|
+| Default   | `tcp`        |
+| Type      | `string`     |
+| Options   | `tcp`, `tls` |
+
+Connection scheme. Set to `tls` for encrypted connections (e.g. AWS ElastiCache with in-transit encryption enabled). Unix socket paths are always detected automatically and ignore this setting.
+
+**Example (AWS ElastiCache with TLS):**
+
+```php
+define( 'MC_STORAGE_HOST', 'master.example.cache.amazonaws.com' );
+define( 'MC_STORAGE_PORT', 6379 );
+define( 'MC_STORAGE_SCHEME', 'tls' );
+```
+
 ## Cache Constants
 
 Settings that control caching behavior.

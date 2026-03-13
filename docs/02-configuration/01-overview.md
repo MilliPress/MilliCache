@@ -78,6 +78,7 @@ Connection to your Redis-compatible server:
 | `MC_STORAGE_PASSWORD` | `''`        | Redis AUTH password            |
 | `MC_STORAGE_DB`       | `0`         | Database number (0-15)         |
 | `MC_STORAGE_PREFIX`   | `mll`       | Key prefix                     |
+| `MC_STORAGE_SCHEME`   | `tcp`       | Connection scheme (`tcp` or `tls`) |
 
 ### Cache Settings
 

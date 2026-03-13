@@ -112,6 +112,16 @@ class Storage {
 	private bool $is_socket;
 
 	/**
+	 * The connection scheme (tcp or tls).
+	 *
+	 * @since    1.3.0
+	 * @access   private
+	 *
+	 * @var      string    $scheme    The connection scheme.
+	 */
+	private string $scheme = 'tcp';
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since 1.0.0
@@ -177,6 +187,10 @@ class Storage {
 		}
 
 		$this->is_socket = strpos( $this->host, '/' ) === 0;
+
+		if ( $this->is_socket ) {
+			$this->scheme = 'unix';
+		}
 	}
 
 	/**
@@ -204,7 +218,7 @@ class Storage {
 			// Initialize the storage server.
 			$this->client = new Client(
 				array(
-					'scheme'     => $this->is_socket ? 'unix' : 'tcp',
+					'scheme'     => $this->scheme,
 					'host'       => $this->is_socket ? null : $this->host,
 					'port'       => $this->is_socket ? null : $this->port,
 					'path'       => $this->is_socket ? $this->host : null,
@@ -823,10 +837,11 @@ class Storage {
 		$status = array(
 			'connected' => false,
 			'config' => array(
-				'host' => $this->host,
-				'port' => $this->port,
-				'database' => $this->db,
-				'prefix' => $this->prefix,
+				'host'       => $this->host,
+				'port'       => $this->port,
+				'scheme'     => $this->scheme,
+				'database'   => $this->db,
+				'prefix'     => $this->prefix,
 				'persistent' => $this->persistent,
 			),
 			'info' => array(),

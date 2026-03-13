@@ -82,6 +82,14 @@ define( 'MC_STORAGE_HOST', '/var/run/redis/redis.sock' );
 define( 'MC_STORAGE_PORT', 0 );  // Ignored for sockets
 ```
 
+### With TLS (e.g. AWS ElastiCache)
+
+```php
+define( 'MC_STORAGE_HOST', 'master.example.cache.amazonaws.com' );
+define( 'MC_STORAGE_PORT', 6379 );
+define( 'MC_STORAGE_SCHEME', 'tls' );
+```
+
 ### Multiple Sites on Same Server
 
 Use different databases or prefixes:
@@ -106,6 +114,7 @@ define( 'MC_STORAGE_PREFIX', 'siteb' );
 | `MC_STORAGE_DB` | `0` | Database number (0-15) |
 | `MC_STORAGE_PERSISTENT` | `true` | Use persistent connections |
 | `MC_STORAGE_PREFIX` | `mll` | Key prefix |
+| `MC_STORAGE_SCHEME` | `tcp` | Connection scheme (`tcp` or `tls`) |
 
 ## Recommended Server Configuration
 

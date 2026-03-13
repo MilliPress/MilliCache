@@ -116,6 +116,42 @@ describe( 'Storage', function () {
 			// Storage should initialize with the unix scheme without throwing.
 			expect( $storage )->toBeInstanceOf( Storage::class );
 		} );
+
+		it( 'constructs with tls scheme without error', function () {
+			$settings = array(
+				'host' => '127.0.0.1',
+				'port' => 6380,
+				'enc_password' => '',
+				'db' => 0,
+				'prefix' => 'test',
+				'persistent' => false,
+				'scheme' => 'tls',
+			);
+
+			$storage = new Storage( $settings );
+
+			// Connection failure is acceptable; the class must not throw on construction.
+			expect( $storage )->toBeInstanceOf( Storage::class );
+			expect( $storage->get_status()['config']['scheme'] )->toBe( 'tls' );
+		} );
+
+		it( 'overrides tls scheme with unix when a socket path is used', function () {
+			$settings = array(
+				'host' => '/var/run/redis/redis.sock',
+				'port' => 0,
+				'enc_password' => '',
+				'db' => 0,
+				'prefix' => 'test',
+				'persistent' => false,
+				'scheme' => 'tls',
+			);
+
+			$storage = new Storage( $settings );
+
+			// Unix socket paths must always use the unix scheme regardless of the scheme setting.
+			expect( $storage )->toBeInstanceOf( Storage::class );
+			expect( $storage->get_status()['config']['scheme'] )->toBe( 'unix' );
+		} );
 	} );
 
 	describe( 'set operations', function () {
