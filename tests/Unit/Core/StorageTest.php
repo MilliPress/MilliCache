@@ -117,25 +117,57 @@ describe( 'Storage', function () {
 			expect( $storage )->toBeInstanceOf( Storage::class );
 		} );
 
-		it( 'constructs with tls scheme without error', function () {
+		it( 'parses tls scheme from host prefix', function () {
 			$settings = array(
-				'host' => '127.0.0.1',
-				'port' => 6380,
+				'host' => 'tls://master.example.cache.amazonaws.com',
+				'port' => 6379,
 				'enc_password' => '',
 				'db' => 0,
 				'prefix' => 'test',
 				'persistent' => false,
-				'scheme' => 'tls',
+			);
+
+			$storage = new Storage( $settings );
+			$status = $storage->get_status();
+
+			expect( $storage )->toBeInstanceOf( Storage::class );
+			expect( $status['config']['scheme'] )->toBe( 'tls' );
+			expect( $status['config']['host'] )->toBe( 'master.example.cache.amazonaws.com' );
+		} );
+
+		it( 'parses tcp scheme from host prefix', function () {
+			$settings = array(
+				'host' => 'tcp://10.0.0.5',
+				'port' => 6379,
+				'enc_password' => '',
+				'db' => 0,
+				'prefix' => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+			$status = $storage->get_status();
+
+			expect( $status['config']['scheme'] )->toBe( 'tcp' );
+			expect( $status['config']['host'] )->toBe( '10.0.0.5' );
+		} );
+
+		it( 'defaults to tcp scheme when host has no prefix', function () {
+			$settings = array(
+				'host' => '127.0.0.1',
+				'port' => 6379,
+				'enc_password' => '',
+				'db' => 0,
+				'prefix' => 'test',
+				'persistent' => false,
 			);
 
 			$storage = new Storage( $settings );
 
-			// Connection failure is acceptable; the class must not throw on construction.
-			expect( $storage )->toBeInstanceOf( Storage::class );
-			expect( $storage->get_status()['config']['scheme'] )->toBe( 'tls' );
+			expect( $storage->get_status()['config']['scheme'] )->toBe( 'tcp' );
 		} );
 
-		it( 'overrides tls scheme with unix when a socket path is used', function () {
+		it( 'uses unix scheme for socket path even with no prefix', function () {
 			$settings = array(
 				'host' => '/var/run/redis/redis.sock',
 				'port' => 0,
@@ -143,13 +175,10 @@ describe( 'Storage', function () {
 				'db' => 0,
 				'prefix' => 'test',
 				'persistent' => false,
-				'scheme' => 'tls',
 			);
 
 			$storage = new Storage( $settings );
 
-			// Unix socket paths must always use the unix scheme regardless of the scheme setting.
-			expect( $storage )->toBeInstanceOf( Storage::class );
 			expect( $storage->get_status()['config']['scheme'] )->toBe( 'unix' );
 		} );
 	} );

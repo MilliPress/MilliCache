@@ -34,7 +34,7 @@ define( 'MC_STORAGE_HOST', '127.0.0.1' );
 | Default   | `127.0.0.1` |
 | Type      | `string`    |
 
-Server hostname, IP address, or Unix socket path.
+Server hostname, IP address, or Unix socket path. Supports an optional `tls://` or `tcp://` scheme prefix for encrypted connections.
 
 **Examples:**
 
@@ -50,6 +50,9 @@ define( 'MC_STORAGE_HOST', 'redis' );
 
 // Unix socket
 define( 'MC_STORAGE_HOST', '/var/run/redis/redis.sock' );
+
+// TLS connection (e.g. AWS ElastiCache with in-transit encryption)
+define( 'MC_STORAGE_HOST', 'tls://master.example.cache.amazonaws.com' );
 ```
 
 ### MC_STORAGE_PORT
@@ -119,28 +122,6 @@ define( 'MC_STORAGE_PREFIX', 'mll' );
 | Type       | `string` |
 
 Prefix for all cache keys in Redis. Use different prefixes to share Redis between sites.
-
-### MC_STORAGE_SCHEME
-
-```php
-define( 'MC_STORAGE_SCHEME', 'tcp' );
-```
-
-| Property  | Value        |
-|-----------|--------------|
-| Default   | `tcp`        |
-| Type      | `string`     |
-| Options   | `tcp`, `tls` |
-
-Connection scheme. Set to `tls` for encrypted connections (e.g. AWS ElastiCache with in-transit encryption enabled). Unix socket paths are always detected automatically and ignore this setting.
-
-**Example (AWS ElastiCache with TLS):**
-
-```php
-define( 'MC_STORAGE_HOST', 'master.example.cache.amazonaws.com' );
-define( 'MC_STORAGE_PORT', 6379 );
-define( 'MC_STORAGE_SCHEME', 'tls' );
-```
 
 ## Cache Constants
 

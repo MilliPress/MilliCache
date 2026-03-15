@@ -117,7 +117,6 @@ final class Settings {
 					'db' => 0,
 					'persistent' => true,
 					'prefix' => 'mll',
-					'scheme' => 'tcp',
 				),
 				'cache' => array(
 					'ttl' => DAY_IN_SECONDS,

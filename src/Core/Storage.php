@@ -112,7 +112,10 @@ class Storage {
 	private bool $is_socket;
 
 	/**
-	 * The connection scheme (tcp or tls).
+	 * The connection scheme (tcp, tls, or unix).
+	 *
+	 * Derived from the host value: `tls://host` sets tls,
+	 * `/path/to/socket` sets unix, otherwise defaults to tcp.
 	 *
 	 * @since    1.3.0
 	 * @access   private
@@ -184,6 +187,12 @@ class Storage {
 
 				$this->$key = $value;
 			}
+		}
+
+		// Extract scheme from host if present (e.g. "tls://hostname").
+		if ( preg_match( '#^(tls|tcp)://#', $this->host, $matches ) ) {
+			$this->scheme = $matches[1];
+			$this->host   = (string) substr( $this->host, strlen( $matches[0] ) );
 		}
 
 		$this->is_socket = strpos( $this->host, '/' ) === 0;
