@@ -14,14 +14,51 @@ on:
       - 'millicache.php'
       - 'advanced-cache.php'
       - 'functions.php'
+      - 'assets/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'webpack.config.js'
   pull_request:
     branches: [main, dev]
     # No paths filter - always run CI on PRs to catch issues before merge
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  build-assets:
+    name: Build Assets
+    runs-on: ubuntu-latest
+    # Only auto-commit on push to main, not on PRs or workflow_call
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Build assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit build files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add build/
+          if git diff --cached --quiet; then
+            echo "No changes to build files"
+          else
+            git commit -m "chore: rebuild assets [skip ci]"
+            git push
+          fi
+
   unit-tests:
     name: Unit Tests (PHP ${{ matrix.php }})
     runs-on: ubuntu-latest

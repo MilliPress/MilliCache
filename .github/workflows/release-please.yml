@@ -52,23 +52,11 @@ jobs:
         with:
           ref: ${{ needs.release-please.outputs.sha }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
           coverage: none
-
-      - name: Build JS assets
-        run: |
-          npm ci
-          npm run build
-          rm -rf node_modules
 
       - name: Download performance results
         uses: actions/download-artifact@v8
@@ -123,10 +111,8 @@ jobs:
           rm -rf dist && mkdir dist
 
           # Export tracked files (respects .gitattributes export-ignore)
+          # build/ is committed by CI, so git archive includes it
           git archive --format=tar HEAD | tar -x -C dist
-
-          # Add built JS assets (excluded by .gitattributes export-ignore)
-          [ -d build ] && rsync -a build/ dist/build/
 
           # Download Strauss for namespace scoping
           mkdir -p dist/bin

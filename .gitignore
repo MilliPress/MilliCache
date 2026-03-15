@@ -1,6 +1,5 @@
 composer.lock
 /deps/
-/build/
 /vendor/
 /artifacts/
 node_modules/
