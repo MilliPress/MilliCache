@@ -9,7 +9,7 @@
  *
  *
  * Description: MilliCache Drop-in file, enabling advanced WordPress caching.
- * Plugin URI:  https://www.millipress.com/cache
+ * Plugin URI:  https://www.millipress.com/millicache
  * Version:     1.1.0
  * Author:      Philipp Wellmer <hello@millipress.com>
  *
