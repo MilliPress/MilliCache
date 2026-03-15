@@ -15,6 +15,7 @@
 
 namespace MilliCache\Admin;
 
+use MilliBase\Manager;
 use MilliCache\Core\Settings;
 use MilliCache\Engine;
 use MilliCache\MilliCache;
@@ -66,7 +67,19 @@ final class UI {
 		$this->version     = $version;
 		$this->engine      = $engine;
 
-		new \MilliBase\Manager( $this->get_ui_config() );
+		add_action( 'init', array( $this, 'boot' ) );
+	}
+
+	/**
+	 * Boot the MilliBase Manager after the textdomain has been loaded.
+	 *
+	 * @since    1.3.0
+	 * @access   public
+	 *
+	 * @return   void
+	 */
+	public function boot(): void {
+		new Manager( $this->get_ui_config() );
 	}
 
 	/**
