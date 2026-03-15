@@ -34,7 +34,7 @@ define( 'MC_STORAGE_HOST', '127.0.0.1' );
 | Default   | `127.0.0.1` |
 | Type      | `string`    |
 
-Server hostname, IP address, or Unix socket path.
+Server hostname, IP address, or Unix socket path. Supports an optional `tls://` or `tcp://` scheme prefix for encrypted connections.
 
 **Examples:**
 
@@ -50,6 +50,9 @@ define( 'MC_STORAGE_HOST', 'redis' );
 
 // Unix socket
 define( 'MC_STORAGE_HOST', '/var/run/redis/redis.sock' );
+
+// TLS connection (e.g. AWS ElastiCache with in-transit encryption)
+define( 'MC_STORAGE_HOST', 'tls://master.example.cache.amazonaws.com' );
 ```
 
 ### MC_STORAGE_PORT
