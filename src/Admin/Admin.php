@@ -112,7 +112,7 @@ final class Admin {
 	 */
 	private function load_dependencies() {
 		new Adminbar( $this->loader, $this->engine );
-		new UI( $this->plugin_name, $this->version, $this->engine );
+		new UI( $this->loader, $this->engine, $this->plugin_name, $this->version );
 	}
 
 	/**

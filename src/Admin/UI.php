@@ -15,6 +15,8 @@
 
 namespace MilliCache\Admin;
 
+use MilliBase\Manager;
+use MilliCache\Core\Loader;
 use MilliCache\Core\Settings;
 use MilliCache\Engine;
 use MilliCache\MilliCache;
@@ -29,6 +31,17 @@ use MilliCache\MilliCache;
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class UI {
+
+	/**
+	 * The loader that's responsible for maintaining and registering all hooks that power
+	 * the plugin.
+	 *
+	 * @since    1.3.1
+	 * @access   protected
+	 *
+	 * @var      Loader    $loader    Maintains and registers all hooks for the plugin.
+	 */
+	protected Loader $loader;
 
 	/**
 	 * The plugin slug.
@@ -52,21 +65,50 @@ final class UI {
 	private Engine $engine;
 
 	/**
-	 * Initialize the UI and boot the MilliBase facade.
+	 * Initialize the UI and register hooks.
 	 *
 	 * @since    1.3.0
 	 * @access   public
 	 *
+	 * @param Loader $loader      The loader class.
+	 * @param Engine $engine      The MilliCache engine instance.
 	 * @param string $plugin_name The plugin slug.
 	 * @param string $version     The plugin version.
-	 * @param Engine $engine      The MilliCache engine instance.
 	 */
-	public function __construct( string $plugin_name, string $version, Engine $engine ) {
+	public function __construct( Loader $loader, Engine $engine, string $plugin_name, string $version ) {
+		$this->loader      = $loader;
 		$this->plugin_name = $plugin_name;
 		$this->version     = $version;
 		$this->engine      = $engine;
 
-		new \MilliBase\Manager( $this->get_ui_config() );
+		$this->register_hooks();
+	}
+
+	/**
+	 * Register hooks for the UI.
+	 *
+	 * Defers Manager boot to the init hook so the textdomain
+	 * is loaded before translation functions execute.
+	 *
+	 * @since    1.3.1
+	 * @access   private
+	 *
+	 * @return   void
+	 */
+	private function register_hooks(): void {
+		$this->loader->add_action( 'init', $this, 'boot' );
+	}
+
+	/**
+	 * Boot the MilliBase facade.
+	 *
+	 * @since    1.3.1
+	 * @access   public
+	 *
+	 * @return   void
+	 */
+	public function boot(): void {
+		new Manager( $this->get_ui_config() );
 	}
 
 	/**
