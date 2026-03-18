@@ -313,18 +313,57 @@ class Storage {
 				return null;
 			}
 
-			$cache = $results[0];
+			$cache       = $results[0];
 			$lock_status = $results[1] ?? '';
 			$flags = array_filter(
 				array_keys( $cache ),
 				fn( $key ) => strpos( (string) $key, $this->prefix . ':f:' ) === 0
 			);
+			$flags = array_map( array( $this, 'get_flag_key' ), $flags );
 
-			return isset( $cache['data'] ) ? array(
-				(array) unserialize( $cache['data'] ),
-				array_map( array( $this, 'get_flag_key' ), $flags ),
+			if ( empty( $cache ) ) {
+				return null;
+			}
+
+			// MC <1.4.0 backward compat: old entries stored in a serialized 'data' blob.
+			if ( isset( $cache['data'] ) ) {
+				return array(
+					(array) unserialize( $cache['data'] ),
+					$flags,
+					$lock_status,
+				);
+			}
+
+			// MC >=1.4.0: output + meta JSON blob.
+			if ( ! isset( $cache['output'] ) ) {
+				return null;
+			}
+
+			$decoded = json_decode( $cache['meta'] ?? '{}', true );
+			// @var array<string, mixed> $meta
+			$meta = is_array( $decoded ) ? $decoded : array();
+
+			$data = array(
+				'output'  => $cache['output'],
+				'headers' => isset( $meta['headers'] ) && is_array( $meta['headers'] ) ? $meta['headers'] : array(),
+				'status'  => isset( $meta['status'] ) && is_numeric( $meta['status'] ) ? (int) $meta['status'] : 200,
+				'gzip'    => ! empty( $meta['gzip'] ),
+				'updated' => isset( $meta['updated'] ) && is_numeric( $meta['updated'] ) ? (int) $meta['updated'] : time(),
+			);
+
+			if ( isset( $meta['custom_ttl'] ) && is_numeric( $meta['custom_ttl'] ) ) {
+				$data['custom_ttl'] = (int) $meta['custom_ttl'];
+			}
+
+			if ( isset( $meta['custom_grace'] ) && is_numeric( $meta['custom_grace'] ) ) {
+				$data['custom_grace'] = (int) $meta['custom_grace'];
+			}
+
+			return array(
+				$data,
+				$flags,
 				$lock_status,
-			) : null;
+			);
 		} catch ( PredisException $e ) {
 			error_log( 'Unable to get cache from the storage server: ' . $e->getMessage() );
 			return null;
@@ -359,11 +398,25 @@ class Storage {
 			 */
 			do_action( 'millicache_entry_storing', $hash, $key, $flags, $data );
 
-			// Serialize the data and calculate its size.
-			$serialized_data = serialize( $data );
+			// Build metadata blob.
+			$meta = array(
+				'headers' => $data['headers'] ?? array(),
+				'status'  => $data['status'] ?? 200,
+				'gzip'    => ! empty( $data['gzip'] ),
+				'updated' => $data['updated'] ?? time(),
+			);
+
+			if ( isset( $data['custom_ttl'] ) ) {
+				$meta['custom_ttl'] = (int) $data['custom_ttl'];
+			}
+
+			if ( isset( $data['custom_grace'] ) ) {
+				$meta['custom_grace'] = (int) $data['custom_grace'];
+			}
+
 			$fields = array(
-				'data' => $serialized_data,
-				'size' => strlen( $serialized_data ),
+				'output' => $data['output'] ?? '',
+				'meta'   => (string) wp_json_encode( $meta ),
 			);
 
 			// Prepare flag keys and add them to fields.
@@ -811,7 +864,7 @@ class Storage {
 			$sizes = $this->client->pipeline(
 				function ( $pipe ) use ( $keys, $flag ) {
 					foreach ( $keys as $key ) {
-						$pipe->hget( ! empty( $flag ) ? $this->get_cache_key( $key ) : $key, 'size' );
+						$pipe->hstrlen( ! empty( $flag ) ? $this->get_cache_key( $key ) : $key, 'output' );
 					}
 				}
 			);

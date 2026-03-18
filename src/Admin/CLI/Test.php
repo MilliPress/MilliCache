@@ -110,7 +110,10 @@ final class Test {
 			// Test 3: Write.
 			$test_key = 'millicache_cli_test_' . time();
 			$test_data = array(
-				'test'    => true,
+				'output'  => 'millicache_test',
+				'headers' => array(),
+				'status'  => 200,
+				'gzip'    => false,
 				'updated' => time(),
 			);
 			try {
@@ -135,7 +138,7 @@ final class Test {
 			// Test 4: Read.
 			try {
 				$read_result = $storage->get_cache( $test_key );
-				$read_passed = is_array( $read_result ) && isset( $read_result[0]['test'] ) && true === $read_result[0]['test'];
+				$read_passed = is_array( $read_result ) && isset( $read_result[0]['output'] ) && 'millicache_test' === $read_result[0]['output'];
 				$tests[] = array(
 					'test'   => __( 'Read', 'millicache' ),
 					'status' => $read_passed ? 'PASS' : 'FAIL',
