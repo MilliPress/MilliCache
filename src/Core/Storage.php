@@ -246,6 +246,89 @@ class Storage {
 	}
 
 	/**
+	 * Get cache entries with metadata and optional output.
+	 *
+	 * Returns per-entry data keyed by cache hash, with flags always included.
+	 * By default, only reads the small meta-field; set $include_output to also
+	 * transfer the (potentially large) output field.
+	 *
+	 * @since 1.4.0
+	 * @access public
+	 *
+	 * @param string $flag           Optional flag filter. Supports wildcards.
+	 * @param bool   $include_output Whether to include the output body.
+	 * @return array<string, array<string, mixed>> Entries keyed by cache hash.
+	 */
+	public function get_entries( string $flag = '', bool $include_output = false ): array {
+		try {
+			if ( ! isset( $this->client ) ) {
+				return array();
+			}
+
+			$keys = empty( $flag )
+				? $this->get_cache_keys_by_pattern( $this->toggle_cache_key( '*' ) )
+				: $this->get_cache_keys_by_flag( $flag );
+
+			if ( empty( $keys ) ) {
+				return array();
+			}
+
+			$by_flag      = ! empty( $flag );
+			$hmget_fields = $include_output ? array( 'meta', 'output' ) : array( 'meta' );
+			$flag_prefix  = $this->prefix . ':f:';
+
+			$results = $this->client->pipeline(
+				function ( $pipe ) use ( $keys, $hmget_fields, $by_flag ) {
+					foreach ( $keys as $key ) {
+						$full_key = $by_flag ? $this->toggle_cache_key( $key ) : $key;
+						$pipe->hmget( $full_key, $hmget_fields );
+						$pipe->hstrlen( $full_key, 'output' );
+						$pipe->hkeys( $full_key );
+					}
+				}
+			);
+
+			if ( ! is_array( $results ) ) {
+				return array();
+			}
+
+			$entries = array();
+
+			foreach ( $keys as $i => $key ) {
+				$values   = $results[ $i * 3 ] ?? null;
+				$size     = $results[ $i * 3 + 1 ] ?? 0;
+				$all_keys = $results[ $i * 3 + 2 ] ?? array();
+
+				if ( ! is_array( $values ) || ! is_string( $values[0] ?? null ) ) {
+					continue;
+				}
+
+				$entry         = $this->parse_meta( $values[0] );
+				$entry['size'] = is_numeric( $size ) ? (int) $size : 0;
+
+				if ( $include_output ) {
+					$entry['output'] = $values[1] ?? '';
+				}
+
+				// Extract flags from hash keys.
+				$entry['flags'] = array_map(
+					array( $this, 'toggle_flag_key' ),
+					is_array( $all_keys ) ? array_filter( $all_keys, fn( $k ) => is_string( $k ) && strpos( $k, $flag_prefix ) === 0 ) : array()
+				);
+
+				// Keys from the pattern scan are full keys; from the flag lookup are hashes.
+				$hash             = $by_flag ? $key : $this->toggle_cache_key( $key );
+				$entries[ $hash ] = $entry;
+			}
+
+			return $entries;
+		} catch ( PredisException $e ) {
+			error_log( 'Unable to get entries from the storage server: ' . $e->getMessage() );
+			return array();
+		}
+	}
+
+	/**
 	 * Perform cache operations.
 	 *
 	 * @since 1.0.0
@@ -297,7 +380,7 @@ class Storage {
 	public function get_cache( string $hash ): ?array {
 		try {
 			// Get the cache entry and lock status.
-			$key = $this->get_cache_key( $hash );
+			$key = $this->toggle_cache_key( $hash );
 
 			$results = $this->client->transaction(
 				function ( $tx ) use ( $key ) {
@@ -319,7 +402,7 @@ class Storage {
 				array_keys( $cache ),
 				fn( $key ) => strpos( (string) $key, $this->prefix . ':f:' ) === 0
 			);
-			$flags = array_map( array( $this, 'get_flag_key' ), $flags );
+			$flags = array_map( array( $this, 'toggle_flag_key' ), $flags );
 
 			if ( empty( $cache ) ) {
 				return null;
@@ -339,25 +422,8 @@ class Storage {
 				return null;
 			}
 
-			$decoded = json_decode( $cache['meta'] ?? '{}', true );
-			// @var array<string, mixed> $meta
-			$meta = is_array( $decoded ) ? $decoded : array();
-
-			$data = array(
-				'output'  => $cache['output'],
-				'headers' => isset( $meta['headers'] ) && is_array( $meta['headers'] ) ? $meta['headers'] : array(),
-				'status'  => isset( $meta['status'] ) && is_numeric( $meta['status'] ) ? (int) $meta['status'] : 200,
-				'gzip'    => ! empty( $meta['gzip'] ),
-				'updated' => isset( $meta['updated'] ) && is_numeric( $meta['updated'] ) ? (int) $meta['updated'] : time(),
-			);
-
-			if ( isset( $meta['custom_ttl'] ) && is_numeric( $meta['custom_ttl'] ) ) {
-				$data['custom_ttl'] = (int) $meta['custom_ttl'];
-			}
-
-			if ( isset( $meta['custom_grace'] ) && is_numeric( $meta['custom_grace'] ) ) {
-				$data['custom_grace'] = (int) $meta['custom_grace'];
-			}
+			$data           = $this->parse_meta( $cache['meta'] ?? '{}' );
+			$data['output'] = $cache['output'];
 
 			return array(
 				$data,
@@ -384,7 +450,7 @@ class Storage {
 	public function set_cache( string $hash, array $data, array $flags ): bool {
 		try {
 			// Get the cache key.
-			$key = $this->get_cache_key( $hash );
+			$key = $this->toggle_cache_key( $hash );
 
 			/**
 			 * Fires before a cache entry is stored in the storage server.
@@ -414,6 +480,12 @@ class Storage {
 				$meta['custom_grace'] = (int) $data['custom_grace'];
 			}
 
+			$meta['url'] = $data['url'] ?? '';
+
+			if ( isset( $data['variant'] ) && is_array( $data['variant'] ) ) {
+				$meta['variant'] = $data['variant'];
+			}
+
 			$fields = array(
 				'output' => $data['output'] ?? '',
 				'meta'   => (string) wp_json_encode( $meta ),
@@ -422,7 +494,7 @@ class Storage {
 			// Prepare flag keys and add them to fields.
 			$flag_keys = array_map(
 				function ( $flag ) use ( &$fields ) {
-					$flag_key = $this->get_flag_key( $flag );
+					$flag_key = $this->toggle_flag_key( $flag );
 					$fields[ $flag_key ] = 1;
 					return $flag_key;
 				},
@@ -476,7 +548,7 @@ class Storage {
 	 */
 	public function delete_cache( string $hash ): bool {
 		try {
-			$key = $this->get_cache_key( $hash );
+			$key = $this->toggle_cache_key( $hash );
 
 			// Get all fields of the key and filter to flag fields only.
 			$fields = $this->client->hkeys( $key );
@@ -549,7 +621,7 @@ class Storage {
 	 */
 	public function set_add( string $key, $members ): int {
 		try {
-			return $this->client->sadd( $this->get_key( $key ), (array) $members );
+			return $this->client->sadd( $this->toggle_key( $key ), (array) $members );
 		} catch ( PredisException $e ) {
 			error_log( 'Storage::set_add failed: ' . $e->getMessage() );
 			return 0;
@@ -568,7 +640,7 @@ class Storage {
 	 */
 	public function set_pop( string $key, int $count = 1 ): array {
 		try {
-			return (array) $this->client->spop( $this->get_key( $key ), $count );
+			return (array) $this->client->spop( $this->toggle_key( $key ), $count );
 		} catch ( PredisException $e ) {
 			error_log( 'Storage::set_pop failed: ' . $e->getMessage() );
 			return array();
@@ -586,7 +658,7 @@ class Storage {
 	 */
 	public function set_count( string $key ): int {
 		try {
-			return $this->client->scard( $this->get_key( $key ) );
+			return $this->client->scard( $this->toggle_key( $key ) );
 		} catch ( PredisException $e ) {
 			error_log( 'Storage::set_count failed: ' . $e->getMessage() );
 			return 0;
@@ -605,7 +677,7 @@ class Storage {
 	public function lock( string $hash ): bool {
 		try {
 			$status = $this->client->set(
-				$this->get_cache_key( $hash . '-lock' ),
+				$this->toggle_cache_key( $hash . '-lock' ),
 				true,
 				'EX',
 				30,
@@ -630,7 +702,7 @@ class Storage {
 	 */
 	public function unlock( string $hash ): bool {
 		try {
-			return (bool) $this->client->del( $this->get_cache_key( $hash . '-lock' ) );
+			return (bool) $this->client->del( $this->toggle_cache_key( $hash . '-lock' ) );
 		} catch ( PredisException $e ) {
 			error_log( 'Unable to unlock in the storage server: ' . $e->getMessage() );
 			return false;
@@ -730,7 +802,7 @@ class Storage {
 					...array_filter(
 						(array) $this->client->pipeline(
 							function ( $pipe ) use ( $flag ) {
-								foreach ( $this->get_cache_keys_by_pattern( $this->get_flag_key( $flag ) ) as $key ) {
+								foreach ( $this->get_cache_keys_by_pattern( $this->toggle_flag_key( $flag ) ) as $key ) {
 									if ( is_string( $key ) ) {
 										$pipe->smembers( $key );
 									}
@@ -740,12 +812,12 @@ class Storage {
 						'is_array'
 					)
 				)
-				: $this->client->smembers( $this->get_flag_key( $flag ) );
+				: $this->client->smembers( $this->toggle_flag_key( $flag ) );
 
 			// Remove prefix from keys.
 			return array_map(
 				function ( $key ) {
-					return $this->get_cache_key( $key );
+					return $this->toggle_cache_key( $key );
 				},
 				array_unique( $members )
 			);
@@ -768,7 +840,7 @@ class Storage {
 			$this->client->pipeline(
 				function ( $pipe ) {
 					// Get all flag keys matching the prefix.
-					$flags = $this->client->keys( $this->get_flag_key( '*' ) );
+					$flags = $this->client->keys( $this->toggle_flag_key( '*' ) );
 
 					foreach ( $flags as $flag ) {
 						// Get all members of the flag's set.
@@ -797,16 +869,16 @@ class Storage {
 	}
 
 	/**
-	 * Generates a key with a prefix but removes it if already present.
+	 * Toggles a key prefix: adds it if missing, strips it if present.
 	 *
 	 * @since 1.0.0
-	 * @access public
+	 * @access private
 	 *
 	 * @param string $key  The key.
 	 * @param string $type The type prefix (e.g. 'c' or 'f').
-	 * @return string The full key with the prefix.
+	 * @return string The toggled key.
 	 */
-	public function get_key( string $key, string $type = '' ): string {
+	private function toggle_key( string $key, string $type = '' ): string {
 		$prefix = $this->prefix . ':' . ( '' !== $type ? $type . ':' : '' );
 		if ( strpos( $key, $prefix ) === 0 ) {
 			return substr( $key, strlen( $prefix ) );
@@ -816,29 +888,67 @@ class Storage {
 	}
 
 	/**
-	 * Get and convert the cache key.
+	 * Toggle the cache key prefix: adds it if missing, strips it if present.
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 *
 	 * @param string $hash The cache hash.
-	 * @return string The cache key.
+	 * @return string The toggled cache key.
 	 */
-	public function get_cache_key( string $hash ): string {
-		return $this->get_key( $hash, 'c' );
+	public function toggle_cache_key( string $hash ): string {
+		return $this->toggle_key( $hash, 'c' );
 	}
 
 	/**
-	 * Get and convert the flag key.
+	 * Toggle the flag key prefix: adds it if missing, strips it if present.
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 *
 	 * @param string $flag The flag name.
-	 * @return string The flag key.
+	 * @return string The toggled flag key.
 	 */
-	public function get_flag_key( string $flag ): string {
-		return $this->get_key( $flag, 'f' );
+	public function toggle_flag_key( string $flag ): string {
+		return $this->toggle_key( $flag, 'f' );
+	}
+
+	/**
+	 * Parse a meta-JSON string into a typed data array.
+	 *
+	 * @since 1.4.0
+	 * @access private
+	 *
+	 * @param string $json The raw JSON meta-string.
+	 * @return array<string, mixed> The parsed metadata.
+	 */
+	private function parse_meta( string $json ): array {
+		$decoded = json_decode( $json, true );
+		// @var array<string, mixed> $meta
+		$meta = is_array( $decoded ) ? $decoded : array();
+
+		$data = array(
+			'headers' => isset( $meta['headers'] ) && is_array( $meta['headers'] ) ? $meta['headers'] : array(),
+			'status'  => isset( $meta['status'] ) && is_numeric( $meta['status'] ) ? (int) $meta['status'] : 200,
+			'gzip'    => ! empty( $meta['gzip'] ),
+			'updated' => isset( $meta['updated'] ) && is_numeric( $meta['updated'] ) ? (int) $meta['updated'] : time(),
+		);
+
+		if ( isset( $meta['custom_ttl'] ) && is_numeric( $meta['custom_ttl'] ) ) {
+			$data['custom_ttl'] = (int) $meta['custom_ttl'];
+		}
+
+		if ( isset( $meta['custom_grace'] ) && is_numeric( $meta['custom_grace'] ) ) {
+			$data['custom_grace'] = (int) $meta['custom_grace'];
+		}
+
+		$data['url'] = isset( $meta['url'] ) && is_string( $meta['url'] ) ? $meta['url'] : '';
+
+		if ( isset( $meta['variant'] ) && is_array( $meta['variant'] ) ) {
+			$data['variant'] = $meta['variant'];
+		}
+
+		return $data;
 	}
 
 	/**
@@ -853,7 +963,7 @@ class Storage {
 	public function get_cache_size( string $flag = '' ) {
 		try {
 			$keys = empty( $flag )
-				? $this->get_cache_keys_by_pattern( $this->get_cache_key( '*' ) )
+				? $this->get_cache_keys_by_pattern( $this->toggle_cache_key( '*' ) )
 				: $this->get_cache_keys_by_flag( $flag );
 
 			if ( empty( $keys ) ) {
@@ -866,7 +976,7 @@ class Storage {
 			$sizes = $this->client->pipeline(
 				function ( $pipe ) use ( $keys, $flag ) {
 					foreach ( $keys as $key ) {
-						$pipe->hstrlen( ! empty( $flag ) ? $this->get_cache_key( $key ) : $key, 'output' );
+						$pipe->hstrlen( ! empty( $flag ) ? $this->toggle_cache_key( $key ) : $key, 'output' );
 					}
 				}
 			);

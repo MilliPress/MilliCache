@@ -18,8 +18,8 @@ describe( 'Storage', function () {
 		} );
 	} );
 
-	describe( 'get_key', function () {
-		it( 'generates cache key with prefix', function () {
+	describe( 'toggle_cache_key', function () {
+		it( 'adds cache prefix when missing', function () {
 			$settings = array(
 				'host' => '127.0.0.1',
 				'port' => 6379,
@@ -30,12 +30,12 @@ describe( 'Storage', function () {
 			);
 
 			$storage = new Storage( $settings );
-			$result = $storage->get_key( 'my-key', 'c' );
+			$result = $storage->toggle_cache_key( 'my-key' );
 
 			expect( $result )->toBe( 'test:c:my-key' );
 		} );
 
-		it( 'removes existing prefix from key', function () {
+		it( 'strips cache prefix when present', function () {
 			$settings = array(
 				'host' => '127.0.0.1',
 				'port' => 6379,
@@ -46,12 +46,14 @@ describe( 'Storage', function () {
 			);
 
 			$storage = new Storage( $settings );
-			$result = $storage->get_key( 'test:c:my-key', 'c' );
+			$result = $storage->toggle_cache_key( 'test:c:my-key' );
 
 			expect( $result )->toBe( 'my-key' );
 		} );
+	} );
 
-		it( 'generates flag key with correct prefix', function () {
+	describe( 'toggle_flag_key', function () {
+		it( 'adds flag prefix when missing', function () {
 			$settings = array(
 				'host' => '127.0.0.1',
 				'port' => 6379,
@@ -62,12 +64,12 @@ describe( 'Storage', function () {
 			);
 
 			$storage = new Storage( $settings );
-			$result = $storage->get_key( 'post-1', 'f' );
+			$result = $storage->toggle_flag_key( 'post-1' );
 
 			expect( $result )->toBe( 'mll:f:post-1' );
 		} );
 
-		it( 'generates key without type prefix', function () {
+		it( 'strips flag prefix when present', function () {
 			$settings = array(
 				'host' => '127.0.0.1',
 				'port' => 6379,
@@ -78,9 +80,9 @@ describe( 'Storage', function () {
 			);
 
 			$storage = new Storage( $settings );
-			$result = $storage->get_key( 'generic-key', '' );
+			$result = $storage->toggle_flag_key( 'mll:f:post-1' );
 
-			expect( $result )->toBe( 'mll:generic-key' );
+			expect( $result )->toBe( 'post-1' );
 		} );
 	} );
 
