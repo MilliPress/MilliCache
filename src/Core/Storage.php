@@ -756,7 +756,7 @@ class Storage {
 	}
 
 	/**
-	 * Cleanup expired flags.
+	 * Clean up expired flags.
 	 *
 	 * @since 1.0.0
 	 * @access public
@@ -797,10 +797,10 @@ class Storage {
 	}
 
 	/**
-	 * Generates a key with prefix, but removes it if already present.
+	 * Generates a key with a prefix but removes it if already present.
 	 *
 	 * @since 1.0.0
-	 * @access private
+	 * @access public
 	 *
 	 * @param string $key  The key.
 	 * @param string $type The type prefix (e.g. 'c' or 'f').
@@ -819,12 +819,12 @@ class Storage {
 	 * Get and convert the cache key.
 	 *
 	 * @since 1.0.0
-	 * @access private
+	 * @access public
 	 *
 	 * @param string $hash The cache hash.
 	 * @return string The cache key.
 	 */
-	private function get_cache_key( string $hash ): string {
+	public function get_cache_key( string $hash ): string {
 		return $this->get_key( $hash, 'c' );
 	}
 
@@ -832,12 +832,12 @@ class Storage {
 	 * Get and convert the flag key.
 	 *
 	 * @since 1.0.0
-	 * @access private
+	 * @access public
 	 *
 	 * @param string $flag The flag name.
 	 * @return string The flag key.
 	 */
-	private function get_flag_key( string $flag ): string {
+	public function get_flag_key( string $flag ): string {
 		return $this->get_key( $flag, 'f' );
 	}
 
