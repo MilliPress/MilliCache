@@ -478,13 +478,17 @@ class Storage {
 		try {
 			$key = $this->get_cache_key( $hash );
 
-			// Get all flags of the key.
-			$flags = $this->client->hkeys( $key );
+			// Get all fields of the key and filter to flag fields only.
+			$fields = $this->client->hkeys( $key );
 
-			// Check if the flags are an array.
-			if ( ! is_array( $flags ) ) {
+			if ( ! is_array( $fields ) ) {
 				return false;
 			}
+
+			$flags = array_filter(
+				$fields,
+				fn( $field ) => is_string( $field ) && strpos( $field, $this->prefix . ':f:' ) === 0
+			);
 
 			/**
 			 * Fires before a cache entry is deleted in the storage server.
@@ -500,15 +504,13 @@ class Storage {
 
 					// Delete flags and remove the key from the sets associated with the flags.
 					foreach ( $flags as $flag ) {
-						if ( strpos( $flag, $this->prefix . ':f:' ) === 0 ) {
-							// Remove the key from the set of the flag.
-							$tx->srem( $flag, $key );
+						// Remove the key from the set of the flag.
+						$tx->srem( $flag, $key );
 
-							// If the set of the flag is empty, delete the flag.
-							$n = $tx->scard( $flag );
-							if ( is_int( $n ) && 0 == $n ) {
-								$tx->del( $flag );
-							}
+						// If the set of the flag is empty, delete the flag.
+						$n = $tx->scard( $flag );
+						if ( is_int( $n ) && 0 == $n ) {
+							$tx->del( $flag );
 						}
 					}
 
