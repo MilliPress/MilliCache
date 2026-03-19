@@ -48,8 +48,8 @@ describe( 'Flags', function () {
 			expect( $this->manager->get_all() )->toBeArray()->toBeEmpty();
 		} );
 
-		it( 'gets flag key without prefix in single site', function () {
-			expect( $this->manager->get_key( 'post:123' ) )->toBe( 'post:123' );
+		it( 'adds key prefix (no-op in single site)', function () {
+			expect( $this->manager->add_key_prefix( 'post:123' ) )->toBe( 'post:123' );
 		} );
 
 		it( 'prefixes array of flags', function () {

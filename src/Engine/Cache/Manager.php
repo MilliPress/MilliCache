@@ -263,8 +263,8 @@ final class Manager {
 	 */
 	public function get_status( bool $network = false ): array {
 		$flag = $network
-			? Engine::instance()->flags()->get_key( 'site', '*' )
-			: Engine::instance()->flags()->get_key( '*' );
+			? Engine::instance()->flags()->add_key_prefix( 'site', '*' )
+			: Engine::instance()->flags()->add_key_prefix( '*' );
 
 		$cache = array(
 			'ttl' => $this->config->ttl,

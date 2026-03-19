@@ -72,7 +72,7 @@ final class Flags {
 			return;
 		}
 
-		$prefixed_flag = $this->get_key( $flag );
+		$prefixed_flag = $this->add_key_prefix( $flag );
 
 		if ( ! in_array( $prefixed_flag, $this->flags, true ) ) {
 			$this->flags[] = $prefixed_flag;
@@ -88,7 +88,7 @@ final class Flags {
 	 * @return void
 	 */
 	public function remove( string $flag ): void {
-		$prefixed_flag = $this->get_key( $flag );
+		$prefixed_flag = $this->add_key_prefix( $flag );
 		$key           = array_search( $prefixed_flag, $this->flags, true );
 
 		if ( false !== $key ) {
@@ -120,9 +120,7 @@ final class Flags {
 	}
 
 	/**
-	 * Get a prefixed flag key.
-	 *
-	 * Adds site/network prefix if in multisite environment.
+	 * Add the site/network prefix to a flag key.
 	 *
 	 * @since 1.0.0
 	 *
@@ -131,8 +129,28 @@ final class Flags {
 	 * @param int|string|null $network_id Network ID (null for current).
 	 * @return string The prefixed flag key.
 	 */
-	public function get_key( string $flag, $site_id = null, $network_id = null ): string {
+	public function add_key_prefix( string $flag, $site_id = null, $network_id = null ): string {
 		return $this->get_prefix( $site_id, $network_id ) . $flag;
+	}
+
+	/**
+	 * Strip the site/network prefix from a flag key.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @param string          $flag       The prefixed flag key.
+	 * @param int|string|null $site_id    Site ID (null for current).
+	 * @param int|string|null $network_id Network ID (null for current).
+	 * @return string The flag key without the site / network prefix.
+	 */
+	public function strip_key_prefix( string $flag, $site_id = null, $network_id = null ): string {
+		$prefix = $this->get_prefix( $site_id, $network_id );
+
+		if ( '' !== $prefix && strpos( $flag, $prefix ) === 0 ) {
+			return substr( $flag, strlen( $prefix ) );
+		}
+
+		return $flag;
 	}
 
 	/**
@@ -169,7 +187,7 @@ final class Flags {
 
 		$prefix = $this->get_prefix( $site_id, $network_id );
 
-		// Return array_map with prefix.
+		// Return array_map with a prefix.
 		return array_map(
 			function ( $flag ) use ( $prefix ) {
 				return $prefix . $flag;

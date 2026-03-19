@@ -279,7 +279,7 @@ final class Processor {
 		$flags   = array_unique( $flags );
 
 		if ( count( $flags ) <= 1 ) {
-			$flags[] = $this->flags->get_key( 'flag' );
+			$flags[] = $this->flags->add_key_prefix( 'flag' );
 		}
 
 		return $flags;

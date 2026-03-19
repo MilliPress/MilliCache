@@ -175,7 +175,7 @@ describe( 'Engine', function () {
 
 		it( 'returns string key for flag', function () {
 			$engine = Engine::instance();
-			$key = $engine->flags()->get_key( 'test' );
+			$key = $engine->flags()->add_key_prefix( 'test' );
 
 			expect( $key )->toBeString();
 			expect( $key )->toContain( 'test' );
@@ -183,7 +183,7 @@ describe( 'Engine', function () {
 
 		it( 'can generate keys with site_id', function () {
 			$engine = Engine::instance();
-			$key = $engine->flags()->get_key( 'test', 1 );
+			$key = $engine->flags()->add_key_prefix( 'test', 1 );
 
 			expect( $key )->toBeString();
 			expect( $key )->toContain( 'test' );
@@ -191,7 +191,7 @@ describe( 'Engine', function () {
 
 		it( 'can generate keys with site_id and network_id', function () {
 			$engine = Engine::instance();
-			$key = $engine->flags()->get_key( 'test', 1, 1 );
+			$key = $engine->flags()->add_key_prefix( 'test', 1, 1 );
 
 			expect( $key )->toBeString();
 			expect( $key )->toContain( 'test' );
