@@ -89,6 +89,10 @@ final class Adminbar {
 	 * @access   public
 	 */
 	public function enqueue_adminbar_assets() {
+		if ( ! is_admin_bar_showing() ) {
+			return;
+		}
+
 		if ( Utils::enqueue_assets( 'adminbar', array( 'wp-api-fetch' ) ) ) {
 			$context = array(
 				'rest_url' => esc_url_raw( rest_url( 'millicache/v1/cache' ) ),
