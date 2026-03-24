@@ -503,7 +503,7 @@ class Storage {
 
 			// Execute the transaction.
 			$this->client->transaction(
-				function ( $tx ) use ( $key, $flag_keys, $fields ) {
+				function ( $tx ) use ( $key, $flag_keys, $fields, $meta ) {
 					// Store the fields.
 					$tx->hmset( $key, $fields );
 
@@ -512,9 +512,9 @@ class Storage {
 						$tx->sadd( $flag_key, array( $key ) );
 					}
 
-					// Set the max expiration time.
+					// Set the max expiration time, respecting per-entry overrides.
 					$config = Engine::instance()->config();
-					$tx->expire( $key, $config->ttl + $config->grace );
+					$tx->expire( $key, ( $meta['custom_ttl'] ?? $config->ttl ) + ( $meta['custom_grace'] ?? $config->grace ) + 30 );
 				}
 			);
 
