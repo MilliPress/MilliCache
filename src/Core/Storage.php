@@ -988,7 +988,12 @@ class Storage {
 				);
 			}
 
-			$valid_sizes = array_filter( $sizes, 'is_numeric' );
+			$valid_sizes = array_filter(
+				$sizes,
+				function ( $size ) {
+					return is_numeric( $size ) && $size > 0;
+				}
+			);
 
 			return array(
 				'index' => count( $valid_sizes ),
