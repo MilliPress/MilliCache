@@ -8,17 +8,7 @@ use MilliCache\Engine\Cache\Entry;
 use MilliCache\Engine\Cache\Result;
 
 uses()->beforeEach(function () {
-	$this->config = new Config(
-		3600,
-		600,
-		true,
-		false,
-		array(),
-		array(),
-		array(),
-		array(),
-		array()
-	);
+	$this->config = create_test_config();
 
 	$this->storage = Mockery::mock(Storage::class);
 	$this->validator = new Validator($this->config);
@@ -108,6 +98,7 @@ describe('Reader', function () {
 		it('deletes too-old entries and returns false', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -125,6 +116,7 @@ describe('Reader', function () {
 		it('serves fresh cache immediately', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -141,6 +133,7 @@ describe('Reader', function () {
 		it('does not serve stale locked cache', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -157,6 +150,7 @@ describe('Reader', function () {
 		it('handles stale cache with successful lock', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -179,6 +173,7 @@ describe('Reader', function () {
 		it('does not serve when lock fails', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -198,6 +193,7 @@ describe('Reader', function () {
 		it('returns entry as-is when not compressed', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false, // Not gzipped
@@ -218,6 +214,7 @@ describe('Reader', function () {
 
 			$entry = new Entry(
 				gzcompress('<html>'),
+				'',
 				array(),
 				200,
 				true, // Gzipped
@@ -235,6 +232,7 @@ describe('Reader', function () {
 
 			$entry = new Entry(
 				$compressed,
+				'',
 				array('Header: value'),
 				200,
 				true,
@@ -252,16 +250,14 @@ describe('Reader', function () {
 		it('returns null on decompression failure', function () {
 			$entry = new Entry(
 				'invalid compressed data',
+				'',
 				array(),
 				200,
 				true,
 				time()
 			);
 
-			// Suppress gzuncompress warning during test.
-			set_error_handler( fn() => true, E_WARNING );
-			$result = $this->reader->decompress($entry);
-			restore_error_handler();
+			$result = suppressing_errors(fn() => $this->reader->decompress($entry));
 
 			expect($result)->toBeNull();
 		});

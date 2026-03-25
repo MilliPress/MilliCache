@@ -6,17 +6,7 @@ use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Entry;
 
 uses()->beforeEach(function () {
-	$this->config = new Config(
-		3600,
-		600,
-		true, // Gzip enabled
-		false,
-		array(),
-		array(),
-		array('test_cookie'),
-		array(),
-		array()
-	);
+	$this->config = create_test_config( ignore_cookies: array( 'test_cookie' ) );
 
 	$this->storage = Mockery::mock(Storage::class);
 	$this->writer = new Writer($this->config, $this->storage);
@@ -67,10 +57,7 @@ describe('Writer', function () {
 			$entry = $this->writer->create_entry(
 				'<html>',
 				array('Content-Type: text/html'),
-				200,
-				null,
-				null,
-				null
+				200
 			);
 
 			expect($entry)->toBeInstanceOf(Entry::class);
@@ -118,18 +105,32 @@ describe('Writer', function () {
 			expect($entry->custom_grace)->toBe(1200);
 		});
 
-		it('includes debug data when provided', function () {
-			$debug = array('key' => 'value');
+		it('includes url when provided', function () {
 			$entry = $this->writer->create_entry(
 				'<html>',
 				array(),
 				200,
 				null,
 				null,
-				$debug
+				'example.com/about/'
 			);
 
-			expect($entry->debug)->toBe($debug);
+			expect($entry->url)->toBe('example.com/about/');
+		});
+
+		it('includes variant data when provided', function () {
+			$variant = array('cookies' => array('session_id'));
+			$entry = $this->writer->create_entry(
+				'<html>',
+				array(),
+				200,
+				null,
+				null,
+				'',
+				$variant
+			);
+
+			expect($entry->variant)->toBe($variant);
 		});
 
 		it('sets updated timestamp to current time', function () {
@@ -146,6 +147,7 @@ describe('Writer', function () {
 		it('returns entry as-is when gzip disabled', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false, // Gzip disabled
@@ -162,6 +164,7 @@ describe('Writer', function () {
 			$original = '<html>Large content here</html>';
 			$entry = new Entry(
 				$original,
+				'',
 				array(),
 				200,
 				true, // Gzip enabled
@@ -183,6 +186,7 @@ describe('Writer', function () {
 			// (Note: gzcompress rarely fails, but we handle it)
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				true,
@@ -200,7 +204,7 @@ describe('Writer', function () {
 		it('returns false when storage unavailable', function () {
 			$this->storage->shouldReceive('is_available')->andReturn(false);
 
-			$entry = new Entry('<html>', array(), 200, false, time());
+			$entry = new Entry('<html>', '', array(), 200, false, time());
 			$result = $this->writer->store('hash', $entry, array(), true);
 
 			expect($result)->toBeFalse();
@@ -209,6 +213,7 @@ describe('Writer', function () {
 		it('stores cache entry successfully', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array('Content-Type: text/html'),
 				200,
 				false,
@@ -228,6 +233,7 @@ describe('Writer', function () {
 		it('converts entry to array for storage', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array('Header: value'),
 				200,
 				true,
@@ -256,7 +262,7 @@ describe('Writer', function () {
 		});
 
 		it('passes cacheable flag to storage', function () {
-			$entry = new Entry('<html>', array(), 200, false, time());
+			$entry = new Entry('<html>', '', array(), 200, false, time());
 
 			$this->storage->shouldReceive('is_available')->andReturn(true);
 			$this->storage->shouldReceive('perform_cache')

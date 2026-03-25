@@ -215,13 +215,14 @@ final class Reader {
 		// Return new entry with decompressed output.
 		return new Entry(
 			$decompressed,
+			$entry->url,
 			$entry->headers,
 			$entry->status,
 			false, // No longer gzipped.
 			$entry->updated,
 			$entry->custom_ttl,
 			$entry->custom_grace,
-			$entry->debug
+			$entry->variant
 		);
 	}
 

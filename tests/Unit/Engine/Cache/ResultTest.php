@@ -27,6 +27,7 @@ describe( 'CacheResult', function () {
 		it( 'creates cache hit', function () {
 			$entry = new Entry(
 				output: 'Test',
+				url: '',
 				headers: array(),
 				status: 200,
 				gzip: false,
@@ -45,6 +46,7 @@ describe( 'CacheResult', function () {
 		it( 'creates locked cache hit', function () {
 			$entry = new Entry(
 				output: 'Test',
+				url: '',
 				headers: array(),
 				status: 200,
 				gzip: false,

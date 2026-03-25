@@ -12,6 +12,8 @@
 
 namespace MilliCache\Engine\Cache;
 
+use MilliCache\Engine\Utilities\Helpers;
+
 ! defined( 'ABSPATH' ) && exit;
 
 /**
@@ -32,6 +34,13 @@ final class Entry {
 	 * @var string
 	 */
 	public string $output;
+
+	/**
+	 * Human-readable URL identifying this cache entry.
+	 *
+	 * @var string
+	 */
+	public string $url;
 
 	/**
 	 * HTTP headers to send with cached content.
@@ -76,11 +85,15 @@ final class Entry {
 	public ?int $custom_grace;
 
 	/**
-	 * Debug data (optional).
+	 * Variant dimensions that differentiate this entry (optional).
+	 *
+	 * Contains cookie names and unique variables that caused this
+	 * cache entry to be stored separately from the default variant.
+	 * Null when this is the default (anonymous, no unique vars) variant.
 	 *
 	 * @var array<string,mixed>|null
 	 */
-	public ?array $debug;
+	public ?array $variant;
 
 	/**
 	 * Constructor.
@@ -88,36 +101,39 @@ final class Entry {
 	 * @since 1.0.0
 	 *
 	 * @param string                   $output       Cached HTML/content.
+	 * @param string                   $url          Human-readable URL identifying this entry.
 	 * @param array<string>            $headers      HTTP headers.
 	 * @param int                      $status       HTTP status code.
 	 * @param bool                     $gzip         Is content gzipped.
 	 * @param int                      $updated      Timestamp when cached.
 	 * @param int|null                 $custom_ttl   Custom TTL override.
 	 * @param int|null                 $custom_grace Custom grace override.
-	 * @param array<string,mixed>|null $debug        Debug information.
+	 * @param array<string,mixed>|null $variant      Variant dimensions.
 	 */
 	public function __construct(
 		string $output,
+		string $url,
 		array $headers,
 		int $status,
 		bool $gzip,
 		int $updated,
 		?int $custom_ttl = null,
 		?int $custom_grace = null,
-		?array $debug = null
+		?array $variant = null
 	) {
 		$this->output       = $output;
+		$this->url          = $url;
 		$this->headers      = $headers;
 		$this->status       = $status;
 		$this->gzip         = $gzip;
 		$this->updated      = $updated;
 		$this->custom_ttl   = null !== $custom_ttl ? $custom_ttl : null;
 		$this->custom_grace = null !== $custom_grace ? $custom_grace : null;
-		$this->debug        = $debug;
+		$this->variant      = $variant;
 	}
 
 	/**
-	 * Create from array (storage format).
+	 * Create from an array (storage format).
 	 *
 	 * @since 1.0.0
 	 *
@@ -127,34 +143,14 @@ final class Entry {
 	public static function from_array( array $data ): self {
 		return new self(
 			isset( $data['output'] ) && is_string( $data['output'] ) ? $data['output'] : '',
-			self::extract_string_array( $data, 'headers' ),
+			isset( $data['url'] ) && is_string( $data['url'] ) ? $data['url'] : '',
+			Helpers::pluck_string_array( $data, 'headers' ),
 			isset( $data['status'] ) && is_numeric( $data['status'] ) ? (int) $data['status'] : 200,
 			isset( $data['gzip'] ) && $data['gzip'],
 			isset( $data['updated'] ) && is_numeric( $data['updated'] ) ? (int) $data['updated'] : time(),
 			isset( $data['custom_ttl'] ) && is_numeric( $data['custom_ttl'] ) ? (int) $data['custom_ttl'] : null,
 			isset( $data['custom_grace'] ) && is_numeric( $data['custom_grace'] ) ? (int) $data['custom_grace'] : null,
-			isset( $data['debug'] ) && is_array( $data['debug'] ) ? $data['debug'] : null
-		);
-	}
-
-	/**
-	 * Safely extract a string array from data.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array<string,mixed> $data Data array.
-	 * @param string              $key  Key to extract.
-	 * @return array<string> String array or empty array.
-	 */
-	private static function extract_string_array( array $data, string $key ): array {
-		if ( ! isset( $data[ $key ] ) || ! is_array( $data[ $key ] ) ) {
-			return array();
-		}
-
-		// Filter to ensure all values are strings.
-		return array_filter(
-			array_map( 'strval', $data[ $key ] ),
-			'is_string'
+			isset( $data['variant'] ) && is_array( $data['variant'] ) ? $data['variant'] : null
 		);
 	}
 
@@ -168,6 +164,7 @@ final class Entry {
 	public function to_array(): array {
 		$data = array(
 			'output'  => $this->output,
+			'url'     => $this->url,
 			'headers' => $this->headers,
 			'status'  => $this->status,
 			'gzip'    => $this->gzip,
@@ -182,8 +179,8 @@ final class Entry {
 			$data['custom_grace'] = $this->custom_grace;
 		}
 
-		if ( null !== $this->debug ) {
-			$data['debug'] = $this->debug;
+		if ( null !== $this->variant ) {
+			$data['variant'] = $this->variant;
 		}
 
 		return $data;

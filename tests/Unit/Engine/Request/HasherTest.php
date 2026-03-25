@@ -17,17 +17,7 @@ uses()
 		$_SERVER['REQUEST_METHOD'] = 'GET';
 		$_COOKIE = array('session' => 'abc123');
 
-		$this->config = new Config(
-			3600,
-			600,
-			true,
-			false,
-			array(),
-			array(),
-			array(),
-			array(),
-			array()
-		);
+		$this->config = create_test_config();
 
 		$this->parser = new Parser($this->config);
 		$this->hasher = new Hasher($this->config, $this->parser);
@@ -143,42 +133,112 @@ describe('Hasher', function () {
 		});
 	});
 
-	describe('get_debug_data', function () {
-		it('returns null when debug is disabled', function () {
+	describe('get_url', function () {
+		it('returns null before generation', function () {
+			expect($this->hasher->get_url())->toBeNull();
+		});
+
+		it('returns full URL with scheme after generation', function () {
 			$this->hasher->generate();
-			expect($this->hasher->get_debug_data())->toBeNull();
+			$url = $this->hasher->get_url();
+
+			expect($url)->toBe('https://example.com/test/page?id=123');
 		});
 
-		it('returns debug data when debug is enabled', function () {
+		it('reflects different host', function () {
+			$_SERVER['HTTP_HOST'] = 'shop.example.com';
+			$_SERVER['REQUEST_URI'] = '/products';
+			$hasher = new Hasher($this->config, $this->parser);
+			$hasher->generate();
+
+			expect($hasher->get_url())->toBe('https://shop.example.com/products');
+		});
+
+		it('uses http scheme when HTTPS is off', function () {
+			$_SERVER['HTTPS'] = '';
+			$hasher = new Hasher($this->config, $this->parser);
+			$hasher->generate();
+
+			expect($hasher->get_url())->toBe('http://example.com/test/page?id=123');
+		});
+	});
+
+	describe('get_variant', function () {
+		it('returns null for vanilla anonymous request', function () {
+			$_COOKIE = array();
+			$this->hasher->generate();
+			expect($this->hasher->get_variant())->toBeNull();
+		});
+
+		it('includes https false when not HTTPS', function () {
+			$_COOKIE = array();
+			$_SERVER['HTTPS'] = '';
+			$this->hasher->generate();
+
+			$variant = $this->hasher->get_variant();
+			expect($variant)->not->toBeNull();
+			expect($variant['https'])->toBeFalse();
+		});
+
+		it('does not include https when HTTPS is on', function () {
+			$_COOKIE = array();
+			$_SERVER['HTTPS'] = 'on';
+			$this->hasher->generate();
+
+			expect($this->hasher->get_variant())->toBeNull();
+		});
+
+		it('includes method when not GET', function () {
+			$_COOKIE = array();
+			$_SERVER['REQUEST_METHOD'] = 'POST';
+			$this->hasher->generate();
+
+			$variant = $this->hasher->get_variant();
+			expect($variant)->not->toBeNull();
+			expect($variant['method'])->toBe('POST');
+		});
+
+		it('does not include method for GET requests', function () {
+			$_COOKIE = array();
+			$_SERVER['REQUEST_METHOD'] = 'GET';
+			$this->hasher->generate();
+
+			expect($this->hasher->get_variant())->toBeNull();
+		});
+
+		it('returns cookie names when cookies are present', function () {
+			$_COOKIE = array( 'session_id' => 'abc', 'pref' => 'dark' );
+			$this->hasher->generate();
+
+			$variant = $this->hasher->get_variant();
+			expect($variant)->not->toBeNull();
+			expect($variant)->toHaveKey('cookies');
+			expect($variant['cookies'])->toBe(array( 'session_id', 'pref' ));
+		});
+
+		it('returns unique variables when configured', function () {
+			$_COOKIE = array();
 			$config = new Config(
-				3600, 600, true, true,
-				array(), array(), array(), array(), array()
+				3600, 600, true, false,
+				array(), array(), array(), array(), array( 'device', 'mobile' )
 			);
 			$hasher = new Hasher($config, $this->parser);
 			$hasher->generate();
 
-			$debug = $hasher->get_debug_data();
-			expect($debug)->not->toBeNull();
-			expect($debug)->toHaveKey('request_hash');
+			$variant = $hasher->get_variant();
+			expect($variant)->not->toBeNull();
+			expect($variant)->toHaveKey('unique');
+			expect($variant['unique'])->toBe(array( 'device', 'mobile' ));
 		});
 
-		it('includes all hash components in debug data', function () {
-			$config = new Config(
-				3600, 600, true, true,
-				array(), array(), array(), array(), array()
-			);
-			$hasher = new Hasher($config, $this->parser);
-			$hasher->generate();
+		it('includes auth header in unique when present', function () {
+			$_COOKIE = array();
+			$_SERVER['HTTP_AUTHORIZATION'] = 'Bearer token123';
+			$this->hasher->generate();
 
-			$debug = $hasher->get_debug_data();
-			$hash_data = $debug['request_hash'];
-
-			expect($hash_data)->toHaveKey('request');
-			expect($hash_data)->toHaveKey('host');
-			expect($hash_data)->toHaveKey('https');
-			expect($hash_data)->toHaveKey('method');
-			expect($hash_data)->toHaveKey('unique');
-			expect($hash_data)->toHaveKey('cookies');
+			$variant = $this->hasher->get_variant();
+			expect($variant)->not->toBeNull();
+			expect($variant['unique'])->toHaveKey('mc-auth-header');
 		});
 	});
 });

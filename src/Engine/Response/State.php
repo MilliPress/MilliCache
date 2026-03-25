@@ -63,13 +63,6 @@ final class State {
 	public bool $fcgi_regenerate;
 
 	/**
-	 * Debug data collected during request processing.
-	 *
-	 * @var array<string,mixed>|null
-	 */
-	public ?array $debug_data;
-
-	/**
 	 * Whether cached content was served for this request.
 	 *
 	 * @var bool
@@ -86,22 +79,19 @@ final class State {
 	 * @param int|null                                   $grace_override  Custom grace override.
 	 * @param array{decision: bool, reason: string}|null $cache_decision  Cache decision override.
 	 * @param bool                                       $fcgi_regenerate Whether FCGI regeneration is enabled.
-	 * @param array<string,mixed>|null                   $debug_data      Debug data.
 	 */
 	public function __construct(
 		string $request_hash,
 		?int $ttl_override = null,
 		?int $grace_override = null,
 		?array $cache_decision = null,
-		bool $fcgi_regenerate = false,
-		?array $debug_data = null
+		bool $fcgi_regenerate = false
 	) {
 		$this->request_hash    = $request_hash;
 		$this->ttl_override    = $ttl_override;
 		$this->grace_override  = $grace_override;
 		$this->cache_decision  = $cache_decision;
 		$this->fcgi_regenerate = $fcgi_regenerate;
-		$this->debug_data      = $debug_data;
 	}
 
 	/**
@@ -117,7 +107,7 @@ final class State {
 	}
 
 	/**
-	 * Create a default context with empty hash.
+	 * Create a default context with an empty hash.
 	 *
 	 * Useful for testing or initialization.
 	 *
@@ -130,7 +120,7 @@ final class State {
 	}
 
 	/**
-	 * Create a modified copy with new TTL override.
+	 * Create a modified copy with a new TTL override.
 	 *
 	 * @since 1.0.0
 	 *
@@ -186,20 +176,6 @@ final class State {
 	public function with_fcgi_regenerate( bool $regenerate ): self {
 		$copy                    = clone $this;
 		$copy->fcgi_regenerate   = $regenerate;
-		return $copy;
-	}
-
-	/**
-	 * Create a modified copy with debug data.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array<string,mixed> $data Debug data.
-	 * @return self New instance with debug data.
-	 */
-	public function with_debug_data( array $data ): self {
-		$copy               = clone $this;
-		$copy->debug_data   = $data;
 		return $copy;
 	}
 
@@ -280,16 +256,5 @@ final class State {
 	 */
 	public function should_fcgi_regenerate(): bool {
 		return $this->fcgi_regenerate;
-	}
-
-	/**
-	 * Get debug data.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return array<string,mixed>|null Debug data or null.
-	 */
-	public function get_debug_data(): ?array {
-		return $this->debug_data;
 	}
 }

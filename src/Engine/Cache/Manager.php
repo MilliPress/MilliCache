@@ -198,8 +198,9 @@ final class Manager {
 	 * @param array<string>            $headers      Response headers in "Key: Value" format.
 	 * @param int|null                 $custom_ttl   Custom TTL override.
 	 * @param int|null                 $custom_grace Custom grace override.
-	 * @param array<string,mixed>|null $debug        Debug data.
-	 * @return array{cached: bool, reason: string} Result with cached flag and reason.
+	 * @param string                   $url          Human-readable URL.
+	 * @param array<string,mixed>|null $variant      Variant dimensions.
+	 * @return array{cached: bool, reason: string} Result with a cached flag and reason.
 	 */
 	public function cache_output(
 		string $hash,
@@ -209,7 +210,8 @@ final class Manager {
 		array $headers,
 		?int $custom_ttl = null,
 		?int $custom_grace = null,
-		?array $debug = null
+		string $url = '',
+		?array $variant = null
 	): array {
 		// Check if we should cache based on status.
 		$status_check = $this->writer->should_cache( $status );
@@ -229,14 +231,15 @@ final class Manager {
 			);
 		}
 
-		// Create cache entry.
+		// Create a cache entry.
 		$entry = $this->writer->create_entry(
 			$output,
 			$header_check['headers'],
 			$status,
 			$custom_ttl,
 			$custom_grace,
-			$debug
+			$url,
+			$variant
 		);
 
 		// Compress if enabled.

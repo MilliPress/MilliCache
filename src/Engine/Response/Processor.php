@@ -137,10 +137,11 @@ final class Processor {
 			$status = 200;
 		}
 
-		// Get TTL/grace options and debug data from context.
+		// Get URL, TTL/grace options and variant data from context.
+		$url          = $this->request_manager->get_url() ?? '';
 		$custom_ttl   = $this->state->get_ttl_override();
 		$custom_grace = $this->state->get_grace_override();
-		$debug        = $this->config->debug ? $this->state->get_debug_data() : null;
+		$variant      = $this->request_manager->get_variant();
 
 		// Cache the output.
 		$result = $this->cache_manager->cache_output(
@@ -151,7 +152,8 @@ final class Processor {
 			headers_list(),
 			$custom_ttl,
 			$custom_grace,
-			$debug
+			$url,
+			$variant
 		);
 
 		// Set headers based on result.
@@ -259,7 +261,8 @@ final class Processor {
 			$status,
 			$headers,
 			$custom_ttl,
-			$custom_grace
+			$custom_grace,
+			$this->request_manager->get_url() ?? ''
 		);
 	}
 

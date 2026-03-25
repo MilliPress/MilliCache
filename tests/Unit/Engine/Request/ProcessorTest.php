@@ -24,17 +24,7 @@ uses()
 		$_GET = array('id' => '123', 'utm_source' => 'google');
 		$_REQUEST = $_GET;
 
-		$this->config = new Config(
-			3600,
-			600,
-			true,
-			false,
-			array(),
-			array(),
-			array(),
-			array('utm_source'),
-			array()
-		);
+		$this->config = create_test_config( ignore_request_keys: array( 'utm_source' ) );
 
 		$this->handler = new Processor($this->config);
 	})
@@ -128,23 +118,39 @@ describe('Handler', function () {
 		});
 	});
 
-	describe('get_debug_data', function () {
-		it('returns null when debug is disabled', function () {
-			$this->handler->process();
-			expect($this->handler->get_debug_data())->toBeNull();
+	describe('get_url', function () {
+		it('returns null before processing', function () {
+			expect($this->handler->get_url())->toBeNull();
 		});
 
-		it('returns debug data when debug is enabled', function () {
+		it('returns full URL with scheme after processing', function () {
+			$this->handler->process();
+			$url = $this->handler->get_url();
+
+			// utm_source is cleaned, so the URL should not include it.
+			expect($url)->toBe('https://example.com/test/page?id=123');
+		});
+	});
+
+	describe('get_variant', function () {
+		it('returns null for vanilla anonymous request', function () {
+			$_COOKIE = array();
+			$this->handler->process();
+			expect($this->handler->get_variant())->toBeNull();
+		});
+
+		it('returns variant data when unique variables are configured', function () {
+			$_COOKIE = array();
 			$config = new Config(
-				3600, 600, true, true,
-				array(), array(), array(), array('utm_source'), array()
+				3600, 600, true, false,
+				array(), array(), array(), array('utm_source'), array( 'device', 'mobile' )
 			);
 			$handler = new Processor($config);
 			$handler->process();
 
-			$debug = $handler->get_debug_data();
-			expect($debug)->not->toBeNull();
-			expect($debug)->toHaveKey('request_hash');
+			$variant = $handler->get_variant();
+			expect($variant)->not->toBeNull();
+			expect($variant)->toHaveKey('unique');
 		});
 	});
 

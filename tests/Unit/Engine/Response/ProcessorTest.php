@@ -101,15 +101,13 @@ describe( 'ResponseManager', function () {
 				->with_ttl_override( 3600 )
 				->with_grace_override( 600 )
 				->with_cache_decision( true, 'always' )
-				->with_fcgi_regenerate( false )
-				->with_debug_data( array( 'test' => 'data' ) );
+				->with_fcgi_regenerate( false );
 
 			expect( $context->get_request_hash() )->toBe( 'test-hash' );
 			expect( $context->get_ttl_override() )->toBe( 3600 );
 			expect( $context->get_grace_override() )->toBe( 600 );
 			expect( $context->get_cache_decision() )->not->toBeNull();
 			expect( $context->should_fcgi_regenerate() )->toBeFalse();
-			expect( $context->get_debug_data() )->toBe( array( 'test' => 'data' ) );
 		} );
 	} );
 

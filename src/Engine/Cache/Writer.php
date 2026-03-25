@@ -139,7 +139,7 @@ final class Writer {
 	}
 
 	/**
-	 * Create cache entry from output buffer.
+	 * Create a cache entry from the output buffer.
 	 *
 	 * @since 1.0.0
 	 *
@@ -148,7 +148,8 @@ final class Writer {
 	 * @param int                      $status       HTTP status code.
 	 * @param int|null                 $custom_ttl   Custom TTL override.
 	 * @param int|null                 $custom_grace Custom grace override.
-	 * @param array<string,mixed>|null $debug        Debug data.
+	 * @param string                   $url          Human-readable URL.
+	 * @param array<string,mixed>|null $variant      Variant dimensions.
 	 * @return Entry The cache entry.
 	 */
 	public function create_entry(
@@ -157,19 +158,21 @@ final class Writer {
 		int $status,
 		?int $custom_ttl = null,
 		?int $custom_grace = null,
-		?array $debug = null
+		string $url = '',
+		?array $variant = null
 	): Entry {
 		$should_gzip = $this->config->gzip && function_exists( 'gzcompress' );
 
 		return new Entry(
 			$output,
+			$url,
 			$headers,
 			$status,
 			$should_gzip,
 			time(),
 			$custom_ttl,
 			$custom_grace,
-			$debug
+			$variant
 		);
 	}
 
@@ -192,25 +195,27 @@ final class Writer {
 			// Compression failed, return uncompressed.
 			return new Entry(
 				$entry->output,
+				$entry->url,
 				$entry->headers,
 				$entry->status,
 				false, // Disable gzip flag.
 				$entry->updated,
 				$entry->custom_ttl,
 				$entry->custom_grace,
-				$entry->debug
+				$entry->variant
 			);
 		}
 
 		return new Entry(
 			$compressed,
+			$entry->url,
 			$entry->headers,
 			$entry->status,
 			true,
 			$entry->updated,
 			$entry->custom_ttl,
 			$entry->custom_grace,
-			$entry->debug
+			$entry->variant
 		);
 	}
 

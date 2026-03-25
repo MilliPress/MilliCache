@@ -131,7 +131,7 @@ final class Processor {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string|null $url The URL to hash, or null for current request.
+	 * @param string|null $url The URL to hash, or null for the current request.
 	 * @return string The URL hash.
 	 */
 	public function get_url_hash( ?string $url = null ): string {
@@ -148,13 +148,24 @@ final class Processor {
 	}
 
 	/**
-	 * Get debug data from last hash generation.
+	 * Get variant dimensions from the last hash generation.
 	 *
-	 * @since 1.0.0
+	 * @since 1.4.0
 	 *
-	 * @return array<string,mixed>|null Debug data, or null if debug disabled.
+	 * @return array<string,mixed>|null Variant data, or null if no variant dimensions.
 	 */
-	public function get_debug_data(): ?array {
-		return $this->get_hasher()->get_debug_data();
+	public function get_variant(): ?array {
+		return $this->get_hasher()->get_variant();
+	}
+
+	/**
+	 * Get the human-readable URL from the last hash generation.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @return string|null The request URL, or null if not yet generated.
+	 */
+	public function get_url(): ?string {
+		return $this->get_hasher()->get_url();
 	}
 }

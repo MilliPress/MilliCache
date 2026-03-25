@@ -9,17 +9,7 @@ use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Entry;
 
 uses()->beforeEach(function () {
-	$this->config = new Config(
-		3600,
-		600,
-		true,
-		false,
-		array(),
-		array(),
-		array(),
-		array(),
-		array()
-	);
+	$this->config = create_test_config();
 
 	$this->storage = Mockery::mock(Storage::class);
 	$this->handler = new Manager($this->config, $this->storage);
@@ -51,7 +41,7 @@ describe('Handler', function () {
 			$this->storage->shouldReceive('is_available')->andReturn(true);
 			$this->storage->shouldReceive('get_cache')->andReturn(null);
 
-			$result = $this->handler->get_and_validate('hash', true);
+			$result = $this->handler->get_and_validate('hash');
 
 			expect($result['serve'])->toBeFalse();
 			expect($result['regenerate'])->toBeFalse();
@@ -72,7 +62,7 @@ describe('Handler', function () {
 				array($cache_data, array(), false)
 			);
 
-			$result = $this->handler->get_and_validate('hash', true);
+			$result = $this->handler->get_and_validate('hash');
 
 			expect($result['serve'])->toBeTrue();
 			expect($result['regenerate'])->toBeFalse();
@@ -95,7 +85,7 @@ describe('Handler', function () {
 			);
 			$this->storage->shouldReceive('lock')->andReturn(true);
 
-			$result = $this->handler->get_and_validate('hash', true);
+			$result = $this->handler->get_and_validate('hash');
 
 			expect($result['serve'])->toBeTrue();
 			expect($result['regenerate'])->toBeTrue();
@@ -116,7 +106,7 @@ describe('Handler', function () {
 				array($cache_data, array(), false)
 			);
 
-			$result = $this->handler->get_and_validate('hash', true);
+			$result = $this->handler->get_and_validate('hash');
 
 			expect($result['serve'])->toBeTrue();
 			expect($result['entry']->output)->toBe($original);
@@ -137,10 +127,7 @@ describe('Handler', function () {
 				array($cache_data, array(), false)
 			);
 
-			// Suppress the expected PHP warning from gzuncompress
-			set_error_handler(function () {}, E_WARNING);
-			$result = $this->handler->get_and_validate('hash', true);
-			restore_error_handler();
+			$result = suppressing_errors(fn() => $this->handler->get_and_validate('hash'));
 
 			expect($result['serve'])->toBeFalse();
 			expect($result['entry'])->toBeNull();
@@ -161,7 +148,7 @@ describe('Handler', function () {
 			);
 			$this->storage->shouldReceive('delete_cache')->with('hash')->once();
 
-			$result = $this->handler->get_and_validate('hash', true);
+			$result = $this->handler->get_and_validate('hash');
 
 			expect($result['serve'])->toBeFalse();
 		});
@@ -219,16 +206,15 @@ describe('Handler', function () {
 			expect($result['cached'])->toBeTrue();
 		});
 
-		it('includes debug data when provided', function () {
+		it('includes url in stored entry', function () {
 			$output = '<html>Test</html>';
-			$debug = array('info' => 'test');
 
 			$this->storage->shouldReceive('is_available')->andReturn(true);
 			$this->storage->shouldReceive('perform_cache')
 				->with(
 					'hash',
-					Mockery::on(function ($data) use ($debug) {
-						return $data['debug'] === $debug;
+					Mockery::on(function ($data) {
+						return $data['url'] === 'example.com/about/';
 					}),
 					Mockery::any(),
 					Mockery::any()
@@ -243,7 +229,38 @@ describe('Handler', function () {
 				array(),
 				null,
 				null,
-				$debug
+				'example.com/about/'
+			);
+
+			expect($result['cached'])->toBeTrue();
+		});
+
+		it('includes variant data when provided', function () {
+			$output = '<html>Test</html>';
+			$variant = array('cookies' => array('session_id'));
+
+			$this->storage->shouldReceive('is_available')->andReturn(true);
+			$this->storage->shouldReceive('perform_cache')
+				->with(
+					'hash',
+					Mockery::on(function ($data) use ($variant) {
+						return $data['variant'] === $variant;
+					}),
+					Mockery::any(),
+					Mockery::any()
+				)
+				->andReturn(true);
+
+			$result = $this->handler->cache_output(
+				'hash',
+				$output,
+				array(),
+				200,
+				array(),
+				null,
+				null,
+				'',
+				$variant
 			);
 
 			expect($result['cached'])->toBeTrue();

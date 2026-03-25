@@ -5,17 +5,7 @@ use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Entry;
 
 uses()->beforeEach(function () {
-	$this->config = new Config(
-		3600, // TTL: 1 hour
-		600,  // Grace: 10 minutes
-		true,
-		false,
-		array(),
-		array(),
-		array(),
-		array(),
-		array()
-	);
+	$this->config = create_test_config();
 
 	$this->validator = new Validator($this->config);
 });
@@ -26,6 +16,7 @@ describe('Validator', function () {
 		it('returns false for fresh entries', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -38,6 +29,7 @@ describe('Validator', function () {
 		it('returns true for stale entries', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -50,6 +42,7 @@ describe('Validator', function () {
 		it('uses custom TTL from entry', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -64,6 +57,7 @@ describe('Validator', function () {
 		it('uses custom TTL parameter over entry TTL', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -80,6 +74,7 @@ describe('Validator', function () {
 		it('returns false for fresh entries', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -92,6 +87,7 @@ describe('Validator', function () {
 		it('returns false for stale but within grace', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -104,6 +100,7 @@ describe('Validator', function () {
 		it('returns true for entries past TTL + grace', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -116,6 +113,7 @@ describe('Validator', function () {
 		it('uses custom grace from entry', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -133,6 +131,7 @@ describe('Validator', function () {
 		it('returns true for fresh entries', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -145,6 +144,7 @@ describe('Validator', function () {
 		it('returns false for stale entries', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -159,6 +159,7 @@ describe('Validator', function () {
 		it('returns positive seconds for fresh cache', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -173,6 +174,7 @@ describe('Validator', function () {
 		it('returns negative seconds for expired cache', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -188,6 +190,7 @@ describe('Validator', function () {
 		it('returns positive seconds for entries within TTL + grace', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -203,6 +206,7 @@ describe('Validator', function () {
 		it('returns negative seconds for entries past TTL + grace', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -218,6 +222,7 @@ describe('Validator', function () {
 		it('returns config TTL when no custom TTL', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -230,6 +235,7 @@ describe('Validator', function () {
 		it('returns custom TTL from entry', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -243,6 +249,7 @@ describe('Validator', function () {
 		it('returns override TTL parameter', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -258,6 +265,7 @@ describe('Validator', function () {
 		it('returns config grace when no custom grace', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
@@ -270,6 +278,7 @@ describe('Validator', function () {
 		it('returns custom grace from entry', function () {
 			$entry = new Entry(
 				'<html>',
+				'',
 				array(),
 				200,
 				false,
