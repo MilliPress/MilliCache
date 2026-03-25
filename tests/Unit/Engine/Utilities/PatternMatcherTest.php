@@ -70,10 +70,7 @@ describe( 'PatternMatcher', function () {
 		} );
 
 		it( 'handles invalid regex gracefully', function () {
-			// Suppress preg_match warning during test.
-			set_error_handler( fn() => true, E_WARNING );
-			$result = PatternMatcher::match( 'test', '#[#' );
-			restore_error_handler();
+			$result = suppressing_errors( fn() => PatternMatcher::match( 'test', '#[#' ) );
 
 			expect( $result )->toBeFalse();
 		} );
