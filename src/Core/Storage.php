@@ -398,11 +398,7 @@ class Storage {
 
 			$cache       = $results[0];
 			$lock_status = $results[1] ?? '';
-			$flags = array_filter(
-				array_keys( $cache ),
-				fn( $key ) => strpos( (string) $key, $this->prefix . ':f:' ) === 0
-			);
-			$flags = array_map( array( $this, 'toggle_flag_key' ), $flags );
+			$flags = array_map( array( $this, 'toggle_flag_key' ), $this->filter_flag_fields( array_keys( $cache ) ) );
 
 			if ( empty( $cache ) ) {
 				return null;
@@ -514,7 +510,7 @@ class Storage {
 
 					// Set the max expiration time, respecting per-entry overrides.
 					$config = Engine::instance()->config();
-					$tx->expire( $key, ( $meta['custom_ttl'] ?? $config->ttl ) + ( $meta['custom_grace'] ?? $config->grace ) + 30 );
+					$tx->expire( $key, ( $meta['custom_ttl'] ?? $config->ttl ) + ( $meta['custom_grace'] ?? $config->grace ) + 3 );
 				}
 			);
 
@@ -557,10 +553,7 @@ class Storage {
 				return false;
 			}
 
-			$flags = array_filter(
-				$fields,
-				fn( $field ) => is_string( $field ) && strpos( $field, $this->prefix . ':f:' ) === 0
-			);
+			$flags = $this->filter_flag_fields( $fields );
 
 			/**
 			 * Fires before a cache entry is deleted in the storage server.
@@ -607,6 +600,24 @@ class Storage {
 			error_log( 'Unable to delete cache in the storage server: ' . $e->getMessage() );
 			return false;
 		}
+	}
+
+	/**
+	 * Filter a list of field names to only those with the flag prefix.
+	 *
+	 * @since 1.4.0
+	 * @access private
+	 *
+	 * @param array<string> $fields Field names.
+	 * @return array<string> Fields matching the flag prefix.
+	 */
+	private function filter_flag_fields( array $fields ): array {
+		$flag_prefix = $this->prefix . ':f:';
+
+		return array_filter(
+			$fields,
+			fn( $field ) => is_string( $field ) && strpos( $field, $flag_prefix ) === 0
+		);
 	}
 
 	/**
