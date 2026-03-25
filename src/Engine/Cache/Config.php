@@ -12,6 +12,8 @@
 
 namespace MilliCache\Engine\Cache;
 
+use MilliCache\Engine\Utilities\Helpers;
+
 ! defined( 'ABSPATH' ) && exit;
 
 /**
@@ -140,32 +142,12 @@ final class Config {
 			isset( $settings['grace'] ) && is_numeric( $settings['grace'] ) ? (int) $settings['grace'] : 3600,
 			! isset( $settings['gzip'] ) || $settings['gzip'],
 			isset( $settings['debug'] ) && $settings['debug'],
-			self::extract_string_array( $settings, 'nocache_paths' ),
-			self::extract_string_array( $settings, 'nocache_cookies' ),
-			self::extract_string_array( $settings, 'ignore_cookies' ),
-			self::extract_string_array( $settings, 'ignore_request_keys' ),
-			self::extract_string_array( $settings, 'unique' )
+			Helpers::pluck_string_array( $settings, 'nocache_paths' ),
+			Helpers::pluck_string_array( $settings, 'nocache_cookies' ),
+			Helpers::pluck_string_array( $settings, 'ignore_cookies' ),
+			Helpers::pluck_string_array( $settings, 'ignore_request_keys' ),
+			Helpers::pluck_string_array( $settings, 'unique' )
 		);
 	}
 
-	/**
-	 * Safely extract a string array from settings.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array<string,mixed> $settings Settings array.
-	 * @param string              $key      Key to extract.
-	 * @return array<string> String array or empty array.
-	 */
-	private static function extract_string_array( array $settings, string $key ): array {
-		if ( ! isset( $settings[ $key ] ) || ! is_array( $settings[ $key ] ) ) {
-			return array();
-		}
-
-		// Filter to ensure all values are strings.
-		return array_filter(
-			array_map( 'strval', $settings[ $key ] ),
-			'is_string'
-		);
-	}
 }
