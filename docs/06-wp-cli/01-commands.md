@@ -21,8 +21,10 @@ Complete reference for MilliCache command-line interface.
 | `wp millicache config get`    | View configuration                |
 | `wp millicache config set`    | Set configuration value           |
 | `wp millicache config reset`  | Reset to defaults                 |
-| `wp millicache config export` | Export settings                   |
-| `wp millicache config import` | Import settings                   |
+| `wp millicache config backup` | Create settings backup            |
+| `wp millicache config restore`| Restore settings from backup      |
+| `wp millicache config export` | Export settings as JSON           |
+| `wp millicache config import` | Import settings from JSON         |
 
 ---
 
@@ -121,6 +123,8 @@ wp millicache stats --format=json
 
 ## Configuration Commands
 
+Configuration commands are provided by the MilliBase framework and manage settings using a priority hierarchy: constants > file > database > defaults.
+
 ### wp millicache config get
 
 Display current configuration values.
@@ -131,11 +135,11 @@ wp millicache config get [<key>] [--show-source] [--format=<format>]
 
 **Options:**
 
-| Option              | Description                                          |
-|---------------------|------------------------------------------------------|
-| `<key>`             | Module or setting key (e.g., `cache` or `cache.ttl`) |
-| `--show-source`     | Show where each value comes from                     |
-| `--format=<format>` | Output: `table`, `json`, `yaml`                      |
+| Option              | Description                                                    |
+|---------------------|----------------------------------------------------------------|
+| `<key>`             | Module or setting key (e.g., `cache` or `cache.ttl`)           |
+| `--show-source`     | Show where each value comes from                               |
+| `--format=<format>` | Output: `table`, `json`, `yaml`, `csv` (default: `table`)      |
 
 **Examples:**
 
@@ -148,6 +152,9 @@ wp millicache config get cache
 
 # View specific setting
 wp millicache config get cache.ttl
+
+# View setting as JSON
+wp millicache config get cache.ttl --format=json
 
 # Show setting sources
 wp millicache config get --show-source
@@ -167,6 +174,8 @@ Set a configuration value.
 wp millicache config set <key> <value>
 ```
 
+Values are automatically coerced: `"true"`/`"false"` become booleans, `"null"` becomes null, and numeric strings become numbers.
+
 **Examples:**
 
 ```bash
@@ -179,7 +188,7 @@ wp millicache config set cache.debug true
 # Set array (JSON format)
 wp millicache config set cache.nocache_paths '["/cart/*", "/checkout/*"]'
 
-# Set password (automatically encrypted)
+# Set password (automatically encrypted, masked in output)
 wp millicache config set storage.enc_password "secret"
 ```
 
@@ -188,7 +197,7 @@ wp millicache config set storage.enc_password "secret"
 
 ### wp millicache config reset
 
-Reset settings to default values.
+Reset settings to default values. A backup is automatically created before resetting.
 
 ```bash
 wp millicache config reset [--module=<module>] [--yes]
@@ -214,23 +223,39 @@ wp millicache config reset --module=cache
 wp millicache config reset --yes
 ```
 
+### wp millicache config backup
+
+Create a manual backup of current settings.
+
+```bash
+wp millicache config backup
+```
+
+Backups expire after 12 hours and are also created automatically before reset and import operations.
+
 ### wp millicache config restore
 
-Restore settings from automatic backup.
+Restore settings from the most recent backup.
 
 ```bash
 wp millicache config restore
 ```
 
-Backups are created before reset/import operations and expire after 12 hours.
-
 ### wp millicache config export
 
-Export settings to file or stdout.
+Export settings as JSON to stdout or file.
 
 ```bash
-wp millicache config export [--file=<path>] [--format=<format>]
+wp millicache config export [--file=<path>] [--module=<module>] [--include-encrypted]
 ```
+
+**Options:**
+
+| Option                | Description                                    |
+|-----------------------|------------------------------------------------|
+| `--file=<path>`       | Write to file instead of stdout                |
+| `--module=<module>`   | Export only a specific module                   |
+| `--include-encrypted` | Include decrypted values of encrypted fields    |
 
 **Examples:**
 
@@ -241,27 +266,43 @@ wp millicache config export
 # Export to file
 wp millicache config export --file=settings.json
 
-# Export as YAML
-wp millicache config export --format=yaml
+# Export only cache module
+wp millicache config export --module=cache
+
+# Include encrypted fields
+wp millicache config export --include-encrypted --file=full-backup.json
 ```
 
 ### wp millicache config import
 
-Import settings from file.
+Import settings from a JSON file. A backup is automatically created before importing.
 
 ```bash
-wp millicache config import --file=<path> [--yes]
+wp millicache config import --file=<path> [--merge] [--no-merge] [--yes]
 ```
+
+**Options:**
+
+| Option        | Description                                              |
+|---------------|----------------------------------------------------------|
+| `--file=<path>` | Path to JSON file (required)                          |
+| `--merge`     | Merge with existing settings (default)                   |
+| `--no-merge`  | Replace all settings with imported values                |
+| `--yes`       | Skip confirmation                                        |
 
 **Examples:**
 
 ```bash
-# Import from file
+# Import from file (merges by default)
 wp millicache config import --file=settings.json
+
+# Replace all settings
+wp millicache config import --file=settings.json --no-merge
 
 # Skip confirmation
 wp millicache config import --file=settings.json --yes
 ```
+
 
 ---
 
@@ -419,10 +460,16 @@ wp millicache stats
 ### Backup and Restore Settings
 
 ```bash
-# Backup
+# Create a manual backup
+wp millicache config backup
+
+# Restore from backup
+wp millicache config restore
+
+# Export to file for external backup
 wp millicache config export --file=backup.json
 
-# Restore
+# Import from file
 wp millicache config import --file=backup.json
 ```
 
