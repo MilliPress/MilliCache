@@ -184,6 +184,14 @@ jobs:
             --repo "${{ github.repository }}" \
             --draft=false
 
+      - name: Update Packagist
+        env:
+          PACKAGIST_API_TOKEN: ${{ secrets.PACKAGIST_API_TOKEN }}
+        run: |
+          curl -s -X POST "https://packagist.org/api/update-package?username=ouun&apiToken=${PACKAGIST_API_TOKEN}" \
+            -d '{"repository":{"url":"https://github.com/MilliPress/MilliCache"}}' \
+            -H "Content-Type: application/json"
+
       - name: Release summary
         env:
           TAG: ${{ needs.release-please.outputs.tag_name }}
