@@ -400,21 +400,7 @@ class Storage {
 			$lock_status = $results[1] ?? '';
 			$flags = array_map( array( $this, 'toggle_flag_key' ), $this->filter_flag_fields( array_keys( $cache ) ) );
 
-			if ( empty( $cache ) ) {
-				return null;
-			}
-
-			// MC <1.4.0 backward compat: old entries stored in a serialized 'data' blob.
-			if ( isset( $cache['data'] ) ) {
-				return array(
-					(array) unserialize( $cache['data'] ),
-					$flags,
-					$lock_status,
-				);
-			}
-
-			// MC >=1.4.0: output + meta JSON blob.
-			if ( ! isset( $cache['output'] ) ) {
+			if ( empty( $cache ) || ! isset( $cache['output'] ) ) {
 				return null;
 			}
 
