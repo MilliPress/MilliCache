@@ -130,7 +130,7 @@ describe( 'Storage', function () {
 			);
 
 			$storage = new Storage( $settings );
-			$status = $storage->get_status();
+			$status = suppressing_errors( fn() => $storage->get_status() );
 
 			expect( $storage )->toBeInstanceOf( Storage::class );
 			expect( $status['config']['scheme'] )->toBe( 'tls' );
@@ -148,7 +148,7 @@ describe( 'Storage', function () {
 			);
 
 			$storage = new Storage( $settings );
-			$status = $storage->get_status();
+			$status = suppressing_errors( fn() => $storage->get_status() );
 
 			expect( $status['config']['scheme'] )->toBe( 'tcp' );
 			expect( $status['config']['host'] )->toBe( '10.0.0.5' );
@@ -166,7 +166,7 @@ describe( 'Storage', function () {
 
 			$storage = new Storage( $settings );
 
-			expect( $storage->get_status()['config']['scheme'] )->toBe( 'tcp' );
+			expect( suppressing_errors( fn() => $storage->get_status() )['config']['scheme'] )->toBe( 'tcp' );
 		} );
 
 		it( 'uses unix scheme for socket path even with no prefix', function () {
@@ -181,7 +181,7 @@ describe( 'Storage', function () {
 
 			$storage = new Storage( $settings );
 
-			expect( $storage->get_status()['config']['scheme'] )->toBe( 'unix' );
+			expect( suppressing_errors( fn() => $storage->get_status() )['config']['scheme'] )->toBe( 'unix' );
 		} );
 	} );
 
