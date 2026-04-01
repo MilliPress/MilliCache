@@ -26,7 +26,8 @@
         "swissspidy/phpstan-no-private": "^0.2.0",
         "roave/security-advisories": "dev-latest",
         "pestphp/pest": "^4.0",
-        "mockery/mockery": "^1.6"
+        "mockery/mockery": "^1.6",
+        "brainmaestro/composer-git-hooks": "^3.0"
     },
     "autoload": {
         "psr-4": {
@@ -80,8 +81,7 @@
                 "stop-on-failure": ["pre-push"]
             },
             "pre-commit": [
-                "echo committing as $(git config user.name)",
-                "composer test"
+                "composer test:fix"
             ],
             "pre-push": [
                 "composer validate --no-check-all --no-check-publish",
