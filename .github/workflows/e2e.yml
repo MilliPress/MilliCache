@@ -17,12 +17,17 @@ jobs:
     timeout-minutes: 25
     runs-on: ubuntu-latest
     env:
-      WP_ARTIFACTS_PATH: ${{ github.workspace }}/artifacts
+      WP_ARTIFACTS_PATH: ${{ github.workspace }}/millicache/artifacts
+
+    defaults:
+      run:
+        working-directory: millicache
 
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          path: millicache
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -38,7 +43,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-e2e-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-composer-e2e-${{ hashFiles('millicache/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-e2e-
 
       # NOTE: WP-ENV caching removed - causes mismatch issues when Docker state is ephemeral
@@ -49,7 +54,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           cache: 'npm'
-          node-version-file: '.nvmrc'
+          cache-dependency-path: millicache/package-lock.json
+          node-version-file: 'millicache/.nvmrc'
 
       - name: Get Playwright version
         id: playwright-version
@@ -90,7 +96,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
-          path: playwright-report/
+          path: millicache/playwright-report/
           if-no-files-found: ignore
           retention-days: 5
 
@@ -166,6 +172,6 @@ jobs:
         with:
           name: performance-results
           path: |
-            ${{ github.workspace }}/artifacts/performance-results.json
-            ${{ github.workspace }}/artifacts/performance-results.md
+            ${{ github.workspace }}/millicache/artifacts/performance-results.json
+            ${{ github.workspace }}/millicache/artifacts/performance-results.md
           retention-days: 7
