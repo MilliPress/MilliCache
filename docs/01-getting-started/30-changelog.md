@@ -8,13 +8,6 @@ menu_order: 30
 
 ## [1.4.0](https://github.com/MilliPress/MilliCache/compare/v1.3.2...v1.4.0) (2026-04-01)
 
-
-### ⚠ BREAKING CHANGES
-
-* **e2e:** WP_BASE_URL changed from localhost:8889 to localhost:8888. Run `wp-env destroy` before starting with the new configuration.
-* **settings:** UI constructor signature changed from (Loader, Engine, string, string) to (Engine, string, string).
-* **cache:** Entry constructor now requires a $url parameter (2nd argument). The $debug property/parameter is replaced by $variant across Entry, Writer, Manager, and Hasher. State no longer carries debug_data.
-
 ### Features
 
 * **cache:** Store request URL and variant dimensions in cache entries ([d334421](https://github.com/MilliPress/MilliCache/commit/d334421d6dab06eaa759eb8189a5fd60e302eb7d))
