@@ -16,7 +16,6 @@
 namespace MilliCache\Admin;
 
 use MilliBase\Manager;
-use MilliCache\Core\Loader;
 use MilliCache\Core\Settings;
 use MilliCache\Engine;
 use MilliCache\MilliCache;
@@ -31,17 +30,6 @@ use MilliCache\MilliCache;
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class UI {
-
-	/**
-	 * The loader that's responsible for maintaining and registering all hooks that power
-	 * the plugin.
-	 *
-	 * @since    1.3.1
-	 * @access   protected
-	 *
-	 * @var      Loader    $loader    Maintains and registers all hooks for the plugin.
-	 */
-	protected Loader $loader;
 
 	/**
 	 * The plugin slug.
@@ -65,38 +53,25 @@ final class UI {
 	private Engine $engine;
 
 	/**
-	 * Initialize the UI and register hooks.
+	 * Initialize the UI and boot the MilliBase Manager.
+	 *
+	 * Manager is created at plugin load time, so schema-derived defaults
+	 * are available immediately. The config closure defers translation
+	 * calls to `init`.
 	 *
 	 * @since    1.3.0
 	 * @access   public
 	 *
-	 * @param Loader $loader      The loader class.
 	 * @param Engine $engine      The MilliCache engine instance.
 	 * @param string $plugin_name The plugin slug.
 	 * @param string $version     The plugin version.
 	 */
-	public function __construct( Loader $loader, Engine $engine, string $plugin_name, string $version ) {
-		$this->loader      = $loader;
+	public function __construct( Engine $engine, string $plugin_name, string $version ) {
 		$this->plugin_name = $plugin_name;
 		$this->version     = $version;
 		$this->engine      = $engine;
 
-		$this->register_hooks();
-	}
-
-	/**
-	 * Register hooks for the UI.
-	 *
-	 * Defers Manager boot to the init hook so the textdomain
-	 * is loaded before translation functions execute.
-	 *
-	 * @since    1.3.1
-	 * @access   private
-	 *
-	 * @return   void
-	 */
-	private function register_hooks(): void {
-		$this->loader->add_action( 'init', $this, 'boot' );
+		$this->boot();
 	}
 
 	/**
@@ -108,18 +83,26 @@ final class UI {
 	 * @return   void
 	 */
 	public function boot(): void {
-		new Manager( $this->get_ui_config() );
+		new Manager(
+			$this->plugin_name,
+			function () {
+				return $this->get_ui_config();
+			},
+			Settings::instance()
+		);
 	}
 
 	/**
 	 * Build the full MilliBase facade configuration array.
 	 *
+	 * Called by Manager's config closure on `init`, when translations are safe.
+	 *
+	 * @since 1.3.0
+	 *
 	 * @return array<string, mixed>
 	 */
 	private function get_ui_config(): array {
 		return array(
-			'settings'       => Settings::instance(),
-			'slug'           => $this->plugin_name,
 			'version'        => $this->version,
 			'text_domain'    => 'millicache',
 			'page_title'     => __( 'MilliCache', 'millicache' ),
