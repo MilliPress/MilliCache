@@ -149,5 +149,4 @@ final class Config {
 			Helpers::pluck_string_array( $settings, 'unique' )
 		);
 	}
-
 }
