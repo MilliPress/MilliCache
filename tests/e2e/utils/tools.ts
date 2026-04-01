@@ -42,7 +42,7 @@ export async function clearCache(flags = '') {
  */
 export async function runWpCliCommand(command: string): Promise<string> {
     return new Promise((resolve, reject) => {
-        exec(`npm run env:tests-cli wp ${command}`, (error, stdout, stderr) => {
+        exec(`npm run env:cli wp ${command}`, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Error executing command: ${stderr}`);
                 reject(error);

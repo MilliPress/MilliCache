@@ -1,38 +1,35 @@
 {
   "core": "WordPress/WordPress",
+  "multisite": true,
   "port": 8888,
+  "testsEnvironment": false,
   "config": {
     "MC_STORAGE_HOST": "redis",
     "MC_CACHE_DEBUG": true,
+    "MC_CACHE_TTL": 5,
+    "MC_STORAGE_DB": 1,
     "WP_CACHE": true,
     "WP_DEBUG": true,
-    "WP_DEBUG_DISPLAY": true
+    "WP_DEBUG_DISPLAY": true,
+    "PERFLAB_DISABLE_OBJECT_CACHE_DROPIN": false
   },
-  "plugins": ["."],
+  "plugins": [
+    ".",
+    "https://downloads.wordpress.org/plugin/performance-lab.zip",
+    "https://downloads.wordpress.org/plugin/wordpress-importer.zip"
+  ],
   "themes": [],
   "mappings": {
     "wp-content/plugins": "./tests/wp-env/plugins",
-    "wp-content/mu-plugins": "./tests/wp-env/mu-plugins"
+    "wp-content/mu-plugins": "./tests/wp-env/mu-plugins",
+    "wp-cli.yml": "./tests/wp-env/wp-cli.yml",
+    ".htaccess": "./tests/wp-env/.htaccess",
+    "wp-content/plugins/woocommerce": "https://downloads.wordpress.org/plugin/woocommerce.zip"
   },
-  "env": {
-    "tests": {
-      "config": {
-        "WP_CACHE": true,
-        "MC_CACHE_TTL": 5,
-        "MC_STORAGE_DB": 1,
-        "PERFLAB_DISABLE_OBJECT_CACHE_DROPIN": false
-      },
-      "plugins": [
-        "https://downloads.wordpress.org/plugin/performance-lab.zip",
-        "https://downloads.wordpress.org/plugin/wordpress-importer.zip"
-      ],
-      "mappings": {
-        "wp-cli.yml": "./tests/wp-env/wp-cli.yml",
-        ".htaccess": "./tests/wp-env/.htaccess",
-
-        "wp-content/plugins/millicache": ".",
-        "wp-content/plugins/woocommerce": "https://downloads.wordpress.org/plugin/woocommerce.zip"
-      }
-    }
+  "lifecycleScripts": {
+    "afterStart": "bash tests/wp-env/after-start.sh",
+    "afterReset": "bash tests/wp-env/after-start.sh",
+    "afterCleanup": "bash tests/wp-env/after-start.sh",
+    "afterDestroy": "bash tests/wp-env/after-destroy.sh"
   }
 }

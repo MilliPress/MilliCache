@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { defineConfig } from '@playwright/test';
 
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 process.env.TEST_ITERATIONS ??= '50';
 process.env.WP_ARTIFACTS_PATH ??= join( process.cwd(), 'artifacts' );

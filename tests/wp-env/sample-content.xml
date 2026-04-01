@@ -7,13 +7,13 @@
 	xmlns:wp="http://wordpress.org/export/1.2/">
 <channel>
 	<title>MilliCache Test Site</title>
-	<link>http://localhost:8889</link>
+	<link>http://localhost:8888</link>
 	<description>Sample content for E2E testing</description>
 	<pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate>
 	<language>en-US</language>
 	<wp:wxr_version>1.2</wp:wxr_version>
-	<wp:base_site_url>http://localhost:8889</wp:base_site_url>
-	<wp:base_blog_url>http://localhost:8889</wp:base_blog_url>
+	<wp:base_site_url>http://localhost:8888</wp:base_site_url>
+	<wp:base_blog_url>http://localhost:8888</wp:base_blog_url>
 
 	<!-- Categories -->
 	<wp:category>
@@ -113,7 +113,7 @@
 	<!-- Posts with Gutenberg blocks -->
 	<item>
 		<title>What is TTFB and Why You Should Care</title>
-		<link>http://localhost:8889/hello-world/</link>
+		<link>http://localhost:8888/hello-world/</link>
 		<pubDate>Mon, 01 Jan 2024 10:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
 		<content:encoded><![CDATA[<!-- wp:paragraph -->
@@ -194,7 +194,7 @@
 
 	<item>
 		<title>Scale Your WordPress Site for High Traffic</title>
-		<link>http://localhost:8889/scale-wordpress-high-traffic/</link>
+		<link>http://localhost:8888/scale-wordpress-high-traffic/</link>
 		<pubDate>Mon, 01 Jan 2024 11:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
 		<content:encoded><![CDATA[<!-- wp:paragraph -->
@@ -298,7 +298,7 @@
 
 	<item>
 		<title>Understanding Redis for WordPress</title>
-		<link>http://localhost:8889/understanding-redis-wordpress/</link>
+		<link>http://localhost:8888/understanding-redis-wordpress/</link>
 		<pubDate>Mon, 01 Jan 2024 12:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
 		<content:encoded><![CDATA[<!-- wp:paragraph -->
@@ -378,7 +378,7 @@
 
 	<item>
 		<title>Why Page Speed Matters for SEO</title>
-		<link>http://localhost:8889/page-speed-matters-seo/</link>
+		<link>http://localhost:8888/page-speed-matters-seo/</link>
 		<pubDate>Mon, 01 Jan 2024 13:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
 		<content:encoded><![CDATA[<!-- wp:paragraph -->
@@ -475,7 +475,7 @@
 
 	<item>
 		<title>Getting Started with Full Page Caching</title>
-		<link>http://localhost:8889/getting-started-full-page-caching/</link>
+		<link>http://localhost:8888/getting-started-full-page-caching/</link>
 		<pubDate>Mon, 01 Jan 2024 14:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
 		<content:encoded><![CDATA[<!-- wp:paragraph -->
@@ -569,7 +569,7 @@
 	<!-- Pages with Gutenberg blocks -->
 	<item>
 		<title>About</title>
-		<link>http://localhost:8889/sample-page/</link>
+		<link>http://localhost:8888/sample-page/</link>
 		<pubDate>Mon, 01 Jan 2024 09:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
 		<content:encoded><![CDATA[<!-- wp:paragraph {"fontSize":"large"} -->
@@ -618,7 +618,7 @@
 
 	<item>
 		<title>Contact</title>
-		<link>http://localhost:8889/contact/</link>
+		<link>http://localhost:8888/contact/</link>
 		<pubDate>Mon, 01 Jan 2024 09:01:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
 		<content:encoded><![CDATA[<!-- wp:paragraph -->
@@ -668,7 +668,7 @@
 	<!-- Books (Custom Post Type) with Gutenberg blocks and taxonomy terms -->
 	<item>
 		<title>WordPress Caching Fundamentals</title>
-		<link>http://localhost:8889/book/wordpress-caching-fundamentals/</link>
+		<link>http://localhost:8888/book/wordpress-caching-fundamentals/</link>
 		<pubDate>Mon, 01 Jan 2024 15:00:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
 		<content:encoded><![CDATA[<!-- wp:paragraph {"fontSize":"large"} -->
@@ -748,7 +748,7 @@
 
 	<item>
 		<title>Redis Deep Dive</title>
-		<link>http://localhost:8889/book/redis-deep-dive/</link>
+		<link>http://localhost:8888/book/redis-deep-dive/</link>
 		<pubDate>Mon, 01 Jan 2024 15:01:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
 		<content:encoded><![CDATA[<!-- wp:paragraph -->
@@ -837,7 +837,7 @@ DEL page:/about</code></pre>
 
 	<item>
 		<title>Scaling WordPress to Millions</title>
-		<link>http://localhost:8889/book/scaling-wordpress-millions/</link>
+		<link>http://localhost:8888/book/scaling-wordpress-millions/</link>
 		<pubDate>Mon, 01 Jan 2024 15:02:00 +0000</pubDate>
 		<dc:creator><![CDATA[admin]]></dc:creator>
 		<content:encoded><![CDATA[<!-- wp:paragraph -->
