@@ -14,6 +14,7 @@
 
 namespace MilliCache\Rules;
 
+use MilliRules\Actions\ActionMeta;
 use MilliRules\Rules;
 
 /**
@@ -72,16 +73,18 @@ final class Manager {
 	/**
 	 * Register a custom action callback.
 	 *
-	 * Proxies to Rules::register_action().
+	 * Proxies to Rules::register_action(). Returns an ActionMeta
+	 * for fluent configuration (e.g., ->scope('flag')).
 	 *
 	 * @since 1.0.0
+	 * @since 1.5.0 Returns ActionMeta for fluent scope configuration.
 	 *
 	 * @param string   $type     The action type identifier.
 	 * @param callable $callback The callback function.
-	 * @return void
+	 * @return ActionMeta Fluent builder for action configuration.
 	 */
-	public function register_action( string $type, callable $callback ): void {
-		Rules::register_action( $type, $callback );
+	public function register_action( string $type, callable $callback ): ActionMeta {
+		return Rules::register_action( $type, $callback );
 	}
 
 	/**
