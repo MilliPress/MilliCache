@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.4.1](https://github.com/MilliPress/MilliCache/compare/v1.4.0...v1.4.1) (2026-04-22)
+
+
+### Bug Fixes
+
+* **advanced-cache.php:** Set correct path to plugin on copy file operation ([35179c2](https://github.com/MilliPress/MilliCache/commit/35179c2e44105ca2cbce553b6db00f284b42ac7c))
+
 ## [1.4.0](https://github.com/MilliPress/MilliCache/compare/v1.3.2...v1.4.0) (2026-04-01)
 
 ### Features
