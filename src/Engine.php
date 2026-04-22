@@ -306,7 +306,7 @@ final class Engine {
 					$this->response()->start_output_buffer( $context );
 				}
 			},
-			200
+			PHP_INT_MAX - 10
 		);
 	}
 
