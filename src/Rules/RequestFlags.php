@@ -24,7 +24,8 @@ use MilliRules\Rules;
  * Registers flag generation rules that execute on template_redirect.
  *
  * These are core rules that are always registered and required for normal operation.
- * However, you can override them with your own rules.
+ * Core flag rules are locked to prevent accidental removal of invalidation targets.
+ * Users can add additional flags via the millicache_flags_for_request filter.
  *
  * Flags are used for bulk cache invalidation - when content changes,
  * all cached pages with matching flags are cleared.
@@ -99,12 +100,13 @@ final class RequestFlags {
 	 */
 	private static function register_singular_post_rule(): void {
 		Rules::create( 'millicache:flags:singular-post' )
+			->lock()
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
 				->is_singular()
 			->then()
-				->add_flag( 'post:{post.id}' )
+				->add_flag( 'post:{post.id}' )->lock()
 			->register();
 	}
 
@@ -124,36 +126,41 @@ final class RequestFlags {
 	private static function register_home_rules(): void {
 		// Homepage showing blog posts (both front page and blog page).
 		Rules::create( 'millicache:flags:home-blog' )
+			->lock()
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
 				->is_front_page()
 				->is_home()
 			->then()
-				->add_flag( 'home' )
-				->add_flag( 'archive:post' )
+				->add_flag( 'home' )->lock()
+				->add_flag( 'archive:post' )->lock()
 			->register();
 
 		// Static front page only.
 		Rules::create( 'millicache:flags:front-page' )
+			->lock()
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
 				->is_front_page()
-				->is_home( false )
+			->and()->when_none()
+				->is_home()
 			->then()
-				->add_flag( 'home' )
+				->add_flag( 'home' )->lock()
 			->register();
 
 		// Blog page (not front page).
 		Rules::create( 'millicache:flags:blog-page' )
+			->lock()
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
 				->is_home()
-				->is_front_page( false )
+			->and()->when_none()
+				->is_front_page()
 			->then()
-				->add_flag( 'archive:post' )
+				->add_flag( 'archive:post' )->lock()
 			->register();
 	}
 
@@ -170,12 +177,13 @@ final class RequestFlags {
 	 */
 	private static function register_post_type_archive_rule(): void {
 		Rules::create( 'millicache:flags:post-type-archive' )
+			->lock()
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
 				->is_post_type_archive()
 			->then()
-				->add_flag( 'archive:{query.post_type}' )
+				->add_flag( 'archive:{query.post_type}' )->lock()
 			->register();
 	}
 
@@ -192,6 +200,7 @@ final class RequestFlags {
 	 */
 	private static function register_taxonomy_archive_rule(): void {
 		Rules::create( 'millicache:flags:taxonomy-archive' )
+			->lock()
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when_any()
@@ -199,7 +208,7 @@ final class RequestFlags {
 				->is_tag()
 				->is_tax()
 			->then()
-				->add_flag( 'archive:{term.taxonomy}:{term.id}' )
+				->add_flag( 'archive:{term.taxonomy}:{term.id}' )->lock()
 			->register();
 	}
 
@@ -216,12 +225,13 @@ final class RequestFlags {
 	 */
 	private static function register_author_archive_rule(): void {
 		Rules::create( 'millicache:flags:author-archive' )
+			->lock()
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
 				->is_author()
 			->then()
-				->add_flag( 'archive:author:{query.author}' )
+				->add_flag( 'archive:author:{query.author}' )->lock()
 			->register();
 	}
 
@@ -240,6 +250,7 @@ final class RequestFlags {
 	 */
 	private static function register_date_archive_rules(): void {
 		Rules::create( 'millicache:flags:date' )
+			->lock()
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
@@ -278,12 +289,13 @@ final class RequestFlags {
 	 */
 	private static function register_feed_rule(): void {
 		Rules::create( 'millicache:flags:feed' )
+			->lock()
 			->on( self::HOOK, self::PRIORITY )
 			->order( self::ORDER )
 			->when()
 				->is_feed()
 			->then()
-				->add_flag( 'feed' )
+				->add_flag( 'feed' )->lock()
 			->register();
 	}
 

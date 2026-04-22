@@ -6,15 +6,15 @@ menu_order: 20
 
 # Built-in Rules
 
-MilliCache includes default rules that handle common caching scenarios. All built-in rules have negative or zero priority, so your custom rules (`->order({10+})`) run after them and can override their decisions.
+MilliCache includes default rules that handle common caching scenarios. Built-in rules use priorities `0` and `1`, so your custom rules (`->order({10+})`) run after them and can override unlocked decisions.
 
 ## Bootstrap Phase Rules
 
 Execute **before WordPress loads** via `advanced-cache.php`.
 
-### Core Bypass Rules (Order -10)
+### Locked Core Rules (Order 0)
 
-These run first and bypass caching for non-cacheable scenarios:
+These bypass caching for fundamentally non-cacheable scenarios. Locked — cannot be overridden:
 
 | Rule ID                           | Condition                    | Result |
 |-----------------------------------|------------------------------|--------|
@@ -22,18 +22,25 @@ These run first and bypass caching for non-cacheable scenarios:
 | `millicache:request:check-method` | Method not GET/HEAD          | Bypass |
 | `millicache:request:cli`          | Running in WP-CLI            | Bypass |
 | `millicache:request:xmlrpc`       | `XMLRPC_REQUEST` is true     | Bypass |
-| `millicache:request:file`         | URL ends with file extension | Bypass |
-| `millicache:request:rest`         | URL contains `wp-json`       | Bypass |
 | `millicache:config:ttl-not-set`   | TTL is 0 or negative         | Bypass |
 
 ### Configuration-Based Rules (Order 0)
 
-Apply settings from your configuration:
+Apply exclusions from your configuration. Locked — user-configured exclusions are authoritative and cannot be overridden by custom rules:
 
 | Rule ID                             | Condition                 | Result |
 |-------------------------------------|---------------------------|--------|
 | `millicache:config:nocache-cookies` | Excluded cookie present   | Bypass |
 | `millicache:config:nocache-paths`   | URL matches excluded path | Bypass |
+
+### Overridable Request Rules (Order 1)
+
+Bypass caching for request types that most sites don't want cached — but sometimes do. Unlocked — can be overridden by custom rules at order `2+`:
+
+| Rule ID                   | Condition                    | Result |
+|---------------------------|------------------------------|--------|
+| `millicache:request:file` | URL ends with file extension | Bypass |
+| `millicache:request:rest` | URL contains `wp-json`       | Bypass |
 
 **Default excluded cookies:**
 - `wp-*pass*` — WordPress password-protected content
@@ -43,37 +50,47 @@ Apply settings from your configuration:
 
 Execute **after WordPress loads** on the `template_redirect` hook.
 
-### Context-Based Rules (Hook Priority 20)
+### Locked WP Rules (Order 0, Hook Priority 20)
+
+Cannot be overridden:
+
+| Rule ID                          | Condition            | Result |
+|----------------------------------|----------------------|--------|
+| `millicache:wp:const:doing-cron` | `DOING_CRON` defined | Bypass |
+
+### Overridable WP Rules (Order 1, Hook Priority 20)
+
+Unlocked — can be overridden by custom rules at order `2+`:
 
 | Rule ID                              | Condition                | Result |
 |--------------------------------------|--------------------------|--------|
 | `millicache:wp:logged-in`            | User is logged in        | Bypass |
 | `millicache:wp:response:code`        | HTTP status ≠ 200        | Bypass |
 | `millicache:wp:const:donotcachepage` | `DONOTCACHEPAGE` defined | Bypass |
-| `millicache:wp:const:doing-cron`     | `DOING_CRON` defined     | Bypass |
 | `millicache:wp:const:doing-ajax`     | `DOING_AJAX` defined     | Bypass |
 
 ## Rule Priority System
 
 Rules execute in priority order (lower numbers first):
 
-| Priority  | Who Uses It         | Purpose                                 |
-|-----------|---------------------|-----------------------------------------|
-| -10       | Core bypass rules   | Fundamental checks (methods, CLI, etc.) |
-| 0         | Configuration rules | Apply user settings                     |
-| 10+       | Your custom rules   | Override or extend defaults             |
+| Priority  | Who Uses It            | Purpose                                             |
+|-----------|------------------------|-----------------------------------------------------|
+| 0         | Built-in locked rules  | Critical bypass + user-configured exclusions        |
+| 1         | Built-in unlocked rules| Common-sense skips (file, REST) — override-friendly |
+| 10+       | Your custom rules      | Override or extend defaults                         |
 
 ### All Rules Run
 
 MilliRules evaluates **all rules** in order — there's no short-circuit behavior. Later rules can override earlier rules' decisions.
 
 ```php
-// Built-in rule (order -10) sets do_cache(false) for POST requests
-// Your rule (order 10) runs AFTER and can override it
-Rules::create( 'mysite:cache-post-search', 'php' )
+// Built-in rule (order 0) sets do_cache(false) for POST requests — but
+// millicache:request:check-method is locked, so it CANNOT be overridden.
+// For an unlocked built-in (e.g. millicache:config:nocache-paths), your
+// rule (order 10) runs AFTER and overrides it:
+Rules::create( 'mysite:cache-search-path', 'php' )
     ->order( 10 )
     ->when()
-        ->request_method( 'POST' )
         ->request_url( '/search/*' )
     ->then()
         ->do_cache( true )  // Overrides the earlier bypass

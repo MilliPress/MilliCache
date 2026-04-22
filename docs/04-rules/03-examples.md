@@ -50,7 +50,7 @@ Never cache cart, checkout, or account pages:
 ```php
 // Bootstrap phase for early bypass
 Rules::create( 'mysite:woo-no-cache', 'php' )
-    ->order( 5 )
+    ->order( 1 )
     ->when_any()
         ->request_url( '*/cart/*' )
         ->request_url( '*/checkout/*' )
@@ -104,7 +104,7 @@ Never cache previews or drafts:
 
 ```php
 Rules::create( 'mysite:no-preview', 'php' )
-    ->order( 5 )
+    ->order( 1 )
     ->when_any()
         ->request_param( 'preview', 'true' )
         ->request_param( 'draft', '1' )

@@ -20,13 +20,18 @@ use MilliRules\Rules;
  * Class WordPress
  *
  * Registers default WordPress rules that execute after WordPress initialization.
- * These rules replace hard-coded caching checks from Engine and use order 0
- * so user rules can override them.
+ * These rules replace hard-coded caching checks from Engine.
+ *
+ * Order convention (mirrors the PHP phase in Bootstrap):
+ * - Order 0: locked rules that cannot be overridden (e.g. doing-cron).
+ * - Order 1: unlocked rules that sites may override via custom rules at order 10+.
  *
  * Registered rules:
- * - millicache:wp:no-cache-cron: Skip cache for cron requests
- * - millicache:wp:no-cache-ajax: Skip cache for AJAX requests
- * - millicache:wp:donotcachepage: Skip cache if DONOTCACHEPAGE constant is true
+ * - millicache:wp:logged-in (order 1, unlocked)
+ * - millicache:wp:response:code (order 1, unlocked)
+ * - millicache:wp:const:donotcachepage (order 1, unlocked)
+ * - millicache:wp:const:doing-cron (order 0, locked)
+ * - millicache:wp:const:doing-ajax (order 1, unlocked)
  *
  * Options example:
  * User can create a rule with order 10 that enables caching for specific AJAX endpoints,
@@ -51,13 +56,6 @@ final class WordPress {
 	 * @since 1.0.0
 	 */
 	private const PRIORITY = 20;
-
-	/**
-	 * The order of the rules.
-	 *
-	 * @since 1.0.0
-	 */
-	private const ORDER = 0;
 
 	/**
 	 * Register default WordPress rules.
@@ -85,7 +83,8 @@ final class WordPress {
 	/**
 	 * Register rule to skip cache for logged-in users.
 	 *
-	 * Checks if the user is logged in. Uses order 0 so user rules can override.
+	 * Checks if the user is logged in. Unlocked at order 1 so sites can
+	 * override for specific roles (e.g. cache for subscribers).
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -95,7 +94,7 @@ final class WordPress {
 	private static function register_logged_in_rule(): void {
 		Rules::create( 'millicache:wp:logged-in' )
 			->on( self::HOOK, self::PRIORITY )
-			->order( self::ORDER )
+			->order( 1 )
 			->when()
 				->is_user_logged_in()
 			->then()
@@ -106,7 +105,8 @@ final class WordPress {
 	/**
 	 * Register rule to skip cache for non-200 response codes.
 	 *
-	 * Checks response code from context. Uses order 0 so user rules can override.
+	 * Checks response code from context. Unlocked at order 1 so sites can
+	 * override to cache specific non-200s (e.g. 404 under heavy load).
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -116,7 +116,7 @@ final class WordPress {
 	private static function register_response_code_rule(): void {
 		Rules::create( 'millicache:wp:response:code' )
 			->on( self::HOOK, self::PRIORITY )
-			->order( self::ORDER )
+			->order( 1 )
 			->when()
 				->custom( 'millicache:check-response-code', fn() => 200 !== http_response_code() )
 			->then()
@@ -127,7 +127,8 @@ final class WordPress {
 	/**
 	 * Register rule to skip cache if DONOTCACHEPAGE constant is true.
 	 *
-	 * Checks if DONOTCACHEPAGE constant is set and true. Uses order 0 so user rules can override.
+	 * Respects the WordPress DONOTCACHEPAGE convention. Unlocked at order 1
+	 * so sites can override in case a plugin sets it too aggressively.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -137,7 +138,7 @@ final class WordPress {
 	private static function register_donotcachepage_rule(): void {
 		Rules::create( 'millicache:wp:const:donotcachepage' )
 			->on( self::HOOK, self::PRIORITY )
-			->order( self::ORDER )
+			->order( 1 )
 			->when()
 				->constant( 'DONOTCACHEPAGE', true, 'IS' )
 			->then()
@@ -148,7 +149,8 @@ final class WordPress {
 	/**
 	 * Register rule to skip cache for cron requests.
 	 *
-	 * Checks if DOING_CRON constant is true. Uses order 0 so user rules can override.
+	 * Locked — cron requests are internal WP executions and should never
+	 * be cached.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -157,19 +159,21 @@ final class WordPress {
 	 */
 	private static function register_cron_rule(): void {
 		Rules::create( 'millicache:wp:const:doing-cron' )
+			->lock()
 			->on( self::HOOK, self::PRIORITY )
-			->order( self::ORDER )
+			->order( 0 )
 			->when()
 				->constant( 'DOING_CRON', true )
 			->then()
-				->do_cache( false, 'MilliCache: Cron requests' )
+				->do_cache( false, 'MilliCache: Cron requests' )->lock()
 			->register();
 	}
 
 	/**
 	 * Register rule to skip cache for AJAX requests.
 	 *
-	 * Checks if DOING_AJAX constant is true. Uses order 0 so user rules can override.
+	 * Unlocked at order 1 so sites can override to cache public AJAX
+	 * endpoints (e.g. search suggest, public product data).
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -179,7 +183,7 @@ final class WordPress {
 	private static function register_ajax_rule(): void {
 		Rules::create( 'millicache:wp:const:doing-ajax' )
 			->on( self::HOOK, self::PRIORITY )
-			->order( self::ORDER )
+			->order( 1 )
 			->when()
 				->constant( 'DOING_AJAX', true, 'IS' )
 			->then()

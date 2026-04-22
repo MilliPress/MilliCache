@@ -44,7 +44,7 @@ flowchart LR
 |---------------|------------------------------------|---------------------------------------------|
 | **Condition** | When should this rule apply?       | "If user is logged in"                      |
 | **Action**    | What should happen?                | "Do not cache"                              |
-| **Priority**  | When to evaluate (lower = earlier) | `-10` (early), `0` (normal), `10+` (custom) |
+| **Priority**  | When to evaluate (lower = earlier) | `0`/`1` (built-in), `10+` (custom)          |
 
 ## The Fluent API
 

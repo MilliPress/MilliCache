@@ -77,11 +77,12 @@ final class Bootstrap {
 	private static function register_wp_cache_rule(): void {
 		// Check WP_CACHE constant.
 		Rules::create( 'millicache:const:wp-cache', 'php' )
-			->order( -10 )
+			->lock()
+			->order( 0 )
 			->when()
 				->constant( 'WP_CACHE', true, '!=' )
 			->then()
-				->do_cache( false, 'MilliCache: WP_CACHE not enabled' )
+				->do_cache( false, 'MilliCache: WP_CACHE not enabled' )->lock()
 			->register();
 	}
 
@@ -95,11 +96,12 @@ final class Bootstrap {
 	private static function register_xmlrpc_request_rule(): void {
 		// Check XML-RPC request.
 		Rules::create( 'millicache:request:xmlrpc', 'php' )
-			->order( -10 )
+			->lock()
+			->order( 0 )
 			->when()
 				->constant( 'XMLRPC_REQUEST', true )
 			->then()
-				->do_cache( false, 'MilliCache: XML-RPC request' )
+				->do_cache( false, 'MilliCache: XML-RPC request' )->lock()
 			->register();
 	}
 
@@ -113,7 +115,7 @@ final class Bootstrap {
 	private static function register_file_request_rule(): void {
 		// Check file request (static assets).
 		Rules::create( 'millicache:request:file', 'php' )
-			->order( -10 )
+			->order( 1 )
 			->when()
 				->custom(
 					'is-file-request',
@@ -142,12 +144,13 @@ final class Bootstrap {
 	private static function register_request_method_rule(): void {
 		// Check the request method (only GET/HEAD).
 		Rules::create( 'millicache:request:check-method', 'php' )
-			->order( -10 )
+			->lock()
+			->order( 0 )
 			->when_none()
 				->request_method( 'GET' )
 				->request_method( 'HEAD' )
 			->then()
-				->do_cache( false, 'MilliCache: Non-GET/HEAD request' )
+				->do_cache( false, 'MilliCache: Non-GET/HEAD request' )->lock()
 			->register();
 	}
 
@@ -161,7 +164,8 @@ final class Bootstrap {
 	private static function register_cli_request_rule(): void {
 		// Check CLI request.
 		Rules::create( 'millicache:request:cli', 'php' )
-			->order( -10 )
+			->lock()
+			->order( 0 )
 			->when()
 				->custom(
 					'cli-request',
@@ -171,7 +175,7 @@ final class Bootstrap {
 				)
 				->constant( 'WP_CLI', true )
 			->then()
-				->do_cache( false, 'MilliCache: CLI request' )
+				->do_cache( false, 'MilliCache: CLI request' )->lock()
 			->register();
 	}
 
@@ -187,7 +191,7 @@ final class Bootstrap {
 	 */
 	private static function register_rest_request_rule(): void {
 		Rules::create( 'millicache:request:rest', 'php' )
-			->order( -10 )
+			->order( 1 )
 			->when()
 				->request_url( '*wp-json*' )
 			->then()
@@ -206,7 +210,8 @@ final class Bootstrap {
 	private static function register_ttl_check_rule( Config $config ): void {
 		// Check TTL is configured.
 		Rules::create( 'millicache:config:ttl-not-set', 'php' )
-			->order( -10 )
+			->lock()
+			->order( 0 )
 			->when()
 				->custom(
 					'ttl-not-set',
@@ -215,7 +220,7 @@ final class Bootstrap {
 					}
 				)
 			->then()
-				->do_cache( false, 'MilliCache: TTL not set' )
+				->do_cache( false, 'MilliCache: TTL not set' )->lock()
 			->register();
 	}
 
@@ -223,7 +228,8 @@ final class Bootstrap {
 	 * Register rule to skip cache for no-cache cookies.
 	 *
 	 * Checks for WordPress login cookies and custom no-cache cookies
-	 * from settings. Uses order 0 so user rules can override.
+	 * from settings. Locked — user-configured exclusions are authoritative
+	 * and cannot be overridden by custom rules.
 	 *
 	 * @since 1.0.0
 	 *
@@ -239,6 +245,7 @@ final class Bootstrap {
 
 		// Build rule using fluent API.
 		$builder = Rules::create( 'millicache:config:nocache-cookies', 'php' )
+			->lock()
 			->order( 0 )
 			->when_any(); // Any cookie match triggers.
 
@@ -249,7 +256,7 @@ final class Bootstrap {
 
 		// Set action and register.
 		$builder->then()
-			->do_cache( false, 'MilliCache: Skip cache for no-cache cookies' )
+			->do_cache( false, 'MilliCache: Skip cache for no-cache cookies' )->lock()
 			->register();
 	}
 
@@ -257,7 +264,8 @@ final class Bootstrap {
 	 * Register rule to skip cache for no-cache paths.
 	 *
 	 * Checks request URL against no-cache path patterns from settings.
-	 * Uses order 0 so user rules can override.
+	 * Locked — user-configured exclusions are authoritative and cannot be
+	 * overridden by custom rules.
 	 *
 	 * @since 1.0.0
 	 *
@@ -274,6 +282,7 @@ final class Bootstrap {
 
 		// Build rule using fluent API.
 		$builder = Rules::create( 'millicache:config:nocache-paths', 'php' )
+			->lock()
 			->order( 0 )
 			->when_any();
 
@@ -284,7 +293,7 @@ final class Bootstrap {
 
 		// Set action and register.
 		$builder->then()
-			->do_cache( false, 'MilliCache: Skip cache for no-cache paths' )
+			->do_cache( false, 'MilliCache: Skip cache for no-cache paths' )->lock()
 			->register();
 	}
 }
