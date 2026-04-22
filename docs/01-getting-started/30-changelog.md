@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.4.2](https://github.com/MilliPress/MilliCache/compare/v1.4.1...v1.4.2) (2026-04-22)
+
+
+### Bug Fixes
+
+* **activator:** Ensure symlink creation only if function exists ([f935526](https://github.com/MilliPress/MilliCache/commit/f9355262ed1c560caf7cb9d1772ea00f94158573))
+
 ## [1.4.1](https://github.com/MilliPress/MilliCache/compare/v1.4.0...v1.4.1) (2026-04-22)
 
 
