@@ -64,7 +64,7 @@ const StatusTab = ( { status, isLoading } ) => {
 	);
 
 	return (
-		<div style={ { padding: '0 16px' } }>
+		<div>
 			{ isLoading && <Spinner /> }
 			{ status && (
 				<>
