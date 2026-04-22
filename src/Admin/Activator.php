@@ -106,7 +106,7 @@ final class Activator {
 		// At this point, either there's no file or we've removed an incorrect symlink.
 		if ( is_readable( $source_file ) ) {
 			// Try to create a symlink first.
-			if ( @symlink( $source_file, $destination ) ) {
+			if ( function_exists( 'symlink' ) && @symlink( $source_file, $destination ) ) {
 				Admin::add_notice(
 					__( 'Symlink created for advanced-cache.php. Please make sure to configure MilliCache to start caching.', 'millicache' ),
 					'success'

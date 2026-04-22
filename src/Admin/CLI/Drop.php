@@ -86,7 +86,7 @@ final class Drop {
 		}
 
 		// Try to create symlink first.
-		if ( @symlink( $source, $destination ) ) {
+		if ( function_exists( 'symlink' ) && @symlink( $source, $destination ) ) {
 			\WP_CLI::success( __( 'Created symlink for advanced-cache.php.', 'millicache' ) );
 			return;
 		}
