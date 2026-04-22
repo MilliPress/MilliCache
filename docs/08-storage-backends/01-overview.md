@@ -72,6 +72,7 @@ define( 'MC_STORAGE_PORT', 6379 );
 ```php
 define( 'MC_STORAGE_HOST', 'redis.example.com' );
 define( 'MC_STORAGE_PORT', 6379 );
+define( 'MC_STORAGE_USERNAME', 'your-username' );
 define( 'MC_STORAGE_PASSWORD', 'your-password' );
 ```
 
@@ -109,6 +110,7 @@ define( 'MC_STORAGE_PREFIX', 'siteb' );
 |-------------------------|-------------|---------------------------------------|
 | `MC_STORAGE_HOST`       | `127.0.0.1` | Hostname, IP, socket, or `tls://host` |
 | `MC_STORAGE_PORT`       | `6379`      | TCP port (0 for sockets)              |
+| `MC_STORAGE_USERNAME`   | `''`        | ACL username (default user if empty)  |
 | `MC_STORAGE_PASSWORD`   | `''`        | AUTH password                         |
 | `MC_STORAGE_DB`         | `0`         | Database number (0-15)                |
 | `MC_STORAGE_PERSISTENT` | `true`      | Use persistent connections            |
@@ -192,8 +194,9 @@ redis-cli -h 127.0.0.1 -p 6379 ping
 Error: NOAUTH Authentication required
 ```
 
-**Solution:** Set the password constant:
+**Solution:** Set the authentication constants:
 ```php
+define( 'MC_STORAGE_USERNAME', 'your-username' );     // omit if using default user
 define( 'MC_STORAGE_PASSWORD', 'your-password' );
 ```
 

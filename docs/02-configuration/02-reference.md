@@ -68,6 +68,22 @@ define( 'MC_STORAGE_PORT', 6379 );
 
 TCP port number. Ignored when using Unix sockets.
 
+### MC_STORAGE_USERNAME
+
+```php
+define( 'MC_STORAGE_USERNAME', 'your-username' );
+```
+
+| Property  | Value        |
+|-----------|--------------|
+| Default   | `''` (empty) |
+| Type      | `string`     |
+
+Redis ACL username. Leave empty to use the default user. Required when your Redis server is configured with ACL users (Redis 6+).
+
+> [!NOTE]
+> When using the admin UI or WP-CLI, the username is stored encrypted as `enc_username`.
+
 ### MC_STORAGE_PASSWORD
 
 ```php
@@ -345,6 +361,7 @@ define( 'WP_CACHE', true );
 // Storage settings
 define( 'MC_STORAGE_HOST', 'redis.example.com' );
 define( 'MC_STORAGE_PORT', 6379 );
+define( 'MC_STORAGE_USERNAME', 'your-username' );
 define( 'MC_STORAGE_PASSWORD', 'secure-password' );
 define( 'MC_STORAGE_DB', 0 );
 define( 'MC_STORAGE_PERSISTENT', true );

@@ -75,6 +75,7 @@ Connection to your Redis-compatible server:
 |-----------------------|-------------|--------------------------------|
 | `MC_STORAGE_HOST`     | `127.0.0.1` | Hostname, IP, socket, or `tls://host` |
 | `MC_STORAGE_PORT`     | `6379`      | TCP port                              |
+| `MC_STORAGE_USERNAME` | `''`        | Redis ACL username                    |
 | `MC_STORAGE_PASSWORD` | `''`        | Redis AUTH password                   |
 | `MC_STORAGE_DB`       | `0`         | Database number (0-15)                |
 | `MC_STORAGE_PREFIX`   | `mll`       | Key prefix                            |
