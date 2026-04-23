@@ -68,9 +68,9 @@ class Storage {
 	 * @since    1.5.0
 	 * @access   private
 	 *
-	 * @var      string    $enc_username   The storage server username.
+	 * @var      string    $username   The storage server username.
 	 */
-	private string $enc_username = '';
+	private string $username = '';
 
 	/**
 	 * The storage server password.
@@ -242,7 +242,7 @@ class Storage {
 					'host'       => $this->is_socket ? null : $this->host,
 					'port'       => $this->is_socket ? null : $this->port,
 					'path'       => $this->is_socket ? $this->host : null,
-					'username'   => $this->enc_username ?: null,
+					'username'   => $this->username ?: null,
 					'password'   => $this->enc_password,
 					'database'   => $this->db,
 					'persistent' => $this->persistent,

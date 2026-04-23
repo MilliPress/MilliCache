@@ -76,13 +76,13 @@ Error: NOAUTH Authentication required
 
 1. **Verify credentials in MilliCache:**
    ```bash
-   wp millicache config get storage.enc_username
+   wp millicache config get storage.username
    wp millicache config get storage.enc_password
    ```
 
 2. **Re-set credentials:**
    ```bash
-   wp millicache config set storage.enc_username "your-username"
+   wp millicache config set storage.username "your-username"
    wp millicache config set storage.enc_password "your-password"
    ```
 

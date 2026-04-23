@@ -82,7 +82,7 @@ define( 'MC_STORAGE_USERNAME', 'your-username' );
 Redis ACL username. Leave empty to use the default user. Required when your Redis server is configured with ACL users (Redis 6+).
 
 > [!NOTE]
-> When using the admin UI or WP-CLI, the username is stored encrypted as `enc_username`.
+> When using the admin UI or WP-CLI, the setting key is `storage.username`.
 
 ### MC_STORAGE_PASSWORD
 

@@ -90,7 +90,7 @@ final class Settings {
 			'storage' => array(
 				'host'         => '127.0.0.1',
 				'port'         => 6379,
-				'enc_username' => '',
+				'username'     => '',
 				'enc_password' => '',
 				'db'           => 0,
 				'persistent'   => true,
