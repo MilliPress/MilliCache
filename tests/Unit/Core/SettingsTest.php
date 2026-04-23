@@ -131,6 +131,7 @@ describe( 'Settings', function () {
 		expect( $defaults )->toHaveKeys( array( 'storage', 'cache', 'rules' ) );
 		expect( $defaults['storage']['host'] )->toBe( '127.0.0.1' );
 		expect( $defaults['storage']['port'] )->toBe( 6379 );
+		expect( $defaults['storage']['username'] )->toBe( '' );
 		expect( $defaults['cache']['ttl'] )->toBe( DAY_IN_SECONDS );
 		expect( $defaults['cache']['grace'] )->toBe( MONTH_IN_SECONDS );
 		expect( $defaults['cache']['gzip'] )->toBeTrue();

@@ -74,18 +74,24 @@ Error: NOAUTH Authentication required
 
 **Solutions:**
 
-1. **Verify password in MilliCache:**
+1. **Verify credentials in MilliCache:**
    ```bash
+   wp millicache config get storage.username
    wp millicache config get storage.enc_password
    ```
 
-2. **Re-set password:**
+2. **Re-set credentials:**
    ```bash
+   wp millicache config set storage.username "your-username"
    wp millicache config set storage.enc_password "your-password"
    ```
 
-3. **Test Redis password directly:**
+3. **Test Redis credentials directly:**
    ```bash
+   # With a named user (Redis ACL)
+   redis-cli -u "redis://your-username:your-password@127.0.0.1:6379" ping
+
+   # With the default user (password only)
    redis-cli -a "your-password" ping
    ```
 

@@ -103,6 +103,22 @@ describe( 'Storage', function () {
 			expect( $storage )->toBeInstanceOf( Storage::class );
 		} );
 
+		it( 'constructs with a username without error', function () {
+			$settings = array(
+				'host'         => '127.0.0.1',
+				'port'         => 6379,
+				'username'     => 'myuser',
+				'enc_password' => '',
+				'db'           => 0,
+				'prefix'       => 'test',
+				'persistent'   => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			expect( $storage )->toBeInstanceOf( Storage::class );
+		} );
+
 		it( 'constructs with a Unix socket path without error', function () {
 			$settings = array(
 				'host' => '/var/run/redis/redis.sock',

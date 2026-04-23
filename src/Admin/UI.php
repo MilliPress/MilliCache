@@ -368,11 +368,19 @@ final class UI {
 					'width'   => '120px',
 				),
 				array(
+					'key'     => 'storage.username',
+					'type'    => 'text',
+					'label'   => __( 'Username', 'millicache' ),
+					'tooltip' => __( 'Username used to authenticate with your Redis, Valkey, or other compatible server. Leave empty if your server does not use ACL with named users.', 'millicache' ),
+					'default' => '',
+				),
+				array(
 					'key'     => 'storage.enc_password',
 					'type'    => 'password',
-					'label'   => __( 'Authentication Password', 'millicache' ),
+					'label'   => __( 'Password', 'millicache' ),
 					'tooltip' => __( 'Password used to authenticate with your Redis, Valkey, or other compatible server. Leave empty if your server does not require authentication.', 'millicache' ),
 					'default' => '',
+					'inline'  => true,
 				),
 				array(
 					'key'     => 'storage.db',

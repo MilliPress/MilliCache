@@ -316,7 +316,7 @@ This prevents accidental caching of sensitive data.
 ### Is the Redis connection secure?
 
 For security:
-1. Use authentication: `MC_STORAGE_PASSWORD`
+1. Use authentication: `MC_STORAGE_USERNAME` and `MC_STORAGE_PASSWORD`
 2. Bind Redis to localhost if on same server
 3. Use private networks for remote Redis
 4. Consider Redis TLS for sensitive environments

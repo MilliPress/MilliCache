@@ -67,6 +67,7 @@ Go to **Settings → MilliCache → Settings Tab → Storage Server** and enter 
 ```php
 define( 'MC_STORAGE_HOST', '127.0.0.1' );
 define( 'MC_STORAGE_PORT', 6379 );
+define( 'MC_STORAGE_USERNAME', 'your-redis-username' );
 define( 'MC_STORAGE_PASSWORD', 'your-redis-password' );
 define( 'MC_STORAGE_DB', 0 );
 ```
