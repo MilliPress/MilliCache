@@ -33,6 +33,9 @@ namespace MilliRules\Builders;
  * @method ConditionBuilder is_feed(string|array|null $feeds = null) Check if viewing a feed
  * @method ConditionBuilder is_user_logged_in(bool|null $value = null) Check if user is logged in
  *
+ * Delegation to Rules:
+ * @method \MilliRules\Rules and() Close this condition group and return to the rule builder
+ *
  * Then/Finalization:
  * @method ActionBuilder then() Proceed to the action builder
  */
