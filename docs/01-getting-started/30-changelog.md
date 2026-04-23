@@ -6,6 +6,23 @@ menu_order: 30
 
 # Changelog
 
+## [1.5.0](https://github.com/MilliPress/MilliCache/compare/v1.4.2...v1.5.0) (2026-04-23)
+
+
+### Features
+
+* **rules:** Add action metadata, scoped locking, and order-aware execution ([7196cd3](https://github.com/MilliPress/MilliCache/commit/7196cd3132757d22c22e7e072900c371d015cfe1))
+* **rules:** Lock critical built-in rules and use order 0/1 convention ([c011d4c](https://github.com/MilliPress/MilliCache/commit/c011d4cff4060885873d892f323b07e8d6709f3b))
+* **storage:** support username for authentication ([#108](https://github.com/MilliPress/MilliCache/issues/108)) ([19d62eb](https://github.com/MilliPress/MilliCache/commit/19d62eb06295b9e704b9701ec4bb6c92155f574a))
+
+
+### Bug Fixes
+
+* **activator:** Handle both old and new variable name in drop-in regex ([cf80b88](https://github.com/MilliPress/MilliCache/commit/cf80b8800915250ad8c43e3076fe19421c7a67d3))
+* **engine:** Use PHP_INT_MAX - 10 for template_redirect priority ([8b7118f](https://github.com/MilliPress/MilliCache/commit/8b7118f19161248a20c20c10874858ca1098c736))
+* **settings:** Remove inline padding from status tab wrapper ([7d919f3](https://github.com/MilliPress/MilliCache/commit/7d919f3249ed52428c5be2fb9c415232c4d9954b))
+* **tests:** Update do_cache arguments to include string type with default value ([5afed64](https://github.com/MilliPress/MilliCache/commit/5afed643a5c72377988b7e5df848f19ac66620a6))
+
 ## [1.4.2](https://github.com/MilliPress/MilliCache/compare/v1.4.1...v1.4.2) (2026-04-22)
 
 
