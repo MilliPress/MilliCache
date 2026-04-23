@@ -6,6 +6,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
+      "include-github-contributors": true,
       "prerelease": false,
       "versioning": "default",
       "component": "millicache",
