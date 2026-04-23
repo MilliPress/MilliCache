@@ -242,7 +242,7 @@ class Storage {
 					'host'       => $this->is_socket ? null : $this->host,
 					'port'       => $this->is_socket ? null : $this->port,
 					'path'       => $this->is_socket ? $this->host : null,
-					'username'   => $this->username ?: null,
+					'username'   => $this->username,
 					'password'   => $this->enc_password,
 					'database'   => $this->db,
 					'persistent' => $this->persistent,
