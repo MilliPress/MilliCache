@@ -14,6 +14,7 @@
 
 namespace MilliCache\Rules\Actions\WP;
 
+use MilliRules\Actions\ActionMeta;
 use MilliRules\Actions\BaseAction;
 use MilliRules\Context;
 
@@ -25,6 +26,51 @@ use MilliRules\Context;
  * @since 1.0.0
  */
 class AddFlag extends BaseAction {
+	/**
+	 * Get the lock scope for this action.
+	 *
+	 * Engine-relevant. Called by Rules::get_action_scope() on the
+	 * advanced-cache.php hot path to build lock keys — before WordPress
+	 * loads. Must not use any WordPress functions; keep this method to
+	 * plain string returns.
+	 *
+	 * Shares the 'flag' scope with RemoveFlag so locking add_flag('x')
+	 * also blocks remove_flag('x'), while add_flag('y') remains unaffected.
+	 *
+	 * @since 1.5.0
+	 *
+	 * @return string
+	 */
+	public static function get_scope(): string {
+		return 'flag';
+	}
+
+	/**
+	 * Declare metadata for the add_flag action.
+	 *
+	 * Consumer-relevant metadata only. The engine never calls set_meta()
+	 * on the lock-key hot path — it reads scope via {@see self::get_scope()}
+	 * — so WordPress translation functions are safe here. set_meta() is
+	 * invoked lazily by UIs/REST endpoints that request full metadata,
+	 * after WordPress has loaded.
+	 *
+	 * @since 1.5.0
+	 *
+	 * @param ActionMeta $meta The metadata object to configure.
+	 * @return void
+	 */
+	public static function set_meta( ActionMeta $meta ): void {
+		$meta
+			->label( __( 'Add Flag', 'millicache' ) )
+			->description( __( 'Tag the response with a flag for bulk invalidation.', 'millicache' ) )
+			->categories( 'caching', 'flags' )
+			->args()
+				->string( 'flag' )
+					->label( __( 'Flag', 'millicache' ) )
+					->description( __( 'The flag identifier to attach to the response.', 'millicache' ) )
+					->required();
+	}
+
 	/**
 	 * Get the action type.
 	 *

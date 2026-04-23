@@ -99,7 +99,7 @@ final class Drop {
 
 		// Replace the path to the engine file.
 		$source_content = preg_replace(
-			'/(\$plugin_path\s*=\s*)dirname.*?;/s',
+			'/(\$(?:engine|plugin)_path\s*=\s*)dirname.*?;/s',
 			"$1'" . dirname( __DIR__, 3 ) . "';",
 			$source_content
 		);

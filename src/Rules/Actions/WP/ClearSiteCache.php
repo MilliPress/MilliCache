@@ -14,6 +14,7 @@
 
 namespace MilliCache\Rules\Actions\WP;
 
+use MilliRules\Actions\ActionMeta;
 use MilliRules\Actions\BaseAction;
 use MilliRules\Context;
 
@@ -26,6 +27,26 @@ use MilliRules\Context;
  * @since 1.0.0
  */
 class ClearSiteCache extends BaseAction {
+	/**
+	 * Declare metadata for the clear_site_cache action.
+	 *
+	 * @since 1.5.0
+	 *
+	 * @param ActionMeta $meta The metadata object to configure.
+	 * @return void
+	 */
+	public static function set_meta( ActionMeta $meta ): void {
+		$meta
+			->label( __( 'Clear Site Cache', 'millicache' ) )
+			->description( __( 'Clear all cache entries for the current site.', 'millicache' ) )
+			->categories( 'caching' )
+			->args()
+				->boolean( 'expire' )
+					->label( __( 'Expire Only', 'millicache' ) )
+					->description( __( 'Mark entries as stale instead of deleting, allowing grace-period serving.', 'millicache' ) )
+					->default( false );
+	}
+
 	/**
 	 * Get the action type.
 	 *

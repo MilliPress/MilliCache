@@ -14,6 +14,7 @@
 
 namespace MilliCache\Rules\Actions\WP;
 
+use MilliRules\Actions\ActionMeta;
 use MilliRules\Actions\BaseAction;
 use MilliRules\Context;
 
@@ -25,6 +26,31 @@ use MilliRules\Context;
  * @since 1.0.0
  */
 class ClearCache extends BaseAction {
+	/**
+	 * Declare metadata for the clear_cache action.
+	 *
+	 * @since 1.5.0
+	 *
+	 * @param ActionMeta $meta The metadata object to configure.
+	 * @return void
+	 */
+	public static function set_meta( ActionMeta $meta ): void {
+		$meta
+			->label( __( 'Clear Cache', 'millicache' ) )
+			->description( __( 'Clear cache entries by flag(s), post-ID(s) or URL(s).', 'millicache' ) )
+			->categories( 'caching' )
+			->args()
+				->string( 'targets' )
+					->label( __( 'Targets', 'millicache' ) )
+					->description( __( 'Cache entries to clear — flag patterns, post IDs, or URLs.', 'millicache' ) )
+					->also_accepts( 'array' )
+					->required()
+				->boolean( 'expire' )
+					->label( __( 'Expire Only', 'millicache' ) )
+					->description( __( 'Mark entries as stale instead of deleting, allowing grace-period serving.', 'millicache' ) )
+					->default( false );
+	}
+
 	/**
 	 * Get the action type.
 	 *
