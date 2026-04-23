@@ -317,9 +317,11 @@ describe( 'Rule Actions', function () {
 			expect( $set_ttl_args[0]->get_min() )->toBe( 0 );
 
 			$do_cache_args = Rules::get_action_meta( 'do_cache' )->get_arguments();
-			expect( $do_cache_args )->toHaveCount( 1 );
+			expect( $do_cache_args )->toHaveCount( 2 );
 			expect( $do_cache_args[0]->get_type() )->toBe( 'boolean' );
 			expect( $do_cache_args[0]->get_default() )->toBeTrue();
+			expect( $do_cache_args[1]->get_type() )->toBe( 'string' );
+			expect( $do_cache_args[1]->get_default() )->toBe( '' );
 		} );
 
 		it( 'serializes the complete wire format via to_array()', function () {
