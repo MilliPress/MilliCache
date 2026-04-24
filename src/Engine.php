@@ -609,7 +609,6 @@ final class Engine {
 	 * Initialize autoloader for MilliCache classes.
 	 *
 	 * Only loads Composer autoloader once, and only when needed.
-	 * Includes fallback PSR-4 autoloader if Composer is not available.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -621,25 +620,16 @@ final class Engine {
 			return;
 		}
 
-		// Attempt to load Composer autoloader.
-		$autoloader = dirname( __DIR__ ) . '/vendor/autoload.php';
-		if ( file_exists( $autoloader ) ) {
-			require_once $autoloader;
-		} else {
-			// Fallback: Register a simple PSR-4 autoloader.
-			spl_autoload_register(
-				function ( $class ) {
-					if ( strpos( $class, 'MilliCache\\' ) === 0 ) {
-						$file = __DIR__ . '/' . str_replace( array( 'MilliCache\\', '\\' ), array( '', '/' ), $class ) . '.php';
-						if ( file_exists( $file ) ) {
-							require_once $file;
-						}
-					}
-				}
-			);
+		// <plugin>/src/Engine.php (standalone) or
+		// <host>/deps/<vendor>/<pkg>/src/Engine.php (Scoped).
+		foreach ( array( 4, 1 ) as $levels ) {
+			$autoloader = dirname( __DIR__, $levels ) . '/vendor/autoload.php';
+			if ( file_exists( $autoloader ) ) {
+				require_once $autoloader;
+				break;
+			}
 		}
 
-		// Load helper functions early, so they're available before WordPress loads.
 		$functions_file = dirname( __DIR__ ) . '/functions.php';
 		if ( file_exists( $functions_file ) ) {
 			require_once $functions_file;
