@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.5.1](https://github.com/MilliPress/MilliCache/compare/v1.5.0...v1.5.1) (2026-04-24)
+
+
+### Bug Fixes
+
+* **engine:** Simplify autoloader initialization for better compatibility ([fe45266](https://github.com/MilliPress/MilliCache/commit/fe45266fe14fef13df84ad4b2cb408a32f205ade))
+
 ## [1.5.0](https://github.com/MilliPress/MilliCache/compare/v1.4.2...v1.5.0) (2026-04-23)
 
 
