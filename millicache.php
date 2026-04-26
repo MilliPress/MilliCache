@@ -88,16 +88,5 @@ function deactivate_millicache() {
 register_activation_hook( MILLICACHE_FILE, 'activate_millicache' );
 register_deactivation_hook( MILLICACHE_FILE, 'deactivate_millicache' );
 
-/**
- * Begins execution of the plugin.
- *
- * @since    1.0.0
- *
- * @return void
- */
-function run_millicache() {
-	$plugin = new MilliCache\MilliCache();
-	$plugin->run();
-}
-
-run_millicache();
+// Begin execution of the plugin.
+MilliCache\MilliCache::instance()->run();

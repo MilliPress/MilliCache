@@ -37,6 +37,16 @@ use MilliCache\Core\Updater;
 final class MilliCache {
 
 	/**
+	 * The singleton instance.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 *
+	 * @var MilliCache|null The singleton instance.
+	 */
+	private static ?MilliCache $instance = null;
+
+	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
 	 * the plugin.
 	 *
@@ -96,6 +106,29 @@ final class MilliCache {
 
 		$this->load_dependencies();
 		$this->define_cache_hooks();
+
+		self::$instance = $this;
+	}
+
+	/**
+	 * Get the MilliCache instance.
+	 *
+	 * Creates a new instance if one doesn't exist. The bootstrap in
+	 * millicache.php constructs the plugin via `new MilliCache()`, which
+	 * also populates the singleton — so by the time WordPress fires hooks,
+	 * `instance()` returns the already-built orchestrator.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return MilliCache The MilliCache instance.
+	 */
+	public static function instance(): MilliCache {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+
+		return self::$instance;
 	}
 
 	/**

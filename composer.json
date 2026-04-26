@@ -43,7 +43,12 @@
         "ext-zlib": "Allows MilliCache to compress the cache with zlib."
     },
     "scripts": {
-        "test": "composer test:fix && composer test:lint && composer test:phpstan && composer test:unit",
+        "test": [
+            "@test:fix",
+            "@test:lint",
+            "@test:phpstan",
+            "@test:unit"
+        ],
         "test:unit": "pest --colors=always",
         "test:coverage": "XDEBUG_MODE=coverage pest --coverage --min=80",
         "test:phpstan": "phpstan analyse -c phpstan.neon --memory-limit 1G",
