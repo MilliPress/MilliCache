@@ -6,6 +6,18 @@ menu_order: 30
 
 # Changelog
 
+## [1.5.2](https://github.com/MilliPress/MilliCache/compare/v1.5.1...v1.5.2) (2026-04-26)
+
+
+### Features
+
+* **plugin:** Implement singleton pattern for MilliCache instance management ([8d92bcb](https://github.com/MilliPress/MilliCache/commit/8d92bcb3b93fac1c2f11d0c611bf60a926fc6f47))
+
+
+### Miscellaneous
+
+* release 1.5.2 ([b2d9de5](https://github.com/MilliPress/MilliCache/commit/b2d9de569b5ec523b3ef845b7beeee873960abad))
+
 ## [1.5.1](https://github.com/MilliPress/MilliCache/compare/v1.5.0...v1.5.1) (2026-04-24)
 
 
