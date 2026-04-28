@@ -414,7 +414,7 @@ final class UI {
 			'id'           => 'cache',
 			'title'        => __( 'Cache Settings', 'millicache' ),
 
-			'open'         => 'ok',
+			'open'         => false,
 			'status'       => array(
 				'key' => 'storage.connected',
 				'ok'  => true,
