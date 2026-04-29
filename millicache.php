@@ -14,7 +14,7 @@
  * x-release-please-start-version
  * Version:           1.5.2
  * x-release-please-end
- * Requires at least: 6.6
+ * Requires at least: 6.7
  * Requires PHP:      7.4
  * Network:           true
  * Author:            MilliPress Team
