@@ -1,6 +1,6 @@
 {
   "name": "millicache",
-  "version": "1.0.0-rc.2",
+  "private": true,
   "author": "Philipp Wellmer <hello@millipress.com>",
   "license": "GPL-2.0-or-later",
   "devDependencies": {
