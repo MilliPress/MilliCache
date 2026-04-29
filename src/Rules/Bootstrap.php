@@ -194,6 +194,10 @@ final class Bootstrap {
 			->order( 1 )
 			->when()
 				->request_url( '*wp-json*' )
+			->and()
+			->when_any()
+				->request_method( 'GET' )
+				->request_method( 'HEAD' )
 			->then()
 				->do_cache( false, 'MilliCache: REST API request' )
 			->register();
