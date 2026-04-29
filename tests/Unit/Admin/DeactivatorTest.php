@@ -32,13 +32,7 @@ if ( ! function_exists( 'wp_clear_scheduled_hook' ) ) {
 	}
 }
 
-if ( ! function_exists( 'wp_delete_file' ) ) {
-	function wp_delete_file( $file ) {
-		global $test_wp_delete_file_called;
-		$test_wp_delete_file_called = $file;
-		return true;
-	}
-}
+// wp_delete_file is mocked in tests/bootstrap.php (shared with DropInTest).
 
 uses()->beforeEach( function () {
 	global $test_wp_clear_scheduled_hook_called, $test_wp_delete_file_called;

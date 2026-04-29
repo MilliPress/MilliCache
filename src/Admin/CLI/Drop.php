@@ -11,7 +11,7 @@
 
 namespace MilliCache\Admin\CLI;
 
-use MilliCache\Admin\Utils;
+use MilliCache\Admin\DropIn;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -52,62 +52,25 @@ final class Drop {
 	 */
 	public function __invoke( array $args, array $assoc_args ): void {
 		$force = isset( $assoc_args['force'] );
-		$destination = WP_CONTENT_DIR . '/advanced-cache.php';
-		$source = MILLICACHE_DIR . '/advanced-cache.php';
 
-		// Check the current status.
-		if ( file_exists( $destination ) && ! $force ) {
-			$info = Utils::validate_advanced_cache_file();
-			if ( ! empty( $info ) && 'symlink' === $info['type'] ) {
-				$target = readlink( $destination );
-				if ( $target === $source ) {
-					\WP_CLI::success( __( 'advanced-cache.php symlink is already correctly configured.', 'millicache' ) );
-					return;
-				}
-			}
-		}
-
-		// Check if wp-content is writable.
-		if ( ! is_writable( WP_CONTENT_DIR ) ) {
-			\WP_CLI::error( __( 'The wp-content directory is not writable.', 'millicache' ) );
-		}
-
-		// Remove existing file.
-		if ( file_exists( $destination ) || is_link( $destination ) ) {
-			if ( ! unlink( $destination ) ) {
-				\WP_CLI::error( __( 'Could not remove existing advanced-cache.php file.', 'millicache' ) );
-			}
-			\WP_CLI::line( __( 'Removed existing advanced-cache.php.', 'millicache' ) );
-		}
-
-		// Check source file.
-		if ( ! is_readable( $source ) ) {
-			\WP_CLI::error( __( 'Source advanced-cache.php file is not readable.', 'millicache' ) );
-		}
-
-		// Try to create symlink first.
-		if ( function_exists( 'symlink' ) && @symlink( $source, $destination ) ) {
-			\WP_CLI::success( __( 'Created symlink for advanced-cache.php.', 'millicache' ) );
-			return;
-		}
-
-		// Fallback: copy file with path replacement.
-		$source_content = file_get_contents( $source );
-		if ( false === $source_content ) {
-			\WP_CLI::error( __( 'Could not read source advanced-cache.php file.', 'millicache' ) );
-		}
-
-		// Replace the path to the engine file.
-		$source_content = preg_replace(
-			'/(\$(?:engine|plugin)_path\s*=\s*)dirname.*?;/s',
-			"$1'" . dirname( __DIR__, 3 ) . "';",
-			$source_content
-		);
-
-		if ( file_put_contents( $destination, $source_content, LOCK_EX ) ) {
-			\WP_CLI::success( __( 'Copied advanced-cache.php to wp-content directory.', 'millicache' ) );
-		} else {
-			\WP_CLI::error( __( 'Could not create advanced-cache.php file.', 'millicache' ) );
+		switch ( DropIn::install( 'advanced-cache.php', null, $force ) ) {
+			case 'symlinked':
+				\WP_CLI::success( __( 'Created symlink for advanced-cache.php.', 'millicache' ) );
+				return;
+			case 'copied':
+				\WP_CLI::success( __( 'Copied advanced-cache.php to wp-content directory.', 'millicache' ) );
+				return;
+			case 'unchanged':
+				\WP_CLI::success( __( 'advanced-cache.php symlink is already correctly configured.', 'millicache' ) );
+				return;
+			case 'preserved':
+				\WP_CLI::warning( __( 'A higher-version advanced-cache.php is in place. Use --force to overwrite.', 'millicache' ) );
+				return;
+			case 'unwritable':
+				\WP_CLI::error( __( 'The wp-content directory is not writable.', 'millicache' ) );
+				// WP_CLI::error() halts execution — fallthrough is unreachable.
+			default:
+				\WP_CLI::error( __( 'Could not create advanced-cache.php file.', 'millicache' ) );
 		}
 	}
 }

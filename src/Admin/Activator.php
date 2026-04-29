@@ -58,7 +58,10 @@ final class Activator {
 	}
 
 	/**
-	 * Create a symlink for advanced-cache.php.
+	 * Install the advanced-cache.php drop-in for the activating plugin.
+	 *
+	 * Routes the install through DropIn::install(), which owns the
+	 * higher-version safeguard and the already-correct-symlink shortcut.
 	 *
 	 * @since    1.0.0
 	 * @access   private
@@ -66,75 +69,39 @@ final class Activator {
 	 * @return   void
 	 */
 	private static function create_advanced_cache_file(): void {
-
-		if ( ! is_writable( WP_CONTENT_DIR ) ) {
-			Admin::add_notice(
-				__( 'The wp-content directory is not writable. Please make sure that the directory is writable and try again or manually copy advanced-cache.php from the plugin folder.', 'millicache' ),
-				'error'
-			);
-
-			return;
-		}
-
-		$source_file = MILLICACHE_DIR . '/advanced-cache.php';
-		$destination = WP_CONTENT_DIR . '/advanced-cache.php';
-
-		if ( file_exists( $destination ) ) {
-			if ( is_link( $destination ) ) {
-				if ( readlink( $destination ) === $source_file ) {
-					Admin::add_notice( __( 'The advanced-cache.php symlink already exists and is correctly configured.', 'millicache' ) );
-					return;
-				} else {
-					unlink( $destination );
-				}
-			} else {
-				$source_version = Utils::get_file_version( $source_file );
-				$destination_version = Utils::get_file_version( $destination );
-
-				if ( $source_version && $destination_version ) {
-					if ( version_compare( $source_version, $destination_version ) > 0 ) {
-						Admin::add_notice(
-							__( 'Your version of advanced-cache.php is outdated. Please copy the file manually from the plugin directory to your wp-content directory.', 'millicache' ),
-							'error'
-						);
-					}
-				}
-				return;
-			}
-		}
-
-		// At this point, either there's no file or we've removed an incorrect symlink.
-		if ( is_readable( $source_file ) ) {
-			// Try to create a symlink first.
-			if ( function_exists( 'symlink' ) && @symlink( $source_file, $destination ) ) {
+		switch ( DropIn::install() ) {
+			case 'symlinked':
 				Admin::add_notice(
 					__( 'Symlink created for advanced-cache.php. Please make sure to configure MilliCache to start caching.', 'millicache' ),
 					'success'
 				);
 				return;
-			} else {
-				// Could not create symlink, try to copy the file.
-				$source_content = file_get_contents( $source_file );
-				if ( false !== $source_content ) {
-					// Replace the path to the engine file.
-					$source_content = preg_replace(
-						'/(\$(?:engine|plugin)_path\s*=\s*)dirname.*?;/s',
-						"$1'" . dirname( __DIR__, 2 ) . "';",
-						$source_content
-					);
-
-					if ( file_put_contents( $destination, $source_content, LOCK_EX ) ) {
-						Admin::add_notice( __( 'The file advanced-cache.php has been copied to the /wp-content directory. Please make sure to configure MilliCache to start caching.', 'millicache' ), 'success' );
-						return;
-					}
-				}
-			}
-
-			// Could not create symlink or copy the file.
-			Admin::add_notice(
-				__( 'Could not create symlink for advanced-cache.php. Please copy the file manually from the plugin directory to your /wp-content directory.', 'millicache' ),
-				'error'
-			);
+			case 'copied':
+				Admin::add_notice(
+					__( 'The file advanced-cache.php has been copied to the /wp-content directory. Please make sure to configure MilliCache to start caching.', 'millicache' ),
+					'success'
+				);
+				return;
+			case 'unchanged':
+				Admin::add_notice( __( 'The advanced-cache.php symlink already exists and is correctly configured.', 'millicache' ) );
+				return;
+			case 'preserved':
+				Admin::add_notice(
+					__( 'Your version of advanced-cache.php is higher than the one shipped with the plugin. Replacement skipped to preserve customizations.', 'millicache' ),
+					'error'
+				);
+				return;
+			case 'unwritable':
+				Admin::add_notice(
+					__( 'The wp-content directory is not writable. Please make sure that the directory is writable and try again or manually copy advanced-cache.php from the plugin folder.', 'millicache' ),
+					'error'
+				);
+				return;
+			default:
+				Admin::add_notice(
+					__( 'Could not create symlink for advanced-cache.php. Please copy the file manually from the plugin directory to your /wp-content directory.', 'millicache' ),
+					'error'
+				);
 		}
 	}
 }

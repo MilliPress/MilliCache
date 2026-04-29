@@ -157,3 +157,36 @@ if ( ! function_exists( 'delete_site_transient' ) ) {
 		return true;
 	}
 }
+
+if ( ! function_exists( 'wp_delete_file' ) ) {
+	function wp_delete_file( $file ) {
+		global $test_wp_delete_file_called;
+		$test_wp_delete_file_called = $file;
+		return @unlink( $file );
+	}
+}
+
+if ( ! function_exists( 'get_file_data' ) ) {
+	function get_file_data( $file_path, $headers, $context = '' ) {
+		$content = '';
+		if ( is_link( $file_path ) ) {
+			$real = readlink( $file_path );
+			if ( $real && file_exists( $real ) ) {
+				$content = (string) file_get_contents( $real );
+			}
+		} elseif ( file_exists( $file_path ) ) {
+			$content = (string) file_get_contents( $file_path );
+		}
+		$content = substr( $content, 0, 8192 );
+
+		$result = array();
+		foreach ( $headers as $key => $name ) {
+			if ( preg_match( '/^[ \t\/*#@]*' . preg_quote( $name, '/' ) . ':(.*)$/mi', $content, $m ) ) {
+				$result[ $key ] = trim( (string) preg_replace( '/\s*(?:\*\/|\?>).*/', '', $m[1] ) );
+			} else {
+				$result[ $key ] = '';
+			}
+		}
+		return $result;
+	}
+}

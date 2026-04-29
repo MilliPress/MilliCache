@@ -63,26 +63,29 @@ final class Deactivator {
 	/**
 	 * Remove the advanced-cache.php file.
 	 *
+	 * DropIn::remove() owns the customization safeguard; this method maps the
+	 * outcome to an admin notice.
+	 *
 	 * @since    1.0.0
 	 * @access   private
 	 *
 	 * @return   void
 	 */
 	private static function remove_advanced_cache_file() {
-		$dropin_file = WP_CONTENT_DIR . '/advanced-cache.php';
-		$plugin_file = MILLICACHE_DIR . '/advanced-cache.php';
-
-		if ( file_exists( $dropin_file ) ) {
-			$dropin_version = Utils::get_file_version( $dropin_file );
-			$plugin_version = Utils::get_file_version( $plugin_file );
-
-			// Delete the advanced-cache.php file if it is a symlink or if the version is equal or lower than the plugin version.
-			if ( is_link( $dropin_file ) || ( $dropin_version && $plugin_version && version_compare( $dropin_version, $plugin_version ) <= 0 ) ) {
-				wp_delete_file( $dropin_file );
+		switch ( DropIn::remove() ) {
+			case 'removed':
 				Admin::add_notice( __( 'MilliCache deactivated & advanced-cache.php removed.', 'millicache' ), 'success' );
-			} else {
+				return;
+			case 'preserved':
 				Admin::add_notice( __( 'Your version of advanced-cache.php is higher than the original plugin version. We did not delete it, please do it yourself.', 'millicache' ), 'error' );
-			}
+				return;
+			case 'absent':
+				return;
+			case 'unwritable':
+				Admin::add_notice( __( 'The wp-content directory is not writable. Please remove advanced-cache.php manually.', 'millicache' ), 'error' );
+				return;
+			default:
+				Admin::add_notice( __( 'Could not remove advanced-cache.php. Please remove it manually.', 'millicache' ), 'error' );
 		}
 	}
 }
