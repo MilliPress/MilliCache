@@ -56,7 +56,9 @@
         "test:fix": "phpcbf --standard=phpcs.xml",
         "cghooks": [
             "vendor/bin/cghooks"
-        ]
+        ],
+        "post-install-cmd": "vendor/bin/cghooks add --ignore-lock",
+        "post-update-cmd": "vendor/bin/cghooks update"
     },
     "config": {
         "vendor-dir": "vendor",
@@ -86,11 +88,13 @@
                 "stop-on-failure": ["pre-push"]
             },
             "pre-commit": [
-                "composer test:fix"
+                "composer test:fix",
+                "npm run fix"
             ],
             "pre-push": [
                 "composer validate --no-check-all --no-check-publish",
-                "composer test"
+                "composer test",
+                "npm run lint"
             ],
             "post-merge": [
                 "composer install"
