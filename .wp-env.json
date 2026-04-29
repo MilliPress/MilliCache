@@ -14,12 +14,12 @@
     "PERFLAB_DISABLE_OBJECT_CACHE_DROPIN": false
   },
   "plugins": [
-    ".",
     "https://downloads.wordpress.org/plugin/performance-lab.zip",
     "https://downloads.wordpress.org/plugin/wordpress-importer.zip"
   ],
   "themes": [],
   "mappings": {
+    "wp-content/plugins/millicache": ".",
     "wp-content/mu-plugins": "./tests/wp-env/mu-plugins",
     "wp-cli.yml": "./tests/wp-env/wp-cli.yml",
     ".htaccess": "./tests/wp-env/.htaccess",
