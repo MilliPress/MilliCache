@@ -15,6 +15,8 @@
 namespace MilliCache\Rules;
 
 use MilliRules\Actions\ActionMeta;
+use MilliRules\Conditions\ConditionMeta;
+use MilliRules\Packages\PackageManager;
 use MilliRules\Rules;
 
 /**
@@ -188,5 +190,105 @@ final class Manager {
 	 */
 	public function compare_values( $actual, $expected, string $operator = '=' ): bool {
 		return Rules::compare_values( $actual, $expected, $operator );
+	}
+
+	/**
+	 * Get all rules from all loaded packages, tagged with their package name.
+	 *
+	 * Proxies to PackageManager::get_all_rules(). Each rule includes a
+	 * '_package' key identifying its origin package.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @return array<int, array<string, mixed>> Flat array of rules, each with '_package' key added.
+	 */
+	public function get_packages_rules(): array {
+		return PackageManager::get_all_rules();
+	}
+
+	/**
+	 * Get the list of valid match types ('all', 'any', 'none').
+	 *
+	 * Proxies to the Rules::MATCH_TYPES constant.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @return array<int, string> The valid match type identifiers.
+	 */
+	public function match_types(): array {
+		return Rules::MATCH_TYPES;
+	}
+
+	/**
+	 * Validate a rule configuration against the engine's registry.
+	 *
+	 * Proxies to Rules::validate(). Returns plain-English error strings
+	 * for engine-level concerns (match_type, condition/action types,
+	 * operators, action arguments). An empty array means the rule is valid.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @param array<string, mixed> $rule The rule configuration array.
+	 * @return array<int, string> Error messages. Empty if valid.
+	 */
+	public function validate( array $rule ): array {
+		return Rules::validate( $rule );
+	}
+
+	/**
+	 * Get metadata for all available condition types.
+	 *
+	 * Proxies to Rules::get_all_condition_metas(). Discovers types from
+	 * both class-based namespace registrations and callback-based
+	 * registrations.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @return array<string, ConditionMeta> Map of type string => ConditionMeta.
+	 */
+	public function get_all_condition_metas(): array {
+		return Rules::get_all_condition_metas();
+	}
+
+	/**
+	 * Get the full metadata for a single condition type.
+	 *
+	 * Proxies to Rules::get_condition_meta().
+	 *
+	 * @since 1.6.0
+	 *
+	 * @param string $type The condition type.
+	 * @return ConditionMeta|null The metadata, or null if not found.
+	 */
+	public function get_condition_meta( string $type ): ?ConditionMeta {
+		return Rules::get_condition_meta( $type );
+	}
+
+	/**
+	 * Get metadata for all available action types.
+	 *
+	 * Proxies to Rules::get_all_action_metas(). Discovers types from both
+	 * class-based namespace registrations and callback-based registrations.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @return array<string, ActionMeta> Map of type string => ActionMeta.
+	 */
+	public function get_all_action_metas(): array {
+		return Rules::get_all_action_metas();
+	}
+
+	/**
+	 * Get the full metadata for a single action type.
+	 *
+	 * Proxies to Rules::get_action_meta().
+	 *
+	 * @since 1.6.0
+	 *
+	 * @param string $type The action type.
+	 * @return ActionMeta|null The metadata, or null if not found.
+	 */
+	public function get_action_meta( string $type ): ?ActionMeta {
+		return Rules::get_action_meta( $type );
 	}
 }
