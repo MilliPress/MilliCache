@@ -82,20 +82,20 @@ describe( 'DropIn::install', function () {
 		dropin_write_source( 'advanced-cache.php' );
 		chmod( WP_CONTENT_DIR, 0555 );
 
-		expect( DropIn::install( 'advanced-cache.php' ) )->toBe( 'unwritable' );
+		expect( DropIn::install( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'unwritable' );
 
 		chmod( WP_CONTENT_DIR, 0755 );
 	} );
 
 	it( 'returns null when the source file is not readable', function () {
 		// No source file written — should return null.
-		expect( DropIn::install( 'missing.php' ) )->toBeNull();
+		expect( DropIn::install( 'missing.php', MILLICACHE_DIR ) )->toBeNull();
 	} );
 
 	it( 'creates a symlink on a fresh install and reports "symlinked"', function () {
 		$source = dropin_write_source( 'advanced-cache.php' );
 
-		$result = DropIn::install( 'advanced-cache.php' );
+		$result = DropIn::install( 'advanced-cache.php', MILLICACHE_DIR );
 
 		expect( $result )->toBe( 'symlinked' );
 		$dest = WP_CONTENT_DIR . '/advanced-cache.php';
@@ -107,14 +107,14 @@ describe( 'DropIn::install', function () {
 		$source = dropin_write_source( 'advanced-cache.php' );
 		symlink( $source, WP_CONTENT_DIR . '/advanced-cache.php' );
 
-		expect( DropIn::install( 'advanced-cache.php' ) )->toBe( 'unchanged' );
+		expect( DropIn::install( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'unchanged' );
 	} );
 
 	it( 'returns "preserved" when destination is a plain copy with a higher version', function () {
 		dropin_write_source( 'advanced-cache.php', '1.0.0' );
 		dropin_write_destination( 'advanced-cache.php', '2.0.0' );
 
-		expect( DropIn::install( 'advanced-cache.php' ) )->toBe( 'preserved' );
+		expect( DropIn::install( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'preserved' );
 		// File untouched.
 		expect( file_get_contents( WP_CONTENT_DIR . '/advanced-cache.php' ) )
 			->toContain( 'Version: 2.0.0' );
@@ -124,7 +124,7 @@ describe( 'DropIn::install', function () {
 		dropin_write_source( 'advanced-cache.php', '1.0.0' );
 		dropin_write_destination( 'advanced-cache.php', '2.0.0' );
 
-		$result = DropIn::install( 'advanced-cache.php', null, true );
+		$result = DropIn::install( 'advanced-cache.php', MILLICACHE_DIR, true );
 
 		// Symlinks succeed in dev environments; the result is 'symlink' or 'copy'
 		// depending on FS support — both indicate the higher-version copy was replaced.
@@ -139,7 +139,7 @@ describe( 'DropIn::install', function () {
 		file_put_contents( $other, '<?php // unrelated' );
 		symlink( $other, WP_CONTENT_DIR . '/advanced-cache.php' );
 
-		$result = DropIn::install( 'advanced-cache.php' );
+		$result = DropIn::install( 'advanced-cache.php', MILLICACHE_DIR );
 
 		expect( $result )->toBe( 'symlinked' );
 		expect( readlink( WP_CONTENT_DIR . '/advanced-cache.php' ) )->toBe( $source );
@@ -152,7 +152,7 @@ describe( 'DropIn::install', function () {
 		file_put_contents( WP_CONTENT_DIR . '/advanced-cache.php', "<?php\n// pre-existing\n" );
 
 		// destination_is_newer is false → falls through to install (replaces).
-		$result = DropIn::install( 'advanced-cache.php' );
+		$result = DropIn::install( 'advanced-cache.php', MILLICACHE_DIR );
 
 		expect( $result )->toBeIn( array( 'symlinked', 'copied' ) );
 	} );
@@ -161,7 +161,7 @@ describe( 'DropIn::install', function () {
 describe( 'DropIn::remove', function () {
 
 	it( 'returns "absent" when nothing is at the destination', function () {
-		expect( DropIn::remove( 'advanced-cache.php' ) )->toBe( 'absent' );
+		expect( DropIn::remove( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'absent' );
 	} );
 
 	it( 'returns "unwritable" when destination exists but wp-content is read-only', function () {
@@ -169,7 +169,7 @@ describe( 'DropIn::remove', function () {
 		dropin_write_destination( 'advanced-cache.php', '1.0.0' );
 		chmod( WP_CONTENT_DIR, 0555 );
 
-		expect( DropIn::remove( 'advanced-cache.php' ) )->toBe( 'unwritable' );
+		expect( DropIn::remove( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'unwritable' );
 
 		chmod( WP_CONTENT_DIR, 0755 );
 	} );
@@ -179,7 +179,7 @@ describe( 'DropIn::remove', function () {
 		$source = dropin_write_source( 'advanced-cache.php', '99.0.0' );
 		symlink( $source, WP_CONTENT_DIR . '/advanced-cache.php' );
 
-		expect( DropIn::remove( 'advanced-cache.php' ) )->toBe( 'removed' );
+		expect( DropIn::remove( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'removed' );
 		expect( is_link( WP_CONTENT_DIR . '/advanced-cache.php' ) )->toBeFalse();
 		expect( file_exists( WP_CONTENT_DIR . '/advanced-cache.php' ) )->toBeFalse();
 	} );
@@ -188,7 +188,7 @@ describe( 'DropIn::remove', function () {
 		dropin_write_source( 'advanced-cache.php', '1.0.0' );
 		dropin_write_destination( 'advanced-cache.php', '2.0.0' );
 
-		expect( DropIn::remove( 'advanced-cache.php' ) )->toBe( 'preserved' );
+		expect( DropIn::remove( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'preserved' );
 		// Still on disk.
 		expect( file_exists( WP_CONTENT_DIR . '/advanced-cache.php' ) )->toBeTrue();
 	} );
@@ -197,7 +197,7 @@ describe( 'DropIn::remove', function () {
 		dropin_write_source( 'advanced-cache.php', '1.0.0' );
 		dropin_write_destination( 'advanced-cache.php', '2.0.0' );
 
-		expect( DropIn::remove( 'advanced-cache.php', null, true ) )->toBe( 'removed' );
+		expect( DropIn::remove( 'advanced-cache.php', MILLICACHE_DIR, true ) )->toBe( 'removed' );
 		expect( file_exists( WP_CONTENT_DIR . '/advanced-cache.php' ) )->toBeFalse();
 	} );
 } );

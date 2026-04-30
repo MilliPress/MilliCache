@@ -12,7 +12,7 @@
  * still bootstraps from the original plugin folder.
  *
  * @link       https://www.millipress.com
- * @since      1.5.3
+ * @since      1.6.0
  *
  * @package    MilliCache
  * @subpackage MilliCache/Admin
@@ -34,6 +34,9 @@ final class DropIn {
 	/**
 	 * Absolute path to the drop-in destination in wp-content.
 	 *
+	 * @since 1.6.0
+	 * @access public
+	 *
 	 * @param string $filename Drop-in filename (e.g. 'advanced-cache.php', 'object-cache.php').
 	 */
 	public static function destination( string $filename = 'advanced-cache.php' ): string {
@@ -44,6 +47,9 @@ final class DropIn {
 	 * Whether a drop-in is currently present at the destination.
 	 *
 	 * Is_link() catches broken symlinks, where file_exists() returns false.
+	 *
+	 * @since 1.6.0
+	 * @access public
 	 *
 	 * @param string $filename Drop-in filename ('advanced-cache.php').
 	 */
@@ -60,8 +66,11 @@ final class DropIn {
 	 * 'preserved' unless $force is true — guards user customizations from
 	 * being silently clobbered on activation or `wp millicache drop`.
 	 *
+	 * @since 1.6.0
+	 * @access public
+	 *
 	 * @param string      $filename   Drop-in filename ('advanced-cache.php').
-	 * @param string|null $source_dir Absolute path to the plugin folder containing $filename. Defaults to MILLICACHE_DIR.
+	 * @param string|null $source_dir Absolute path to the plugin folder containing $filename. Defaults to plugin root.
 	 * @param bool        $force      Override the higher-version safeguard.
 	 * @return null|string 'symlinked', 'copied', 'unchanged', 'preserved', 'unwritable', or null on failure.
 	 */
@@ -70,7 +79,7 @@ final class DropIn {
 			return 'unwritable';
 		}
 
-		$source_dir  = $source_dir ?? MILLICACHE_DIR;
+		$source_dir  = $source_dir ?? dirname( __DIR__, 2 );
 		$source_file = $source_dir . '/' . $filename;
 		$destination = self::destination( $filename );
 
@@ -129,8 +138,11 @@ final class DropIn {
 	 * A plain copy with a higher version than the bundled file is preserved
 	 * as 'preserved' unless $force is true.
 	 *
+	 * @since 1.6.0
+	 * @access public
+	 *
 	 * @param string      $filename   Drop-in filename ('advanced-cache.php').
-	 * @param string|null $source_dir Absolute path to the plugin folder containing $filename. Defaults to MILLICACHE_DIR.
+	 * @param string|null $source_dir Absolute path to the plugin folder containing $filename. Defaults to plugin root.
 	 * @param bool        $force      Override the higher-version safeguard.
 	 * @return null|string 'removed', 'absent', 'preserved', 'unwritable', or null on failure.
 	 */
@@ -146,7 +158,7 @@ final class DropIn {
 		$destination = self::destination( $filename );
 
 		if ( ! $force && ! is_link( $destination ) ) {
-			$source_dir  = $source_dir ?? MILLICACHE_DIR;
+			$source_dir  = $source_dir ?? dirname( __DIR__, 2 );
 			$source_file = $source_dir . '/' . $filename;
 			if ( self::destination_is_newer( $destination, $source_file ) ) {
 				return 'preserved';
@@ -161,6 +173,9 @@ final class DropIn {
 	 *
 	 * Returns false if either version header is missing — only an explicit
 	 * higher version triggers the safeguard.
+	 *
+	 * @since 1.6.0
+	 * @access private
 	 *
 	 * @param string $destination Absolute path to the installed drop-in.
 	 * @param string $source      Absolute path to the bundled drop-in source.

@@ -34,7 +34,9 @@ if ( ! defined( 'WPINC' ) ) {
  *
  * @since 1.0.0
  */
-define( 'MILLICACHE_VERSION', '1.5.2' ); // x-release-please-version.
+if ( ! defined( 'MILLICACHE_VERSION' ) ) {
+	define( 'MILLICACHE_VERSION', '1.5.2' ); // x-release-please-version.
+}
 
 if ( ! defined( 'MILLICACHE_BASENAME' ) ) {
 	define( 'MILLICACHE_BASENAME', plugin_basename( __FILE__ ) );
@@ -63,30 +65,34 @@ if ( file_exists( __DIR__ . '/functions.php' ) ) {
 	require_once __DIR__ . '/functions.php';
 }
 
-/**
- * The code that runs during plugin activation.
- *
- * @since 1.0.0
- *
- * @return void
- */
-function activate_millicache() {
-	\MilliCache\Admin\Activator::activate();
+if ( ! function_exists( 'activate_millicache' ) ) {
+	/**
+	 * The code that runs during plugin activation.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function activate_millicache() {
+		\MilliCache\Admin\Activator::activate();
+	}
 }
 
-/**
- * The code that runs during plugin deactivation.
- *
- * @since 1.0.0
- *
- * @return void
- */
-function deactivate_millicache() {
-	\MilliCache\Admin\Deactivator::deactivate();
+if ( ! function_exists( 'deactivate_millicache' ) ) {
+	/**
+	 * The code that runs during plugin deactivation.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function deactivate_millicache() {
+		\MilliCache\Admin\Deactivator::deactivate();
+	}
 }
 
-register_activation_hook( MILLICACHE_FILE, 'activate_millicache' );
-register_deactivation_hook( MILLICACHE_FILE, 'deactivate_millicache' );
+register_activation_hook( __FILE__, 'activate_millicache' );
+register_deactivation_hook( __FILE__, 'deactivate_millicache' );
 
 // Begin execution of the plugin.
 MilliCache\MilliCache::instance()->run();
