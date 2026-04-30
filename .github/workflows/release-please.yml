@@ -119,7 +119,7 @@ jobs:
           curl -sL https://github.com/BrianHenryIE/strauss/releases/download/0.26.5/strauss.phar -o dist/bin/strauss.phar
 
           # Install production dependencies in the isolated dist directory
-          composer install --no-dev --no-interaction --prefer-dist --working-dir=dist
+          composer install --no-dev --no-interaction --no-scripts --prefer-dist --working-dir=dist
 
           # Run Strauss to scope dependencies (rewrites source files in dist/)
           (cd dist && php bin/strauss.phar -q)
@@ -132,7 +132,7 @@ jobs:
             && mv dist/composer.json.tmp dist/composer.json
 
           # Regenerate autoloader with scoped deps/ classmap
-          composer dump-autoload --no-dev --optimize --classmap-authoritative --working-dir=dist
+          composer dump-autoload --no-dev --optimize --classmap-authoritative --no-scripts --working-dir=dist
 
           # Remove build tools from dist (not needed in the release)
           rm -rf dist/bin
