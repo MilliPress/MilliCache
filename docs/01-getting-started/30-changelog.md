@@ -6,6 +6,18 @@ menu_order: 30
 
 # Changelog
 
+## [1.6.0](https://github.com/MilliPress/MilliCache/compare/v1.5.2...v1.6.0) (2026-04-30)
+
+
+### Features
+
+* **rules:** Expose MilliRules registry/validation through Manager ([812cf36](https://github.com/MilliPress/MilliCache/commit/812cf36980071bbd18884e6112fdfd22ba2d5e53))
+
+
+### Bug Fixes
+
+* **rules:** Restrict default REST rule to GET/HEAD to avoid lock warning ([3144a48](https://github.com/MilliPress/MilliCache/commit/3144a48541edc17296a8e5902b1c35bf466daff7))
+
 ## [1.5.2](https://github.com/MilliPress/MilliCache/compare/v1.5.1...v1.5.2) (2026-04-26)
 
 
