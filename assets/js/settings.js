@@ -16,4 +16,4 @@ window.MilliBase.registerComponent( 'MilliCacheClearButton', ClearCacheButton );
 
 // AUTO_REBUILD_TEST_MARKER — temporary, remove before merge
 // eslint-disable-next-line no-console
-console.log( 'millicache: auto-rebuild test marker' );
+console.log( 'millicache: auto-rebuild test marker v2' );
