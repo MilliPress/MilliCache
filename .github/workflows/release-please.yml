@@ -137,9 +137,7 @@ jobs:
           # Remove build tools from dist (not needed in the release)
           rm -rf dist/bin
 
-          # Remove build-time composer files; the classmap-authoritative
-          # autoloader in vendor/composer/ is self-contained at runtime, and the
-          # lock file lists dev deps we excluded with --no-dev (misleading SBOM).
+          # Remove build-time composer files
           rm -f dist/composer.json dist/composer.lock
 
           echo "Dist contents:"
