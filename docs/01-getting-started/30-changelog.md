@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.6.1](https://github.com/MilliPress/MilliCache/compare/v1.6.0...v1.6.1) (2026-05-01)
+
+
+### Bug Fixes
+
+* **deps:** Require millipress/millibase ^2.4.0 ([3d1a0f9](https://github.com/MilliPress/MilliCache/commit/3d1a0f968bad8da0aee81c21aa4b1ec9180ec326))
+
 ## [1.6.0](https://github.com/MilliPress/MilliCache/compare/v1.5.2...v1.6.0) (2026-04-30)
 
 
