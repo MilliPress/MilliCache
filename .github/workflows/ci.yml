@@ -34,7 +34,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # PAT with admin/bypass rights so the rebuild push is not rejected
+          # by branch protection. Default GITHUB_TOKEN cannot bypass.
+          token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
