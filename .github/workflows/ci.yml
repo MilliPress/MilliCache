@@ -29,14 +29,16 @@ jobs:
   build-assets:
     name: Build Assets
     runs-on: ubuntu-latest
-    # Only auto-commit on push to main, not on PRs or workflow_call
-    if: github.event_name == 'push'
+    # On push to main: rebuild and auto-commit. On PR: verify only.
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v6
         with:
-          # PAT with admin/bypass rights so the rebuild push is not rejected
-          # by branch protection. Default GITHUB_TOKEN cannot bypass.
-          token: ${{ secrets.RELEASE_TOKEN }}
+          # Use the bypass-capable PAT only on push (to commit the rebuild).
+          # PR runs verify only, so they use the default GITHUB_TOKEN — this
+          # avoids exposing the PAT to potentially untrusted PR code via npm
+          # postinstall scripts.
+          token: ${{ github.event_name == 'push' && secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -49,7 +51,19 @@ jobs:
           npm ci
           npm run build
 
-      - name: Commit build files
+      - name: Verify build is in sync (PRs)
+        if: github.event_name == 'pull_request'
+        run: |
+          if git diff --quiet build/; then
+            echo "build/ is in sync with source."
+          else
+            echo "::error::build/ is out of sync with source. Run 'npm run build' locally and commit the result."
+            git --no-pager diff --stat build/
+            exit 1
+          fi
+
+      - name: Commit build files (push to main)
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
