@@ -16,4 +16,4 @@ window.MilliBase.registerComponent( 'MilliCacheClearButton', ClearCacheButton );
 
 // AUTO_REBUILD_TEST_MARKER — temporary, remove before merge
 // eslint-disable-next-line no-console
-console.log( 'millicache: workflow_dispatch test marker' );
+console.log( 'millicache: workflow_dispatch test marker (PAT scope updated)' );
