@@ -13,3 +13,7 @@ import '../css/settings.scss';
 // Register custom tab components.
 window.MilliBase.registerComponent( 'MilliCacheStatus', StatusTab );
 window.MilliBase.registerComponent( 'MilliCacheClearButton', ClearCacheButton );
+
+// AUTO_REBUILD_TEST_MARKER — temporary, remove before merge
+// eslint-disable-next-line no-console
+console.log( 'millicache: workflow_dispatch test marker' );
