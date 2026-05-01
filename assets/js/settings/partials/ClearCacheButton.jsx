@@ -8,7 +8,8 @@ import {
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-const ClearCacheButton = ( { status, triggerAction, isSaving, isLoading } ) => {
+const ClearCacheButton = ( { status, triggerAction, isSaving } ) => {
+	const { isLoadingAction } = window.MilliBase.hooks.useSettings();
 	const [ isModalOpen, setIsModalOpen ] = useState( false );
 	const [ targets, setTargets ] = useState( [] );
 
@@ -36,7 +37,7 @@ const ClearCacheButton = ( { status, triggerAction, isSaving, isLoading } ) => {
 				onClick={ () => setIsModalOpen( true ) }
 				disabled={
 					isSaving ||
-					isLoading ||
+					isLoadingAction ||
 					! status.storage?.connected ||
 					status.cache?.index < 1
 				}
