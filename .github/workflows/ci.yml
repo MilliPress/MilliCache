@@ -2,11 +2,6 @@ name: CI
 
 on:
   workflow_call:
-  # workflow_dispatch is used by the auto-rebuild step below to re-run the
-  # full check suite on a bot-pushed rebuild commit (push events from inside a
-  # workflow run are suppressed by GitHub's anti-recursion guard, but
-  # workflow_dispatch is exempt).
-  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -92,16 +87,14 @@ jobs:
           git push "https://x-access-token:${PAT}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${TARGET_REF}"
           echo "Pushed rebuild to '${TARGET_REF}'."
 
-          # GitHub's anti-recursion guard suppresses push/pull_request events
-          # for commits pushed from inside a workflow run, even via a PAT, so
-          # ci.yml will not re-fire on synchronize. Explicitly dispatch the
-          # workflow on the just-pushed ref so all jobs (including required
-          # checks like Unit Tests / PHPStan / WordPress Code Style) attach
-          # their results to the rebuild commit and the PR can be merged.
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            GH_TOKEN="$PAT" gh workflow run ci.yml --ref "${TARGET_REF}" --repo "${GITHUB_REPOSITORY}"
-            echo "Dispatched ci.yml on '${TARGET_REF}' to refresh required checks."
-          fi
+          # NOTE: GitHub's anti-recursion guard suppresses push/pull_request
+          # events for commits pushed from inside a workflow run, even via a
+          # PAT. ci.yml will NOT re-fire on synchronize, so the rebuild commit
+          # only gets the checks that run via other mechanisms (e.g. CodeQL).
+          # If branch protection requires ci.yml-defined checks, the PR will
+          # need an admin override to merge after auto-rebuild. To avoid this
+          # entirely, switch the auto-rebuild push to use a GitHub App
+          # installation token (App-pushed commits do trigger PR events).
 
       - name: Verify build (fork PRs only)
         if: |
