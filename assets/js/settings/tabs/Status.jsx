@@ -1,7 +1,8 @@
 import { Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-const StatusTab = ( { status, isLoading } ) => {
+const StatusTab = ( { status } ) => {
+	const { isLoadingSettings } = window.MilliBase.hooks.useSettings();
 	const connectionInfo = {
 		[ __( 'Status', 'millicache' ) ]: status.storage?.connected
 			? __( 'Connected', 'millicache' )
@@ -65,7 +66,7 @@ const StatusTab = ( { status, isLoading } ) => {
 
 	return (
 		<div>
-			{ isLoading && <Spinner /> }
+			{ isLoadingSettings && <Spinner /> }
 			{ status && (
 				<>
 					<h2>{ __( 'Connection', 'millicache' ) }</h2>
