@@ -2,6 +2,11 @@ name: CI
 
 on:
   workflow_call:
+  # workflow_dispatch is used by the auto-rebuild step below to re-run the
+  # full check suite on a bot-pushed rebuild commit (push events from inside a
+  # workflow run are suppressed by GitHub's anti-recursion guard, but
+  # workflow_dispatch is exempt).
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -81,15 +86,22 @@ jobs:
             git --no-pager diff --stat build/
             exit 1
           fi
-          # Use a non-bot committer identity so the resulting commit re-fires
-          # downstream workflow runs (e.g. ci.yml's pull_request synchronize).
-          # GitHub silently suppresses workflow triggers for commits authored
-          # by github-actions[bot], even when the push is via a PAT.
           git -c user.name="MilliPress CI" \
               -c user.email="ci@millipress.dev" \
               commit -m "chore: rebuild assets${MSG_SUFFIX}"
           git push "https://x-access-token:${PAT}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${TARGET_REF}"
           echo "Pushed rebuild to '${TARGET_REF}'."
+
+          # GitHub's anti-recursion guard suppresses push/pull_request events
+          # for commits pushed from inside a workflow run, even via a PAT, so
+          # ci.yml will not re-fire on synchronize. Explicitly dispatch the
+          # workflow on the just-pushed ref so all jobs (including required
+          # checks like Unit Tests / PHPStan / WordPress Code Style) attach
+          # their results to the rebuild commit and the PR can be merged.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            GH_TOKEN="$PAT" gh workflow run ci.yml --ref "${TARGET_REF}" --repo "${GITHUB_REPOSITORY}"
+            echo "Dispatched ci.yml on '${TARGET_REF}' to refresh required checks."
+          fi
 
       - name: Verify build (fork PRs only)
         if: |
