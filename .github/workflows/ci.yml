@@ -86,8 +86,8 @@ jobs:
             git --no-pager diff --stat build/
             exit 1
           fi
-          git -c user.name="MilliPress CI" \
-              -c user.email="ci@millipress.dev" \
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
               commit -m "chore: rebuild assets${MSG_SUFFIX}"
           git push "https://x-access-token:${PAT}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${TARGET_REF}"
           echo "Pushed rebuild to '${TARGET_REF}'."
