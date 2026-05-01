@@ -29,16 +29,21 @@ jobs:
   build-assets:
     name: Build Assets
     runs-on: ubuntu-latest
-    # On push to main: rebuild and auto-commit. On PR: verify only.
+    # On push to main: rebuild and auto-commit. On same-repo PR: rebuild and
+    # auto-commit to the PR branch. On fork PR: verify only (auto-push not
+    # authorized into forks).
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v6
         with:
-          # Use the bypass-capable PAT only on push (to commit the rebuild).
-          # PR runs verify only, so they use the default GITHUB_TOKEN — this
-          # avoids exposing the PAT to potentially untrusted PR code via npm
-          # postinstall scripts.
-          token: ${{ github.event_name == 'push' && secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          # Default GITHUB_TOKEN at checkout time — never expose RELEASE_TOKEN
+          # to npm postinstall scripts. The push step below sets the PAT only
+          # in its own env scope.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # On same-repo PR: check out the PR's head branch directly so the
+          # rebuild commit goes onto the right ref. On fork PR or push:
+          # default ref (merge ref / main).
+          ref: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.head_ref || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -51,28 +56,48 @@ jobs:
           npm ci
           npm run build
 
-      - name: Verify build is in sync (PRs)
-        if: github.event_name == 'pull_request'
+      - name: Auto-rebuild & push (push or same-repo PR)
+        if: |
+          github.event_name == 'push' ||
+          (github.event_name == 'pull_request' &&
+           github.event.pull_request.head.repo.full_name == github.repository)
+        env:
+          PAT: ${{ secrets.RELEASE_TOKEN }}
+          # On PR: push back to the PR branch. On push: stay on main.
+          TARGET_REF: ${{ github.head_ref || github.ref_name }}
+          # Skip CI on push-to-main rebuilds so release-please doesn't
+          # re-trigger pointlessly. On PR rebuilds, allow CI to re-run so the
+          # build-assets check goes green on the rebuild commit.
+          MSG_SUFFIX: ${{ github.event_name == 'push' && ' [skip ci]' || '' }}
+        run: |
+          git add build/
+          if git diff --cached --quiet; then
+            echo "build/ is in sync with source — no rebuild needed."
+            exit 0
+          fi
+          if [ -z "$PAT" ]; then
+            echo "::error::RELEASE_TOKEN is not available in this workflow context."
+            echo "::error::For Dependabot PRs: add RELEASE_TOKEN under Settings → Secrets and variables → Dependabot so the rebuild can be auto-pushed back to the PR branch."
+            git --no-pager diff --stat build/
+            exit 1
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -m "chore: rebuild assets${MSG_SUFFIX}"
+          git push "https://x-access-token:${PAT}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${TARGET_REF}"
+          echo "Pushed rebuild to '${TARGET_REF}'."
+
+      - name: Verify build (fork PRs only)
+        if: |
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name != github.repository
         run: |
           if git diff --quiet build/; then
             echo "build/ is in sync with source."
           else
-            echo "::error::build/ is out of sync with source. Run 'npm run build' locally and commit the result."
+            echo "::error::build/ is out of sync with source. Fork PRs require manual rebuild by a maintainer."
             git --no-pager diff --stat build/
             exit 1
-          fi
-
-      - name: Commit build files (push to main)
-        if: github.event_name == 'push'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add build/
-          if git diff --cached --quiet; then
-            echo "No changes to build files"
-          else
-            git commit -m "chore: rebuild assets [skip ci]"
-            git push
           fi
 
   unit-tests:
