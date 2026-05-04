@@ -2,7 +2,9 @@
 /**
  * Bootstrap Rules
  *
- * Rules that execute before WordPress loads, using only server variables and PHP context.
+ * Bootstrap-time rule registration. Built-in PHP-phase rules (executed during
+ * advanced-cache.php boot) plus user-defined rules from settings (any phase;
+ * MilliRules dispatches each by phase at evaluation time).
  *
  * @link        https://www.millipress.com
  * @since       1.0.0
@@ -14,6 +16,7 @@
 
 namespace MilliCache\Rules;
 
+use MilliCache\Core\Settings;
 use MilliCache\Engine\Cache\Config;
 use MilliRules\Context;
 use MilliRules\Rules;
@@ -21,12 +24,9 @@ use MilliRules\Rules;
 /**
  * Class Bootstrap
  *
- * Registers default bootstrap rules that execute before WordPress initialization.
- * These rules use order 0 so user rules can override them.
- *
- * Options example:
- * User can create a rule with order 10 that sets TTL for specific paths,
- * overriding the default no-cache behavior because higher order executes last.
+ * Registers built-in PHP-phase rules and any user-defined rules from the settings store.
+ * Built-ins use order 0 and are locked, so user rules at higher order can
+ * compose on top without overriding the locked invariants.
  *
  * @since       1.0.0
  * @package     MilliCache
@@ -65,6 +65,10 @@ final class Bootstrap {
 		self::register_ttl_check_rule( $config );
 		self::register_nocache_cookies( $config );
 		self::register_nocache_paths( $config );
+
+		if ( Settings::instance()->get( 'rules.load', false ) ) {
+			self::register_user_rules();
+		}
 	}
 
 	/**
@@ -299,5 +303,50 @@ final class Bootstrap {
 		$builder->then()
 			->do_cache( false, 'MilliCache: Skip cache for no-cache paths' )->lock()
 			->register();
+	}
+
+	/**
+	 * Register user-defined rules from Settings.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return void
+	 */
+	private static function register_user_rules(): void {
+		$rules = Settings::instance()->get( 'rules.items', array() );
+
+		if ( ! is_array( $rules ) || empty( $rules ) ) {
+			return;
+		}
+
+		foreach ( $rules as $rule_data ) {
+			if ( ! is_array( $rule_data ) || empty( $rule_data['enabled'] ) ) {
+				continue;
+			}
+
+			$id = (string) ( $rule_data['id'] ?? '' );
+
+			if ( '' === $id ) {
+				continue;
+			}
+
+			$builder = Rules::create( $id )
+				->title( (string) ( $rule_data['title'] ?? '' ) )
+				->order( (int) ( $rule_data['order'] ?? 100 ) );
+
+			if ( isset( $rule_data['hook'] ) ) {
+				$builder->on(
+					(string) $rule_data['hook'],
+					(int) ( $rule_data['priority'] ?? 10 )
+				);
+			}
+
+			$match_method = 'when_' . strtolower( (string) ( $rule_data['match_type'] ?? 'all' ) );
+
+			$builder
+				->{$match_method}( (array) ( $rule_data['conditions'] ?? array() ) )
+				->then( (array) ( $rule_data['actions'] ?? array() ) )
+				->register();
+		}
 	}
 }

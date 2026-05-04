@@ -107,7 +107,10 @@ final class Settings {
 				'debug'               => false,
 				'gzip'                => true,
 			),
-			'rules'   => array(),
+			'rules'   => array(
+				'load'  => false,
+				'items' => array(),
+			),
 		);
 	}
 }
