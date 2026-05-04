@@ -241,7 +241,7 @@ final class Manager {
 		$flags = array_values(
 			array_filter(
 				array_map( array( Flags::class, 'normalize' ), (array) $flags ),
-				static fn( string $f ) => $f !== ''
+				static fn( string $f ) => '' !== $f
 			)
 		);
 
