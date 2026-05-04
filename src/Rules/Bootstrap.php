@@ -195,7 +195,8 @@ final class Bootstrap {
 	 */
 	private static function register_rest_request_rule(): void {
 		Rules::create( 'millicache:request:rest', 'php' )
-			->order( 1 )
+			->lock()
+			->order( 0 )
 			->when()
 				->request_url( '*wp-json*' )
 			->and()
