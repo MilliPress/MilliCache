@@ -494,9 +494,23 @@ class Storage {
 				$flags
 			);
 
+			// Get existing flag fields.
+			$existing_flag_fields = $this->filter_flag_fields(
+				array_map( 'strval', $this->client->hkeys( $key ) )
+			);
+
+			// Determine which ones to remove.
+			$stale_flag_fields = array_diff( $existing_flag_fields, $flag_keys );
+
 			// Execute the transaction.
 			$this->client->transaction(
-				function ( $tx ) use ( $key, $flag_keys, $fields, $meta ) {
+				function ( $tx ) use ( $key, $flag_keys, $fields, $meta, $stale_flag_fields ) {
+					// Remove stale flag fields and their flag-set memberships.
+					foreach ( $stale_flag_fields as $stale_flag_field ) {
+						$tx->hdel( $key, array( $stale_flag_field ) );
+						$tx->srem( $stale_flag_field, array( $key ) );
+					}
+
 					// Store the fields.
 					$tx->hmset( $key, $fields );
 
