@@ -14,6 +14,9 @@ require_once __DIR__ . '/bootstrap.php';
 // Set up autoloading.
 require_once __DIR__ . '/../vendor/autoload.php';
 
+// Integration test helpers — depends on autoloader.
+require_once __DIR__ . '/Helpers/Rules.php';
+
 /**
  * Create a Config instance with sensible test defaults.
  *
@@ -75,3 +78,15 @@ uses()
 		Mockery::close();
 	} )
 	->in( 'Unit' );
+
+// Integration tests run the real MilliRules engine; reset its global static
+// state before each test. Must run serially (no --parallel) because of that
+// shared state.
+uses()
+	->beforeEach( function () {
+		reset_rules_state();
+	} )
+	->afterEach( function () {
+		Mockery::close();
+	} )
+	->in( 'Integration' );
