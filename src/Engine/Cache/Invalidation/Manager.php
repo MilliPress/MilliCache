@@ -13,6 +13,7 @@
 namespace MilliCache\Engine\Cache\Invalidation;
 
 use MilliCache\Core\Storage;
+use MilliCache\Engine\Flags;
 use MilliCache\Engine\Request\Processor as RequestManager;
 use MilliCache\Engine\Utilities\Multisite;
 
@@ -236,8 +237,13 @@ final class Manager {
 	 * @return self                For fluent chaining.
 	 */
 	public function flags( $flags, bool $expire = false, bool $add_prefix = true ): self {
-		// Convert to array.
-		$flags = is_string( $flags ) ? array( $flags ) : $flags;
+		// Normalize input (ensure array), lowercase/trim each flag and drop empty strings only.
+		$flags = array_values(
+			array_filter(
+				array_map( array( Flags::class, 'normalize' ), (array) $flags ),
+				static fn( string $f ) => $f !== ''
+			)
+		);
 
 		// Add to the clearer queue.
 		$this->enqueue_flags( $flags, $expire, $add_prefix );

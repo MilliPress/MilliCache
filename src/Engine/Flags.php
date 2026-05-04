@@ -72,7 +72,7 @@ final class Flags {
 			return;
 		}
 
-		$prefixed_flag = $this->add_key_prefix( $flag );
+		$prefixed_flag = $this->add_key_prefix( self::normalize( $flag ) );
 
 		if ( ! in_array( $prefixed_flag, $this->flags, true ) ) {
 			$this->flags[] = $prefixed_flag;
@@ -88,13 +88,29 @@ final class Flags {
 	 * @return void
 	 */
 	public function remove( string $flag ): void {
-		$prefixed_flag = $this->add_key_prefix( $flag );
+		if ( empty( $flag ) ) {
+			return;
+		}
+
+		$prefixed_flag = $this->add_key_prefix( self::normalize( $flag ) );
 		$key           = array_search( $prefixed_flag, $this->flags, true );
 
 		if ( false !== $key ) {
 			unset( $this->flags[ $key ] );
 			$this->flags = array_values( $this->flags ); // Re-index array.
 		}
+	}
+
+	/**
+	 * Normalize a user-supplied flag identifier.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param string $flag The raw flag identifier.
+	 * @return string Normalized flag identifier (empty if input was blank).
+	 */
+	public static function normalize( string $flag ): string {
+		return strtolower( trim( $flag ) );
 	}
 
 	/**
