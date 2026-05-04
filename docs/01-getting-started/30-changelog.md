@@ -6,6 +6,25 @@ menu_order: 30
 
 # Changelog
 
+## [1.6.2](https://github.com/MilliPress/MilliCache/compare/v1.6.1...v1.6.2) (2026-05-04)
+
+
+### Features
+
+* **flags:** Normalize flag identifiers (lowercase + trim) at boundaries ([2859cd2](https://github.com/MilliPress/MilliCache/commit/2859cd21b1ac0791ee0d0323fa27f46747360540))
+* **rules:** Load user-defined rules from settings into the rule engine ([b3fc827](https://github.com/MilliPress/MilliCache/commit/b3fc82709356b7a1e8cabab071504f2f2c4b778c))
+
+
+### Bug Fixes
+
+* **deps:** Require millipress/millirules ^1.1.5 ([4edb44d](https://github.com/MilliPress/MilliCache/commit/4edb44d9cf6a4d956f91624f0f53824e9d151d07))
+* **storage:** Drop stale flag fields and their set memberships on store ([50b8d54](https://github.com/MilliPress/MilliCache/commit/50b8d541c9f155db62417311f91926f4b4d8efd4))
+
+
+### Miscellaneous
+
+* release 1.6.2 ([509add9](https://github.com/MilliPress/MilliCache/commit/509add99f3025e7859833b08f6c58601603c5dc1))
+
 ## [1.6.1](https://github.com/MilliPress/MilliCache/compare/v1.6.0...v1.6.1) (2026-05-01)
 
 
