@@ -34,12 +34,23 @@ jobs:
     # authorized into forks).
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     steps:
+      - name: Mint App installation token
+        id: app-token
+        if: |
+          github.event_name == 'push' ||
+          (github.event_name == 'pull_request' &&
+           github.event.pull_request.head.repo.full_name == github.repository)
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.MILLIPRESS_BOT_APP_ID }}
+          private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
+
       - uses: actions/checkout@v6
         with:
-          # Default GITHUB_TOKEN at checkout time — never expose RELEASE_TOKEN
-          # to npm postinstall scripts. The push step below sets the PAT only
-          # in its own env scope.
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # App token (when present) lets the rebuild push trigger PR
+          # `synchronize` events so required checks re-run on the rebuild
+          # commit. Falls back to the default GITHUB_TOKEN on fork PRs.
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           # On same-repo PR: check out the PR's head branch directly so the
           # rebuild commit goes onto the right ref. On fork PR or push:
           # default ref (merge ref / main).
@@ -62,7 +73,7 @@ jobs:
           (github.event_name == 'pull_request' &&
            github.event.pull_request.head.repo.full_name == github.repository)
         env:
-          PAT: ${{ secrets.RELEASE_TOKEN }}
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
           # On PR: push back to the PR branch. On push: stay on main.
           TARGET_REF: ${{ github.head_ref || github.ref_name }}
           # Skip CI on push-to-main rebuilds so release-please doesn't
@@ -75,26 +86,17 @@ jobs:
             echo "build/ is in sync with source — no rebuild needed."
             exit 0
           fi
-          if [ -z "$PAT" ]; then
-            echo "::error::RELEASE_TOKEN is not available in this workflow context."
-            echo "::error::For Dependabot PRs: add RELEASE_TOKEN under Settings → Secrets and variables → Dependabot so the rebuild can be auto-pushed back to the PR branch."
+          if [ -z "$APP_TOKEN" ]; then
+            echo "::error::App installation token is not available."
+            echo "::error::For Dependabot PRs: ensure MILLIPRESS_BOT_APP_ID and MILLIPRESS_BOT_PRIVATE_KEY are exposed under Settings → Secrets and variables → Dependabot so the rebuild can be auto-pushed back to the PR branch."
             git --no-pager diff --stat build/
             exit 1
           fi
-          git -c user.name="github-actions[bot]" \
-              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+          git -c user.name="millipress-bot[bot]" \
+              -c user.email="millipress-bot[bot]@users.noreply.github.com" \
               commit -m "chore: rebuild assets${MSG_SUFFIX}"
-          git push "https://x-access-token:${PAT}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${TARGET_REF}"
+          git push "https://x-access-token:${APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${TARGET_REF}"
           echo "Pushed rebuild to '${TARGET_REF}'."
-
-          # NOTE: GitHub's anti-recursion guard suppresses push/pull_request
-          # events for commits pushed from inside a workflow run, even via a
-          # PAT. ci.yml will NOT re-fire on synchronize, so the rebuild commit
-          # only gets the checks that run via other mechanisms (e.g. CodeQL).
-          # If branch protection requires ci.yml-defined checks, the PR will
-          # need an admin override to merge after auto-rebuild. To avoid this
-          # entirely, switch the auto-rebuild push to use a GitHub App
-          # installation token (App-pushed commits do trigger PR events).
 
       - name: Verify build (fork PRs only)
         if: |
