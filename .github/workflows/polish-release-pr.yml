@@ -1,0 +1,101 @@
+name: Polish Release PR (next)
+
+# When release-please opens or updates the release PR on the `next` branch,
+# this workflow asks Claude to rewrite the auto-generated changelog and PR
+# body in user-facing language.
+#
+# Triggered only on PRs that release-please labelled with `autorelease: pending`.
+# Skipped silently when the label isn't present (e.g. regular PRs).
+#
+# Requires repository secrets:
+#   ANTHROPIC_API_KEY  - Claude API key
+#   RELEASE_TOKEN      - PAT with contents:write + pull-requests:write
+#                        (same secret release-please-next.yml uses)
+
+on:
+  pull_request:
+    branches:
+      - next
+    types: [opened, synchronize, reopened, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  polish:
+    if: contains(github.event.pull_request.labels.*.name, 'autorelease: pending')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: Switch to release PR branch
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr checkout "$PR_NUMBER"
+
+      - name: Configure git author
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Polish changelog and PR body with Claude
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          allowed_tools: "Bash,Read,Edit,Write"
+          prompt: |
+            You are preparing a release for MilliCache (a Redis-backed full-page
+            cache plugin for WordPress). Release-please has just opened or
+            updated a release PR on the `next` branch with an auto-generated
+            changelog entry. Your job: rewrite that entry in clear, user-facing
+            language and produce a polished PR body.
+
+            Workflow:
+
+            1. Read `docs/01-getting-started/30-changelog.md`. The newest entry
+               (highest version number, at or near the top) is what release-please
+               just generated. It will look like a bullet list grouped under
+               "Features", "Bug Fixes", "Performance", "Dependencies".
+
+            2. Read the commit history that produced it:
+                 git log --no-merges $(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD --pretty=format:'%h %s%n%b%n---'
+
+            3. Rewrite ONLY that newest entry. Keep the version + date heading
+               line exactly as release-please wrote it. Replace the bullet
+               sections with prose that:
+                 - Explains the user-visible value of each change ("why")
+                 - Groups related changes
+                 - Skips internal refactors / hidden changelog types
+                 - Uses plain English, not commit verbatim
+                 - Preserves the version-number link / heading format
+
+            4. Older entries in the changelog: DO NOT modify.
+
+            5. Stage and commit the change with:
+                 git add docs/01-getting-started/30-changelog.md
+                 git commit -m "docs(changelog): polish release notes"
+                 git push origin HEAD
+
+            6. Write a polished PR body to `/tmp/pr-body.md`. Same tone as the
+               changelog entry. Open with a one-line summary, then the grouped
+               highlights, then a "Testing" section noting which test suites
+               cover the changes (Pest unit tests, PHPStan max, e2e), and close
+               with a link to the auto-generated changelog entry.
+
+            Tone reminder: the audience is plugin users + developers integrating
+            MilliCache, not the release engineer. Skip jargon. Lead with what
+            changed for them.
+
+      - name: Update PR description
+        if: hashFiles('/tmp/pr-body.md') != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: gh pr edit "$PR_NUMBER" --body-file /tmp/pr-body.md --repo "$REPO"
