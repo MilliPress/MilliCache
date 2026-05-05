@@ -1,0 +1,67 @@
+name: Attach Release Asset
+
+# Builds millicache.zip at the given tag and uploads it to that tag's
+# existing GitHub release, leaving the release name, body, and prerelease
+# flag untouched. Use when a release was cut without an asset (e.g. an
+# older tag from before the build pipeline existed) and you want to
+# back-fill the bundle without disturbing the changelog.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to bundle and attach (e.g., v1.7.0-beta)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  attach:
+    name: Build & attach asset
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the workflow's source branch (not the tag) so the build
+      # script is on disk. The script then archives the tag's tree via
+      # the REF env var below. fetch-tags ensures the requested tag is
+      # available locally for `git archive`.
+      - name: Checkout workflow source
+        uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Build dist at tag
+        env:
+          REF: ${{ inputs.tag }}
+        run: ./.github/scripts/build-dist.sh
+
+      - name: Create release archive
+        run: |
+          cd dist
+          zip -rq "../millicache.zip" .
+
+      - name: Upload asset to existing release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: gh release upload "$TAG" millicache.zip --clobber
+
+      - name: Summary
+        env:
+          TAG: ${{ inputs.tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          {
+            echo "## Asset attached to ${TAG}"
+            echo ""
+            echo "[View Release](https://github.com/${REPO}/releases/tag/${TAG})"
+          } >> $GITHUB_STEP_SUMMARY
