@@ -9,7 +9,7 @@
       "include-commit-authors": true,
       "prerelease": true,
       "prerelease-type": "beta",
-      "versioning": "default",
+      "versioning": "prerelease",
       "component": "millicache",
       "changelog-path": "docs/01-getting-started/30-changelog.md",
       "extra-files": [
