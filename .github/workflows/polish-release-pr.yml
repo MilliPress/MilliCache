@@ -1,20 +1,6 @@
 name: Polish Release PR (next)
 
-# When release-please opens or updates the release PR on the `next` branch,
-# this workflow asks an LLM (via your CLI Proxy API) to rewrite the
-# auto-generated changelog entry and the PR body in user-facing language.
-#
-# Triggered only on PRs that release-please labelled with `autorelease: pending`.
-# Skipped silently when the label isn't present (e.g. regular PRs).
-#
-# Required repository secrets:
-#   LLM_PROXY_URL  - Proxy API root, including /v1  (e.g. https://llm-api.example.com/v1)
-#   LLM_PROXY_KEY  - Bearer token your proxy accepts
-#   RELEASE_TOKEN  - PAT with contents:write + pull-requests:write
-#                    (same secret release-please-next.yml uses)
-#
-# Change LLM_MODEL below to swap the backing model. Any model name your proxy
-# routes will work (claude-sonnet-4-6, claude-opus-4-7, gpt-4o, etc.).
+# Adds a prose intro to the newest changelog entry on release PRs.
 
 on:
   pull_request:
@@ -36,15 +22,22 @@ jobs:
       LLM_MODEL: claude-sonnet-4-6
 
     steps:
+      - name: Mint App installation token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.MILLIPRESS_BOT_APP_ID }}
+          private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
+
       - name: Checkout default
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Switch to release PR branch
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: gh pr checkout "$PR_NUMBER"
 
@@ -213,57 +206,6 @@ jobs:
             exit 1
           fi
 
-      - name: Generate PR body via LLM proxy
-        if: steps.guard.outputs.skip != 'true'
-        run: |
-          set -euo pipefail
-          NEWEST=$(awk '/^## /{n++; if(n==2) exit} {print}' docs/01-getting-started/30-changelog.md)
-
-          SYSTEM_PROMPT=$(cat <<'EOF'
-          Write a pull-request description for a MilliCache release. The audience is the maintainer reviewing the release PR plus anyone reading the merged commit later (including non-engineers who want to know what this release changed for them).
-
-          Tone: friendly, plain English, no deep jargon. A bit of humor is fine where it fits naturally — don't force it. Use simple examples to illustrate user-visible changes when it helps.
-
-          Structure:
-          - One-sentence summary at the top, written for a regular WordPress user.
-          - Grouped highlights (Features, Fixes, Performance, Dependencies — only the sections that actually have content).
-          - Short "Testing" line referencing Pest unit tests, PHPStan max, and the e2e gate.
-          - Closing: link to the file docs/01-getting-started/30-changelog.md for the full entry.
-
-          STRICT ACCURACY RULES:
-          - Describe only what the changelog entry you receive actually claims. Do not invent UIs, admin features, CLI commands, or workflows. MilliCache free has no admin UI for rules — don't claim otherwise.
-          - Do not promise behaviour ("works automatically", "no setup required") unless the changelog entry says so.
-          - When unsure, omit. Brevity beats fabrication.
-
-          Output is the raw markdown body, no fences or wrappers.
-          EOF
-          )
-
-          PAYLOAD=$(jq -n \
-            --arg model   "$LLM_MODEL" \
-            --arg system  "$SYSTEM_PROMPT" \
-            --arg user    "$NEWEST" \
-            '{
-               model: $model,
-               temperature: 0.4,
-               messages: [
-                 { role: "system", content: $system },
-                 { role: "user",   content: ("Newest changelog entry:\n\n" + $user) }
-               ]
-             }')
-
-          curl -fsS "$LLM_PROXY_URL/chat/completions" \
-            -H "Authorization: Bearer $LLM_PROXY_KEY" \
-            -H "Content-Type: application/json" \
-            -d "$PAYLOAD" \
-            | jq -r '.choices[0].message.content' \
-            > /tmp/pr-body.md
-
-          if [ ! -s /tmp/pr-body.md ]; then
-            echo "::warning::PR body came back empty - leaving release-please's default in place."
-            rm -f /tmp/pr-body.md
-          fi
-
       - name: Commit + push polished changelog
         if: steps.guard.outputs.skip != 'true'
         run: |
@@ -274,11 +216,3 @@ jobs:
             git commit -m "docs(changelog): polish release notes"
             git push origin HEAD
           fi
-
-      - name: Update PR description
-        if: steps.guard.outputs.skip != 'true' && hashFiles('/tmp/pr-body.md') != ''
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
-        run: gh pr edit "$PR_NUMBER" --body-file /tmp/pr-body.md --repo "$REPO"

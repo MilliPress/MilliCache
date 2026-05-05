@@ -20,16 +20,23 @@ jobs:
       sha: ${{ steps.release.outputs.sha }}
 
     steps:
+      - name: Mint App installation token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.MILLIPRESS_BOT_APP_ID }}
+          private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
+
       - name: Run Release Please
         id: release
         uses: googleapis/release-please-action@v5
         with:
-          token: ${{ secrets.RELEASE_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Convert release to draft
         if: ${{ steps.release.outputs.release_created }}
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           TAG_NAME: ${{ steps.release.outputs.tag_name }}
         run: gh release edit "$TAG_NAME" --draft --repo "${{ github.repository }}"
 
