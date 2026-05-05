@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.0-beta](https://github.com/MilliPress/MilliCache/compare/v1.6.2...v1.7.0-beta) (2026-05-05)
+
+
+### Features
+
+* **cache:** Add bucket framework with content-addressable body dedup ([#126](https://github.com/MilliPress/MilliCache/issues/126)) ([a279fd7](https://github.com/MilliPress/MilliCache/commit/a279fd704a05ce58165aed45038798f175f214cb))
+
 ## [1.6.2](https://github.com/MilliPress/MilliCache/compare/v1.6.1...v1.6.2) (2026-05-04)
 
 
