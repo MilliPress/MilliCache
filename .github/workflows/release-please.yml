@@ -194,6 +194,27 @@ jobs:
             --repo "${{ github.repository }}" \
             --draft=false
 
+      - name: Mint App installation token for Pro dispatch
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.MILLIPRESS_BOT_APP_ID }}
+          private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
+          owner: MilliPress
+          repositories: MilliCache-Pro
+
+      - name: Notify MilliCache-Pro of the new release
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          VERSION: ${{ needs.release-please.outputs.version }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          gh api -X POST repos/MilliPress/MilliCache-Pro/dispatches \
+            -f event_type=millicache-released \
+            -F "client_payload[version]=$VERSION" \
+            -F "client_payload[tag]=$TAG_NAME"
+
       - name: Update Packagist
         env:
           PACKAGIST_API_TOKEN: ${{ secrets.PACKAGIST_API_TOKEN }}
