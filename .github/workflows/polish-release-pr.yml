@@ -1,8 +1,15 @@
 name: Polish Release PR (next)
 
 # When release-please opens or updates the release PR on the `next` branch,
-# this workflow asks an LLM (via your CLI Proxy API) to rewrite the
-# auto-generated changelog entry and the PR body in user-facing language.
+# this workflow asks an LLM (via your CLI Proxy API) to add a friendly,
+# user-facing prose introduction to the newest changelog entry. The
+# original auto-generated bullet list is preserved verbatim under the
+# intro. Older entries are never touched.
+#
+# The polished changelog is what release-please reads when it creates the
+# GitHub Release at merge time, so the prose intro becomes part of the
+# permanent release notes. The PR description itself is left as
+# release-please's auto-generated version (we don't fight it on every run).
 #
 # Triggered only on PRs that release-please labelled with `autorelease: pending`.
 # Skipped silently when the label isn't present (e.g. regular PRs).
@@ -213,57 +220,6 @@ jobs:
             exit 1
           fi
 
-      - name: Generate PR body via LLM proxy
-        if: steps.guard.outputs.skip != 'true'
-        run: |
-          set -euo pipefail
-          NEWEST=$(awk '/^## /{n++; if(n==2) exit} {print}' docs/01-getting-started/30-changelog.md)
-
-          SYSTEM_PROMPT=$(cat <<'EOF'
-          Write a pull-request description for a MilliCache release. The audience is the maintainer reviewing the release PR plus anyone reading the merged commit later (including non-engineers who want to know what this release changed for them).
-
-          Tone: friendly, plain English, no deep jargon. A bit of humor is fine where it fits naturally — don't force it. Use simple examples to illustrate user-visible changes when it helps.
-
-          Structure:
-          - One-sentence summary at the top, written for a regular WordPress user.
-          - Grouped highlights (Features, Fixes, Performance, Dependencies — only the sections that actually have content).
-          - Short "Testing" line referencing Pest unit tests, PHPStan max, and the e2e gate.
-          - Closing: link to the file docs/01-getting-started/30-changelog.md for the full entry.
-
-          STRICT ACCURACY RULES:
-          - Describe only what the changelog entry you receive actually claims. Do not invent UIs, admin features, CLI commands, or workflows. MilliCache free has no admin UI for rules — don't claim otherwise.
-          - Do not promise behaviour ("works automatically", "no setup required") unless the changelog entry says so.
-          - When unsure, omit. Brevity beats fabrication.
-
-          Output is the raw markdown body, no fences or wrappers.
-          EOF
-          )
-
-          PAYLOAD=$(jq -n \
-            --arg model   "$LLM_MODEL" \
-            --arg system  "$SYSTEM_PROMPT" \
-            --arg user    "$NEWEST" \
-            '{
-               model: $model,
-               temperature: 0.4,
-               messages: [
-                 { role: "system", content: $system },
-                 { role: "user",   content: ("Newest changelog entry:\n\n" + $user) }
-               ]
-             }')
-
-          curl -fsS "$LLM_PROXY_URL/chat/completions" \
-            -H "Authorization: Bearer $LLM_PROXY_KEY" \
-            -H "Content-Type: application/json" \
-            -d "$PAYLOAD" \
-            | jq -r '.choices[0].message.content' \
-            > /tmp/pr-body.md
-
-          if [ ! -s /tmp/pr-body.md ]; then
-            echo "::warning::PR body came back empty - leaving release-please's default in place."
-            rm -f /tmp/pr-body.md
-          fi
-
       - name: Commit + push polished changelog
         if: steps.guard.outputs.skip != 'true'
         run: |
@@ -274,11 +230,3 @@ jobs:
             git commit -m "docs(changelog): polish release notes"
             git push origin HEAD
           fi
-
-      - name: Update PR description
-        if: steps.guard.outputs.skip != 'true' && hashFiles('/tmp/pr-body.md') != ''
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
-        run: gh pr edit "$PR_NUMBER" --body-file /tmp/pr-body.md --repo "$REPO"
