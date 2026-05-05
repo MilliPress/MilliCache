@@ -1,29 +1,6 @@
 name: Polish Release PR (next)
 
-# When release-please opens or updates the release PR on the `next` branch,
-# this workflow asks an LLM (via your CLI Proxy API) to add a friendly,
-# user-facing prose introduction to the newest changelog entry. The
-# original auto-generated bullet list is preserved verbatim under the
-# intro. Older entries are never touched.
-#
-# The polished changelog is what release-please reads when it creates the
-# GitHub Release at merge time, so the prose intro becomes part of the
-# permanent release notes. The PR description itself is left as
-# release-please's auto-generated version (we don't fight it on every run).
-#
-# Triggered only on PRs that release-please labelled with `autorelease: pending`.
-# Skipped silently when the label isn't present (e.g. regular PRs).
-#
-# Required repository secrets:
-#   LLM_PROXY_URL              - Proxy API root, including /v1  (e.g. https://llm-api.example.com/v1)
-#   LLM_PROXY_KEY              - Bearer token your proxy accepts
-#   MILLIPRESS_BOT_APP_ID      - millipress-bot GitHub App ID
-#   MILLIPRESS_BOT_PRIVATE_KEY - millipress-bot GitHub App private key
-#                                (App needs Contents: write + Pull requests: write;
-#                                same App release-please-next.yml uses)
-#
-# Change LLM_MODEL below to swap the backing model. Any model name your proxy
-# routes will work (claude-sonnet-4-6, claude-opus-4-7, gpt-4o, etc.).
+# Adds a prose intro to the newest changelog entry on release PRs.
 
 on:
   pull_request:
