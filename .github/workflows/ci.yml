@@ -42,7 +42,7 @@ jobs:
            github.event.pull_request.head.repo.full_name == github.repository)
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.MILLIPRESS_BOT_APP_ID }}
+          client-id: ${{ secrets.MILLIPRESS_BOT_CLIENT_ID }}
           private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
 
       - uses: actions/checkout@v6
@@ -88,7 +88,7 @@ jobs:
           fi
           if [ -z "$APP_TOKEN" ]; then
             echo "::error::App installation token is not available."
-            echo "::error::For Dependabot PRs: ensure MILLIPRESS_BOT_APP_ID and MILLIPRESS_BOT_PRIVATE_KEY are exposed under Settings → Secrets and variables → Dependabot so the rebuild can be auto-pushed back to the PR branch."
+            echo "::error::For Dependabot PRs: ensure MILLIPRESS_BOT_CLIENT_ID and MILLIPRESS_BOT_PRIVATE_KEY are exposed under Settings → Secrets and variables → Dependabot so the rebuild can be auto-pushed back to the PR branch."
             git --no-pager diff --stat build/
             exit 1
           fi
