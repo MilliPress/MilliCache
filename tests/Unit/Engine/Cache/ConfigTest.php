@@ -90,4 +90,61 @@ describe( 'CacheConfig', function () {
 			expect( $config->gzip )->toBeTrue(); // Default.
 		} );
 	} );
+
+	describe( 'buckets', function () {
+
+		it( 'defaults to an empty map when settings omit the field', function () {
+			$config = Config::from_settings( array() );
+
+			expect( $config->buckets )->toBe( array() );
+		} );
+
+		it( 'reads nested buckets from settings and lowercases keys', function () {
+			$config = Config::from_settings( array(
+				'buckets' => array(
+					'Accept' => array(
+						'Text/Markdown'         => 'md',
+						' application/ld+json ' => 'jsonld',
+					),
+				),
+			) );
+
+			expect( $config->buckets )->toBe( array(
+				'accept' => array(
+					'text/markdown'       => 'md',
+					'application/ld+json' => 'jsonld',
+				),
+			) );
+		} );
+
+		it( 'drops invalid pairs without breaking the rest of the map', function () {
+			$config = Config::from_settings( array(
+				'buckets' => array(
+					'accept' => array(
+						'text/markdown' => 'md',
+						'text/plain'    => '',     // empty token, dropped.
+						123             => 'bad',  // non-string key, dropped.
+					),
+				),
+			) );
+
+			expect( $config->buckets )->toBe( array(
+				'accept' => array( 'text/markdown' => 'md' ),
+			) );
+		} );
+
+		it( 'supports multiple bucket dimensions side by side', function () {
+			$config = Config::from_settings( array(
+				'buckets' => array(
+					'accept'   => array( 'text/markdown' => 'md' ),
+					'language' => array( 'de' => 'de', 'fr' => 'fr' ),
+				),
+			) );
+
+			expect( $config->buckets )->toBe( array(
+				'accept'   => array( 'text/markdown' => 'md' ),
+				'language' => array( 'de' => 'de', 'fr' => 'fr' ),
+			) );
+		} );
+	} );
 } );

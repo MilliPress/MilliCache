@@ -213,14 +213,44 @@ define( 'MC_CACHE_UNIQUE', [] );
 | Default   | `[]`    |
 | Type      | `array` |
 
-Variables that make cache entries unique. Each combination creates a separate entry.
+Static cache namespace — values folded into every request hash on this deployment. Use for deploy-time cache busting or multi-site isolation.
 
 ```php
-define( 'MC_CACHE_UNIQUE', [ 'device', 'currency' ] );
+define( 'MC_CACHE_UNIQUE', [ 'version' => '2.1', 'site_id' => 5 ] );
 ```
 
-> [!WARNING]
-> Overuse can lead to cache fragmentation and reduced hit rates. Use with caution.
+> [!TIP]
+> For per-request differentiation, use `MC_CACHE_BUCKETS` instead.
+
+### MC_CACHE_BUCKETS
+
+```php
+define( 'MC_CACHE_BUCKETS', [] );
+```
+
+| Property  | Value                                       |
+|-----------|---------------------------------------------|
+| Default   | `[]`                                        |
+| Type      | `array<string, array<string, string>>`      |
+
+Shared lookup tables for bucket resolvers. Each top-level key names a request *dimension*; the inner map translates raw request values into compact bucket tokens.
+
+```php
+define( 'MC_CACHE_BUCKETS', [
+    'accept' => [ 'text/markdown' => 'md' ],
+    'tenant' => [ 'acme' => 'acme', 'globex' => 'glx' ],
+] );
+```
+
+Two built-in resolvers ship in MilliCache:
+
+- **`auth`** — Authorization header. Always-on correctness primitive: each unique bearer token gets its own cache entry. No config needed.
+- **`accept`** — Accept header content negotiation. Dormant unless `MC_CACHE_BUCKETS['accept']` is configured. Parses with q-values and looks up the top-preferred MIME type.
+
+Other dimensions need a resolver implementation. See [Bucket Extension](../07-developers/02-hooks-filters.md#bucket-extension) — the rules engine's `set_bucket` action is the no-code way to add them.
+
+> [!NOTE]
+> Bucket tokens should be short — they're folded into the cache key. `md`, `de`, `mobile` are good; full MIME types or full UA strings are not.
 
 ### MC_CACHE_NOCACHE_PATHS
 

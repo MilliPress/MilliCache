@@ -108,11 +108,12 @@ This means:
 
 Available in `php` rules (before WordPress):
 
-| Action                       | Description            | Example                          |
-|------------------------------|------------------------|----------------------------------|
-| `do_cache( $bool, $reason )` | Enable/disable caching | `->do_cache( false, 'Preview' )` |
-| `set_ttl( $seconds )`        | Override TTL           | `->set_ttl( 3600 )`              |
-| `set_grace( $seconds )`      | Override grace period  | `->set_grace( 86400 )`           |
+| Action                          | Description                 | Example                                |
+|---------------------------------|-----------------------------|----------------------------------------|
+| `do_cache( $bool, $reason )`    | Enable/disable caching      | `->do_cache( false, 'Preview' )`       |
+| `set_ttl( $seconds )`           | Override TTL                | `->set_ttl( 3600 )`                    |
+| `set_grace( $seconds )`         | Override grace period       | `->set_grace( 86400 )`                 |
+| `set_bucket( $name, $token )`   | Add a bucket to the hash    | `->set_bucket( 'device', 'mobile' )`   |
 
 ### WordPress Phase Actions
 

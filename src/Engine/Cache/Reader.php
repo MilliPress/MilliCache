@@ -67,40 +67,34 @@ final class Reader {
 	/**
 	 * Get cache entry by hash.
 	 *
+	 * The Storage layer is responsible for resolving the request entry's
+	 * `output` field through the content-addressable output keyspace, so the
+	 * Entry returned here always carries the actual body bytes (or empty when
+	 * the response was empty).
+	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $hash The request hash.
-	 * @return Result The cache result (hit, miss, or stale).
+	 * @return Result The cache result (hit or miss).
 	 */
 	public function get( string $hash ): Result {
 		if ( ! $this->storage->is_available() ) {
 			return Result::miss();
 		}
 
-		// Look for an existing cache entry by request hash.
 		$result = $this->storage->get_cache( $hash );
 
-		// No cache found.
 		if ( ! $result ) {
 			return Result::miss();
 		}
 
-		// Unpack the result.
 		list( $cache, $flags, $locked ) = $result;
 
-		// No valid cache data.
 		if ( ! is_array( $cache ) || empty( $cache ) ) {
 			return Result::miss();
 		}
 
-		// Convert to Entry.
-		$entry = Entry::from_array( $cache );
-
-		// Convert locked to boolean (storage returns string).
-		$is_locked = ! empty( $locked );
-
-		// Return cache result with entry and metadata.
-		return Result::hit( $entry, $flags, $is_locked );
+		return Result::hit( Entry::from_array( $cache ), $flags, ! empty( $locked ) );
 	}
 
 	/**

@@ -261,7 +261,8 @@ class Storage {
 	 *
 	 * Returns per-entry data keyed by cache hash, with flags always included.
 	 * By default, only reads the small meta-field; set $include_output to also
-	 * transfer the (potentially large) output field.
+	 * transfer the (potentially large) output body, which is dereferenced from
+	 * the content-addressable output keyspace.
 	 *
 	 * @since 1.4.0
 	 * @access public
@@ -284,16 +285,14 @@ class Storage {
 				return array();
 			}
 
-			$by_flag      = ! empty( $flag );
-			$hmget_fields = $include_output ? array( 'meta', 'output' ) : array( 'meta' );
-			$flag_prefix  = $this->prefix . ':f:';
+			$by_flag     = ! empty( $flag );
+			$flag_prefix = $this->prefix . ':f:';
 
 			$results = $this->client->pipeline(
-				function ( $pipe ) use ( $keys, $hmget_fields, $by_flag ) {
+				function ( $pipe ) use ( $keys, $by_flag ) {
 					foreach ( $keys as $key ) {
 						$full_key = $by_flag ? $this->toggle_cache_key( $key ) : $key;
-						$pipe->hmget( $full_key, $hmget_fields );
-						$pipe->hstrlen( $full_key, 'output' );
+						$pipe->hmget( $full_key, array( 'meta', 'output' ) );
 						$pipe->hkeys( $full_key );
 					}
 				}
@@ -303,33 +302,70 @@ class Storage {
 				return array();
 			}
 
-			$entries = array();
-
+			// Phase 1: collect output hashes per entry.
+			$entries       = array();
+			$output_hashes = array();
 			foreach ( $keys as $i => $key ) {
-				$values   = $results[ $i * 3 ] ?? null;
-				$size     = $results[ $i * 3 + 1 ] ?? 0;
-				$all_keys = $results[ $i * 3 + 2 ] ?? array();
+				$values   = $results[ $i * 2 ] ?? null;
+				$all_keys = $results[ $i * 2 + 1 ] ?? array();
 
 				if ( ! is_array( $values ) || ! is_string( $values[0] ?? null ) ) {
 					continue;
 				}
 
 				$entry         = $this->parse_meta( $values[0] );
-				$entry['size'] = is_numeric( $size ) ? (int) $size : 0;
+				$output_hash   = isset( $values[1] ) && is_string( $values[1] ) ? $values[1] : '';
+				$entry['size'] = 0;
 
-				if ( $include_output ) {
-					$entry['output'] = $values[1] ?? '';
-				}
-
-				// Extract flags from hash keys.
 				$entry['flags'] = array_map(
 					array( $this, 'toggle_flag_key' ),
 					is_array( $all_keys ) ? array_filter( $all_keys, fn( $k ) => is_string( $k ) && strpos( $k, $flag_prefix ) === 0 ) : array()
 				);
 
-				// Keys from the pattern scan are full keys; from the flag lookup are hashes.
 				$hash             = $by_flag ? $key : $this->toggle_cache_key( $key );
 				$entries[ $hash ] = $entry;
+
+				if ( '' !== $output_hash ) {
+					$output_hashes[ $hash ] = $output_hash;
+				}
+			}
+
+			if ( empty( $output_hashes ) ) {
+				return $entries;
+			}
+
+			// Phase 2: pipeline-fetch sizes (and bodies if requested) for unique hashes.
+			$unique_hashes = array_values( array_unique( $output_hashes ) );
+			$body_results  = $this->client->pipeline(
+				function ( $pipe ) use ( $unique_hashes, $include_output ) {
+					foreach ( $unique_hashes as $output_hash ) {
+						$pipe->hstrlen( $this->output_key( $output_hash ), 'output' );
+						if ( $include_output ) {
+							$pipe->hget( $this->output_key( $output_hash ), 'output' );
+						}
+					}
+				}
+			);
+
+			$stride       = $include_output ? 2 : 1;
+			$hash_sizes   = array();
+			$hash_outputs = array();
+			if ( is_array( $body_results ) ) {
+				foreach ( $unique_hashes as $i => $output_hash ) {
+					$size                       = $body_results[ $i * $stride ] ?? 0;
+					$hash_sizes[ $output_hash ] = is_numeric( $size ) ? (int) $size : 0;
+					if ( $include_output ) {
+						$body                         = $body_results[ $i * $stride + 1 ] ?? '';
+						$hash_outputs[ $output_hash ] = is_string( $body ) ? $body : '';
+					}
+				}
+			}
+
+			foreach ( $output_hashes as $entry_hash => $output_hash ) {
+				$entries[ $entry_hash ]['size'] = $hash_sizes[ $output_hash ] ?? 0;
+				if ( $include_output ) {
+					$entries[ $entry_hash ]['output'] = $hash_outputs[ $output_hash ] ?? '';
+				}
 			}
 
 			return $entries;
@@ -415,8 +451,20 @@ class Storage {
 				return null;
 			}
 
+			// "output" field holds the output_hash; resolve to bytes.
+			$output_hash = (string) $cache['output'];
+			$output      = '';
+			if ( '' !== $output_hash ) {
+				$body = $this->client->hget( $this->output_key( $output_hash ), 'output' );
+				if ( ! is_string( $body ) ) {
+					// Body GC'd or missing — miss.
+					return null;
+				}
+				$output = $body;
+			}
+
 			$data           = $this->parse_meta( $cache['meta'] ?? '{}' );
-			$data['output'] = $cache['output'];
+			$data['output'] = $output;
 
 			return array(
 				$data,
@@ -431,6 +479,13 @@ class Storage {
 
 	/**
 	 * Set cache.
+	 *
+	 * Stores the response body in a content-addressable keyspace
+	 * (`<prefix>:o:<output_hash>`) and points the request entry's `output`
+	 * field at that hash. Multiple variants whose bodies hash to the same
+	 * value automatically share storage; a Redis SET tracks referencing
+	 * request keys so the body can be garbage-collected when the last
+	 * referrer is removed.
 	 *
 	 * @since 1.0.0
 	 * @access public
@@ -457,7 +512,14 @@ class Storage {
 			 */
 			do_action( 'millicache_entry_storing', $hash, $key, $flags, $data );
 
-			// Build metadata blob.
+			// Hash the body for the content-addressable keyspace.
+			$output      = isset( $data['output'] ) && is_string( $data['output'] ) ? $data['output'] : '';
+			$output_hash = '' === $output ? '' : sha1( $output );
+
+			// Read previous hash so we can release its reference if it's changing.
+			$existing_output_hash = (string) ( $this->client->hget( $key, 'output' ) ?? '' );
+
+			// Build metadata blob; output bytes live at output_key, not inline.
 			$meta = array(
 				'headers' => $data['headers'] ?? array(),
 				'status'  => $data['status'] ?? 200,
@@ -480,7 +542,7 @@ class Storage {
 			}
 
 			$fields = array(
-				'output' => $data['output'] ?? '',
+				'output' => $output_hash,
 				'meta'   => (string) wp_json_encode( $meta ),
 			);
 
@@ -502,16 +564,22 @@ class Storage {
 			// Determine which ones to remove.
 			$stale_flag_fields = array_diff( $existing_flag_fields, $flag_keys );
 
+			$config = Engine::instance()->config();
+			$ttl    = ( $meta['custom_ttl'] ?? $config->ttl ) + ( $meta['custom_grace'] ?? $config->grace ) + 3;
+
+			$output_key   = '' === $output_hash ? '' : $this->output_key( $output_hash );
+			$output_refs  = '' === $output_hash ? '' : $this->output_refs_key( $output_hash );
+
 			// Execute the transaction.
 			$this->client->transaction(
-				function ( $tx ) use ( $key, $flag_keys, $fields, $meta, $stale_flag_fields ) {
+				function ( $tx ) use ( $key, $flag_keys, $fields, $stale_flag_fields, $ttl, $output_key, $output_refs, $output_hash, $output ) {
 					// Remove stale flag fields and their flag-set memberships.
 					foreach ( $stale_flag_fields as $stale_flag_field ) {
 						$tx->hdel( $key, array( $stale_flag_field ) );
 						$tx->srem( $stale_flag_field, array( $key ) );
 					}
 
-					// Store the fields.
+					// Store the request entry fields.
 					$tx->hmset( $key, $fields );
 
 					// Add key to flag sets.
@@ -519,11 +587,22 @@ class Storage {
 						$tx->sadd( $flag_key, array( $key ) );
 					}
 
-					// Set the max expiration time, respecting per-entry overrides.
-					$config = Engine::instance()->config();
-					$tx->expire( $key, ( $meta['custom_ttl'] ?? $config->ttl ) + ( $meta['custom_grace'] ?? $config->grace ) + 3 );
+					// Write the body keyspace if there is any output.
+					if ( '' !== $output_hash ) {
+						$tx->hsetnx( $output_key, 'output', $output );
+						$tx->sadd( $output_refs, array( $key ) );
+						$tx->expire( $output_key, $ttl );
+						$tx->expire( $output_refs, $ttl );
+					}
+
+					$tx->expire( $key, $ttl );
 				}
 			);
+
+			// Release the old body reference if the hash changed.
+			if ( '' !== $existing_output_hash && $existing_output_hash !== $output_hash ) {
+				$this->release_output( $existing_output_hash, $key );
+			}
 
 			/**
 			 * Fires after a cache entry is stored in the storage server.
@@ -557,14 +636,15 @@ class Storage {
 		try {
 			$key = $this->toggle_cache_key( $hash );
 
-			// Get all fields of the key and filter to flag fields only.
-			$fields = $this->client->hkeys( $key );
+			// Read fields up front so we can release the body reference after deletion.
+			$entry_fields = $this->client->hgetall( $key );
 
-			if ( ! is_array( $fields ) ) {
+			if ( ! is_array( $entry_fields ) || empty( $entry_fields ) ) {
 				return false;
 			}
 
-			$flags = $this->filter_flag_fields( $fields );
+			$flags       = $this->filter_flag_fields( array_keys( $entry_fields ) );
+			$output_hash = isset( $entry_fields['output'] ) ? (string) $entry_fields['output'] : '';
 
 			/**
 			 * Fires before a cache entry is deleted in the storage server.
@@ -595,6 +675,9 @@ class Storage {
 				}
 			);
 
+			// Release the body reference; GC if it was the last referrer.
+			$this->release_output( $output_hash, $key );
+
 			/**
 			 * Fires after a cache entry is deleted in the storage server.
 			 *
@@ -610,6 +693,63 @@ class Storage {
 		} catch ( PredisException $e ) {
 			error_log( 'Unable to delete cache in the storage server: ' . $e->getMessage() );
 			return false;
+		}
+	}
+
+	/**
+	 * Build the Redis key for a body in the output keyspace.
+	 *
+	 * @since 1.6.0
+	 * @access private
+	 *
+	 * @param string $output_hash The body's content hash.
+	 * @return string The fully prefixed key.
+	 */
+	private function output_key( string $output_hash ): string {
+		return $this->prefix . ':o:' . $output_hash;
+	}
+
+	/**
+	 * Build the Redis key for a body's reference set.
+	 *
+	 * @since 1.6.0
+	 * @access private
+	 *
+	 * @param string $output_hash The body's content hash.
+	 * @return string The fully prefixed reference set key.
+	 */
+	private function output_refs_key( string $output_hash ): string {
+		return $this->output_key( $output_hash ) . ':refs';
+	}
+
+	/**
+	 * Release one referrer from a body and GC the body if it's the last one.
+	 *
+	 * Idempotent: a no-op when the hash is empty or the referrer isn't a member.
+	 *
+	 * @since 1.6.0
+	 * @access private
+	 *
+	 * @param string $output_hash The body's content hash.
+	 * @param string $referrer    The cache key that previously referenced it.
+	 * @return void
+	 */
+	private function release_output( string $output_hash, string $referrer ): void {
+		if ( '' === $output_hash ) {
+			return;
+		}
+
+		$output_key  = $this->output_key( $output_hash );
+		$output_refs = $this->output_refs_key( $output_hash );
+
+		try {
+			$this->client->srem( $output_refs, array( $referrer ) );
+			$remaining = $this->client->scard( $output_refs );
+			if ( 0 === (int) $remaining ) {
+				$this->client->del( array( $output_key, $output_refs ) );
+			}
+		} catch ( PredisException $e ) {
+			error_log( 'Unable to release body reference in the storage server: ' . $e->getMessage() );
 		}
 	}
 
@@ -976,6 +1116,10 @@ class Storage {
 	/**
 	 * Get the size of the cache.
 	 *
+	 * Reports logical (per-entry) body size: each entry contributes the byte
+	 * length of the body it points to, even if multiple entries share the same
+	 * body in the deduplicated output keyspace.
+	 *
 	 * @since 1.0.0
 	 * @access public
 	 *
@@ -991,35 +1135,69 @@ class Storage {
 			if ( empty( $keys ) ) {
 				return array(
 					'index' => 0,
-					'size' => 0,
+					'size'  => 0,
 				);
 			}
 
-			$sizes = $this->client->pipeline(
-				function ( $pipe ) use ( $keys, $flag ) {
+			// Phase 1: collect each entry's output_hash.
+			$by_flag       = ! empty( $flag );
+			$output_hashes = $this->client->pipeline(
+				function ( $pipe ) use ( $keys, $by_flag ) {
 					foreach ( $keys as $key ) {
-						$pipe->hstrlen( ! empty( $flag ) ? $this->toggle_cache_key( $key ) : $key, 'output' );
+						$pipe->hget( $by_flag ? $this->toggle_cache_key( $key ) : $key, 'output' );
 					}
 				}
 			);
 
-			if ( ! is_array( $sizes ) ) {
+			if ( ! is_array( $output_hashes ) ) {
 				return array(
 					'index' => count( $keys ),
-					'size' => 0,
+					'size'  => 0,
 				);
 			}
 
-			$valid_sizes = array_filter(
-				$sizes,
-				function ( $size ) {
-					return is_numeric( $size ) && $size > 0;
+			$entry_hashes = array_map( 'strval', $output_hashes );
+			$unique       = array_values( array_unique( array_filter( $entry_hashes ) ) );
+
+			if ( empty( $unique ) ) {
+				return array(
+					'index' => 0,
+					'size'  => 0,
+				);
+			}
+
+			// Phase 2: fetch unique body strlens.
+			$strlens = $this->client->pipeline(
+				function ( $pipe ) use ( $unique ) {
+					foreach ( $unique as $output_hash ) {
+						$pipe->hstrlen( $this->output_key( $output_hash ), 'output' );
+					}
 				}
 			);
 
+			$hash_sizes = array();
+			if ( is_array( $strlens ) ) {
+				foreach ( $unique as $i => $output_hash ) {
+					$hash_sizes[ $output_hash ] = is_numeric( $strlens[ $i ] ?? 0 ) ? (int) $strlens[ $i ] : 0;
+				}
+			}
+
+			$total_size  = 0;
+			$valid_count = 0;
+			foreach ( $entry_hashes as $output_hash ) {
+				if ( '' === $output_hash ) {
+					continue;
+				}
+				$size = $hash_sizes[ $output_hash ] ?? 0;
+				if ( $size > 0 ) {
+					$total_size += $size;
+					++$valid_count;
+				}
+			}
+
 			return array(
-				'index' => count( $valid_sizes ),
-				'size' => (int) array_sum( $valid_sizes ),
+				'index' => $valid_count,
+				'size'  => $total_size,
 			);
 		} catch ( PredisException $e ) {
 			error_log( 'Unable to get cache size from the storage server: ' . $e->getMessage() );

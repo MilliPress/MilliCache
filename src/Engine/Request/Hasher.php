@@ -13,15 +13,16 @@
 namespace MilliCache\Engine\Request;
 
 use MilliCache\Engine\Cache\Config;
+use MilliCache\Engine\Request\Bucket\Resolver as Buckets;
 use MilliCache\Engine\Utilities\ServerVars;
 
 ! defined( 'ABSPATH' ) && exit;
 
 /**
- * Generates unique hash for each request.
+ * Generates a unique hash for each request.
  *
  * Creates an MD5 hash based on request URI, host, method, cookies,
- * unique variables, and authorization headers to uniquely identify
+ * unique variables, and resolved request buckets to uniquely identify
  * cache entries.
  *
  * @since       1.0.0
@@ -44,6 +45,13 @@ final class Hasher {
 	 * @var Parser
 	 */
 	private Parser $parser;
+
+	/**
+	 * Bucket resolver.
+	 *
+	 * @var Buckets
+	 */
+	private Buckets $buckets;
 
 	/**
 	 * Generated request hash.
@@ -71,12 +79,14 @@ final class Hasher {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param Config $config Cache configuration.
-	 * @param Parser $parser Request parser.
+	 * @param Config       $config  Cache configuration.
+	 * @param Parser       $parser  Request parser.
+	 * @param Buckets|null $buckets Optional bucket resolver (defaults to a new instance).
 	 */
-	public function __construct( Config $config, Parser $parser ) {
-		$this->config = $config;
-		$this->parser = $parser;
+	public function __construct( Config $config, Parser $parser, ?Buckets $buckets = null ) {
+		$this->config  = $config;
+		$this->parser  = $parser;
+		$this->buckets = $buckets ?? new Buckets( $config );
 	}
 
 	/**
@@ -98,10 +108,10 @@ final class Hasher {
 			'cookies' => $this->parser->parse_cookies( $_COOKIE ),
 		);
 
-		// Make sure requests with Authorization headers are unique.
-		$auth = ServerVars::get( 'HTTP_AUTHORIZATION' );
-		if ( ! empty( $auth ) ) {
-			$request_hash['unique']['mc-auth-header'] = md5( $auth );
+		// Resolve request buckets.
+		$buckets = $this->buckets->all();
+		if ( ! empty( $buckets ) ) {
+			$request_hash['buckets'] = $buckets;
 		}
 
 		// Build variant dimensions (only non-default parts that differentiate this request).
@@ -117,6 +127,9 @@ final class Hasher {
 		}
 		if ( ! empty( $request_hash['unique'] ) ) {
 			$variant['unique'] = $request_hash['unique'];
+		}
+		if ( ! empty( $buckets ) ) {
+			$variant['buckets'] = $buckets;
 		}
 		$this->variant = ! empty( $variant ) ? $variant : null;
 
@@ -144,9 +157,9 @@ final class Hasher {
 	/**
 	 * Get variant dimensions from hash generation.
 	 *
-	 * Returns the non-default request dimensions (cookie names, unique variables)
-	 * that differentiate this cache entry from a vanilla anonymous request.
-	 * Null when the request has no variant dimensions.
+	 * Returns the non-default request dimensions (cookie names, unique
+	 * variables, resolved buckets) that differentiate this cache entry from
+	 * a vanilla anonymous request. Null when none applies.
 	 *
 	 * @since 1.4.0
 	 *
