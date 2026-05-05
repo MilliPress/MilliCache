@@ -17,13 +17,14 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
       version: ${{ steps.release.outputs.version }}
+      sha: ${{ steps.release.outputs.sha }}
 
     steps:
       - name: Mint App installation token
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.MILLIPRESS_BOT_APP_ID }}
+          client-id: ${{ secrets.MILLIPRESS_BOT_CLIENT_ID }}
           private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
 
       - name: Run Release Please
@@ -48,3 +49,16 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     uses: ./.github/workflows/e2e.yml
+    secrets: inherit
+
+  bundle:
+    name: Build & Publish (Prerelease)
+    needs: [release-please, e2e]
+    if: ${{ needs.release-please.outputs.release_created }}
+    uses: ./.github/workflows/release-bundle.yml
+    with:
+      tag_name: ${{ needs.release-please.outputs.tag_name }}
+      version: ${{ needs.release-please.outputs.version }}
+      sha: ${{ needs.release-please.outputs.sha }}
+      prerelease: true
+    secrets: inherit

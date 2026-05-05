@@ -24,7 +24,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.MILLIPRESS_BOT_APP_ID }}
+          client-id: ${{ secrets.MILLIPRESS_BOT_CLIENT_ID }}
           private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
 
       - name: Run Release Please
@@ -38,7 +38,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           TAG_NAME: ${{ steps.release.outputs.tag_name }}
-        run: gh release edit "$TAG_NAME" --draft --repo "${{ github.repository }}"
+          REPO: ${{ github.repository }}
+        run: gh release edit "$TAG_NAME" --draft --repo "$REPO"
 
   e2e:
     name: E2E Gate
@@ -47,195 +48,15 @@ jobs:
     uses: ./.github/workflows/e2e.yml
     secrets: inherit
 
-  build-release:
-    name: Build & Release
+  bundle:
+    name: Build & Publish
     needs: [release-please, e2e]
     if: ${{ needs.release-please.outputs.release_created }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.release-please.outputs.sha }}
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          coverage: none
-
-      - name: Download performance results
-        uses: actions/download-artifact@v8
-        with:
-          name: performance-results
-          path: /tmp/performance
-        continue-on-error: true
-
-      - name: Extract release notes for current version
-        env:
-          VERSION: ${{ needs.release-please.outputs.version }}
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
-        run: |
-          CHANGELOG_PATH="docs/01-getting-started/30-changelog.md"
-
-          # Extract only the current version's changelog section
-          # Release Please format: ## [version] or ## version
-          if [ -f "$CHANGELOG_PATH" ]; then
-            # Extract from the version header until the next ## header (or EOF)
-            awk -v ver="$VERSION" '
-              /^## \[?[0-9]/ {
-                if (found) exit
-                if (index($0, ver)) found=1
-              }
-              found { print }
-            ' "$CHANGELOG_PATH" > /tmp/changelog.md
-
-            # If nothing was extracted, use a fallback
-            if [ ! -s /tmp/changelog.md ]; then
-              echo "## ${TAG_NAME}" > /tmp/changelog.md
-            fi
-          else
-            echo "## ${TAG_NAME}" > /tmp/changelog.md
-          fi
-
-          echo "Release notes for version $VERSION:"
-          cat /tmp/changelog.md
-
-      - name: Append performance summary to changelog
-        run: |
-          if [ -f /tmp/performance/performance-results.md ]; then
-            echo "" >> /tmp/changelog.md
-            echo "" >> /tmp/changelog.md
-            cat /tmp/performance/performance-results.md >> /tmp/changelog.md
-            echo "Performance summary appended to changelog"
-          else
-            echo "No performance results found, skipping"
-          fi
-
-      - name: Create dist build
-        run: |
-          rm -rf dist && mkdir dist
-
-          # Export tracked files (respects .gitattributes export-ignore)
-          # build/ is committed by CI, so git archive includes it
-          git archive --format=tar HEAD | tar -x -C dist
-
-          # Download Strauss for namespace scoping
-          mkdir -p dist/bin
-          curl -sL https://github.com/BrianHenryIE/strauss/releases/download/0.26.5/strauss.phar -o dist/bin/strauss.phar
-
-          # Install production dependencies in the isolated dist directory
-          composer install --no-dev --no-interaction --no-scripts --prefer-dist --working-dir=dist
-
-          # Run Strauss to scope dependencies (rewrites source files in dist/)
-          (cd dist && php bin/strauss.phar -q)
-
-          # Scope stub namespaces to match scoped dependencies
-          sed -i 's/namespace MilliRules\\Builders;/namespace MilliCache\\Deps\\MilliRules\\Builders;/' dist/stubs/*.php
-
-          # Add deps/ classmap to the dist composer.json for the scoped packages
-          jq '.autoload.classmap = ["deps/"]' dist/composer.json > dist/composer.json.tmp \
-            && mv dist/composer.json.tmp dist/composer.json
-
-          # Regenerate autoloader with scoped deps/ classmap
-          composer dump-autoload --no-dev --optimize --classmap-authoritative --no-scripts --working-dir=dist
-
-          # Remove build tools from dist (not needed in the release)
-          rm -rf dist/bin
-
-          # Remove build-time composer files
-          rm -f dist/composer.json dist/composer.lock
-
-          echo "Dist contents:"
-          ls -la dist/
-
-      - name: Create release archive
-        run: |
-          cd dist
-          zip -rq "../millicache.zip" .
-          cd ..
-
-      - name: Upload release asset
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
-        run: |
-          gh release upload "$TAG_NAME" \
-            millicache.zip \
-            --clobber
-
-      - name: Update release notes with performance results
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
-        run: |
-          if [ -f /tmp/changelog.md ] && [ -s /tmp/changelog.md ]; then
-            gh release edit "$TAG_NAME" \
-              --notes-file /tmp/changelog.md
-            echo "Release notes updated with performance results"
-          else
-            echo "No changelog file found, skipping release notes update"
-          fi
-
-  publish-release:
-    name: Publish Release
-    needs: [release-please, build-release]
-    if: ${{ needs.release-please.outputs.release_created }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Promote draft to published
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
-        run: |
-          gh release edit "$TAG_NAME" \
-            --repo "${{ github.repository }}" \
-            --draft=false
-
-      - name: Mint App installation token for Pro dispatch
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          app-id: ${{ secrets.MILLIPRESS_BOT_APP_ID }}
-          private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
-          owner: MilliPress
-          repositories: MilliCache-Pro
-
-      - name: Notify MilliCache-Pro of the new release
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          VERSION: ${{ needs.release-please.outputs.version }}
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
-        run: |
-          gh api -X POST repos/MilliPress/MilliCache-Pro/dispatches \
-            -f event_type=millicache-released \
-            -F "client_payload[version]=$VERSION" \
-            -F "client_payload[tag]=$TAG_NAME"
-
-      - name: Update Packagist
-        env:
-          PACKAGIST_API_TOKEN: ${{ secrets.PACKAGIST_API_TOKEN }}
-        run: |
-          curl -s -X POST "https://packagist.org/api/update-package?username=ouun&apiToken=${PACKAGIST_API_TOKEN}" \
-            -d '{"repository":{"url":"https://github.com/MilliPress/MilliCache"}}' \
-            -H "Content-Type: application/json"
-
-      - name: Release summary
-        env:
-          TAG: ${{ needs.release-please.outputs.tag_name }}
-          VERSION: ${{ needs.release-please.outputs.version }}
-          REPO: ${{ github.repository }}
-        run: |
-          {
-            echo "## Release ${TAG} Published"
-            echo ""
-            echo "| Property | Value |"
-            echo "|----------|-------|"
-            echo "| Version | ${VERSION} |"
-            echo "| Tag | ${TAG} |"
-            echo ""
-            echo "[View Release](https://github.com/${REPO}/releases/tag/${TAG})"
-          } >> $GITHUB_STEP_SUMMARY
+    uses: ./.github/workflows/release-bundle.yml
+    with:
+      tag_name: ${{ needs.release-please.outputs.tag_name }}
+      version: ${{ needs.release-please.outputs.version }}
+      sha: ${{ needs.release-please.outputs.sha }}
+      notify_pro: true
+      update_packagist: true
+    secrets: inherit
