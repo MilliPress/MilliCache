@@ -15,10 +15,12 @@ name: Polish Release PR (next)
 # Skipped silently when the label isn't present (e.g. regular PRs).
 #
 # Required repository secrets:
-#   LLM_PROXY_URL  - Proxy API root, including /v1  (e.g. https://llm-api.example.com/v1)
-#   LLM_PROXY_KEY  - Bearer token your proxy accepts
-#   RELEASE_TOKEN  - PAT with contents:write + pull-requests:write
-#                    (same secret release-please-next.yml uses)
+#   LLM_PROXY_URL              - Proxy API root, including /v1  (e.g. https://llm-api.example.com/v1)
+#   LLM_PROXY_KEY              - Bearer token your proxy accepts
+#   MILLIPRESS_BOT_APP_ID      - millipress-bot GitHub App ID
+#   MILLIPRESS_BOT_PRIVATE_KEY - millipress-bot GitHub App private key
+#                                (App needs Contents: write + Pull requests: write;
+#                                same App release-please-next.yml uses)
 #
 # Change LLM_MODEL below to swap the backing model. Any model name your proxy
 # routes will work (claude-sonnet-4-6, claude-opus-4-7, gpt-4o, etc.).
@@ -43,15 +45,22 @@ jobs:
       LLM_MODEL: claude-sonnet-4-6
 
     steps:
+      - name: Mint App installation token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.MILLIPRESS_BOT_APP_ID }}
+          private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
+
       - name: Checkout default
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Switch to release PR branch
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: gh pr checkout "$PR_NUMBER"
 
