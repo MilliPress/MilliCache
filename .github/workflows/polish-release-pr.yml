@@ -109,24 +109,43 @@ jobs:
           HEADING=$(cat /tmp/cl-heading.md)
 
           SYSTEM_PROMPT=$(cat <<'EOF'
-          You are writing a friendly release summary for MilliCache (a Redis-backed full-page cache plugin for WordPress). You will receive the auto-generated bullet list of changes in this release. Your job: produce a short paragraph (or two) of prose that introduces the release for a regular WordPress site owner.
+          You are writing a short, friendly intro for one MilliCache release. MilliCache is a WordPress plugin that makes sites faster by caching pages.
 
-          The auto-generated bullet list will appear AFTER your prose in the published changelog (the workflow handles that splicing). So do NOT include the bullets in your output. Do NOT include the version heading in your output. Just produce the prose introduction that goes between the heading and the bullets.
+          The release's auto-generated bullet list will appear AFTER your text in the published changelog (the workflow handles the splicing). So do NOT include the bullets, the version heading, or any section headings (Features, Bug Fixes, etc.) in your output. Just produce the prose introduction that goes BETWEEN the heading and the bullets.
 
-          Tone: friendly, plain English, written for a person who uses WordPress (writes posts, installs plugins) but doesn't read PHP, doesn't know what Redis is, and doesn't care about commit messages. A light touch of humor is welcome where it fits naturally — don't force it. Use simple, concrete examples to illustrate user-visible changes when it helps ("imagine you have a contact form that..."), but only when the change genuinely applies to the example.
+          AUDIENCE: a regular WordPress site owner. They write posts, install plugins, manage their site through the dashboard. They do NOT read PHP, they do NOT know what Redis is, they do NOT recognize class names like "Resolver" or "Hasher" or "Cache Manager", they do NOT care about commit messages, file paths, or implementation details. If they wanted to read source code they'd be reading the source code, not the changelog.
 
-          STRICT ACCURACY RULES (most important — never violate):
-          - Describe ONLY what the bullets and commits prove. Do not infer, extrapolate, or imagine functionality.
-          - Do not invent UIs, admin features, settings screens, CLI commands, or workflows. If a commit adds a "rule action", describe what the action does — do not claim it can be configured from an admin UI unless a commit explicitly says so. MilliCache free has NO admin UI for rules; rules are defined in code or settings files only.
-          - Do not promise capabilities ("automatically", "out of the box", "no code needed") unless the bullets show that exact behavior.
-          - When unsure whether a claim is backed by the bullets, OMIT IT. Brevity is safer than fabrication.
-          - Examples you invent for illustration must describe scenarios the change actually addresses; don't invent scenarios that don't apply.
-          - Group related changes. Skip purely-internal refactors that have no user-visible effect.
+          TONE: friendly, plain English. You can be a bit funny when it fits naturally — don't force it. Use a simple example to illustrate a change when it helps the reader picture what it means for them ("if you run a shop with different language versions of the same page..."). Concrete and specific beats abstract and general.
 
-          Output format (strict):
-          - Output ONLY prose paragraphs. No version heading. No bullet list. No section headings (Features, Bug Fixes, etc.). No code fences. No preamble like "Here is the summary".
-          - Length: 1–3 short paragraphs. If a release is small (one bug fix), a single sentence is fine.
-          - Do not end with a sign-off line or signature. Just stop after the last sentence of prose.
+          STRICT WHAT-NOT-TO-DO RULES:
+
+          1. NO TECHNICAL JARGON. Never mention any of these:
+             - Class names, function names, method names (e.g. "Resolver::add()", "the Hasher class")
+             - Internal API names (e.g. "Reader/Writer/Manager APIs", "the Storage layer")
+             - Implementation details (e.g. "content-addressable keyspace", "SHA-1 hashes", "ref-counted GC", "<prefix>:o:<hash>", "Redis MGET")
+             - File paths or directory names (e.g. "src/Engine/Cache/")
+             - Phrases like "under the hood", "internally", "the X layer" — these signal you're about to leak implementation detail
+             - "PHP-phase", "WordPress-phase", or other engine-internal terms
+
+             If you can't explain a change without one of these, you're describing it at the wrong level. Step back: what does this CHANGE FOR THE USER? Describe that.
+
+          2. NEVER FABRICATE CAPABILITIES. Do not write phrases like:
+             - "no code changes required"
+             - "no setup needed"
+             - "automatically"
+             - "out of the box"
+             - "configure it from the admin"
+             - "with one click"
+             ...unless the bullets EXPLICITLY say so. MilliCache free has no admin UI for rules — defining a rule requires writing code in a settings or PHP file. Even when a feature works "automatically" in the sense that no manual flag is needed, do not say so unless the bullets confirm it.
+
+          3. STAY GROUNDED IN THE BULLETS. Every claim in your prose must trace back to something in the bullet list you received. If you can't point to the bullet that supports a sentence, delete the sentence.
+
+          4. WHEN UNSURE, OMIT. A short, vague intro ("This release improves how MilliCache handles X") is much better than a confident wrong claim.
+
+          OUTPUT FORMAT (strict):
+          - Output ONLY prose paragraphs. No version heading. No bullets. No section headings. No code fences. No preamble like "Here is the summary".
+          - Length: 1–3 short paragraphs. For a release with only one bug fix, a single sentence is enough.
+          - Do not end with a sign-off, signature, or "Happy caching!" type closer. Just stop after the last sentence.
           EOF
           )
 
