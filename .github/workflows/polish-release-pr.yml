@@ -95,31 +95,42 @@ jobs:
           # Ensure all three files exist even if some are empty.
           touch /tmp/cl-header.md /tmp/cl-older.md
 
-          NEWEST=$(cat /tmp/cl-newest.md)
+          # Further split the newest entry into:
+          #   HEADING    = the first line (the '## [version](...)' heading + date)
+          #   BULLETS    = everything after the heading (the auto-generated sections + bullets)
+          # We send only BULLETS (with the heading for context) to the LLM and ask it to
+          # produce ONLY a paragraph or two of prose. We then splice:
+          #   heading + blank line + LLM prose + blank line + original BULLETS
+          # The original bullet list stays exactly as release-please generated it.
+          head -1 /tmp/cl-newest.md > /tmp/cl-heading.md
+          tail -n +2 /tmp/cl-newest.md > /tmp/cl-bullets.md
+
+          BULLETS=$(cat /tmp/cl-bullets.md)
+          HEADING=$(cat /tmp/cl-heading.md)
 
           SYSTEM_PROMPT=$(cat <<'EOF'
-          You are polishing the most recent entry of a release changelog for MilliCache (a Redis-backed full-page cache plugin for WordPress).
+          You are writing a friendly release summary for MilliCache (a Redis-backed full-page cache plugin for WordPress). You will receive the auto-generated bullet list of changes in this release. Your job: produce a short paragraph (or two) of prose that introduces the release for a regular WordPress site owner.
 
-          You will receive ONE changelog entry — the version heading line plus the bullet sections release-please generated under it. Rewrite the bullets as prose that a regular WordPress site owner can understand without deep technical background. Use everyday language; explain unfamiliar terms briefly when you must use them. Concrete examples help — feel free to invent simple scenarios that illustrate the change ("imagine you have a contact form that..."). A light touch of humor is welcome where it fits naturally; don't force it.
+          The auto-generated bullet list will appear AFTER your prose in the published changelog (the workflow handles that splicing). So do NOT include the bullets in your output. Do NOT include the version heading in your output. Just produce the prose introduction that goes between the heading and the bullets.
 
-          Audience: a person who knows WordPress as a user (writes posts, installs plugins, looks at the admin dashboard occasionally) but doesn't read PHP, doesn't know what Redis does internally, and doesn't care about commit messages. Speak to them like a friendly product update, not a release engineer's notes.
+          Tone: friendly, plain English, written for a person who uses WordPress (writes posts, installs plugins) but doesn't read PHP, doesn't know what Redis is, and doesn't care about commit messages. A light touch of humor is welcome where it fits naturally — don't force it. Use simple, concrete examples to illustrate user-visible changes when it helps ("imagine you have a contact form that..."), but only when the change genuinely applies to the example.
 
           STRICT ACCURACY RULES (most important — never violate):
-          - Describe ONLY what the commit subjects and bodies actually prove. Do not infer, extrapolate, or imagine functionality.
-          - Do not invent UIs, admin features, settings screens, CLI commands, or workflows. If a commit adds a "rule action", describe what the action does — do not claim it can be configured from the admin without writing code unless a commit explicitly says so. MilliCache free has NO admin UI for rules; rules are defined in code or settings files only.
-          - Do not promise capabilities ("automatically", "out of the box", "no code needed") unless the commits show that exact behavior.
-          - When unsure whether a claim is backed by the diff, OMIT IT. Brevity is safer than fabrication.
-          - Examples you invent for illustration must describe scenarios that the change actually addresses; don't invent scenarios the change doesn't apply to.
+          - Describe ONLY what the bullets and commits prove. Do not infer, extrapolate, or imagine functionality.
+          - Do not invent UIs, admin features, settings screens, CLI commands, or workflows. If a commit adds a "rule action", describe what the action does — do not claim it can be configured from an admin UI unless a commit explicitly says so. MilliCache free has NO admin UI for rules; rules are defined in code or settings files only.
+          - Do not promise capabilities ("automatically", "out of the box", "no code needed") unless the bullets show that exact behavior.
+          - When unsure whether a claim is backed by the bullets, OMIT IT. Brevity is safer than fabrication.
+          - Examples you invent for illustration must describe scenarios the change actually addresses; don't invent scenarios that don't apply.
           - Group related changes. Skip purely-internal refactors that have no user-visible effect.
 
-          Output format constraints (strict):
-          - Keep the FIRST line (the '## [version](...)' heading + date) byte-for-byte identical to the input.
-          - Output only the rewritten entry — nothing before, nothing after. No preamble like "Here is the rewritten entry". No code fences. No commentary. Just the entry markdown, starting with the version heading and ending after the last paragraph of prose.
-          - Preserve the issue/PR/commit links from the bullets where helpful, but it's fine to inline them into prose.
+          Output format (strict):
+          - Output ONLY prose paragraphs. No version heading. No bullet list. No section headings (Features, Bug Fixes, etc.). No code fences. No preamble like "Here is the summary".
+          - Length: 1–3 short paragraphs. If a release is small (one bug fix), a single sentence is fine.
+          - Do not end with a sign-off line or signature. Just stop after the last sentence of prose.
           EOF
           )
 
-          USER_CONTENT=$(printf 'Recent commits (for context, do not include verbatim):\n\n%s\n\n---\n\nEntry to rewrite:\n\n%s' "$COMMITS" "$NEWEST")
+          USER_CONTENT=$(printf 'Release heading (for context, do NOT repeat in output):\n\n%s\n\nAuto-generated changelog sections + bullets (write a friendly intro for these — do NOT include them in output):\n\n%s\n\n---\n\nRecent commits (additional context, do not include verbatim):\n\n%s' "$HEADING" "$BULLETS" "$COMMITS")
 
           PAYLOAD=$(jq -n \
             --arg model    "$LLM_MODEL" \
@@ -139,27 +150,44 @@ jobs:
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
 
-          echo "$response" | jq -r '.choices[0].message.content' > /tmp/cl-newest-polished.md
+          echo "$response" | jq -r '.choices[0].message.content' > /tmp/cl-prose.md
 
-          if [ ! -s /tmp/cl-newest-polished.md ]; then
-            echo "::warning::Polished entry came back empty — keeping the auto-generated entry."
+          if [ ! -s /tmp/cl-prose.md ]; then
+            echo "::warning::Polished prose came back empty — keeping the auto-generated entry."
             exit 0
           fi
 
-          # Sanity check: the polished entry must start with a '## ' heading. If the LLM
-          # added a preamble, drop everything before the first heading.
-          awk 'found || /^## /{found=1; print}' /tmp/cl-newest-polished.md > /tmp/cl-newest-polished-trimmed.md
-          if [ ! -s /tmp/cl-newest-polished-trimmed.md ]; then
-            echo "::warning::Polished entry has no '## ' heading — keeping the auto-generated entry."
+          # Defensive cleanup: if the LLM violated instructions and included a heading or
+          # bullets, strip them so we don't end up with duplicates after splicing.
+          # 1. Drop any leading lines that start with '#' (heading the LLM accidentally included).
+          # 2. Stop at the first '### Features' or '### Bug Fixes' line if the LLM started
+          #    pasting the bullets back.
+          awk '
+            BEGIN { started = 0 }
+            /^### (Features|Bug Fixes|Performance|Dependencies)/ { exit }
+            !started && /^#/ { next }
+            !started && /^$/ { next }
+            { started = 1; print }
+          ' /tmp/cl-prose.md > /tmp/cl-prose-clean.md
+
+          if [ ! -s /tmp/cl-prose-clean.md ]; then
+            echo "::warning::Polished prose was empty after cleanup — keeping the auto-generated entry."
             exit 0
           fi
 
-          # Ensure exactly one trailing blank line so it joins cleanly with the older entries.
-          sed -e :a -e '/^\s*$/{$d;N;ba' -e '}' /tmp/cl-newest-polished-trimmed.md > /tmp/cl-newest-clean.md
-          printf '\n\n' >> /tmp/cl-newest-clean.md
+          # Reassemble the newest entry: heading + blank + prose + blank + original bullets.
+          {
+            cat /tmp/cl-heading.md
+            printf '\n'
+            cat /tmp/cl-prose-clean.md
+            # Ensure trailing blank line on the prose if missing.
+            if [ -n "$(tail -c 1 /tmp/cl-prose-clean.md 2>/dev/null)" ]; then printf '\n'; fi
+            printf '\n'
+            cat /tmp/cl-bullets.md
+          } > /tmp/cl-newest-final.md
 
-          # Reassemble: header + polished newest + older entries.
-          cat /tmp/cl-header.md /tmp/cl-newest-clean.md /tmp/cl-older.md > "$CHANGELOG_FILE"
+          # Reassemble the full changelog: header + polished newest + older entries.
+          cat /tmp/cl-header.md /tmp/cl-newest-final.md /tmp/cl-older.md > "$CHANGELOG_FILE"
 
           if [ ! -s "$CHANGELOG_FILE" ]; then
             echo "::error::Reassembled changelog is empty — aborting."
