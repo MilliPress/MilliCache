@@ -72,26 +72,54 @@ jobs:
 
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD)
           COMMITS=$(git log --no-merges "$PREV_TAG"..HEAD --pretty=format:'%h %s%n%b%n---')
-          CHANGELOG=$(cat docs/01-getting-started/30-changelog.md)
+          CHANGELOG_FILE=docs/01-getting-started/30-changelog.md
+
+          # Split the changelog into three pieces:
+          #   HEADER      = front matter + title (everything before the first '## ' heading)
+          #   NEWEST      = the most recent entry (from the first '## ' through the line before the second '## ')
+          #   OLDER       = everything from the second '## ' to EOF (older releases — never modified)
+          # This guarantees older entries stay byte-for-byte identical regardless of what the LLM returns.
+          awk '
+            BEGIN { section = 0 }
+            /^## / { section++ }
+            section == 0 { print > "/tmp/cl-header.md" }
+            section == 1 { print > "/tmp/cl-newest.md" }
+            section >= 2 { print > "/tmp/cl-older.md" }
+          ' "$CHANGELOG_FILE"
+
+          if [ ! -s /tmp/cl-newest.md ]; then
+            echo "::warning::Could not locate a newest entry in the changelog — skipping polish."
+            exit 0
+          fi
+
+          # Ensure all three files exist even if some are empty.
+          touch /tmp/cl-header.md /tmp/cl-older.md
+
+          NEWEST=$(cat /tmp/cl-newest.md)
 
           SYSTEM_PROMPT=$(cat <<'EOF'
-          You are polishing a release for MilliCache (a Redis-backed full-page cache plugin for WordPress).
+          You are polishing the most recent entry of a release changelog for MilliCache (a Redis-backed full-page cache plugin for WordPress).
 
-          Release-please has just generated the newest entry in the changelog by mechanically grouping conventional-commit messages. Your job: rewrite ONLY that newest entry in clear, user-facing language. Older entries below it must remain byte-for-byte identical.
+          You will receive ONE changelog entry — the version heading line plus the bullet sections release-please generated under it. Rewrite the bullets as prose that a regular WordPress site owner can understand without deep technical background. Use everyday language; explain unfamiliar terms briefly when you must use them. Concrete examples help — feel free to invent simple scenarios that illustrate the change ("imagine you have a contact form that..."). A light touch of humor is welcome where it fits naturally; don't force it.
 
-          Rules for the rewrite:
-          - Keep the version + date heading line exactly as release-please wrote it.
-          - Replace bullet sections (Features, Bug Fixes, Performance, Dependencies) with prose that explains the user-visible value of each change. Lead with the *why*, not the verbatim commit subject.
-          - Group related changes when it reads better.
-          - Skip purely-internal refactors (the conventional-commit types release-please marks as hidden).
-          - Plain English. Audience is plugin users and integrators, not the release engineer.
-          - Preserve the version-number link / heading format release-please used.
+          Audience: a person who knows WordPress as a user (writes posts, installs plugins, looks at the admin dashboard occasionally) but doesn't read PHP, doesn't know what Redis does internally, and doesn't care about commit messages. Speak to them like a friendly product update, not a release engineer's notes.
 
-          Output: the COMPLETE changelog file. Newest entry rewritten. Everything else byte-for-byte unchanged.
+          STRICT ACCURACY RULES (most important — never violate):
+          - Describe ONLY what the commit subjects and bodies actually prove. Do not infer, extrapolate, or imagine functionality.
+          - Do not invent UIs, admin features, settings screens, CLI commands, or workflows. If a commit adds a "rule action", describe what the action does — do not claim it can be configured from the admin without writing code unless a commit explicitly says so. MilliCache free has NO admin UI for rules; rules are defined in code or settings files only.
+          - Do not promise capabilities ("automatically", "out of the box", "no code needed") unless the commits show that exact behavior.
+          - When unsure whether a claim is backed by the diff, OMIT IT. Brevity is safer than fabrication.
+          - Examples you invent for illustration must describe scenarios that the change actually addresses; don't invent scenarios the change doesn't apply to.
+          - Group related changes. Skip purely-internal refactors that have no user-visible effect.
+
+          Output format constraints (strict):
+          - Keep the FIRST line (the '## [version](...)' heading + date) byte-for-byte identical to the input.
+          - Output only the rewritten entry — nothing before, nothing after. No preamble like "Here is the rewritten entry". No code fences. No commentary. Just the entry markdown, starting with the version heading and ending after the last paragraph of prose.
+          - Preserve the issue/PR/commit links from the bullets where helpful, but it's fine to inline them into prose.
           EOF
           )
 
-          USER_CONTENT=$(printf 'Recent commits:\n\n%s\n\n---\n\nCurrent changelog (rewrite only the newest entry, leave the rest unchanged):\n\n%s' "$COMMITS" "$CHANGELOG")
+          USER_CONTENT=$(printf 'Recent commits (for context, do not include verbatim):\n\n%s\n\n---\n\nEntry to rewrite:\n\n%s' "$COMMITS" "$NEWEST")
 
           PAYLOAD=$(jq -n \
             --arg model    "$LLM_MODEL" \
@@ -111,10 +139,30 @@ jobs:
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
 
-          echo "$response" | jq -r '.choices[0].message.content' > docs/01-getting-started/30-changelog.md
+          echo "$response" | jq -r '.choices[0].message.content' > /tmp/cl-newest-polished.md
 
-          if [ ! -s docs/01-getting-started/30-changelog.md ]; then
-            echo "::error::Polished changelog came back empty"
+          if [ ! -s /tmp/cl-newest-polished.md ]; then
+            echo "::warning::Polished entry came back empty — keeping the auto-generated entry."
+            exit 0
+          fi
+
+          # Sanity check: the polished entry must start with a '## ' heading. If the LLM
+          # added a preamble, drop everything before the first heading.
+          awk 'found || /^## /{found=1; print}' /tmp/cl-newest-polished.md > /tmp/cl-newest-polished-trimmed.md
+          if [ ! -s /tmp/cl-newest-polished-trimmed.md ]; then
+            echo "::warning::Polished entry has no '## ' heading — keeping the auto-generated entry."
+            exit 0
+          fi
+
+          # Ensure exactly one trailing blank line so it joins cleanly with the older entries.
+          sed -e :a -e '/^\s*$/{$d;N;ba' -e '}' /tmp/cl-newest-polished-trimmed.md > /tmp/cl-newest-clean.md
+          printf '\n\n' >> /tmp/cl-newest-clean.md
+
+          # Reassemble: header + polished newest + older entries.
+          cat /tmp/cl-header.md /tmp/cl-newest-clean.md /tmp/cl-older.md > "$CHANGELOG_FILE"
+
+          if [ ! -s "$CHANGELOG_FILE" ]; then
+            echo "::error::Reassembled changelog is empty — aborting."
             exit 1
           fi
 
@@ -125,13 +173,20 @@ jobs:
           NEWEST=$(awk '/^## /{n++; if(n==2) exit} {print}' docs/01-getting-started/30-changelog.md)
 
           SYSTEM_PROMPT=$(cat <<'EOF'
-          Write a concise pull-request description for a MilliCache release. The audience is the maintainer reviewing the release PR plus anyone reading the merged commit. Plain English, no jargon.
+          Write a pull-request description for a MilliCache release. The audience is the maintainer reviewing the release PR plus anyone reading the merged commit later (including non-engineers who want to know what this release changed for them).
+
+          Tone: friendly, plain English, no deep jargon. A bit of humor is fine where it fits naturally — don't force it. Use simple examples to illustrate user-visible changes when it helps.
 
           Structure:
-          - One-sentence summary at the top.
-          - Grouped highlights (Features, Fixes, Performance, Dependencies - only the sections that have content).
+          - One-sentence summary at the top, written for a regular WordPress user.
+          - Grouped highlights (Features, Fixes, Performance, Dependencies — only the sections that actually have content).
           - Short "Testing" line referencing Pest unit tests, PHPStan max, and the e2e gate.
           - Closing: link to the file docs/01-getting-started/30-changelog.md for the full entry.
+
+          STRICT ACCURACY RULES:
+          - Describe only what the changelog entry you receive actually claims. Do not invent UIs, admin features, CLI commands, or workflows. MilliCache free has no admin UI for rules — don't claim otherwise.
+          - Do not promise behaviour ("works automatically", "no setup required") unless the changelog entry says so.
+          - When unsure, omit. Brevity beats fabrication.
 
           Output is the raw markdown body, no fences or wrappers.
           EOF
