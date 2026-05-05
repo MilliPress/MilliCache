@@ -23,10 +23,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code at tag
+      # Check out the workflow's source branch (not the tag) so the build
+      # script is on disk. The script then archives the tag's tree via
+      # the REF env var below. fetch-tags ensures the requested tag is
+      # available locally for `git archive`.
+      - name: Checkout workflow source
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.tag }}
+          fetch-tags: true
+          fetch-depth: 0
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -34,7 +39,9 @@ jobs:
           php-version: '8.3'
           coverage: none
 
-      - name: Build dist
+      - name: Build dist at tag
+        env:
+          REF: ${{ inputs.tag }}
         run: ./.github/scripts/build-dist.sh
 
       - name: Create release archive

@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
 # Build the MilliCache dist/ directory: exports tracked files, scopes
 # dependencies via Strauss, and regenerates the autoloader. Shared by
-# release-bundle.yml and manual-release.yml. Run from the repo root.
-# Assumes build/ assets are already present (CI commits them; locally
-# you'd run `npm run build` first).
+# release-bundle.yml, manual-release.yml, and attach-release-asset.yml.
+# Run from the repo root. Assumes build/ assets are already present
+# (CI commits them; locally you'd run `npm run build` first).
+#
+# REF (env, default HEAD): git ref whose tree is exported into dist/.
+# Lets the attach-release-asset workflow build at a historical tag
+# while running the script from a newer branch.
 set -euo pipefail
 
+REF="${REF:-HEAD}"
 STRAUSS_VERSION="${STRAUSS_VERSION:-0.26.5}"
 STRAUSS_URL="https://github.com/BrianHenryIE/strauss/releases/download/${STRAUSS_VERSION}/strauss.phar"
 
 rm -rf dist && mkdir dist
 
-git archive --format=tar HEAD | tar -x -C dist
+git archive --format=tar "$REF" | tar -x -C dist
 
 mkdir -p dist/bin
 curl -sL "$STRAUSS_URL" -o dist/bin/strauss.phar
