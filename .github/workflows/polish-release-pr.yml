@@ -28,7 +28,7 @@ permissions:
 
 jobs:
   polish:
-    if: contains(github.event.pull_request.labels.*.name, 'autorelease: pending')
+    if: "contains(github.event.pull_request.labels.*.name, 'autorelease: pending')"
     runs-on: ubuntu-latest
     env:
       LLM_PROXY_URL: ${{ secrets.LLM_PROXY_URL }}
