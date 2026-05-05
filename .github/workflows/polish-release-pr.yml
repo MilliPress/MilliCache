@@ -1,16 +1,20 @@
 name: Polish Release PR (next)
 
 # When release-please opens or updates the release PR on the `next` branch,
-# this workflow asks Claude to rewrite the auto-generated changelog and PR
-# body in user-facing language.
+# this workflow asks an LLM (via your CLI Proxy API) to rewrite the
+# auto-generated changelog entry and the PR body in user-facing language.
 #
 # Triggered only on PRs that release-please labelled with `autorelease: pending`.
 # Skipped silently when the label isn't present (e.g. regular PRs).
 #
-# Requires repository secrets:
-#   ANTHROPIC_API_KEY  - Claude API key
-#   RELEASE_TOKEN      - PAT with contents:write + pull-requests:write
-#                        (same secret release-please-next.yml uses)
+# Required repository secrets:
+#   LLM_PROXY_URL  - Proxy API root, including /v1  (e.g. https://llm-api.example.com/v1)
+#   LLM_PROXY_KEY  - Bearer token your proxy accepts
+#   RELEASE_TOKEN  - PAT with contents:write + pull-requests:write
+#                    (same secret release-please-next.yml uses)
+#
+# Change LLM_MODEL below to swap the backing model. Any model name your proxy
+# routes will work (claude-sonnet-4-6, claude-opus-4-7, gpt-4o, etc.).
 
 on:
   pull_request:
@@ -26,6 +30,11 @@ jobs:
   polish:
     if: contains(github.event.pull_request.labels.*.name, 'autorelease: pending')
     runs-on: ubuntu-latest
+    env:
+      LLM_PROXY_URL: ${{ secrets.LLM_PROXY_URL }}
+      LLM_PROXY_KEY: ${{ secrets.LLM_PROXY_KEY }}
+      LLM_MODEL: claude-sonnet-4-6
+
     steps:
       - name: Checkout default
         uses: actions/checkout@v4
@@ -39,61 +48,133 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: gh pr checkout "$PR_NUMBER"
 
+      - name: Skip if last commit is our own polish
+        id: guard
+        run: |
+          last_subject=$(git log -1 --format=%s)
+          if [ "$last_subject" = "docs(changelog): polish release notes" ]; then
+            echo "Last commit is the polish bot's own commit - skipping to avoid loop."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Configure git author
+        if: steps.guard.outputs.skip != 'true'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Polish changelog and PR body with Claude
-        uses: anthropics/claude-code-action@beta
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          allowed_tools: "Bash,Read,Edit,Write"
-          prompt: |
-            You are preparing a release for MilliCache (a Redis-backed full-page
-            cache plugin for WordPress). Release-please has just opened or
-            updated a release PR on the `next` branch with an auto-generated
-            changelog entry. Your job: rewrite that entry in clear, user-facing
-            language and produce a polished PR body.
+      - name: Polish changelog via LLM proxy
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
 
-            Workflow:
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          COMMITS=$(git log --no-merges "$PREV_TAG"..HEAD --pretty=format:'%h %s%n%b%n---')
+          CHANGELOG=$(cat docs/01-getting-started/30-changelog.md)
 
-            1. Read `docs/01-getting-started/30-changelog.md`. The newest entry
-               (highest version number, at or near the top) is what release-please
-               just generated. It will look like a bullet list grouped under
-               "Features", "Bug Fixes", "Performance", "Dependencies".
+          SYSTEM_PROMPT=$(cat <<'EOF'
+          You are polishing a release for MilliCache (a Redis-backed full-page cache plugin for WordPress).
 
-            2. Read the commit history that produced it:
-                 git log --no-merges $(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD --pretty=format:'%h %s%n%b%n---'
+          Release-please has just generated the newest entry in the changelog by mechanically grouping conventional-commit messages. Your job: rewrite ONLY that newest entry in clear, user-facing language. Older entries below it must remain byte-for-byte identical.
 
-            3. Rewrite ONLY that newest entry. Keep the version + date heading
-               line exactly as release-please wrote it. Replace the bullet
-               sections with prose that:
-                 - Explains the user-visible value of each change ("why")
-                 - Groups related changes
-                 - Skips internal refactors / hidden changelog types
-                 - Uses plain English, not commit verbatim
-                 - Preserves the version-number link / heading format
+          Rules for the rewrite:
+          - Keep the version + date heading line exactly as release-please wrote it.
+          - Replace bullet sections (Features, Bug Fixes, Performance, Dependencies) with prose that explains the user-visible value of each change. Lead with the *why*, not the verbatim commit subject.
+          - Group related changes when it reads better.
+          - Skip purely-internal refactors (the conventional-commit types release-please marks as hidden).
+          - Plain English. Audience is plugin users and integrators, not the release engineer.
+          - Preserve the version-number link / heading format release-please used.
 
-            4. Older entries in the changelog: DO NOT modify.
+          Output: the COMPLETE changelog file. Newest entry rewritten. Everything else byte-for-byte unchanged.
+          EOF
+          )
 
-            5. Stage and commit the change with:
-                 git add docs/01-getting-started/30-changelog.md
-                 git commit -m "docs(changelog): polish release notes"
-                 git push origin HEAD
+          USER_CONTENT=$(printf 'Recent commits:\n\n%s\n\n---\n\nCurrent changelog (rewrite only the newest entry, leave the rest unchanged):\n\n%s' "$COMMITS" "$CHANGELOG")
 
-            6. Write a polished PR body to `/tmp/pr-body.md`. Same tone as the
-               changelog entry. Open with a one-line summary, then the grouped
-               highlights, then a "Testing" section noting which test suites
-               cover the changes (Pest unit tests, PHPStan max, e2e), and close
-               with a link to the auto-generated changelog entry.
+          PAYLOAD=$(jq -n \
+            --arg model    "$LLM_MODEL" \
+            --arg system   "$SYSTEM_PROMPT" \
+            --arg user     "$USER_CONTENT" \
+            '{
+               model: $model,
+               temperature: 0.4,
+               messages: [
+                 { role: "system", content: $system },
+                 { role: "user",   content: $user }
+               ]
+             }')
 
-            Tone reminder: the audience is plugin users + developers integrating
-            MilliCache, not the release engineer. Skip jargon. Lead with what
-            changed for them.
+          response=$(curl -fsS "$LLM_PROXY_URL/chat/completions" \
+            -H "Authorization: Bearer $LLM_PROXY_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          echo "$response" | jq -r '.choices[0].message.content' > docs/01-getting-started/30-changelog.md
+
+          if [ ! -s docs/01-getting-started/30-changelog.md ]; then
+            echo "::error::Polished changelog came back empty"
+            exit 1
+          fi
+
+      - name: Generate PR body via LLM proxy
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          NEWEST=$(awk '/^## /{n++; if(n==2) exit} {print}' docs/01-getting-started/30-changelog.md)
+
+          SYSTEM_PROMPT=$(cat <<'EOF'
+          Write a concise pull-request description for a MilliCache release. The audience is the maintainer reviewing the release PR plus anyone reading the merged commit. Plain English, no jargon.
+
+          Structure:
+          - One-sentence summary at the top.
+          - Grouped highlights (Features, Fixes, Performance, Dependencies - only the sections that have content).
+          - Short "Testing" line referencing Pest unit tests, PHPStan max, and the e2e gate.
+          - Closing: link to the file docs/01-getting-started/30-changelog.md for the full entry.
+
+          Output is the raw markdown body, no fences or wrappers.
+          EOF
+          )
+
+          PAYLOAD=$(jq -n \
+            --arg model   "$LLM_MODEL" \
+            --arg system  "$SYSTEM_PROMPT" \
+            --arg user    "$NEWEST" \
+            '{
+               model: $model,
+               temperature: 0.4,
+               messages: [
+                 { role: "system", content: $system },
+                 { role: "user",   content: ("Newest changelog entry:\n\n" + $user) }
+               ]
+             }')
+
+          curl -fsS "$LLM_PROXY_URL/chat/completions" \
+            -H "Authorization: Bearer $LLM_PROXY_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
+            | jq -r '.choices[0].message.content' \
+            > /tmp/pr-body.md
+
+          if [ ! -s /tmp/pr-body.md ]; then
+            echo "::warning::PR body came back empty - leaving release-please's default in place."
+            rm -f /tmp/pr-body.md
+          fi
+
+      - name: Commit + push polished changelog
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          if git diff --quiet docs/01-getting-started/30-changelog.md; then
+            echo "No changes from the rewrite - skipping commit."
+          else
+            git add docs/01-getting-started/30-changelog.md
+            git commit -m "docs(changelog): polish release notes"
+            git push origin HEAD
+          fi
 
       - name: Update PR description
-        if: hashFiles('/tmp/pr-body.md') != ''
+        if: steps.guard.outputs.skip != 'true' && hashFiles('/tmp/pr-body.md') != ''
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
