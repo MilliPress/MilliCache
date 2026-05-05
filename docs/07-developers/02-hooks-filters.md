@@ -250,6 +250,51 @@ add_filter( 'millicache_settings_clear_site_options', function( $options ) {
 
 ---
 
+### Bucket Extension
+
+Buckets are short canonical tokens folded into the cache key to differentiate per-request signals. MilliCache does **not** expose a runtime hook filter for buckets — `advanced-cache.php` runs before any plugin or mu-plugin loads, so a `add_filter()` callback registered on `plugins_loaded` would never run during cache lookup. The lookup hash and the write hash would diverge, producing a permanent cache miss.
+
+Buckets are extended through two paths whose timing matches MilliCache's boot order:
+
+#### Static bucket configuration
+
+Lookup tables for resolvers go in the [`MC_CACHE_BUCKETS`](../02-configuration/02-reference.md#mc_cache_buckets) constant. Read during Config construction, available when the cache key is generated.
+
+```php
+define( 'MC_CACHE_BUCKETS', [
+    'tenant' => [ 'acme' => 'acme', 'globex' => 'glx' ],
+    'ab'     => [ 'control' => 'a', 'variant' => 'b' ],
+] );
+```
+
+Defining a lookup table doesn't bucket anything by itself; a *resolver* still has to read the table and call `add_bucket()`.
+
+#### Runtime bucket extension via the rules engine
+
+For per-request bucket resolution that depends on conditions (URL match, header presence, cookie value, etc.), use the **rules engine**. Rules are evaluated during the early PHP phase, in time to influence the request hash.
+
+The `set_bucket` PHP-phase action calls into:
+
+```php
+\MilliCache\Engine\Request\Bucket\Resolver::add_bucket( string $name, string $token ): void
+```
+
+`add_bucket()` is the programmatic extension point. Programmatic additions take precedence over built-in resolutions when names collide.
+
+Example: bucket A/B test arms from a cookie:
+
+```
+Condition: cookie ab_arm matches /^[ab]$/
+Action:    set_bucket name="ab" token="{cookie:ab_arm}"
+```
+
+The rule fires per request; the action calls `$resolver->add_bucket('ab', $cookie_value)`. Cache entries for arm A and arm B stay distinct, but if the rendered HTML happens to be byte-identical they automatically share storage via the content-addressable output keyspace.
+
+> [!NOTE]
+> Regular WordPress plugins cannot extend buckets at the cache-lookup phase because they load after `advanced-cache.php`. To influence cache differentiation, ship a settings update (extending `MC_CACHE_BUCKETS`) or register rules.
+
+---
+
 ### Request Flags Filters
 
 #### millicache_flags_for_request

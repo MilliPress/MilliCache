@@ -50,13 +50,16 @@ If caching proceeds, MilliCache generates a **cache key** from:
 
 - Request URL (path and query string)
 - Cookies (excluding ignored ones)
-- Custom unique variables (if configured)
+- Custom unique variables (`MC_CACHE_UNIQUE`)
+- Resolved request **buckets** — short tokens for per-request signals (Authorization is built-in; others can be added via rules)
 
 The key is hashed and used to look up cached content in Redis:
 
 ```
-Cache Key = hash( URL + filtered_cookies + unique_vars )
+Cache Key = hash( URL + filtered_cookies + unique_vars + buckets )
 ```
+
+Buckets handle dimensions that vary *per request*; `unique_vars` provides static deployment-level isolation. See [`MC_CACHE_BUCKETS`](../02-configuration/02-reference.md#mc_cache_buckets) and [Bucket Extension](../07-developers/02-hooks-filters.md#bucket-extension).
 
 ### 4. Cache Hit
 
@@ -94,17 +97,27 @@ This ensures visitors never wait for page generation.
 
 ## Cache Storage Structure
 
-Each cache entry contains:
+Each cache entry is split across two Redis keyspaces: the **request entry** holds per-request metadata; the **output entry** holds the response body and is content-addressable, so identical bodies across variants share storage.
 
-| Component   | Description           |
-|-------------|-----------------------|
-| `content`   | Full HTML response    |
-| `headers`   | HTTP response headers |
-| `flags`     | Tags for invalidation |
-| `created`   | Timestamp when cached |
-| `ttl`       | Time-to-live value    |
-| `grace`     | Grace period value    |
-| `gzip`      | Compression status    |
+| Keyspace | Key shape                       | Holds                                                                  |
+|----------|---------------------------------|------------------------------------------------------------------------|
+| Request  | `<prefix>:c:<request_hash>`     | Headers, status, flags, variant meta, `output_ref` (sha1 pointer)      |
+| Output   | `<prefix>:o:<output_hash>`      | Response body bytes (compressed if gzip is enabled)                    |
+| Refs     | `<prefix>:o:<output_hash>:refs` | Redis SET of request keys referencing this body                        |
+
+The reference SET tracks who's pointing at each body so it can be garbage-collected when the last referrer is removed. Variants that genuinely differ get their own body; identical bodies across variants share one.
+
+### Per-entry fields
+
+| Component    | Description                                            |
+|--------------|--------------------------------------------------------|
+| `output_ref` | SHA-1 pointer to the body in the output keyspace       |
+| `headers`    | HTTP response headers                                  |
+| `status`     | HTTP status code                                       |
+| `flags`      | Tags for invalidation                                  |
+| `variant`    | Differentiating dimensions (cookies, buckets, method)  |
+| `updated`    | Timestamp when cached                                  |
+| `gzip`       | Whether the body bytes are compressed                  |
 
 ### Flags (Tags)
 

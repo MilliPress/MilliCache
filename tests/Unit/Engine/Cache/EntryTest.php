@@ -176,4 +176,5 @@ describe( 'CacheEntry', function () {
 			expect( $converted_back )->toBe( $original_data );
 		} );
 	} );
+
 } );
