@@ -290,11 +290,11 @@ final class Admin {
 	 */
 	public function delete_cache_size_transient(): void {
 		// Delete single-site cache size transient.
-		delete_site_transient( 'millicache_size_' . $this->engine->flags()->get_prefix() . '*' );
+		delete_site_transient( 'millicache_sizes_' . $this->engine->flags()->get_prefix() . '*' );
 
 		if ( is_multisite() ) {
 			// Delete network-wide cache size transient.
-			delete_site_transient( 'millicache_size_' . $this->engine->flags()->get_prefix( '*' ) . '*' );
+			delete_site_transient( 'millicache_sizes_' . $this->engine->flags()->get_prefix( '*' ) . '*' );
 		}
 	}
 }

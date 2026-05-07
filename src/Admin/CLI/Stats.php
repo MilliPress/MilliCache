@@ -67,21 +67,28 @@ final class Stats {
 		$format = $assoc_args['format'] ?? 'table';
 		$size = Utils::get_cache_size( $flag, true );
 
-		// Calculate average size (size is in bytes).
-		$avg_size = $size['index'] > 0 ? (int) ( $size['size'] / $size['index'] ) : 0;
-		$avg_size_human = (string) size_format( $avg_size, $avg_size > 1048576 ? 2 : 0 );
+		// Average uses gross bytes — that's what each entry "weighs" pre-dedup.
+		$avg = $size['index'] > 0 ? (int) ( $size['gross'] / $size['index'] ) : 0;
+		$avg_human = (string) size_format( $avg, $avg > 1048576 ? 2 : 0 );
 
-		// Build stats data.
+		// Dedup ratio: gross / size. 1.00 means no sharing.
+		$dedup = $size['size'] > 0 ? round( $size['gross'] / $size['size'], 2 ) : 1.0;
+
 		$stats = array(
-			'flag'           => $flag,
-			'entries'        => $size['index'],
-			'size'           => $size['size'],
-			'size_human'     => $size['size_human'],
-			'avg_size'       => $avg_size,
-			'avg_size_human' => $avg_size_human,
+			'flag'          => $flag,
+			'entries'       => $size['index'],
+			'size'          => $size['size'],
+			'size_human'    => $size['size_human'],
+			'gross'         => $size['gross'],
+			'gross_human'   => $size['gross_human'],
+			'unique'        => $size['unique'],
+			'largest'       => $size['largest'],
+			'largest_human' => $size['largest_human'],
+			'dedup'         => $dedup,
+			'avg'           => $avg,
+			'avg_human'     => $avg_human,
 		);
 
-		// Output based on format.
 		$items = $this->build_rows_from_array( $stats, 'property', 'value' );
 		$this->output_items( $items, $stats, $format, array( 'property', 'value' ) );
 	}

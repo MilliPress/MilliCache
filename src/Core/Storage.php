@@ -1116,15 +1116,25 @@ class Storage {
 	/**
 	 * Get the size of the cache.
 	 *
-	 * Reports logical (per-entry) body size: each entry contributes the byte
-	 * length of the body it points to, even if multiple entries share the same
-	 * body in the deduplicated output keyspace.
+	 * Reports four numbers, all derived from the same Redis pipeline pass:
+	 *
+	 * - `size` (net / physical): each unique body is counted once. Reflects how
+	 *   much memory the storage server is actually holding for cached output.
+	 *   This is the headline number shown in the UI.
+	 * - `gross` (pre-dedup): each entry contributes the byte length of the
+	 *   body it points to, even if multiple entries share the same body in
+	 *   the deduplicated output keyspace. The ratio `gross / size` is the
+	 *   dedup factor.
+	 * - `unique`: number of distinct stored bodies (denominator that explains
+	 *   the dedup ratio).
+	 * - `largest`: byte length of the biggest single stored body — surfaces
+	 *   outliers and bloated pages.
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 *
 	 * @param string $flag Get cache by flag. Supports wildcards.
-	 * @return false|array{index: int, size: int} The number of cache keys and the size of the cache in bytes.
+	 * @return false|array{index: int, size: int, gross: int, unique: int, largest: int} The entry count, net (physical) size, gross (pre-dedup) size, unique-body count, and largest body, in bytes.
 	 */
 	public function get_cache_size( string $flag = '' ) {
 		try {
@@ -1132,11 +1142,16 @@ class Storage {
 				? $this->get_cache_keys_by_pattern( $this->toggle_cache_key( '*' ) )
 				: $this->get_cache_keys_by_flag( $flag );
 
+			$empty = array(
+				'index'   => 0,
+				'size'    => 0,
+				'gross'   => 0,
+				'unique'  => 0,
+				'largest' => 0,
+			);
+
 			if ( empty( $keys ) ) {
-				return array(
-					'index' => 0,
-					'size'  => 0,
-				);
+				return $empty;
 			}
 
 			// Phase 1: collect each entry's output_hash.
@@ -1150,20 +1165,14 @@ class Storage {
 			);
 
 			if ( ! is_array( $output_hashes ) ) {
-				return array(
-					'index' => count( $keys ),
-					'size'  => 0,
-				);
+				return array_merge( $empty, array( 'index' => count( $keys ) ) );
 			}
 
 			$entry_hashes = array_map( 'strval', $output_hashes );
 			$unique       = array_values( array_unique( array_filter( $entry_hashes ) ) );
 
 			if ( empty( $unique ) ) {
-				return array(
-					'index' => 0,
-					'size'  => 0,
-				);
+				return $empty;
 			}
 
 			// Phase 2: fetch unique body strlens.
@@ -1182,7 +1191,7 @@ class Storage {
 				}
 			}
 
-			$total_size  = 0;
+			$gross       = 0;
 			$valid_count = 0;
 			foreach ( $entry_hashes as $output_hash ) {
 				if ( '' === $output_hash ) {
@@ -1190,14 +1199,17 @@ class Storage {
 				}
 				$size = $hash_sizes[ $output_hash ] ?? 0;
 				if ( $size > 0 ) {
-					$total_size += $size;
+					$gross += $size;
 					++$valid_count;
 				}
 			}
 
 			return array(
-				'index' => $valid_count,
-				'size'  => $total_size,
+				'index'   => $valid_count,
+				'size'    => array_sum( $hash_sizes ),
+				'gross'   => $gross,
+				'unique'  => count( $hash_sizes ),
+				'largest' => $hash_sizes ? max( $hash_sizes ) : 0,
 			);
 		} catch ( PredisException $e ) {
 			error_log( 'Unable to get cache size from the storage server: ' . $e->getMessage() );

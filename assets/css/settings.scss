@@ -2,6 +2,58 @@
 
 	table.widefat {
 		margin-bottom: 20px;
+
+		// Reserve the icon's footprint (20 px icon + 6 px margin) so values
+		// without a status icon line up with values that have one.
+		td > code:first-child {
+			margin-left: 26px;
+		}
+	}
+
+	.millicache-status-popover-wrapper {
+		display: inline-flex;
+		align-items: center;
+		vertical-align: middle;
+		margin-right: 6px;
+	}
+
+	.millicache-status-icon {
+		display: inline-flex;
+		align-items: center;
+		margin-right: 6px;
+		vertical-align: middle;
+
+		svg,
+		svg path {
+			fill: currentColor;
+		}
+
+		&.millicache-status-ok {
+			color: #4ab866;
+		}
+
+		&.millicache-status-warning {
+			color: #dba617;
+		}
+
+		&.millicache-status-error {
+			color: #cc1818;
+		}
+
+		// When the indicator is a clickable Button, drop the duplicate margin
+		// on the wrapper and tighten the button padding so it sits inline.
+		&--button.components-button {
+			background: transparent;
+			min-width: 20px;
+			height: auto;
+			margin-right: 0;
+
+			&:hover:not(:disabled),
+			&:focus:not(:disabled) {
+				background: transparent;
+				filter: brightness(0.85);
+			}
+		}
 	}
 
 	.components-panel__body {
@@ -50,6 +102,34 @@
 
 		.components-unit-control__select {
 			max-width: unset;
+		}
+	}
+}
+
+// Popovers are portaled to body (.components-popover__fallback-container),
+// so they live outside #millicache-settings — these rules must be unscoped.
+.millicache-info-popover {
+
+	.components-popover__content {
+		min-width: 300px;
+	}
+
+	.millicache-info-popover__content {
+		padding: 10px;
+
+		p {
+			margin: 0;
+			line-height: 1.5;
+		}
+	}
+
+	.millicache-info-popover__link {
+		color: var(--wp-admin-theme-color, #3858e9);
+		text-decoration: none;
+
+		&:hover,
+		&:focus {
+			text-decoration: underline;
 		}
 	}
 }
