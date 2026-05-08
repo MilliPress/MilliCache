@@ -18,6 +18,13 @@ rm -rf dist && mkdir dist
 
 git archive --format=tar "$REF" | tar -x -C dist
 
+# Defensive cleanup: strip dev-only config that slipped past
+# export-ignore in older tags (e.g. release-please-config-next.json
+# was not covered by the singular pattern in v1.7.0-beta's
+# .gitattributes). Safe to run unconditionally — no-op for already-
+# clean trees.
+rm -f dist/release-please-config*.json
+
 mkdir -p dist/bin
 curl -sL "$STRAUSS_URL" -o dist/bin/strauss.phar
 

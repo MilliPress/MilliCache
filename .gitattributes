@@ -5,7 +5,7 @@ php*.*                      export-ignore
 playwright.*                export-ignore
 composer.lock               export-ignore
 README.md                   export-ignore
-release-please-config.json  export-ignore
+release-please-config*.json export-ignore
 docs/                       export-ignore
 assets/                     export-ignore
 tests/                      export-ignore
