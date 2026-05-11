@@ -470,7 +470,7 @@ final class UI {
 							'label' => __( 'Weeks', 'millicache' ),
 						),
 						array(
-							'value' => 'M',
+							'value' => 'mo',
 							'label' => __( 'Months', 'millicache' ),
 						),
 					),
