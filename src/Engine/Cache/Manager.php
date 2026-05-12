@@ -266,7 +266,7 @@ final class Manager {
 	 */
 	public function get_status( bool $network = false ): array {
 		$flag = $network
-			? Engine::instance()->flags()->add_key_prefix( 'site', '*' )
+			? Engine::instance()->flags()->add_key_prefix( '*', '*' )
 			: Engine::instance()->flags()->add_key_prefix( '*' );
 
 		$cache = array(
