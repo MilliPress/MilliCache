@@ -230,6 +230,8 @@ const StatusTab = ( { status } ) => {
 					'millicache'
 			  );
 
+	// Per-site multisite payload only carries `connected`; host/port/db
+	// rows require the full storage payload (network admin & single-site).
 	const connectionInfo = [
 		{
 			label: __( 'Status', 'millicache' ),
@@ -245,24 +247,44 @@ const StatusTab = ( { status } ) => {
 				  ),
 			statusDocsLink: DOC_LINKS.connection,
 		},
-		{
+		status.storage?.config?.host && {
 			label: __( 'Host', 'millicache' ),
-			value: status.storage?.config.host ?? 'N/A',
+			value: status.storage.config.host,
 		},
-		{
+		status.storage?.config?.port && {
 			label: __( 'Port', 'millicache' ),
-			value: status.storage?.config.port ?? 'N/A',
+			value: status.storage.config.port,
 		},
-		{
+		status.storage?.config?.database !== undefined && {
 			label: __( 'Database', 'millicache' ),
-			value: status.storage?.config.database ?? 'N/A',
+			value: status.storage.config.database,
 		},
-	];
+	].filter( Boolean );
+
+	// Drop-in is install-wide; only present in single-site and network payloads.
+	const dropinRows = status.dropin
+		? [
+				{
+					label: __( 'Drop-in Status', 'millicache' ),
+					value: dropinStatusValue,
+					status: dropinStatusHealth,
+					statusMessage: dropinStatusAdvice,
+					statusDocsLink: DOC_LINKS.dropIn,
+				},
+				{
+					label: __( 'Drop-in Type', 'millicache' ),
+					value: dropinTypeValue,
+					status: dropinTypeHealth,
+					statusMessage: dropinTypeAdvice,
+					statusDocsLink: DOC_LINKS.dropIn,
+				},
+		  ]
+		: [];
 
 	const cacheInfo = [
 		{
 			label: __( 'Cached pages', 'millicache' ),
-			value: cacheIndex || 'N/A',
+			value: cacheIndex,
 		},
 		{
 			label: __( 'Cache size', 'millicache' ),
@@ -285,20 +307,7 @@ const StatusTab = ( { status } ) => {
 					},
 			  ]
 			: [] ),
-		{
-			label: __( 'Drop-in Status', 'millicache' ),
-			value: dropinStatusValue,
-			status: dropinStatusHealth,
-			statusMessage: dropinStatusAdvice,
-			statusDocsLink: DOC_LINKS.dropIn,
-		},
-		{
-			label: __( 'Drop-in Type', 'millicache' ),
-			value: dropinTypeValue,
-			status: dropinTypeHealth,
-			statusMessage: dropinTypeAdvice,
-			statusDocsLink: DOC_LINKS.dropIn,
-		},
+		...dropinRows,
 	];
 
 	const storageInfo = [
@@ -330,21 +339,37 @@ const StatusTab = ( { status } ) => {
 		},
 	];
 
+	// Storage Server is install-wide; only network admin and single-site
+	// payloads carry the server info needed to render it.
+	const showStorageServer = Boolean( status.storage?.info );
+
+	// Per-site multisite gets only the connection up/down indicator and
+	// per-site cache numbers — collapse the lonely "Status" row into the
+	// Cache table and drop the section headings.
+	const isCompact = ! showStorageServer && connectionInfo.length === 1;
+
 	return (
 		<div>
 			{ isLoadingSettings && <Spinner /> }
-			{ status && (
-				<>
-					<h2>{ __( 'Connection', 'millicache' ) }</h2>
-					{ renderTable( connectionInfo ) }
+			{ status &&
+				( isCompact ? (
+					renderTable( [ ...connectionInfo, ...cacheInfo ] )
+				) : (
+					<>
+						<h2>{ __( 'Connection', 'millicache' ) }</h2>
+						{ renderTable( connectionInfo ) }
 
-					<h2>{ __( 'Cache', 'millicache' ) }</h2>
-					{ renderTable( cacheInfo ) }
+						<h2>{ __( 'Cache', 'millicache' ) }</h2>
+						{ renderTable( cacheInfo ) }
 
-					<h2>{ __( 'Storage Server', 'millicache' ) }</h2>
-					{ renderTable( storageInfo ) }
-				</>
-			) }
+						{ showStorageServer && (
+							<>
+								<h2>{ __( 'Storage Server', 'millicache' ) }</h2>
+								{ renderTable( storageInfo ) }
+							</>
+						) }
+					</>
+				) ) }
 		</div>
 	);
 };

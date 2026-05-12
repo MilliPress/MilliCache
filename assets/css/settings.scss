@@ -1,4 +1,4 @@
-#millicache-settings {
+.millibase-page[data-slug^="millicache"] {
 
 	table.widefat {
 		margin-bottom: 20px;
@@ -25,7 +25,7 @@
 
 		svg,
 		svg path {
-			fill: currentColor;
+			fill: currentcolor;
 		}
 
 		&.millicache-status-ok {
