@@ -134,6 +134,7 @@ final class Admin {
 		$this->loader->add_action( 'admin_init', $this, 'undefined_cache_notice' );
 
 		// Notices.
+		$this->loader->add_action( 'millicache_admin_notice', $this, 'add_notice', 10, 2 );
 		$this->loader->add_action( is_network_admin() ? 'network_admin_notices' : 'admin_notices', $this, 'display_notices' );
 
 		// Cache Size.
@@ -144,6 +145,9 @@ final class Admin {
 
 	/**
 	 * Add a notice to the admin area.
+	 *
+	 * Can be called directly or triggered via:
+	 *     do_action( 'millicache_admin_notice', 'Saved.', 'success' );
 	 *
 	 * @since    1.0.0
 	 * @access   public
@@ -186,7 +190,20 @@ final class Admin {
 			printf(
 				'<div class="notice notice-%s is-dismissible"><p><b>Page Cache: </b>%s</p></div>',
 				esc_attr( $notice['type'] ),
-				esc_html( $notice['message'] )
+				wp_kses(
+					$notice['message'],
+					array(
+						'a'      => array(
+							'href'   => array(),
+							'target' => array(),
+							'rel'    => array(),
+						),
+						'strong' => array(),
+						'em'     => array(),
+						'code'   => array(),
+						'br'     => array(),
+					)
+				)
 			);
 		}
 	}
