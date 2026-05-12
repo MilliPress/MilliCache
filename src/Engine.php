@@ -215,7 +215,7 @@ final class Engine {
 		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\WP', 'WP' );
 
 		// Resolve settings array.
-		$this->settings = Settings::instance()->get();
+		$this->settings = $this->load_settings();
 
 		// Cache injected dependencies (for testing).
 		$this->storage = $storage;
@@ -377,7 +377,7 @@ final class Engine {
 	 */
 	public function get_settings( ?string $module = null ): array {
 		if ( ! isset( $this->settings ) ) {
-			$this->settings = Settings::instance()->get();
+			$this->settings = $this->load_settings();
 		}
 
 		if ( $module ) {
@@ -385,6 +385,27 @@ final class Engine {
 		}
 
 		return $this->settings;
+	}
+
+	/**
+	 * Load the settings tree.
+	 *
+	 * On multisite, storage lives in its own network-scoped Settings instance.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return array<mixed> The merged settings tree.
+	 */
+	private function load_settings(): array {
+		// Get site settings as the base.
+		$settings = Settings::site()->get();
+
+		if ( Multisite::is_enabled() ) {
+			// Merge network settings.
+			$settings['storage'] = (array) Settings::network()->get( 'storage' );
+		}
+
+		return $settings;
 	}
 
 	/**
@@ -429,14 +450,15 @@ final class Engine {
 	}
 
 	/**
-	 * Get a multisite instance.
+	 * Get the shared Multisite helper.
 	 *
 	 * @since    1.0.0
-	 * @access   private
+	 * @since    1.7.0 Made public.
+	 * @access   public
 	 *
 	 * @return   Multisite The multisite instance.
 	 */
-	private function multisite(): Multisite {
+	public function multisite(): Multisite {
 		if ( ! $this->multisite ) {
 			$this->multisite = new Multisite();
 		}

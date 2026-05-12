@@ -66,7 +66,7 @@ final class Bootstrap {
 		self::register_nocache_cookies( $config );
 		self::register_nocache_paths( $config );
 
-		if ( Settings::instance()->get( 'rules.load', false ) ) {
+		if ( Settings::site()->get( 'rules.load', false ) ) {
 			self::register_user_rules();
 		}
 	}
@@ -314,7 +314,7 @@ final class Bootstrap {
 	 * @return void
 	 */
 	private static function register_user_rules(): void {
-		$rules = Settings::instance()->get( 'rules.items', array() );
+		$rules = Settings::site()->get( 'rules.items', array() );
 
 		if ( ! is_array( $rules ) || empty( $rules ) ) {
 			return;

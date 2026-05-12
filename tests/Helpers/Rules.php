@@ -122,19 +122,23 @@ function reset_test_globals(): void {
 }
 
 /**
- * Reset the Settings singleton so tests can install their own instance.
+ * Reset the Settings singletons so tests can install their own instances.
  */
 function reset_settings_singleton(): void {
-	$property = ( new ReflectionClass( Settings::class ) )->getProperty( 'instance' );
-	$property->setAccessible( true );
-	$property->setValue( null, null );
+	$reflection = new ReflectionClass( Settings::class );
+	foreach ( array( 'site', 'network' ) as $name ) {
+		$property = $reflection->getProperty( $name );
+		$property->setAccessible( true );
+		$property->setValue( null, null );
+	}
 }
 
 /**
  * Install a Settings instance backed by the provided defaults.
  *
  * Uses MilliBase's standalone mode so no WordPress option/database is touched
- * and no hooks are registered.
+ * and no hooks are registered. Injected as the per-site instance — rules,
+ * cache, and (on single-site) storage all live there.
  *
  * @param array<string, array<string, mixed>> $defaults Module => key => value defaults.
  */
@@ -146,7 +150,7 @@ function install_test_settings( array $defaults ): void {
 		)
 	);
 
-	Settings::inject( $settings );
+	Settings::inject_site( $settings );
 }
 
 /**
