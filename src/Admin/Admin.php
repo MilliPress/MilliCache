@@ -230,7 +230,7 @@ final class Admin {
 	 * @return   void
 	 */
 	public function enqueue_settings_assets( string $admin_page ) {
-		if ( 'settings_page_millicache' !== $admin_page ) {
+		if ( false === strpos( $admin_page, 'page_millicache' ) ) {
 			return;
 		}
 
@@ -292,7 +292,7 @@ final class Admin {
 		// Delete single-site cache size transient.
 		delete_site_transient( 'millicache_sizes_' . $this->engine->flags()->get_prefix() . '*' );
 
-		if ( is_multisite() ) {
+		if ( $this->engine->multisite()->is_enabled() ) {
 			// Delete network-wide cache size transient.
 			delete_site_transient( 'millicache_sizes_' . $this->engine->flags()->get_prefix( '*' ) . '*' );
 		}
