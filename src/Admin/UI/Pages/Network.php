@@ -14,6 +14,7 @@ namespace MilliCache\Admin\UI\Pages;
 
 use MilliBase\Manager;
 use MilliCache\Admin\UI\Sections;
+use MilliCache\Core\Migrations;
 use MilliCache\Core\Settings;
 
 ! defined( 'ABSPATH' ) && exit;
@@ -64,6 +65,7 @@ final class Network extends Base {
 			'menu_title'      => __( 'MilliCache', 'millicache' ),
 			'cli'             => array( 'slug' => 'millicache' ),
 			'network'         => true,
+			'migrations'      => $this->migrations(),
 			'troubleshooting' => $this->troubleshooting_config(),
 			'header'          => array(
 				'title'   => __( 'MilliCache Network', 'millicache' ),
@@ -91,6 +93,28 @@ final class Network extends Base {
 				'callback' => function () {
 					return $this->status_builder->build( true );
 				},
+			),
+		);
+	}
+
+	/**
+	 * Migrations registered with this page's MilliBase Manager.
+	 *
+	 * Each entry is an array consumed by MilliBase's MigrationRunner with
+	 * keys `name`, `version`, `scope`, and `callback`. Identity is
+	 * `name@version`; bumping `version` re-runs the migration.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return array<int, array{name: string, version: string, scope: string, callback: callable}>
+	 */
+	private function migrations(): array {
+		return array(
+			array(
+				'name'     => 'move_storage_to_network',
+				'version'  => '1.7.0',
+				'scope'    => 'network',
+				'callback' => array( Migrations\MoveStorageToNetwork::class, 'run' ),
 			),
 		);
 	}
