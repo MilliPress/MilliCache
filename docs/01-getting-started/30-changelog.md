@@ -8,6 +8,9 @@ menu_order: 30
 
 ## [1.7.0-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta...v1.7.0-beta.1) (2026-05-13)
 
+This release brings some solid infrastructure improvements to MilliCache. The highlights include a new migration system that smoothly moves storage configuration to the right place on multisite installs, a reworked Status tab with clearer metrics and friendlier labels for non-technical site owners, and a new `millicache_admin_notice` action that makes it easier for subsystems and add-ons to surface notices without tight coupling to the Admin class.
+
+
 
 ### Features
 
