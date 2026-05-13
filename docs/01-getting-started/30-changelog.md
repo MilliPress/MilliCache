@@ -11,6 +11,9 @@ menu_order: 30
 This release brings some solid infrastructure improvements to MilliCache. The highlights include a new migration system that smoothly moves storage configuration to the right place on multisite installs, a reworked Status tab with clearer metrics and friendlier labels for non-technical site owners, and a new `millicache_admin_notice` action that makes it easier for subsystems and add-ons to surface notices without tight coupling to the Admin class.
 
 
+This release brings some solid infrastructure improvements to MilliCache. The highlights include a new migration system that smoothly moves storage configuration to the right place on multisite installs, a reworked Status tab with clearer metrics and friendlier labels for non-technical site owners, and a new `millicache_admin_notice` action that makes it easier for subsystems and add-ons to surface notices without tight coupling to the Admin class.
+
+
 
 ### Features
 
