@@ -6,6 +6,21 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.0-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta...v1.7.0-beta.1) (2026-05-13)
+
+
+### Features
+
+* **admin:** add millicache_admin_notice action and HTML allowlist ([c693a0a](https://github.com/MilliPress/MilliCache/commit/c693a0ac19f88dc066e08a093d381fa210f2333d))
+* **migrations:** add Core/Migrations with storage→network move ([63875c4](https://github.com/MilliPress/MilliCache/commit/63875c4d4ac75c199413deb195f631687c10223c))
+* **status:** rework cache size metrics and Status tab UI ([88991c4](https://github.com/MilliPress/MilliCache/commit/88991c46555d890f6cc1e8bb10704cb1d5df1d8b))
+
+
+### Bug Fixes
+
+* **cache status:** Correct key prefix for site flags in status retrieval ([0f419a2](https://github.com/MilliPress/MilliCache/commit/0f419a2bf51f73a7f8a84c0b8ed3fb39945f223d))
+* **ui:** Correct month value from 'M' to 'mo' ([a0dbbf5](https://github.com/MilliPress/MilliCache/commit/a0dbbf5c3496fc117fe4521fc950935418590601))
+
 ## [1.7.0-beta](https://github.com/MilliPress/MilliCache/compare/v1.6.2...v1.7.0-beta) (2026-05-05)
 
 MilliCache 1.7.0-beta brings a significant upgrade to how the cache handles response variants. The new bucket framework gives any part of your stack a clean way to tell the cache "these requests are different" — whether that's by auth token, content type, A/B test arm, or any other signal you can express as a rule condition. On top of that, identical response bodies are now stored only once and shared across variants automatically, so sites serving multiple representations of the same content use meaningfully less Redis memory without any extra configuration.
