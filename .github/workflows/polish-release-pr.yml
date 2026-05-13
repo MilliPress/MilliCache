@@ -90,13 +90,18 @@ jobs:
 
           # Further split the newest entry into:
           #   HEADING    = the first line (the '## [version](...)' heading + date)
-          #   BULLETS    = everything after the heading (the auto-generated sections + bullets)
+          #   BULLETS    = the auto-generated sections + bullets only — starting at the
+          #                first '### ' subsection header. Any prose that a previous
+          #                polish run inserted between the heading and the bullets is
+          #                discarded here so the splice stays idempotent across reruns
+          #                (without this, each rerun appended a new prose block above
+          #                the previous one — see release v1.7.0-beta.1 regression).
           # We send only BULLETS (with the heading for context) to the LLM and ask it to
           # produce ONLY a paragraph or two of prose. We then splice:
           #   heading + blank line + LLM prose + blank line + original BULLETS
           # The original bullet list stays exactly as release-please generated it.
           head -1 /tmp/cl-newest.md > /tmp/cl-heading.md
-          tail -n +2 /tmp/cl-newest.md > /tmp/cl-bullets.md
+          awk '/^### / { found=1 } found { print }' /tmp/cl-newest.md > /tmp/cl-bullets.md
 
           BULLETS=$(cat /tmp/cl-bullets.md)
           HEADING=$(cat /tmp/cl-heading.md)
