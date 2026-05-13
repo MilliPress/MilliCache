@@ -190,7 +190,7 @@ final class Site extends Manager {
 			),
 
 			'abilities' => array(
-				'expose' => array( 'settings' )
+				'expose' => array( 'settings' ),
 			),
 
 			'status'          => array(
