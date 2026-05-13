@@ -33,8 +33,9 @@ final class Clear {
 	 * [--id=<id>]
 	 * : Comma separated list of post IDs.
 	 *
-	 * [--url=<url>]
-	 * : Comma separated list of URLs.
+	 * [--uri=<uri>]
+	 * : Comma separated list of URIs (paths or full URLs). Use the global
+	 *   `--url=<site-url>` to scope to a specific site on multisite.
 	 *
 	 * [--flag=<flag>]
 	 * : Comma separated list of flags.
@@ -72,7 +73,7 @@ final class Clear {
 			$assoc_args,
 			array(
 				'id'      => '',
-				'url'     => '',
+				'uri'     => '',
 				'flag'    => '',
 				'site'    => '',
 				'network' => '',
@@ -90,7 +91,7 @@ final class Clear {
 		}
 
 		// Clear the full cache if no arguments are given.
-		if ( '' === $assoc_args['id'] && '' === $assoc_args['url'] && '' === $assoc_args['flag'] && '' === $assoc_args['site'] && '' === $assoc_args['network'] ) {
+		if ( '' === $assoc_args['id'] && '' === $assoc_args['uri'] && '' === $assoc_args['flag'] && '' === $assoc_args['site'] && '' === $assoc_args['network'] ) {
 			millicache()->clear()->all( $expire )->execute_queue();
 			\WP_CLI::success( is_multisite() ? esc_html__( 'Network cache cleared.', 'millicache' ) : esc_html__( 'Site cache cleared.', 'millicache' ) );
 			return;
@@ -139,15 +140,15 @@ final class Clear {
 			}
 		}
 
-		// Queue cache clearing by URLs.
-		if ( '' !== $assoc_args['url'] ) {
-			$urls = array_map( 'trim', explode( ',', $assoc_args['url'] ) );
+		// Queue cache clearing by URIs (paths or full URLs).
+		if ( '' !== $assoc_args['uri'] ) {
+			$urls = array_map( 'trim', explode( ',', $assoc_args['uri'] ) );
 			foreach ( $urls as $url ) {
 				$clear->urls( $url, $expire );
 			}
 			$messages[] = sprintf(
-				// translators: %s is the number of cleared URLs.
-				esc_html__( 'Cleared cache for %s URLs.', 'millicache' ),
+				// translators: %s is the number of cleared URIs.
+				esc_html__( 'Cleared cache for %s URIs.', 'millicache' ),
 				count( $urls )
 			);
 		}

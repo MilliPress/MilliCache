@@ -57,8 +57,11 @@ wp millicache clear
 # Clear specific posts
 wp millicache clear --id=1,2,3
 
-# Clear by URLs
-wp millicache clear --url="https://example.com/page-1/,https://example.com/page-2/"
+# Clear by URIs (paths or full URLs)
+wp millicache clear --uri="/page-1/,/page-2/"
+
+# Or with absolute URLs
+wp millicache clear --uri="https://example.com/page-1/,https://example.com/page-2/"
 
 # Clear by flags
 wp millicache clear --flag="post:123,home,archive:*"

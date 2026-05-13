@@ -35,7 +35,7 @@ Complete reference for MilliCache command-line interface.
 Clear cached entries with various targeting options.
 
 ```bash
-wp millicache clear [--id=<id>] [--url=<url>] [--flag=<flag>]
+wp millicache clear [--id=<id>] [--uri=<uri>] [--flag=<flag>]
                     [--site=<site>] [--network=<network>] [--expire]
 ```
 
@@ -44,11 +44,15 @@ wp millicache clear [--id=<id>] [--url=<url>] [--flag=<flag>]
 | Option                | Description                                                |
 |-----------------------|------------------------------------------------------------|
 | `--id=<id>`           | Comma-separated post IDs                                   |
-| `--url=<url>`         | Comma-separated URLs                                       |
+| `--uri=<uri>`         | Comma-separated paths or full URLs                         |
 | `--flag=<flag>`       | Comma-separated cache flags (supports wildcards)           |
 | `--site=<site>`       | Comma-separated site IDs (multisite)                       |
 | `--network=<network>` | Comma-separated network IDs (multisite)                    |
 | `--expire`            | Expire instead of delete (serve stale during regeneration) |
+
+> On multisite, scope a command to a specific site with WP‑CLI's global
+> `--url=<site-url>` flag — it switches the site context before the command
+> runs. Use `--uri=` for the actual cache targets within that site.
 
 **Examples:**
 
@@ -59,8 +63,8 @@ wp millicache clear
 # Clear specific posts
 wp millicache clear --id=1,2,3,42
 
-# Clear by URLs
-wp millicache clear --url="https://example.com/,https://example.com/about/"
+# Clear by URIs (paths or full URLs)
+wp millicache clear --uri="/,/about/"
 
 # Clear by flags
 wp millicache clear --flag="home,archive:post"
