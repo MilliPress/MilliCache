@@ -102,10 +102,16 @@ describe( 'CLI/Clear', function () {
 			expect( $docblock )->toContain( '[--id=<id>]' );
 		} );
 
-		it( 'documents --url option', function () {
+		it( 'documents --uri option', function () {
 			$method = new ReflectionMethod( Clear::class, '__invoke' );
 			$docblock = $method->getDocComment();
-			expect( $docblock )->toContain( '[--url=<url>]' );
+			expect( $docblock )->toContain( '[--uri=<uri>]' );
+		} );
+
+		it( 'does not register --url as a subcommand option (conflicts with WP-CLI global)', function () {
+			$method = new ReflectionMethod( Clear::class, '__invoke' );
+			$docblock = $method->getDocComment();
+			expect( $docblock )->not->toContain( '[--url=<url>]' );
 		} );
 
 		it( 'documents --flag option', function () {
