@@ -175,14 +175,19 @@ The split is invisible at the cache-layer API: `Reader`, `Writer`, and `Manager`
 
 ### Settings
 
-Configuration management via MilliBase, accessed through the Engine singleton.
+Configuration management via MilliBase. Each scope owns its own
+`\MilliBase\Settings` instance and the defaults that back it.
 
-**Access:** `Settings::instance()` returns a `\MilliBase\Settings` instance.
+**Access:** `Site::settings()` and `Network::settings()` each return a
+`\MilliBase\Settings` instance. On single-site, `Network::settings()`
+delegates to `Site::settings()` so callers can read `storage` from either
+without branching.
 
 ```php
-use MilliCache\Core\Settings;
+use MilliCache\Base\Network;
+use MilliCache\Base\Site;
 
-$settings = Settings::instance();
+$settings = Site::settings();
 
 // Get settings
 $ttl   = $settings->get( 'cache.ttl' );
@@ -194,6 +199,9 @@ $settings->set( 'cache.ttl', 3600 );
 // Import/Export
 $settings->export( 'cache' );
 $settings->import( $data );
+
+// Network-scoped (multisite) — `storage` lives here on multisite
+$storage = Network::settings()->get( 'storage' );
 ```
 
 ### Cache Manager

@@ -7,14 +7,14 @@
  * @since      1.7.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/Core/Migrations
+ * @subpackage MilliCache/Base/Migrations
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 
-namespace MilliCache\Core\Migrations;
+namespace MilliCache\Base\Migrations;
 
 use MilliBase\Manager;
-use MilliCache\Core\Settings;
+use MilliCache\Base\Site;
 use RuntimeException;
 
 ! defined( 'ABSPATH' ) && exit;
@@ -28,7 +28,7 @@ use RuntimeException;
  *
  * @since      1.7.0
  * @package    MilliCache
- * @subpackage MilliCache/Core/Migrations
+ * @subpackage MilliCache/Base/Migrations
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 final class MoveStorageToNetwork {
@@ -51,7 +51,7 @@ final class MoveStorageToNetwork {
 		$main_id = get_main_site_id();
 
 		switch_to_blog( $main_id );
-		$per_site = Settings::site()->read_raw();
+		$per_site = Site::settings()->read_raw();
 		restore_current_blog();
 
 		$storage = $per_site['storage'] ?? null;

@@ -1,16 +1,16 @@
 <?php
 /**
- * Abstract base class for MilliCache settings pages.
+ * Abstract base class for MilliCache MilliBase Manager wiring.
  *
  * @link       https://www.millipress.com
  * @since      1.7.0
  *
  * @package    MilliCache
- * @subpackage MilliCache/Admin/UI/Pages
+ * @subpackage MilliCache/Base
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 
-namespace MilliCache\Admin\UI\Pages;
+namespace MilliCache\Base;
 
 use MilliCache\Admin\UI\CacheActions;
 use MilliCache\Admin\UI\StatusBuilder;
@@ -19,18 +19,27 @@ use MilliCache\Engine\Utilities\Multisite;
 ! defined( 'ABSPATH' ) && exit;
 
 /**
- * Common scaffolding for the per-site and Network Admin settings pages.
+ * Common scaffolding for the per-site and network MilliBase Manager wiring.
  *
- * Each concrete subclass owns its own MilliBase `Manager` instance and
- * supplies the page-specific config; this base provides the shared
- * UI building blocks (header links, troubleshooting URL, status tab,
- * clear-cache button, cache-action config shape).
+ * Each concrete subclass owns its own {@see \MilliBase\Manager} instance and
+ * supplies the scope-specific config (UI, CLI, REST, abilities, migrations);
+ * this abstract provides the shared UI building blocks (header links,
+ * troubleshooting URL, status tab, clear-cache button, cache-action config shape).
  *
  * @package    MilliCache
- * @subpackage MilliCache/Admin/UI/Pages
+ * @subpackage MilliCache/Base
  * @author     Philipp Wellmer <hello@millipress.com>
  */
-abstract class Base {
+abstract class Manager {
+
+	/**
+	 * Plugin slug — shared by the MilliBase Settings and Manager instances
+	 * created by each scope subclass.
+	 *
+	 * @since 1.7.0
+	 * @var string
+	 */
+	protected const SLUG = 'millicache';
 
 	/**
 	 * Documentation base URL.
@@ -220,5 +229,19 @@ abstract class Base {
 			'capability' => $capability,
 			'callback'   => $callback,
 		);
+	}
+
+	/**
+	 * Resolve the directory where MilliCache's config files live.
+	 *
+	 * Shared by both scope subclasses when constructing their MilliBase
+	 * Settings instances.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return string
+	 */
+	protected static function config_directory(): string {
+		return ( defined( 'WP_CONTENT_DIR' ) ? WP_CONTENT_DIR : '' ) . '/settings/millicache/';
 	}
 }

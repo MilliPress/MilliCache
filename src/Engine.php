@@ -11,7 +11,8 @@
 
 namespace MilliCache;
 
-use MilliCache\Core\Settings;
+use MilliCache\Base\Site;
+use MilliCache\Base\Network;
 use MilliCache\Core\Storage;
 use MilliRules\MilliRules;
 use MilliRules\Rules;
@@ -398,11 +399,11 @@ final class Engine {
 	 */
 	private function load_settings(): array {
 		// Get site settings as the base.
-		$settings = Settings::site()->get();
+		$settings = Site::settings()->get();
 
 		if ( Multisite::is_enabled() ) {
 			// Merge network settings.
-			$settings['storage'] = (array) Settings::network()->get( 'storage' );
+			$settings['storage'] = (array) Network::settings()->get( 'storage' );
 		}
 
 		return $settings;

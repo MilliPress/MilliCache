@@ -10,7 +10,8 @@
  */
 
 use MilliBase\Settings as BaseSettings;
-use MilliCache\Core\Settings;
+use MilliCache\Base\Network;
+use MilliCache\Base\Site;
 use MilliCache\Engine;
 use MilliCache\Rules\Actions\PHP\DoCache;
 use MilliCache\Rules\Actions\PHP\SetGrace;
@@ -125,9 +126,8 @@ function reset_test_globals(): void {
  * Reset the Settings singletons so tests can install their own instances.
  */
 function reset_settings_singleton(): void {
-	$reflection = new ReflectionClass( Settings::class );
-	foreach ( array( 'site', 'network' ) as $name ) {
-		$property = $reflection->getProperty( $name );
+	foreach ( array( Site::class, Network::class ) as $class ) {
+		$property = ( new ReflectionClass( $class ) )->getProperty( 'settings' );
 		$property->setAccessible( true );
 		$property->setValue( null, null );
 	}
@@ -150,7 +150,7 @@ function install_test_settings( array $defaults ): void {
 		)
 	);
 
-	Settings::inject_site( $settings );
+	Site::inject_settings( $settings );
 }
 
 /**

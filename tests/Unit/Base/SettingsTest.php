@@ -8,7 +8,8 @@
  * @package    MilliCache
  */
 
-use MilliCache\Core\Settings;
+use MilliCache\Base\Network;
+use MilliCache\Base\Site;
 
 // Mock WordPress constants.
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
@@ -112,20 +113,20 @@ if ( ! function_exists( 'do_action' ) ) {
 describe( 'Settings', function () {
 
 	it( 'returns a MilliBase Settings instance', function () {
-		$settings = Settings::site();
+		$settings = Site::settings();
 
 		expect( $settings )->toBeInstanceOf( \MilliBase\Settings::class );
 	} );
 
 	it( 'returns the same instance on repeated calls', function () {
-		$settings1 = Settings::site();
-		$settings2 = Settings::site();
+		$settings1 = Site::settings();
+		$settings2 = Site::settings();
 
 		expect( $settings1 )->toBe( $settings2 );
 	} );
 
 	it( 'provides default settings', function () {
-		$defaults = Settings::site()->get_default_settings();
+		$defaults = Site::settings()->get_default_settings();
 
 		expect( $defaults )->toBeArray();
 		expect( $defaults )->toHaveKeys( array( 'storage', 'cache', 'rules' ) );
@@ -138,7 +139,7 @@ describe( 'Settings', function () {
 	} );
 
 	it( 'provides merged settings', function () {
-		$result = Settings::site()->get();
+		$result = Site::settings()->get();
 
 		expect( $result )->toBeArray();
 		expect( $result )->toHaveKey( 'storage' );
@@ -146,14 +147,14 @@ describe( 'Settings', function () {
 	} );
 
 	it( 'provides module-scoped settings', function () {
-		$result = Settings::site()->get( 'cache' );
+		$result = Site::settings()->get( 'cache' );
 
 		expect( $result )->toHaveKey( 'ttl' );
 		expect( $result )->toHaveKey( 'grace' );
 	} );
 
-	it( 'delegates network() to site() on single-site', function () {
-		expect( Settings::network() )->toBe( Settings::site() );
+	it( 'delegates Network::settings() to Site::settings() on single-site', function () {
+		expect( Network::settings() )->toBe( Site::settings() );
 	} );
 
 } );
