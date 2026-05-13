@@ -6,17 +6,18 @@ menu_order: 30
 
 # Changelog
 
-## [1.7.0-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta...v1.7.0-beta.1) (2026-05-13)
+## [1.7.0-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.6.2...v1.7.0-beta.1) (2026-05-13)
 
-This release brings some solid infrastructure improvements to MilliCache. The highlights include a new migration system that smoothly moves storage configuration to the right place on multisite installs, a reworked Status tab with clearer metrics and friendlier labels for non-technical site owners, and a new `millicache_admin_notice` action that makes it easier for subsystems and add-ons to surface notices without tight coupling to the Admin class.
+This release introduces a new **bucket framework** for response variants. Before, the cache treated every request producing the same URL as one entry — which meant sites returning different content based on a cookie, header, or user state had to either disable caching for those pages or fight invalidation manually. Now any rule condition can split requests into separate buckets — cookie values (consent state, A/B test arm, currency), auth tokens, or the `Accept` header. That last one is especially useful for sites optimizing for AI agents: pair MilliCache with something like [`roots/post-content-to-markdown`](https://github.com/roots/post-content-to-markdown), and the Markdown variant your AI crawlers fetch and the HTML variant your browsers fetch live under the same page context — publish or update a post, and both invalidate together instead of drifting out of sync. Paired with content-addressable body deduplication, identical response bodies are stored once and shared across every bucket that produces them, so variants that happen to land on the same output don't pay for duplicate storage.
 
+**Multisite networks** get a proper Network Admin UI for storage settings. Until now, sharing Redis connection details across subsites meant setting them via `define()` constants in `wp-config.php` — that route still works (and still takes precedence if you set both), but you can now configure storage from Network Admin like any other network-wide setting. Existing per-site UI configurations are migrated there automatically the first time you upgrade, so nothing breaks. The **Status tab** has also been reworked with breakdowns that tell you something useful at a glance: total bytes, deduplicated bytes, average per entry — so you can see whether the body dedup is paying off for your site.
 
-This release brings some solid infrastructure improvements to MilliCache. The highlights include a new migration system that smoothly moves storage configuration to the right place on multisite installs, a reworked Status tab with clearer metrics and friendlier labels for non-technical site owners, and a new `millicache_admin_notice` action that makes it easier for subsystems and add-ons to surface notices without tight coupling to the Admin class.
-
+The upgraded MilliBase foundation also brings the new **Abilities API**. This exposes your cache settings through standardized REST endpoints that AI assistants and automation tools speak natively — so a tool like Claude can read your current TTL or update your ignore list directly, and CI pipelines can configure MilliCache the same way they'd configure any other service.
 
 
 ### Features
 
+* **cache:** Add bucket framework with content-addressable body dedup ([#126](https://github.com/MilliPress/MilliCache/issues/126)) ([a279fd7](https://github.com/MilliPress/MilliCache/commit/a279fd704a05ce58165aed45038798f175f214cb))
 * **admin:** add millicache_admin_notice action and HTML allowlist ([c693a0a](https://github.com/MilliPress/MilliCache/commit/c693a0ac19f88dc066e08a093d381fa210f2333d))
 * **migrations:** add Core/Migrations with storage→network move ([63875c4](https://github.com/MilliPress/MilliCache/commit/63875c4d4ac75c199413deb195f631687c10223c))
 * **status:** rework cache size metrics and Status tab UI ([88991c4](https://github.com/MilliPress/MilliCache/commit/88991c46555d890f6cc1e8bb10704cb1d5df1d8b))
