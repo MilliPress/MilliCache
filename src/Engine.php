@@ -15,21 +15,14 @@ use MilliCache\Base\Site;
 use MilliCache\Base\Network;
 use MilliCache\Core\Storage;
 use MilliRules\MilliRules;
-use MilliRules\Rules;
-use MilliCache\Engine\Cache\Config;
-use MilliCache\Engine\Cache\Invalidation\Manager as InvalidationManager;
-use MilliCache\Engine\Cache\Manager as CacheManager;
+use MilliRules\Rules as RulesRegistry;
+use MilliCache\Engine\Cache;
 use MilliCache\Engine\Flags;
 use MilliCache\Engine\Options;
-use MilliCache\Engine\Request\Processor as RequestProcessor;
-use MilliCache\Engine\Response\Headers;
-use MilliCache\Engine\Response\Processor as ResponseProcessor;
-use MilliCache\Engine\Response\State;
+use MilliCache\Engine\Request;
+use MilliCache\Engine\Response;
 use MilliCache\Engine\Utilities\Multisite;
-use MilliCache\Rules\Bootstrap as BootstrapRules;
-use MilliCache\Rules\Manager as RulesManager;
-use MilliCache\Rules\RequestFlags;
-use MilliCache\Rules\WordPress as WordPressRules;
+use MilliCache\Rules;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -60,9 +53,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var Config|null The cache configuration instance.
+	 * @var Cache\Config|null The cache configuration instance.
 	 */
-	private ?Config $config;
+	private ?Cache\Config $config;
 
 	/**
 	 * The Cache Storage object.
@@ -100,9 +93,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var Headers|null
+	 * @var Response\Headers|null
 	 */
-	private ?Headers $headers = null;
+	private ?Response\Headers $headers = null;
 
 	/**
 	 * State-Options for TTL, Grace-TTL and cache decision.
@@ -120,9 +113,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var RulesManager|null The rules manager instance.
+	 * @var Rules\Manager|null The rules manager instance.
 	 */
-	private ?RulesManager $rules_manager = null;
+	private ?Rules\Manager $rules_manager = null;
 
 	/**
 	 * Cache handler.
@@ -130,9 +123,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var CacheManager|null The cache handler instance.
+	 * @var Cache\Manager|null The cache handler instance.
 	 */
-	private ?CacheManager $cache_manager;
+	private ?Cache\Manager $cache_manager;
 
 	/**
 	 * Clearing handler.
@@ -140,9 +133,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var InvalidationManager|null The clearing handler instance.
+	 * @var Cache\Invalidation\Manager|null The clearing handler instance.
 	 */
-	private ?InvalidationManager $invalidation_manager;
+	private ?Cache\Invalidation\Manager $invalidation_manager;
 
 	/**
 	 * Request processor.
@@ -150,9 +143,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var RequestProcessor|null The request handler instance.
+	 * @var Request\Processor|null The request handler instance.
 	 */
-	private ?RequestProcessor $request_processor;
+	private ?Request\Processor $request_processor;
 
 	/**
 	 * Response processor.
@@ -160,9 +153,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @var ResponseProcessor|null The response handler instance.
+	 * @var Response\Processor|null The response handler instance.
 	 */
-	private ?ResponseProcessor $response_processor = null;
+	private ?Response\Processor $response_processor = null;
 
 	/**
 	 * The MilliCache Settings.
@@ -187,13 +180,13 @@ final class Engine {
 	/**
 	 * Constructor with dependency injection.
 	 *
-	 * @param Storage|null             $storage           Storage.
-	 * @param Multisite|null           $multisite         Multisite.
-	 * @param Config|null              $config            Config.
-	 * @param Flags|null               $flag_manager      Flag Processor.
-	 * @param RequestProcessor|null    $request_manager   Request Processor.
-	 * @param CacheManager|null        $cache_manager     Cache Processor.
-	 * @param InvalidationManager|null $clearing_manager  Clearing Processor.
+	 * @param Storage|null                    $storage           Storage.
+	 * @param Multisite|null                  $multisite         Multisite.
+	 * @param Cache\Config|null               $config            Cache configuration.
+	 * @param Flags|null                      $flag_manager      Flag Processor.
+	 * @param Request\Processor|null          $request_manager   Request Processor.
+	 * @param Cache\Manager|null              $cache_manager     Cache Processor.
+	 * @param Cache\Invalidation\Manager|null $clearing_manager  Clearing Processor.
 	 *
 	 * @return void
 	 * @since 1.0.0
@@ -202,18 +195,18 @@ final class Engine {
 	public function __construct(
 		?Storage $storage = null,
 		?Multisite $multisite = null,
-		?Config $config = null,
+		?Cache\Config $config = null,
 		?Flags $flag_manager = null,
-		?RequestProcessor $request_manager = null,
-		?CacheManager $cache_manager = null,
-		?InvalidationManager $clearing_manager = null
+		?Request\Processor $request_manager = null,
+		?Cache\Manager $cache_manager = null,
+		?Cache\Invalidation\Manager $clearing_manager = null
 	) {
 		// Initialize autoloader first.
 		$this->autoload();
 
 		// Register action namespaces.
-		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\PHP', 'PHP' );
-		Rules::register_namespace( 'Actions', 'MilliCache\Rules\Actions\WP', 'WP' );
+		RulesRegistry::register_namespace( 'Actions', 'MilliCache\Rules\Actions\PHP', 'PHP' );
+		RulesRegistry::register_namespace( 'Actions', 'MilliCache\Rules\Actions\WP', 'WP' );
 
 		// Resolve settings array.
 		$this->settings = $this->load_settings();
@@ -290,7 +283,7 @@ final class Engine {
 		$hash = $this->request()->process();
 
 		// Create State object.
-		$context = State::create( $hash );
+		$context = Response\State::create( $hash );
 
 		// Get and return cached content (options applied in ResponseManager).
 		$context = $this->response()->retrieve_and_serve_cache( $context );
@@ -314,8 +307,16 @@ final class Engine {
 	/**
 	 * Initialize MilliRules and register MilliCache rules.
 	 *
-	 * Initializes the MilliRules package system with PHP package for early execution,
-	 * registers namespaces, and defers WP package loading until WordPress is ready.
+	 * All rule registrations happen at this PHP-phase entry point. PHP-typed
+	 * rules register directly (PHP package is loaded by {@see MilliRules::init()}).
+	 * WP-typed rules are queued as pending by MilliRules (their conditions/actions
+	 * reference the not-yet-loaded WP package) and finalize when
+	 * {@see MilliRules::load_packages()} fires at plugins_loaded:1.
+	 *
+	 * Insertion order in the pending queue determines override precedence:
+	 * {@see Rules\WordPress} queues its built-ins first; {@see Rules\Custom}
+	 * queues settings rules after, so unlocked same-ID overrides win the
+	 * last-write race on flush. Locked built-ins still reject overrides.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -326,21 +327,18 @@ final class Engine {
 		// Initialize MilliRules with the PHP package for early execution.
 		MilliRules::init( array( 'PHP' ) );
 
-		// Rules that execute before WordPress loads.
-		BootstrapRules::register();
+		// PHP-typed rules register directly. WP-typed rules queue as pending.
+		Rules\Bootstrap::register();
+		Rules\WordPress::register();
+		Rules\Custom::register();
+		Rules\RequestFlags::register();
 
-		// Defer WP package and rules until WordPress is ready.
+		// Load the WP package once WordPress is up; this flushes the pending
+		// queue in insertion order, finalizing every WP-typed rule above.
 		add_action(
 			'plugins_loaded',
-			function () {
-				// Load MilliRules WordPress package.
+			static function (): void {
 				MilliRules::load_packages( array( 'WP' ) );
-
-				// Rules that execute after WordPress loaded.
-				WordPressRules::register();
-
-				// Register Request Flags rules.
-				RequestFlags::register();
 			},
 			1
 		);
@@ -415,9 +413,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @return Config The config instance.
+	 * @return Cache\Config The config instance.
 	 */
-	public function config(): Config {
+	public function config(): Cache\Config {
 		if ( ! $this->config ) {
 			$cache_settings = $this->get_settings( 'cache' );
 
@@ -429,8 +427,8 @@ final class Engine {
 			// Add WordPress test cookie to ignore list.
 			$cache_settings['ignore_cookies'][] = defined( 'TEST_COOKIE' ) ? TEST_COOKIE : 'wordpress_test_cookie';
 
-			// Create Config from settings.
-			$this->config = Config::from_settings( $cache_settings );
+			// Create Cache\Config from settings.
+			$this->config = Cache\Config::from_settings( $cache_settings );
 		}
 		return $this->config;
 	}
@@ -487,11 +485,11 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access private
 	 *
-	 * @return Headers Response headers instance.
+	 * @return Response\Headers Response headers instance.
 	 */
-	private function headers(): Headers {
+	private function headers(): Response\Headers {
 		if ( ! $this->headers ) {
-			$this->headers = new Headers( $this->config() );
+			$this->headers = new Response\Headers( $this->config() );
 		}
 		return $this->headers;
 	}
@@ -530,11 +528,11 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @return RulesManager The rules manager instance.
+	 * @return Rules\Manager The rules manager instance.
 	 */
-	public function rules(): RulesManager {
+	public function rules(): Rules\Manager {
 		if ( ! $this->rules_manager ) {
-			$this->rules_manager = new RulesManager();
+			$this->rules_manager = new Rules\Manager();
 		}
 		return $this->rules_manager;
 	}
@@ -545,11 +543,11 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @return CacheManager The cache manager instance.
+	 * @return Cache\Manager The cache manager instance.
 	 */
-	public function cache(): CacheManager {
+	public function cache(): Cache\Manager {
 		if ( ! $this->cache_manager ) {
-			$this->cache_manager = new CacheManager(
+			$this->cache_manager = new Cache\Manager(
 				$this->config(),
 				$this->storage()
 			);
@@ -560,16 +558,16 @@ final class Engine {
 	/**
 	 * Get a invalidation manager instance.
 	 *
-	 * @return InvalidationManager The clearing manager instance.
+	 * @return Cache\Invalidation\Manager The clearing manager instance.
 	 * @since 1.0.0
 	 * @access private
 	 */
-	private function invalidation(): InvalidationManager {
+	private function invalidation(): Cache\Invalidation\Manager {
 		if ( ! $this->invalidation_manager ) {
 			$cache_settings = $this->get_settings( 'cache' );
 			$ttl = is_numeric( $cache_settings['ttl'] ?? null ) ? (int) $cache_settings['ttl'] : 3600;
 
-			$this->invalidation_manager = new InvalidationManager(
+			$this->invalidation_manager = new Cache\Invalidation\Manager(
 				$this->storage(),
 				$this->request(),
 				$this->multisite(),
@@ -582,13 +580,13 @@ final class Engine {
 	/**
 	 * Get a request manager instance.
 	 *
-	 * @return RequestProcessor The request manager instance.
+	 * @return Request\Processor The request manager instance.
 	 * @since 1.0.0
 	 * @access public
 	 */
-	public function request(): RequestProcessor {
+	public function request(): Request\Processor {
 		if ( ! $this->request_processor ) {
-			$this->request_processor = new RequestProcessor( $this->config() );
+			$this->request_processor = new Request\Processor( $this->config() );
 		}
 		return $this->request_processor;
 	}
@@ -596,13 +594,13 @@ final class Engine {
 	/**
 	 * Get Response Processor instance.
 	 *
-	 * @return ResponseProcessor
+	 * @return Response\Processor
 	 * @since 1.0.0
 	 * @access public
 	 */
-	public function response(): ResponseProcessor {
+	public function response(): Response\Processor {
 		if ( ! $this->response_processor ) {
-			$this->response_processor = new ResponseProcessor(
+			$this->response_processor = new Response\Processor(
 				$this->config(),
 				$this->flags(),
 				$this->headers(),
@@ -622,9 +620,9 @@ final class Engine {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @return InvalidationManager The cache clearing interface.
+	 * @return Cache\Invalidation\Manager The cache clearing interface.
 	 */
-	public function clear(): InvalidationManager {
+	public function clear(): Cache\Invalidation\Manager {
 		return $this->invalidation();
 	}
 
