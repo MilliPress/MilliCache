@@ -98,7 +98,6 @@ final class Site extends Manager {
 				'gzip'                => true,
 			),
 			'rules' => array(
-				'load'  => false,
 				'items' => array(),
 			),
 		);

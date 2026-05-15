@@ -99,6 +99,9 @@ final class Network extends Manager {
 				'persistent'   => true,
 				'prefix'       => 'mll',
 			),
+			'rules'   => array(
+				'items' => array(),
+			),
 		);
 	}
 

@@ -51,7 +51,6 @@ function reset_rules_state(): void {
 				'unique'          => array(),
 			),
 			'rules' => array(
-				'load'  => false,
 				'items' => array(),
 			),
 		)
@@ -120,6 +119,7 @@ function reset_test_globals(): void {
 	$GLOBALS['test_filters']         = array();
 	$GLOBALS['test_actions']         = array();
 	$GLOBALS['test_site_transients'] = array();
+	$GLOBALS['test_is_multisite']    = false;
 }
 
 /**
