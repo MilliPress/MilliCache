@@ -46,10 +46,10 @@ final class UI {
 		$status_builder = new StatusBuilder( $engine, $plugin_name, $version );
 		$cache_actions  = new CacheActions( $engine );
 
-		new Base\Site( $plugin_name, $version, $status_builder, $cache_actions );
-
 		if ( $engine->multisite()->is_enabled() ) {
 			new Base\Network( $plugin_name, $version, $status_builder, $cache_actions );
 		}
+
+		new Base\Site( $plugin_name, $version, $status_builder, $cache_actions );
 	}
 }
