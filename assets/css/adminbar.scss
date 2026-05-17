@@ -41,6 +41,14 @@
 		margin: 0 5px;
 	}
 
+	.millicache-cache-size {
+		line-height: inherit;
+
+		&.is-refreshing {
+			animation: millicache-pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+		}
+	}
+
 	&:hover {
 
 		.ab-icon {

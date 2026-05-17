@@ -2,6 +2,12 @@
 
 import '../css/adminbar.scss';
 
+// Throttle: at most one storage scan per window, not per hover.
+const REFRESH_COOLDOWN_MS = 5000;
+
+let isRefreshing = false;
+let lastRefresh = 0;
+
 document.addEventListener( 'DOMContentLoaded', () => {
 	const adminbar = document.getElementById( 'wp-admin-bar-millicache' );
 	if ( ! adminbar ) {
@@ -59,6 +65,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			}
 		} );
 	} );
+
+	// Refresh size on menu open (hover + keyboard/touch).
+	adminbar.addEventListener( 'mouseenter', () => refreshCacheSize() );
+	adminbar.addEventListener( 'focusin', () => refreshCacheSize() );
 } );
 
 function clearCache( action, targets = null ) {
@@ -72,7 +82,11 @@ function clearCache( action, targets = null ) {
 	if ( action === 'clear' ) {
 		data.is_network_admin = millicache.is_network_admin;
 	} else if ( action === 'clear_current' ) {
-		data.request_flags = millicache.request_flags;
+		// No targets => no-op (must never become a full clear).
+		if ( ! targets ) {
+			return;
+		}
+		data.request_flags = targets;
 	} else if ( action === 'clear_targets' && targets ) {
 		data.targets = targets;
 	}
@@ -85,12 +99,74 @@ function clearCache( action, targets = null ) {
 	} )
 		.then( ( result ) => {
 			showNotice( result.message, result.success ? 'success' : 'error' );
+			// Size changed; refresh now, bypassing the cooldown.
+			refreshCacheSize( true );
 		} )
 		.catch( ( error ) => {
 			// eslint-disable-next-line no-console
 			console.error( 'Error:', error );
 			showNotice( error.message || 'Error clearing cache', 'error' );
 		} );
+}
+
+function refreshCacheSize( force = false ) {
+	const target = document.querySelector(
+		'#wp-admin-bar-millicache .millicache-cache-size'
+	);
+
+	// Span only exists for manage_options users.
+	if ( ! target ) {
+		return;
+	}
+
+	const now = Date.now();
+	if (
+		! force &&
+		( isRefreshing || now - lastRefresh < REFRESH_COOLDOWN_MS )
+	) {
+		return;
+	}
+
+	isRefreshing = true;
+	target.classList.add( 'is-refreshing' );
+
+	const path = millicache.is_network_admin
+		? '/millicache/v1/status?network=true'
+		: '/millicache/v1/status';
+
+	wp.apiFetch( { path } )
+		.then( ( result ) => {
+			if ( result && result.cache ) {
+				target.textContent = formatCacheSize( result.cache );
+			}
+		} )
+		.catch( ( error ) => {
+			// Keep the server-rendered text on failure.
+			// eslint-disable-next-line no-console
+			console.error( 'Error:', error );
+		} )
+		.finally( () => {
+			isRefreshing = false;
+			lastRefresh = Date.now();
+			target.classList.remove( 'is-refreshing' );
+		} );
+}
+
+// Mirrors Utils::get_cache_size_summary_string().
+function formatCacheSize( cache ) {
+	const { __, _n, sprintf } = wp.i18n;
+
+	if ( cache.size > 0 ) {
+		return sprintf(
+			// translators: %1$s is the number of pages, %2$s is singular or plural "page", %3$s is the cache size.
+			__( '%1$s %2$s (%3$s)', 'millicache' ),
+			Number( cache.index ).toLocaleString(),
+			_n( 'page', 'pages', cache.index, 'millicache' ),
+			cache.size_human
+		);
+	}
+
+	return __( 'No cached pages', 'millicache' );
 }
 
 function showNotice( message, type ) {

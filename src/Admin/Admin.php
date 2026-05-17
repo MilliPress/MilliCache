@@ -111,7 +111,7 @@ final class Admin {
 	 * @return   void
 	 */
 	private function load_dependencies() {
-		new Adminbar( $this->loader, $this->engine );
+		new Adminbar( $this->loader );
 		new UI( $this->engine, $this->plugin_name, $this->version );
 	}
 

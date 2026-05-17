@@ -133,8 +133,7 @@ uses()->beforeEach( function () {
 } );
 
 /**
- * Note: The Adminbar class constructor requires an Engine instance which is a final class
- * and cannot be mocked. These tests focus on verifying the class structure and static behaviors.
+ * Note: These tests focus on verifying the class structure and static behaviors.
  */
 describe( 'Adminbar', function () {
 
@@ -166,21 +165,12 @@ describe( 'Adminbar', function () {
 			expect( $params[0]->getType()->getName() )->toBe( 'MilliCache\Core\Loader' );
 		} );
 
-		it( 'requires Engine as second parameter', function () {
+		it( 'has exactly one required parameter', function () {
 			$reflection = new ReflectionClass( Adminbar::class );
 			$constructor = $reflection->getConstructor();
 			$params = $constructor->getParameters();
 
-			expect( $params[1]->getName() )->toBe( 'engine' );
-			expect( $params[1]->getType()->getName() )->toBe( 'MilliCache\Engine' );
-		} );
-
-		it( 'has exactly two required parameters', function () {
-			$reflection = new ReflectionClass( Adminbar::class );
-			$constructor = $reflection->getConstructor();
-			$params = $constructor->getParameters();
-
-			expect( count( $params ) )->toBe( 2 );
+			expect( count( $params ) )->toBe( 1 );
 		} );
 	} );
 
@@ -237,12 +227,6 @@ describe( 'Adminbar', function () {
 			$reflection = new ReflectionClass( Adminbar::class );
 			expect( $reflection->hasProperty( 'loader' ) )->toBeTrue();
 			expect( $reflection->getProperty( 'loader' )->isProtected() )->toBeTrue();
-		} );
-
-		it( 'has private engine property', function () {
-			$reflection = new ReflectionClass( Adminbar::class );
-			expect( $reflection->hasProperty( 'engine' ) )->toBeTrue();
-			expect( $reflection->getProperty( 'engine' )->isPrivate() )->toBeTrue();
 		} );
 	} );
 } );

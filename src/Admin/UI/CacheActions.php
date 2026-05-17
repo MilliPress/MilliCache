@@ -95,7 +95,9 @@ final class CacheActions {
 					if ( empty( $flags ) ) {
 						return $this->error( 'no_flags', __( 'No flags provided to clear cache.', 'millicache' ) );
 					}
-					$this->engine->clear()->flags( $flags );
+					// url: flag is stored unprefixed (even on multisite) —
+					// clear as-is. Empty already handled above.
+					$this->engine->clear()->flags( $flags, false, false );
 					$message = __( 'The current page cache has been cleared.', 'millicache' );
 					break;
 
