@@ -5,6 +5,10 @@ import '../css/adminbar.scss';
 // Throttle: at most one storage scan per window, not per hover.
 const REFRESH_COOLDOWN_MS = 5000;
 
+// The purge runs on request shutdown, after the response; brief wait so
+// the post-clear recount sees the settled state.
+const POST_CLEAR_REFRESH_DELAY_MS = 500;
+
 let isRefreshing = false;
 let lastRefresh = 0;
 
@@ -99,8 +103,18 @@ function clearCache( action, targets = null ) {
 	} )
 		.then( ( result ) => {
 			showNotice( result.message, result.success ? 'success' : 'error' );
-			// Size changed; refresh now, bypassing the cooldown.
-			refreshCacheSize( true );
+			// Pulse now so the wait reads as "updating", then recount
+			// once the shutdown-time purge has settled.
+			const size = document.querySelector(
+				'#wp-admin-bar-millicache .millicache-cache-size'
+			);
+			if ( size ) {
+				size.classList.add( 'is-refreshing' );
+			}
+			setTimeout(
+				() => refreshCacheSize( true ),
+				POST_CLEAR_REFRESH_DELAY_MS
+			);
 		} )
 		.catch( ( error ) => {
 			// eslint-disable-next-line no-console
