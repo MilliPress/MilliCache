@@ -375,10 +375,6 @@ final class Engine {
 	 * @return array<mixed> The MilliCache Settings.
 	 */
 	public function get_settings( ?string $module = null ): array {
-		if ( ! isset( $this->settings ) ) {
-			$this->settings = $this->load_settings();
-		}
-
 		if ( $module ) {
 			return is_array( $this->settings[ $module ] ) ? $this->settings[ $module ] : array();
 		}

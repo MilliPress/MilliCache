@@ -41,9 +41,9 @@ final class Helpers {
 			return array();
 		}
 
-		return array_filter(
-			array_map( 'strval', $data[ $key ] ),
-			'is_string'
+		return array_map(
+			static fn ( $v ) => is_scalar( $v ) ? (string) $v : '',
+			$data[ $key ]
 		);
 	}
 }

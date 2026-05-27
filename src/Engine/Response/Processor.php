@@ -232,7 +232,7 @@ final class Processor {
 	private function extract_header_value( array $headers, string $name ): string {
 		$value = '';
 		foreach ( $headers as $header ) {
-			if ( ! is_string( $header ) || false === strpos( $header, ':' ) ) {
+			if ( false === strpos( $header, ':' ) ) {
 				continue;
 			}
 			list( $key, $candidate ) = explode( ':', $header, 2 );

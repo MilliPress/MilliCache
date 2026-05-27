@@ -51,7 +51,7 @@ final class ServerVars {
 	 * @return string The sanitized server variable value, or empty string if not set.
 	 */
 	public static function get( string $key ): string {
-		if ( ! isset( $_SERVER[ $key ] ) ) {
+		if ( ! isset( $_SERVER[ $key ] ) || ! is_string( $_SERVER[ $key ] ) ) {
 			return '';
 		}
 

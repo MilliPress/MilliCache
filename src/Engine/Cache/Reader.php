@@ -90,7 +90,7 @@ final class Reader {
 
 		list( $cache, $flags, $locked ) = $result;
 
-		if ( ! is_array( $cache ) || empty( $cache ) ) {
+		if ( empty( $cache ) ) {
 			return Result::miss();
 		}
 

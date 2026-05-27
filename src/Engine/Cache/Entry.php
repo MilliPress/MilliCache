@@ -100,15 +100,15 @@ final class Entry {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string                   $output       Cached HTML/content.
-	 * @param string                   $url          Human-readable URL identifying this entry.
-	 * @param array<string>            $headers      HTTP headers.
-	 * @param int                      $status       HTTP status code.
-	 * @param bool                     $gzip         Is content gzipped.
-	 * @param int                      $updated      Timestamp when cached.
-	 * @param int|null                 $custom_ttl   Custom TTL override.
-	 * @param int|null                 $custom_grace Custom grace override.
-	 * @param array<string,mixed>|null $variant      Variant dimensions.
+	 * @param string                       $output       Cached HTML/content.
+	 * @param string                       $url          Human-readable URL identifying this entry.
+	 * @param array<string>                $headers      HTTP headers.
+	 * @param int                          $status       HTTP status code.
+	 * @param bool                         $gzip         Is content gzipped.
+	 * @param int                          $updated      Timestamp when cached.
+	 * @param int|null                     $custom_ttl   Custom TTL override.
+	 * @param int|null                     $custom_grace Custom grace override.
+	 * @param array<array-key, mixed>|null $variant      Variant dimensions.
 	 */
 	public function __construct(
 		string $output,

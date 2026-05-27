@@ -422,7 +422,7 @@ class Storage {
 	 * @access public
 	 *
 	 * @param string $hash The cache hash.
-	 * @return null|array{mixed[], array<string>, string} The cached data.
+	 * @return null|array{array<string, mixed>, array<string>, string} The cached data.
 	 */
 	public function get_cache( string $hash ): ?array {
 		try {
@@ -452,7 +452,7 @@ class Storage {
 			}
 
 			// "output" field holds the output_hash; resolve to bytes.
-			$output_hash = (string) $cache['output'];
+			$output_hash = is_scalar( $cache['output'] ) ? (string) $cache['output'] : '';
 			$output      = '';
 			if ( '' !== $output_hash ) {
 				$body = $this->client->hget( $this->output_key( $output_hash ), 'output' );
@@ -463,7 +463,7 @@ class Storage {
 				$output = $body;
 			}
 
-			$data           = $this->parse_meta( $cache['meta'] ?? '{}' );
+			$data           = $this->parse_meta( $cache['meta'] ?? null );
 			$data['output'] = $output;
 
 			return array(
@@ -527,11 +527,11 @@ class Storage {
 				'updated' => $data['updated'] ?? time(),
 			);
 
-			if ( isset( $data['custom_ttl'] ) ) {
+			if ( isset( $data['custom_ttl'] ) && is_numeric( $data['custom_ttl'] ) ) {
 				$meta['custom_ttl'] = (int) $data['custom_ttl'];
 			}
 
-			if ( isset( $data['custom_grace'] ) ) {
+			if ( isset( $data['custom_grace'] ) && is_numeric( $data['custom_grace'] ) ) {
 				$meta['custom_grace'] = (int) $data['custom_grace'];
 			}
 
@@ -639,12 +639,12 @@ class Storage {
 			// Read fields up front so we can release the body reference after deletion.
 			$entry_fields = $this->client->hgetall( $key );
 
-			if ( ! is_array( $entry_fields ) || empty( $entry_fields ) ) {
+			if ( empty( $entry_fields ) ) {
 				return false;
 			}
 
 			$flags       = $this->filter_flag_fields( array_keys( $entry_fields ) );
-			$output_hash = isset( $entry_fields['output'] ) ? (string) $entry_fields['output'] : '';
+			$output_hash = isset( $entry_fields['output'] ) && is_scalar( $entry_fields['output'] ) ? (string) $entry_fields['output'] : '';
 
 			/**
 			 * Fires before a cache entry is deleted in the storage server.
@@ -767,7 +767,7 @@ class Storage {
 
 		return array_filter(
 			$fields,
-			fn( $field ) => is_string( $field ) && strpos( $field, $flag_prefix ) === 0
+			fn( $field ) => strpos( $field, $flag_prefix ) === 0
 		);
 	}
 
@@ -899,7 +899,8 @@ class Storage {
 					if ( $result ) {
 						list($data, , $locked) = $result;
 						if ( $data && ! $locked ) {
-							$data['updated'] -= $ttl;
+							$updated          = isset( $data['updated'] ) && is_numeric( $data['updated'] ) ? (int) $data['updated'] : time();
+							$data['updated']  = $updated - $ttl;
 							$this->set_cache( $key, $data, array() );
 						}
 					}
@@ -928,11 +929,6 @@ class Storage {
 				if ( is_string( $key ) ) {
 					$keys[] = $key;
 				}
-			}
-
-			// Check if the keys are an array.
-			if ( ! is_array( $keys ) ) {
-				return array();
 			}
 
 			return $keys;
@@ -965,9 +961,7 @@ class Storage {
 						(array) $this->client->pipeline(
 							function ( $pipe ) use ( $flag ) {
 								foreach ( $this->get_cache_keys_by_pattern( $this->toggle_flag_key( $flag ) ) as $key ) {
-									if ( is_string( $key ) ) {
-										$pipe->smembers( $key );
-									}
+									$pipe->smembers( $key );
 								}
 							}
 						),
@@ -976,9 +970,12 @@ class Storage {
 				)
 				: $this->client->smembers( $this->toggle_flag_key( $flag ) );
 
+			// smembers()/pipeline return mixed; keep only string members.
+			$members = array_values( array_filter( (array) $members, 'is_string' ) );
+
 			// Remove prefix from keys.
 			return array_map(
-				function ( $key ) {
+				function ( string $key ) {
 					return $this->toggle_cache_key( $key );
 				},
 				array_unique( $members )
@@ -1081,11 +1078,12 @@ class Storage {
 	 * @since 1.4.0
 	 * @access private
 	 *
-	 * @param string $json The raw JSON meta-string.
+	 * @param mixed $json The raw meta value from storage (JSON string, or a
+	 *                    non-string when the field is absent/corrupt).
 	 * @return array<string, mixed> The parsed metadata.
 	 */
-	private function parse_meta( string $json ): array {
-		$decoded = json_decode( $json, true );
+	private function parse_meta( $json ): array {
+		$decoded = is_string( $json ) ? json_decode( $json, true ) : null;
 		// @var array<string, mixed> $meta
 		$meta = is_array( $decoded ) ? $decoded : array();
 
@@ -1223,7 +1221,7 @@ class Storage {
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @return array<mixed> The Storage Server status.
+	 * @return array{connected: bool, config: array<mixed>, info: array<string, array<string, mixed>>, error?: string} The Storage Server status.
 	 */
 	public function get_status(): array {
 		$status = array(
@@ -1283,16 +1281,19 @@ class Storage {
 			),
 		);
 
-		foreach ( $info_keys as $section => $keys ) {
-			$info = $this->client->info( $section );
+		$server_section = array();
 
-			if ( ! is_array( $info ) ) {
-				continue;
+		foreach ( $info_keys as $section => $keys ) {
+			$info         = $this->client->info( $section );
+			$section_data = isset( $info[ $section ] ) && is_array( $info[ $section ] ) ? $info[ $section ] : array();
+
+			if ( 'Server' === $section ) {
+				$server_section = $section_data;
 			}
 
 			foreach ( $keys as $key ) {
-				if ( isset( $info[ $section ][ $key ] ) ) {
-					$status['info'][ $section ][ $key ] = $info[ $section ][ $key ];
+				if ( isset( $section_data[ $key ] ) ) {
+					$status['info'][ $section ][ $key ] = $section_data[ $key ];
 				}
 			}
 		}
@@ -1306,8 +1307,8 @@ class Storage {
 		);
 
 		foreach ( $types as $key => $type ) {
-			if ( isset( $info['Server'][ $key ] ) ) {
-				$status['info']['Server']['version'] = "$type {$info[ 'Server' ][ $key ]}";
+			if ( isset( $server_section[ $key ] ) && is_scalar( $server_section[ $key ] ) ) {
+				$status['info']['Server']['version'] = $type . ' ' . $server_section[ $key ];
 				break;
 			}
 		}

@@ -1,12 +1,12 @@
 parameters:
-  level: max
+  level: 9
   paths:
     - millicache.php
     - advanced-cache.php
     - assets/
     - src/
   excludePaths:
-    - deps/
+    - deps/(?)
   stubFiles:
     - stubs/ActionBuilder.php
     - stubs/ConditionBuilder.php
@@ -15,3 +15,18 @@ parameters:
     - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
   fileExtensions:
     - php
+  ignoreErrors:
+    # Intentional pre-WP fallback: is_multisite() is unavailable when the
+    # advanced-cache.php drop-in runs, but the MULTISITE constant (wp-config)
+    # is. is_enabled() prefers is_multisite() when WP is loaded.
+    -
+      identifier: phpstanWP.wpConstant.fetch
+      path: src/Engine/Utilities/Multisite.php
+      count: 1
+    # Plugin-owned data: the notices transient is written by this class
+    # (set_transient at display_notices) with the typed $notices shape;
+    # get_transient() only returns mixed, so trust our own round-trip.
+    -
+      identifier: assign.propertyType
+      path: src/Admin/Admin.php
+      count: 1

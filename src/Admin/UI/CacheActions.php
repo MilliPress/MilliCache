@@ -102,8 +102,8 @@ final class CacheActions {
 					break;
 
 				case 'clear_targets':
-					$targets = $request->get_param( 'targets' );
-					if ( ! is_string( $targets ) && ! is_array( $targets ) ) {
+					$targets = $this->read_targets( $request );
+					if ( null === $targets ) {
 						return $this->error( 'invalid_targets', __( 'Invalid targets parameter. Must be a string or an array.', 'millicache' ) );
 					}
 					$this->engine->clear()->targets( $targets );
@@ -159,8 +159,8 @@ final class CacheActions {
 					break;
 
 				case 'clear_targets':
-					$targets = $request->get_param( 'targets' );
-					if ( ! is_string( $targets ) && ! is_array( $targets ) ) {
+					$targets = $this->read_targets( $request );
+					if ( null === $targets ) {
 						return $this->error( 'invalid_targets', __( 'Invalid targets parameter. Must be a string or an array.', 'millicache' ) );
 					}
 					if ( empty( $targets ) ) {
@@ -252,6 +252,32 @@ final class CacheActions {
 			: ( is_array( $raw ) ? $raw : array() );
 
 		return array_values( array_filter( $list, 'is_string' ) );
+	}
+
+	/**
+	 * Read the untrusted `targets` REST param.
+	 *
+	 * The param arrives as `mixed`; this is the single place that validates
+	 * it. Array entries are reduced to scalar (string/int) targets.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param \WP_REST_Request $request The REST API request object.
+	 * @phpstan-param \WP_REST_Request<array<string, mixed>> $request
+	 * @return array<int|string>|string|null Filtered list, raw string, or null when invalid.
+	 */
+	private function read_targets( \WP_REST_Request $request ) {
+		$raw = $request->get_param( 'targets' );
+
+		if ( is_string( $raw ) ) {
+			return $raw;
+		}
+
+		if ( is_array( $raw ) ) {
+			return array_values( array_filter( $raw, static fn ( $t ) => is_string( $t ) || is_int( $t ) ) );
+		}
+
+		return null;
 	}
 
 	/**
