@@ -623,6 +623,32 @@ final class Engine {
 	}
 
 	/**
+	 * Detect how MilliCache is installed by mirroring {@see self::autoload()}'s
+	 * vendor-autoload probes.
+	 *
+	 * Returns `'composer'` when a host (`<wp-root>/vendor/autoload.php`) loads
+	 * the plugin, `'standalone'` when the plugin ships its own `vendor/`, and
+	 * `'unknown'` when neither path resolves. Order mirrors {@see self::autoload()}
+	 * so the value reflects which loader actually fired.
+	 *
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @return string One of `'composer'`, `'standalone'`, `'unknown'`.
+	 */
+	public function install_mode(): string {
+		if ( file_exists( dirname( __DIR__, 4 ) . '/vendor/autoload.php' ) ) {
+			return 'composer';
+		}
+
+		if ( file_exists( dirname( __DIR__ ) . '/vendor/autoload.php' ) ) {
+			return 'standalone';
+		}
+
+		return 'unknown';
+	}
+
+	/**
 	 * Initialize autoloader for MilliCache classes.
 	 *
 	 * Only loads Composer autoloader once, and only when needed.
