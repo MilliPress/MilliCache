@@ -166,9 +166,9 @@ final class Site extends Manager {
 					),
 				),
 			),
-			'footer' => [
+			'footer' => array(
 				'right' => 'MilliCache ' . MILLICACHE_VERSION,
-			],
+			),
 
 			'tabs'            => array(
 				$this->status_tab(),

@@ -157,9 +157,9 @@ final class Network extends Manager {
 				'links'   => $this->get_header_links(),
 				'buttons' => array( $this->clear_cache_button() ),
 			),
-			'footer' => [
-				'right' => 'MilliCache ' . MILLICACHE_VERSION                 // Prepended to "MilliBase X.Y.Z"
-			],
+			'footer' => array(
+				'right' => 'MilliCache ' . MILLICACHE_VERSION,                 // Prepended to "MilliBase X.Y.Z"
+			),
 
 			'tabs'            => array(
 				$this->status_tab(),
