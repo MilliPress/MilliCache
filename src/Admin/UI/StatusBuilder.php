@@ -221,21 +221,24 @@ final class StatusBuilder {
 	}
 
 	/**
-	 * Gather MilliRules registry stats: total rules + per-package breakdown.
+	 * Gather MilliRules registry stats: total rules + per-package breakdown +
+	 * count of user-defined custom rules from settings.
 	 *
 	 * Returns zeros / an empty map when MilliRules isn't loaded — defensive
 	 * against environments that never call into the rules engine. Per-package
-	 * counts are useful in support tickets to spot rule-count regressions
-	 * (e.g. "user has 0 WP rules — bootstrap regression").
+	 * counts spot bootstrap-regression patterns ("user has 0 WP rules");
+	 * `custom_count` reflects how many enabled rule entries the user
+	 * configured in Settings → Rules, including any that override built-ins.
 	 *
 	 * @since 1.7.0
 	 *
-	 * @return array{registered_count: int, packages: array<string, int>}
+	 * @return array{registered_count: int, custom_count: int, packages: array<string, int>}
 	 */
 	private function gather_rules(): array {
 		if ( ! class_exists( '\\MilliRules\\Packages\\PackageManager' ) ) {
 			return array(
 				'registered_count' => 0,
+				'custom_count'     => 0,
 				'packages'         => array(),
 			);
 		}
@@ -253,8 +256,62 @@ final class StatusBuilder {
 
 		return array(
 			'registered_count' => count( $all ),
+			'custom_count'     => $this->count_custom_rules(),
 			'packages'         => $packages,
 		);
+	}
+
+	/**
+	 * Sum the enabled rule entries in the site- and (on multisite) network-
+	 * scoped settings.
+	 *
+	 * The count mirrors what {@see \MilliCache\Rules\Custom::register()}
+	 * actually forwards to MilliRules — entries without an `id` or with
+	 * `enabled: false` are skipped, matching the registration filter.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return int
+	 */
+	private function count_custom_rules(): int {
+		$count = $this->count_rule_items( \MilliCache\Base\Site::settings()->get( 'rules.items', array() ) );
+
+		if ( $this->engine->multisite()->is_enabled() ) {
+			$count += $this->count_rule_items( \MilliCache\Base\Network::settings()->get( 'rules.items', array() ) );
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Count rule entries that would actually register: each entry must be an
+	 * array with a non-empty `id`, and `enabled` must not be explicitly false.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param mixed $items The raw `rules.items` value from a settings store.
+	 * @return int
+	 */
+	private function count_rule_items( $items ): int {
+		if ( ! is_array( $items ) ) {
+			return 0;
+		}
+
+		$count = 0;
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			if ( array_key_exists( 'enabled', $item ) && ! $item['enabled'] ) {
+				continue;
+			}
+			if ( '' === (string) ( $item['id'] ?? '' ) ) {
+				continue;
+			}
+			++$count;
+		}
+
+		return $count;
 	}
 
 	/**
@@ -625,6 +682,7 @@ final class StatusBuilder {
 		}
 		$lines[] = '**Rules**';
 		$lines[] = sprintf( '- Registered: %d', $this->as_int( $rules['registered_count'] ?? null ) );
+		$lines[] = sprintf( '- Custom (from settings): %d', $this->as_int( $rules['custom_count'] ?? null ) );
 		$lines[] = sprintf(
 			'- By package: %s',
 			empty( $package_parts ) ? 'none' : implode( ', ', $package_parts )

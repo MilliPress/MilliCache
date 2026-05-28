@@ -318,6 +318,7 @@ describe( 'StatusBuilder/build', function () {
 					),
 					'rules'     => array(
 						'registered_count' => 27,
+						'custom_count'     => 3,
 						'packages'         => array( 'WP' => 18, 'PHP' => 9 ),
 					),
 					'plugins'   => array(
