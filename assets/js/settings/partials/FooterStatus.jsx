@@ -232,12 +232,7 @@ const FooterStatus = ( { status } ) => {
 
 			{ isOpen && (
 				<Modal
-					title={ null }
-					aria={ {
-						labelledby: undefined,
-						describedby: undefined,
-					} }
-					contentLabel={ __( 'MilliCache status', 'millicache' ) }
+					title={ __( 'MilliCache status', 'millicache' ) }
 					onRequestClose={ () => setIsOpen( false ) }
 					size="medium"
 					className="millicache-footer-status__modal"
