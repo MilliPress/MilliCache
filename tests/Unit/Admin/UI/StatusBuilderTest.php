@@ -388,7 +388,7 @@ describe( 'StatusBuilder/build', function () {
 
 			$md = invoke_builder_method( $this->builder, 'render_markdown', array( $payload ) );
 
-			expect( $md )->toContain( '_Install-wide diagnostic — see the Network Admin Status page._' );
+			expect( $md )->toContain( '_Install-wide diagnostic. See the Network Admin Status page._' );
 		} );
 
 		it( 'ends with the generated-at footer line', function () {

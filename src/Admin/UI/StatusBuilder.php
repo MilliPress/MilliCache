@@ -311,7 +311,7 @@ final class StatusBuilder {
 				'label'       => __( 'advanced-cache.php drop-in is installed', 'millicache' ),
 				'status'      => $dropin_is_present ? 'good' : 'critical',
 				'description' => $dropin_is_present
-					? __( 'The drop-in is in place — MilliCache can intercept page requests early.', 'millicache' )
+					? __( 'The drop-in is in place. MilliCache can intercept page requests early.', 'millicache' )
 					: __( 'The drop-in is missing. Re-install it from MilliCache settings; without it, no pages are cached.', 'millicache' ),
 				'value'       => $dropin_is_present
 					? ( is_string( $dropin['type'] ?? null ) ? $dropin['type'] : 'file' )
@@ -350,7 +350,7 @@ final class StatusBuilder {
 			'label'       => __( 'WP_CACHE constant is enabled', 'millicache' ),
 			'status'      => $wp_cache_on ? 'good' : 'critical',
 			'description' => $wp_cache_on
-				? __( 'WP_CACHE is defined and truthy — WordPress will load the advanced-cache.php drop-in.', 'millicache' )
+				? __( 'WP_CACHE is defined and truthy. WordPress will load the advanced-cache.php drop-in.', 'millicache' )
 				: __( "WP_CACHE is not defined or false in wp-config.php. WordPress won't load the drop-in, so MilliCache can't intercept page requests.", 'millicache' ),
 			'value'       => $wp_cache_on ? 'true' : 'false',
 		);
@@ -362,7 +362,7 @@ final class StatusBuilder {
 			'status'      => $connected ? 'good' : 'critical',
 			'description' => $connected
 				? __( 'MilliCache successfully connected to its configured storage server.', 'millicache' )
-				: __( 'MilliCache cannot reach the configured storage server. Cache reads and writes are failing — check the host, port, and credentials.', 'millicache' ),
+				: __( 'MilliCache cannot reach the configured storage server. Cache reads and writes are failing. Check the host, port, and credentials.', 'millicache' ),
 			'value'       => $connected
 				? __( 'connected', 'millicache' )
 				: __( 'disconnected', 'millicache' ),
@@ -379,7 +379,7 @@ final class StatusBuilder {
 				'label'       => __( 'Storage backend has a memory limit', 'millicache' ),
 				'status'      => $max_mem_ok ? 'good' : 'recommended',
 				'description' => $max_mem_ok
-					? __( 'A maxmemory limit is configured — the storage server can evict entries when full.', 'millicache' )
+					? __( 'A maxmemory limit is configured. The storage server can evict entries when full.', 'millicache' )
 					: __( 'No maxmemory limit is set on the storage server. Without one, the cache can grow until it crowds out other workloads on the host.', 'millicache' ),
 				'value'       => is_string( $memory['maxmemory_human'] ?? null ) ? $memory['maxmemory_human'] : 'n/a',
 			);
@@ -488,7 +488,7 @@ final class StatusBuilder {
 
 		$lines[] = '**advanced-cache.php**';
 		if ( null === $dropin ) {
-			$lines[] = '- _Install-wide diagnostic — see the Network Admin Status page._';
+			$lines[] = '- _Install-wide diagnostic. See the Network Admin Status page._';
 		} else {
 			$present = ! empty( $dropin );
 			$lines[] = sprintf( '- Present: %s', $present ? 'yes' : 'no' );
@@ -515,7 +515,7 @@ final class StatusBuilder {
 					: 'n/a'
 			);
 		} else {
-			$lines[] = '- _Install-wide diagnostic — see the Network Admin Status page._';
+			$lines[] = '- _Install-wide diagnostic. See the Network Admin Status page._';
 		}
 		if ( isset( $storage['error'] ) && is_string( $storage['error'] ) ) {
 			$lines[] = sprintf( '- Error: %s', $storage['error'] );

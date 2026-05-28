@@ -146,7 +146,7 @@ const DebugTab = ( { markdown, copyState, onCopy, onOpenIssue } ) => (
 	<>
 		<p>
 			{ __(
-				'A sanitized debug snapshot — no hosts, credentials, or customer paths are included. “Open GitHub Issue” starts a bug report with the snapshot and your environment versions pre-filled; “Copy to clipboard” gives you the Markdown for pasting elsewhere.',
+				'A sanitized debug snapshot. No hosts, credentials, or customer paths are included. “Open GitHub Issue” starts a bug report with the snapshot and your environment versions pre-filled; “Copy to clipboard” gives you the Markdown for pasting elsewhere.',
 				'millicache'
 			) }
 		</p>
@@ -218,7 +218,7 @@ const FooterStatus = ( { status } ) => {
 				onClick={ () => setIsOpen( true ) }
 				aria-label={ sprintf(
 					/* translators: %s: status summary */
-					__( 'MilliCache status: %s — click for details', 'millicache' ),
+					__( 'MilliCache status: %s. Open details.', 'millicache' ),
 					label
 				) }
 				title={ label }
@@ -232,7 +232,12 @@ const FooterStatus = ( { status } ) => {
 
 			{ isOpen && (
 				<Modal
-					title={ __( 'MilliCache status', 'millicache' ) }
+					title={ null }
+					aria={ {
+						labelledby: undefined,
+						describedby: undefined,
+					} }
+					contentLabel={ __( 'MilliCache status', 'millicache' ) }
 					onRequestClose={ () => setIsOpen( false ) }
 					size="medium"
 					className="millicache-footer-status__modal"
