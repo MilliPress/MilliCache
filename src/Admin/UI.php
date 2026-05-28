@@ -13,7 +13,9 @@
 namespace MilliCache\Admin;
 
 use MilliCache\Base;
+use MilliCache\Core\Loader;
 use MilliCache\Engine;
+use MilliCache\Admin\SiteHealth;
 use MilliCache\Admin\UI\CacheActions;
 use MilliCache\Admin\UI\StatusBuilder;
 
@@ -38,13 +40,16 @@ final class UI {
 	 *
 	 * @since 1.3.0
 	 *
+	 * @param Loader $loader      The hook loader (used by Site Health filter wiring).
 	 * @param Engine $engine      The MilliCache engine instance.
 	 * @param string $plugin_name The plugin slug.
 	 * @param string $version     The plugin version.
 	 */
-	public function __construct( Engine $engine, string $plugin_name, string $version ) {
+	public function __construct( Loader $loader, Engine $engine, string $plugin_name, string $version ) {
 		$status_builder = new StatusBuilder( $engine, $plugin_name, $version );
 		$cache_actions  = new CacheActions( $engine );
+
+		new SiteHealth( $loader, $status_builder );
 
 		if ( $engine->multisite()->is_enabled() ) {
 			new Base\Network( $plugin_name, $version, $status_builder, $cache_actions );
