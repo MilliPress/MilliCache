@@ -124,7 +124,31 @@ final class StatusBuilder {
 
 		$checks = $this->gather_checks( $payload );
 
-		$payload['debug'] = array(
+		/**
+		 * Filter the list of MilliCache status checks.
+		 *
+		 * Lets extensions (e.g. MilliCache Pro) append, remove, or reshape
+		 * checks. Each entry should follow the shape produced by
+		 * {@see StatusBuilder::gather_checks()}:
+		 *
+		 *   - `id`          (string)   Stable identifier.
+		 *   - `label`       (string)   Short, translated headline.
+		 *   - `status`      (string)   `good`, `recommended`, or `critical`.
+		 *   - `description` (string)   Translated explanation of the result.
+		 *   - `value`       (string)   Optional observed value.
+		 *   - `docs_url`    (string)   Optional URL for the "Learn more" link.
+		 *
+		 * The filtered list drives the footer pill color, the Status checks
+		 * tab, the pill summary count, and the aggregate health verdict.
+		 *
+		 * @since 1.7.0
+		 *
+		 * @param array<int, array<string, mixed>> $checks  Default check list.
+		 * @param array<string, mixed>             $payload The in-progress status payload.
+		 */
+		$checks = apply_filters( 'millicache_status_checks', $checks, $payload );
+
+		$debug = array(
 			'plugin'       => array(
 				'name'         => $this->plugin_name,
 				'version'      => $this->version,
@@ -140,6 +164,25 @@ final class StatusBuilder {
 			'health'       => $this->compute_health( $checks ),
 			'generated_at' => gmdate( 'c' ),
 		);
+
+		/**
+		 * Filter the assembled debug block before markdown rendering.
+		 *
+		 * Lets extensions add their own diagnostic sub-blocks under
+		 * `payload.debug` — useful for MilliCache Pro features whose
+		 * data belongs in the snapshot (e.g. fragment-cache stats).
+		 *
+		 * Reserved keys consumed downstream — `checks`, `health`,
+		 * `generated_at`, `markdown` — should be left intact; replace
+		 * them only with full awareness of how the modal, CLI, and
+		 * Site Health surfaces consume the payload.
+		 *
+		 * @since 1.7.0
+		 *
+		 * @param array<string, mixed> $debug   Default debug block.
+		 * @param array<string, mixed> $payload The full status payload.
+		 */
+		$payload['debug'] = apply_filters( 'millicache_status_debug', $debug, $payload );
 
 		$payload['debug']['markdown'] = $this->render_markdown( $payload );
 
@@ -524,21 +567,24 @@ final class StatusBuilder {
 	 *
 	 * `critical` wins over `recommended` wins over `good`. Mirrors how the
 	 * footer pill, Site Health cards, and CLI all derive a one-word answer
-	 * from the same structured signal.
+	 * from the same structured signal. Accepts the wider post-filter shape
+	 * because the {@see 'millicache_status_checks'} hook can produce entries
+	 * without a `status` key — those are treated as `good`.
 	 *
 	 * @since 1.7.0
 	 *
-	 * @param array<int, array{status: string}> $checks The checks list from {@see self::gather_checks()}.
+	 * @param array<int, array<string, mixed>> $checks The (possibly filtered) checks list.
 	 * @return string One of `'ok'`, `'warning'`, `'error'`.
 	 */
 	private function compute_health( array $checks ): string {
 		$has_warning = false;
 
 		foreach ( $checks as $check ) {
-			if ( 'critical' === $check['status'] ) {
+			$status = $check['status'] ?? 'good';
+			if ( 'critical' === $status ) {
 				return 'error';
 			}
-			if ( 'recommended' === $check['status'] ) {
+			if ( 'recommended' === $status ) {
 				$has_warning = true;
 			}
 		}
@@ -716,6 +762,35 @@ final class StatusBuilder {
 			'' !== $parent ? $parent : '—'
 		);
 		$lines[] = '';
+
+		/**
+		 * Filter the Markdown sections appended to the support snapshot.
+		 *
+		 * Each returned string is treated as an independent Markdown block
+		 * and inserted after the standard sections but before the Health
+		 * line. Sections should already include their own bold heading,
+		 * for example:
+		 *
+		 *     **Fragment cache**
+		 *     - Enabled: yes
+		 *     - Index: 1,234 entries
+		 *
+		 * Extensions are responsible for keeping their content
+		 * support-safe — no hosts, credentials, or customer paths.
+		 *
+		 * @since 1.7.0
+		 *
+		 * @param array<int, string>   $sections Default empty list of sections.
+		 * @param array<string, mixed> $payload  The full status payload.
+		 */
+		$extra_sections = apply_filters( 'millicache_status_markdown_sections', array(), $payload );
+		foreach ( $extra_sections as $section ) {
+			if ( '' === trim( $section ) ) {
+				continue;
+			}
+			$lines[] = $section;
+			$lines[] = '';
+		}
 
 		$lines[] = sprintf( '**Health**: %s', $health );
 		$lines[] = '';
