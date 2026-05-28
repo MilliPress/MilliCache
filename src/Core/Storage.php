@@ -166,15 +166,51 @@ class Storage {
 	}
 
 	/**
-	 * Check if the storage server is connected.
+	 * Check if the storage server's socket is currently open on this request.
+	 *
+	 * Predis uses lazy connections — the socket isn't opened until a command
+	 * runs. This returns the current socket state and is best used as a
+	 * "has this request talked to the cache yet?" breadcrumb, not as a
+	 * health probe. For an active reachability check, use
+	 * {@see self::ping()} (or {@see self::get_status()} for the full
+	 * server diagnostic payload).
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 *
-	 * @return bool Whether the storage server is connected.
+	 * @return bool Whether the storage client socket is open.
 	 */
 	public function is_connected(): bool {
 		return isset( $this->client ) && $this->client->isConnected();
+	}
+
+	/**
+	 * Send a `PING` to the storage server and report whether it answered.
+	 *
+	 * Opens the lazy connection if needed and returns true on a `PONG`,
+	 * false on any Predis exception. This is the correct signal for
+	 * "is the server reachable right now?" — Site Health tests, the
+	 * settings-page Status indicator, and any other place where the answer
+	 * has to be accurate even on a request that hasn't yet read or written
+	 * the cache.
+	 *
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @return bool Whether the storage server responds to a PING.
+	 */
+	public function ping(): bool {
+		if ( ! isset( $this->client ) ) {
+			return false;
+		}
+
+		try {
+			$this->client->ping();
+			return true;
+		} catch ( PredisException $e ) {
+			unset( $e );
+			return false;
+		}
 	}
 
 	/**
