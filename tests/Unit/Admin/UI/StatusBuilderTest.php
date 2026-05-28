@@ -128,6 +128,15 @@ describe( 'StatusBuilder/build', function () {
 			}
 		} );
 
+		it( 'attaches a docs_url to every check', function () {
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $this->healthy ) );
+
+			foreach ( $checks as $check ) {
+				expect( $check )->toHaveKey( 'docs_url' );
+				expect( $check['docs_url'] )->toStartWith( 'https://millipress.com/docs/millicache/' );
+			}
+		} );
+
 		it( 'flags dropin_present as critical when the drop-in is missing', function () {
 			$payload = $this->healthy;
 			$payload['dropin'] = array();
@@ -307,6 +316,10 @@ describe( 'StatusBuilder/build', function () {
 						'registered_count' => 18,
 						'sample'           => array( 'home', 'posts', 'category' ),
 					),
+					'rules'     => array(
+						'registered_count' => 27,
+						'packages'         => array( 'WP' => 18, 'PHP' => 9 ),
+					),
 					'plugins'   => array(
 						array( 'name' => 'Akismet', 'version' => '5.3.5', 'network' => false ),
 						array( 'name' => 'WooCommerce', 'version' => '9.4.2', 'network' => true ),
@@ -332,6 +345,7 @@ describe( 'StatusBuilder/build', function () {
 			expect( $md )->toContain( '**Cache config**' );
 			expect( $md )->toContain( '**Cache stats**' );
 			expect( $md )->toContain( '**Flags**' );
+			expect( $md )->toContain( '**Rules**' );
 			expect( $md )->toContain( '**Active plugins**' );
 			expect( $md )->toContain( '**Theme**' );
 			expect( $md )->toContain( '**Health**: ok' );

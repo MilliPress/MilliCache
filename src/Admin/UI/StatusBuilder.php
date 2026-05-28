@@ -47,6 +47,17 @@ use MilliCache\Engine;
 final class StatusBuilder {
 
 	/**
+	 * Documentation base URL used to anchor `docs_url` on each check.
+	 *
+	 * Kept in sync with {@see \MilliCache\Base\Manager::DOCS_BASE} — duplicated
+	 * here to avoid coupling the payload layer to the Manager hierarchy.
+	 *
+	 * @since 1.7.0
+	 * @var string
+	 */
+	private const DOCS_BASE = 'https://millipress.com/docs/millicache';
+
+	/**
 	 * The MilliCache engine instance.
 	 *
 	 * @since 1.7.0
@@ -122,6 +133,7 @@ final class StatusBuilder {
 			'versions'     => $this->gather_versions(),
 			'multisite'    => $this->gather_multisite(),
 			'flags'        => $this->gather_flags(),
+			'rules'        => $this->gather_rules(),
 			'plugins'      => $this->gather_plugins(),
 			'theme'        => $this->gather_theme(),
 			'checks'       => $checks,
@@ -209,6 +221,43 @@ final class StatusBuilder {
 	}
 
 	/**
+	 * Gather MilliRules registry stats: total rules + per-package breakdown.
+	 *
+	 * Returns zeros / an empty map when MilliRules isn't loaded — defensive
+	 * against environments that never call into the rules engine. Per-package
+	 * counts are useful in support tickets to spot rule-count regressions
+	 * (e.g. "user has 0 WP rules — bootstrap regression").
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return array{registered_count: int, packages: array<string, int>}
+	 */
+	private function gather_rules(): array {
+		if ( ! class_exists( '\\MilliRules\\Packages\\PackageManager' ) ) {
+			return array(
+				'registered_count' => 0,
+				'packages'         => array(),
+			);
+		}
+
+		$all      = \MilliRules\Packages\PackageManager::get_all_rules();
+		$packages = array();
+
+		foreach ( $all as $rule ) {
+			$pkg = is_string( $rule['_package'] ?? null ) ? $rule['_package'] : 'unknown';
+
+			$packages[ $pkg ] = ( $packages[ $pkg ] ?? 0 ) + 1;
+		}
+
+		ksort( $packages );
+
+		return array(
+			'registered_count' => count( $all ),
+			'packages'         => $packages,
+		);
+	}
+
+	/**
 	 * Gather name + version for every active plugin (site- and network-scope).
 	 *
 	 * Network-scope activation takes precedence over per-site activation when
@@ -290,7 +339,7 @@ final class StatusBuilder {
 	 * @since 1.7.0
 	 *
 	 * @param array<string, mixed> $payload The (in-progress) payload.
-	 * @return array<int, array{id: string, label: string, status: string, description: string, value?: string}>
+	 * @return array<int, array{id: string, label: string, status: string, description: string, value?: string, docs_url?: string}>
 	 */
 	private function gather_checks( array $payload ): array {
 		$dropin  = is_array( $payload['dropin'] ?? null ) ? $payload['dropin'] : null;
@@ -304,6 +353,12 @@ final class StatusBuilder {
 		$wp_cache_on       = defined( 'WP_CACHE' ) && WP_CACHE;
 		$connected         = ! empty( $storage['connected'] );
 
+		$dropin_docs   = self::DOCS_BASE . '/01-getting-started/20-installation#advanced-cache-php-issues';
+		$wp_cache_docs = self::DOCS_BASE . '/01-getting-started/20-installation#wp-cache-constant';
+		$conn_docs     = self::DOCS_BASE . '/08-storage-backends/01-overview#basic-connection';
+		$mem_docs      = self::DOCS_BASE . '/08-storage-backends/01-overview#memory-sizing';
+		$policy_docs   = self::DOCS_BASE . '/08-storage-backends/01-overview#recommended-server-configuration';
+
 		// Drop-in presence — install-wide signal, omitted on per-site multisite.
 		if ( ! $is_per_site_ms ) {
 			$checks[] = array(
@@ -316,6 +371,7 @@ final class StatusBuilder {
 				'value'       => $dropin_is_present
 					? ( is_string( $dropin['type'] ?? null ) ? $dropin['type'] : 'file' )
 					: __( 'missing', 'millicache' ),
+				'docs_url'    => $dropin_docs,
 			);
 
 			if ( $dropin_is_present ) {
@@ -340,6 +396,7 @@ final class StatusBuilder {
 					'status'      => $dropin_status,
 					'description' => $dropin_text,
 					'value'       => $dropin_value,
+					'docs_url'    => $dropin_docs,
 				);
 			}
 		}
@@ -353,6 +410,7 @@ final class StatusBuilder {
 				? __( 'WP_CACHE is defined and truthy. WordPress will load the advanced-cache.php drop-in.', 'millicache' )
 				: __( "WP_CACHE is not defined or false in wp-config.php. WordPress won't load the drop-in, so MilliCache can't intercept page requests.", 'millicache' ),
 			'value'       => $wp_cache_on ? 'true' : 'false',
+			'docs_url'    => $wp_cache_docs,
 		);
 
 		// Storage connectivity — always checked.
@@ -366,6 +424,7 @@ final class StatusBuilder {
 			'value'       => $connected
 				? __( 'connected', 'millicache' )
 				: __( 'disconnected', 'millicache' ),
+			'docs_url'    => $conn_docs,
 		);
 
 		// Storage server limits — install-wide; skip on per-site multisite or
@@ -382,6 +441,7 @@ final class StatusBuilder {
 					? __( 'A maxmemory limit is configured. The storage server can evict entries when full.', 'millicache' )
 					: __( 'No maxmemory limit is set on the storage server. Without one, the cache can grow until it crowds out other workloads on the host.', 'millicache' ),
 				'value'       => is_string( $memory['maxmemory_human'] ?? null ) ? $memory['maxmemory_human'] : 'n/a',
+				'docs_url'    => $mem_docs,
 			);
 
 			$policy    = $memory['maxmemory_policy'] ?? null;
@@ -395,6 +455,7 @@ final class StatusBuilder {
 					? __( 'The storage server is configured with allkeys-lru, the recommended policy for a cache workload.', 'millicache' )
 					: __( 'For a cache workload, allkeys-lru is recommended so the server can automatically evict least-recently-used entries when full.', 'millicache' ),
 				'value'       => is_string( $policy ) ? $policy : 'n/a',
+				'docs_url'    => $policy_docs,
 			);
 		}
 
@@ -458,6 +519,7 @@ final class StatusBuilder {
 		$versions  = is_array( $debug['versions'] ?? null ) ? $debug['versions'] : array();
 		$multisite = is_array( $debug['multisite'] ?? null ) ? $debug['multisite'] : array();
 		$flags     = is_array( $debug['flags'] ?? null ) ? $debug['flags'] : array();
+		$rules     = is_array( $debug['rules'] ?? null ) ? $debug['rules'] : array();
 		$plugins   = is_array( $debug['plugins'] ?? null ) ? $debug['plugins'] : array();
 		$theme     = is_array( $debug['theme'] ?? null ) ? $debug['theme'] : array();
 		$health    = $this->as_string( $debug['health'] ?? null, 'unknown' );
@@ -551,6 +613,21 @@ final class StatusBuilder {
 		$lines[] = sprintf(
 			'- Sample: %s',
 			empty( $sample ) ? 'none' : implode( ', ', array_filter( $sample, 'is_string' ) )
+		);
+		$lines[] = '';
+
+		$rule_packages = is_array( $rules['packages'] ?? null ) ? $rules['packages'] : array();
+		$package_parts = array();
+		foreach ( $rule_packages as $pkg_name => $pkg_count ) {
+			if ( is_string( $pkg_name ) && is_numeric( $pkg_count ) ) {
+				$package_parts[] = sprintf( '%s: %d', $pkg_name, (int) $pkg_count );
+			}
+		}
+		$lines[] = '**Rules**';
+		$lines[] = sprintf( '- Registered: %d', $this->as_int( $rules['registered_count'] ?? null ) );
+		$lines[] = sprintf(
+			'- By package: %s',
+			empty( $package_parts ) ? 'none' : implode( ', ', $package_parts )
 		);
 		$lines[] = '';
 

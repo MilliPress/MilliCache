@@ -257,6 +257,16 @@
 		line-height: 1.5;
 	}
 
+	.millicache-footer-status__check-link {
+		color: var(--wp-admin-theme-color, #3858e9);
+		text-decoration: none;
+
+		&:hover,
+		&:focus {
+			text-decoration: underline;
+		}
+	}
+
 	.millicache-footer-status__empty {
 		color: #757575;
 		font-style: italic;

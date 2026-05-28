@@ -86,8 +86,8 @@ const summarize = ( health, checks ) => {
 
 	if ( recommended > 0 ) {
 		return sprintf(
-			/* translators: %d: number of recommendations */
-			_n( '%d recommendation', '%d recommendations', recommended, 'millicache' ),
+			/* translators: %d: number of recommendations (warnings) */
+			_n( '%d warning', '%d warnings', recommended, 'millicache' ),
 			recommended
 		);
 	}
@@ -133,6 +133,19 @@ const ChecksList = ( { checks } ) => {
 							</div>
 							<p className="millicache-footer-status__check-desc">
 								{ c.description }
+								{ c.status !== 'good' && c.docs_url && (
+									<>
+										{ ' ' }
+										<a
+											href={ c.docs_url }
+											target="_blank"
+											rel="noopener noreferrer"
+											className="millicache-footer-status__check-link"
+										>
+											{ __( 'Learn more', 'millicache' ) }
+										</a>
+									</>
+								) }
 							</p>
 						</div>
 					</li>
@@ -232,7 +245,7 @@ const FooterStatus = ( { status } ) => {
 
 			{ isOpen && (
 				<Modal
-					title={ __( 'MilliCache status', 'millicache' ) }
+					title={ __( 'MilliCache Status', 'millicache' ) }
 					onRequestClose={ () => setIsOpen( false ) }
 					size="medium"
 					className="millicache-footer-status__modal"
