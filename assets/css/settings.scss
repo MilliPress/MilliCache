@@ -185,8 +185,20 @@
 
 	.millicache-footer-status__tabs {
 
+		// Bleed past the modal's 32px content padding so the borders span
+		// the full modal width like the tab nav patterns elsewhere in the
+		// admin. Inner padding restores tab-label alignment with the
+		// surrounding content.
 		.components-tab-panel__tabs {
-			margin-bottom: 16px;
+			margin: 0 -32px 16px;
+			padding: 0 32px;
+			border-top: 1px solid #dcdcde;
+			border-bottom: 1px solid #dcdcde;
+
+			@media (max-width: 600px) {
+				margin: 0 -16px 16px;
+				padding: 0 16px;
+			}
 		}
 	}
 
