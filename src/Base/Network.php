@@ -158,7 +158,8 @@ final class Network extends Manager {
 				'buttons' => array( $this->clear_cache_button() ),
 			),
 			'footer' => array(
-				'right' => 'MilliCache ' . MILLICACHE_VERSION,                 // Prepended to "MilliBase X.Y.Z"
+				'left'  => array( 'component' => 'MilliCacheFooterStatus' ),
+				'right' => 'MilliCache ' . MILLICACHE_VERSION,
 			),
 
 			'tabs'            => array(

@@ -166,7 +166,8 @@ final class Site extends Manager {
 					),
 				),
 			),
-			'footer' => array(
+			'footer'          => array(
+				'left'  => array( 'component' => 'MilliCacheFooterStatus' ),
 				'right' => 'MilliCache ' . MILLICACHE_VERSION,
 			),
 

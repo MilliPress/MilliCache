@@ -242,7 +242,7 @@ const StatusTab = ( { status } ) => {
 			statusMessage: status.storage?.connected
 				? null
 				: __(
-						'MilliCache cannot reach the configured storage server. Check the host, port, and credentials in the Storage tab.',
+						'MilliCache cannot reach the configured storage server. Check the host, port, and credentials in the Storage settings.',
 						'millicache'
 				  ),
 			statusDocsLink: DOC_LINKS.connection,
