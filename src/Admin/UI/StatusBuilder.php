@@ -143,10 +143,11 @@ final class StatusBuilder {
 		 *
 		 * @since 1.7.0
 		 *
-		 * @param array<int, array<string, mixed>> $checks  Default check list.
-		 * @param array<string, mixed>             $payload The in-progress status payload.
+		 * @param array<int, array<string, mixed>> $checks     Default check list.
+		 * @param array<string, mixed>             $payload    The in-progress status payload.
+		 * @param bool                             $is_network Whether the firing `/status` endpoint is network-scoped.
 		 */
-		$checks = apply_filters( 'millicache_status_checks', $checks, $payload );
+		$checks = apply_filters( 'millicache_status_checks', $checks, $payload, $network_admin );
 
 		$debug = array(
 			'plugin'       => array(
@@ -179,12 +180,13 @@ final class StatusBuilder {
 		 *
 		 * @since 1.7.0
 		 *
-		 * @param array<string, mixed> $debug   Default debug block.
-		 * @param array<string, mixed> $payload The full status payload.
+		 * @param array<string, mixed> $debug      Default debug block.
+		 * @param array<string, mixed> $payload    The full status payload.
+		 * @param bool                 $is_network Whether the firing `/status` endpoint is network-scoped.
 		 */
-		$payload['debug'] = apply_filters( 'millicache_status_debug', $debug, $payload );
+		$payload['debug'] = apply_filters( 'millicache_status_debug', $debug, $payload, $network_admin );
 
-		$payload['debug']['markdown'] = $this->render_markdown( $payload );
+		$payload['debug']['markdown'] = $this->render_markdown( $payload, $network_admin );
 
 		return $payload;
 	}
@@ -603,10 +605,11 @@ final class StatusBuilder {
 	 *
 	 * @since 1.7.0
 	 *
-	 * @param array<string, mixed> $payload The assembled payload.
+	 * @param array<string, mixed> $payload    The assembled payload.
+	 * @param bool                 $is_network Whether the firing `/status` endpoint is network-scoped.
 	 * @return string
 	 */
-	private function render_markdown( array $payload ): string {
+	private function render_markdown( array $payload, bool $is_network = false ): string {
 		// Top-level legacy blocks (also consumed by the Status tab).
 		$dropin  = is_array( $payload['dropin'] ?? null ) ? $payload['dropin'] : null;
 		$storage = is_array( $payload['storage'] ?? null ) ? $payload['storage'] : array();
@@ -780,10 +783,11 @@ final class StatusBuilder {
 		 *
 		 * @since 1.7.0
 		 *
-		 * @param array<int, string>   $sections Default empty list of sections.
-		 * @param array<string, mixed> $payload  The full status payload.
+		 * @param array<int, string>   $sections   Default empty list of sections.
+		 * @param array<string, mixed> $payload    The full status payload.
+		 * @param bool                 $is_network Whether the firing `/status` endpoint is network-scoped.
 		 */
-		$extra_sections = apply_filters( 'millicache_status_markdown_sections', array(), $payload );
+		$extra_sections = apply_filters( 'millicache_status_markdown_sections', array(), $payload, $is_network );
 		foreach ( $extra_sections as $section ) {
 			if ( '' === trim( $section ) ) {
 				continue;
