@@ -79,7 +79,7 @@ const summarize = ( health, checks ) => {
 	if ( critical > 0 ) {
 		return sprintf(
 			/* translators: %d: number of critical issues */
-			_n( '%d issue', '%d issues', critical, 'millicache' ),
+			_n( '%d Issue', '%d Issues', critical, 'millicache' ),
 			critical
 		);
 	}
@@ -87,7 +87,7 @@ const summarize = ( health, checks ) => {
 	if ( recommended > 0 ) {
 		return sprintf(
 			/* translators: %d: number of recommendations (warnings) */
-			_n( '%d warning', '%d warnings', recommended, 'millicache' ),
+			_n( '%d Warning', '%d Warnings', recommended, 'millicache' ),
 			recommended
 		);
 	}
@@ -159,7 +159,7 @@ const DebugTab = ( { markdown, copyState, onCopy, onOpenIssue } ) => (
 	<>
 		<p>
 			{ __(
-				'A sanitized debug snapshot. No hosts, credentials, or customer paths are included. “Open GitHub Issue” starts a bug report with the snapshot and your environment versions pre-filled; “Copy to clipboard” gives you the Markdown for pasting elsewhere.',
+				'A sanitized debug snapshot. No hosts, credentials, or customer paths are included. “Open GitHub Issue” starts a bug report with the snapshot and your environment versions pre-filled.',
 				'millicache'
 			) }
 		</p>
@@ -256,11 +256,11 @@ const FooterStatus = ( { status } ) => {
 						tabs={ [
 							{
 								name: 'checks',
-								title: __( 'Status checks', 'millicache' ),
+								title: __( 'Status Checks', 'millicache' ),
 							},
 							{
 								name: 'debug',
-								title: __( 'Debug info', 'millicache' ),
+								title: __( 'Debug Info', 'millicache' ),
 							},
 						] }
 					>
