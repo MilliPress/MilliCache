@@ -179,25 +179,19 @@
 	letter-spacing: 0.01em;
 }
 
-// Modal contents render via WP component portals (outside any page root),
-// so styles for them are also intentionally unscoped.
+// Modal contents render via WP component portals (outside any page root).
 .millicache-footer-status__modal {
 
-	.millicache-footer-status__tabs {
+	.components-modal__content {
+		padding-top: 0;
 
-		// Bleed past the modal's 32px content padding so the borders span
-		// the full modal width like the tab nav patterns elsewhere in the
-		// admin. Inner padding restores tab-label alignment with the
-		// surrounding content.
-		.components-tab-panel__tabs {
-			margin: 0 -32px 16px;
-			padding: 0 32px;
-			border-top: 1px solid #dcdcde;
-			border-bottom: 1px solid #dcdcde;
+		.millicache-footer-status__tabs {
 
-			@media (max-width: 600px) {
-				margin: 0 -16px 16px;
-				padding: 0 16px;
+			.components-tab-panel__tabs {
+				margin: 0 -24px 16px;
+				padding: 0 24px;
+				border-top: 1px solid #dcdcde;
+				border-bottom: 1px solid #dcdcde;
 			}
 		}
 	}
@@ -228,6 +222,14 @@
 		width: 20px;
 		height: 20px;
 		margin-top: 2px;
+
+		// @wordpress/icons Path primitives ship without a fill, so SVG's
+		// default `fill: black` wins unless we explicitly bridge it to the
+		// wrapper's currentColor.
+		/* stylelint-disable-next-line no-descending-specificity */
+		svg path {
+			fill: currentcolor;
+		}
 
 		&--good {
 			color: #4ab866;
