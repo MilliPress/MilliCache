@@ -1,6 +1,7 @@
 import { useState } from '@wordpress/element';
-import { Button, Modal } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+import { Button, Modal, TabPanel, Icon } from '@wordpress/components';
+import { __, _n, sprintf } from '@wordpress/i18n';
+import { check, caution, error } from '@wordpress/icons';
 
 const ISSUE_URL = 'https://github.com/MilliPress/MilliCache/issues/new';
 const ISSUE_TEMPLATE = 'bug_report.yml';
@@ -10,17 +11,18 @@ const MAX_ISSUE_URL_LENGTH = 8000;
 
 const KNOWN_BACKENDS = [ 'Redis', 'KeyDB', 'Dragonfly', 'Valkey' ];
 
-const HEALTH_LABELS = {
-	ok: __( 'MilliCache is healthy', 'millicache' ),
-	warning: __( 'MilliCache has warnings', 'millicache' ),
-	error: __( 'MilliCache has errors', 'millicache' ),
-	loading: __( 'Loading MilliCache status…', 'millicache' ),
+const CHECK_ICONS = {
+	good: { icon: check, className: 'millicache-footer-status__check-icon--good' },
+	recommended: {
+		icon: caution,
+		className: 'millicache-footer-status__check-icon--warning',
+	},
+	critical: {
+		icon: error,
+		className: 'millicache-footer-status__check-icon--critical',
+	},
 };
 
-/**
- * Pluck the backend name (e.g. "Redis") from a server-version string
- * ("Redis 7.2.4"). Used to prefill the bug-report cache-backend dropdown.
- */
 const resolveBackend = ( serverVersion ) => {
 	if ( typeof serverVersion !== 'string' || ! serverVersion ) {
 		return '';
@@ -51,7 +53,6 @@ const buildIssueUrl = ( status ) => {
 		params.set( 'cache-backend', backend );
 	}
 
-	// Prefill the debug-info textarea when the resulting URL stays within the safe length budget.
 	if ( typeof markdown === 'string' && markdown ) {
 		params.set( 'debug-info', markdown );
 		const candidate = `${ ISSUE_URL }?${ params.toString() }`;
@@ -64,6 +65,116 @@ const buildIssueUrl = ( status ) => {
 	return `${ ISSUE_URL }?${ params.toString() }`;
 };
 
+/**
+ * Pick a short status-aware label that summarizes the failing checks count.
+ */
+const summarize = ( health, checks ) => {
+	if ( health === 'loading' ) {
+		return __( 'Checking…', 'millicache' );
+	}
+
+	const critical = checks.filter( ( c ) => c.status === 'critical' ).length;
+	const recommended = checks.filter( ( c ) => c.status === 'recommended' ).length;
+
+	if ( critical > 0 ) {
+		return sprintf(
+			/* translators: %d: number of critical issues */
+			_n( '%d issue', '%d issues', critical, 'millicache' ),
+			critical
+		);
+	}
+
+	if ( recommended > 0 ) {
+		return sprintf(
+			/* translators: %d: number of recommendations */
+			_n( '%d recommendation', '%d recommendations', recommended, 'millicache' ),
+			recommended
+		);
+	}
+
+	return __( 'Healthy', 'millicache' );
+};
+
+const ChecksList = ( { checks } ) => {
+	if ( ! checks || checks.length === 0 ) {
+		return (
+			<p className="millicache-footer-status__empty">
+				{ __(
+					'No status checks are available yet. Try refreshing this page.',
+					'millicache'
+				) }
+			</p>
+		);
+	}
+
+	return (
+		<ul className="millicache-footer-status__checks">
+			{ checks.map( ( c ) => {
+				const cfg = CHECK_ICONS[ c.status ] ?? CHECK_ICONS.recommended;
+				return (
+					<li
+						key={ c.id }
+						className={ `millicache-footer-status__check millicache-footer-status__check--${ c.status }` }
+					>
+						<span
+							className={ `millicache-footer-status__check-icon ${ cfg.className }` }
+							aria-hidden="true"
+						>
+							<Icon icon={ cfg.icon } size={ 20 } />
+						</span>
+						<div className="millicache-footer-status__check-body">
+							<div className="millicache-footer-status__check-head">
+								<strong>{ c.label }</strong>
+								{ c.value && (
+									<code className="millicache-footer-status__check-value">
+										{ c.value }
+									</code>
+								) }
+							</div>
+							<p className="millicache-footer-status__check-desc">
+								{ c.description }
+							</p>
+						</div>
+					</li>
+				);
+			} ) }
+		</ul>
+	);
+};
+
+const DebugTab = ( { markdown, copyState, onCopy, onOpenIssue } ) => (
+	<>
+		<p>
+			{ __(
+				'A sanitized debug snapshot — no hosts, credentials, or customer paths are included. “Open GitHub Issue” starts a bug report with the snapshot and your environment versions pre-filled; “Copy to clipboard” gives you the Markdown for pasting elsewhere.',
+				'millicache'
+			) }
+		</p>
+
+		<textarea
+			className="millicache-footer-status__payload"
+			value={ markdown }
+			readOnly
+			rows={ 18 }
+			onFocus={ ( event ) => event.target.select() }
+		/>
+
+		<div className="millicache-footer-status__actions">
+			<Button variant="primary" onClick={ onCopy } disabled={ ! markdown }>
+				{ copyState === 'copied'
+					? __( 'Copied!', 'millicache' )
+					: copyState === 'manual'
+					? __( 'Select & copy manually', 'millicache' )
+					: __( 'Copy to clipboard', 'millicache' ) }
+			</Button>
+
+			<Button variant="secondary" onClick={ onOpenIssue }>
+				{ __( 'Open GitHub Issue', 'millicache' ) }
+			</Button>
+		</div>
+	</>
+);
+
 const FooterStatus = ( { status } ) => {
 	const [ isOpen, setIsOpen ] = useState( false );
 	const [ copyState, setCopyState ] = useState( 'idle' );
@@ -71,6 +182,7 @@ const FooterStatus = ( { status } ) => {
 	const debug = status?.[ 'debug' ];
 	const health = debug?.health ?? 'loading';
 	const markdown = debug?.markdown ?? '';
+	const checks = Array.isArray( debug?.checks ) ? debug.checks : [];
 
 	const handleCopy = async () => {
 		if ( ! markdown ) {
@@ -93,14 +205,10 @@ const FooterStatus = ( { status } ) => {
 	};
 
 	const handleOpenIssue = () => {
-		window.open(
-			buildIssueUrl( status ),
-			'_blank',
-			'noopener,noreferrer'
-		);
+		window.open( buildIssueUrl( status ), '_blank', 'noopener,noreferrer' );
 	};
 
-	const dotLabel = HEALTH_LABELS[ health ] ?? HEALTH_LABELS.loading;
+	const label = summarize( health, checks );
 
 	return (
 		<>
@@ -108,57 +216,54 @@ const FooterStatus = ( { status } ) => {
 				type="button"
 				className={ `millicache-footer-status__trigger millicache-footer-status__trigger--${ health }` }
 				onClick={ () => setIsOpen( true ) }
-				aria-label={ dotLabel }
-				title={ dotLabel }
+				aria-label={ sprintf(
+					/* translators: %s: status summary */
+					__( 'MilliCache status: %s — click for details', 'millicache' ),
+					label
+				) }
+				title={ label }
 			>
 				<span
 					className="millicache-footer-status__dot"
 					aria-hidden="true"
 				/>
-				<span className="millicache-footer-status__label">
-					{ __( 'Status', 'millicache' ) }
-				</span>
+				<span className="millicache-footer-status__label">{ label }</span>
 			</button>
 
 			{ isOpen && (
 				<Modal
-					title={ __( 'MilliCache Status', 'millicache' ) }
+					title={ __( 'MilliCache status', 'millicache' ) }
 					onRequestClose={ () => setIsOpen( false ) }
 					size="medium"
 					className="millicache-footer-status__modal"
 				>
-
-					<textarea
-						className="millicache-footer-status__payload"
-						value={ markdown }
-						readOnly
-						rows={ 18 }
-						onFocus={ ( event ) => event.target.select() }
-					/>
-
-					<div className="millicache-footer-status__actions">
-						<Button
-							variant="primary"
-							onClick={ handleCopy }
-							disabled={ ! markdown }
-						>
-							{ copyState === 'copied'
-								? __( 'Copied!', 'millicache' )
-								: copyState === 'manual'
-								? __(
-										'Select & copy manually',
-										'millicache'
-								  )
-								: __( 'Copy to clipboard', 'millicache' ) }
-						</Button>
-
-						<Button
-							variant="secondary"
-							onClick={ handleOpenIssue }
-						>
-							{ __( 'Open GitHub Issue', 'millicache' ) }
-						</Button>
-					</div>
+					<TabPanel
+						className="millicache-footer-status__tabs"
+						activeClass="is-active"
+						tabs={ [
+							{
+								name: 'checks',
+								title: __( 'Status checks', 'millicache' ),
+							},
+							{
+								name: 'debug',
+								title: __( 'Debug info', 'millicache' ),
+							},
+						] }
+					>
+						{ ( tab ) =>
+							tab.name === 'checks' ? (
+								<ChecksList checks={ checks } />
+							) : (
+								<DebugTab
+									markdown={ markdown }
+									copyState={ copyState }
+									onCopy={ handleCopy }
+									onOpenIssue={ handleOpenIssue }
+								/>
+							)
+						}
+					</TabPanel>
 				</Modal>
 			) }
 		</>

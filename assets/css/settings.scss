@@ -183,6 +183,85 @@
 // so styles for them are also intentionally unscoped.
 .millicache-footer-status__modal {
 
+	.millicache-footer-status__tabs {
+
+		.components-tab-panel__tabs {
+			margin-bottom: 16px;
+		}
+	}
+
+	.millicache-footer-status__checks {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.millicache-footer-status__check {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+		padding: 12px 0;
+		border-bottom: 1px solid #f0f0f1;
+
+		&:last-child {
+			border-bottom: 0;
+		}
+	}
+
+	.millicache-footer-status__check-icon {
+		flex: 0 0 20px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		margin-top: 2px;
+
+		&--good {
+			color: #4ab866;
+		}
+
+		&--warning {
+			color: #dba617;
+		}
+
+		&--critical {
+			color: #cc1818;
+		}
+	}
+
+	.millicache-footer-status__check-body {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.millicache-footer-status__check-head {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
+		margin-bottom: 4px;
+	}
+
+	.millicache-footer-status__check-value {
+		font-size: 11px;
+		color: #757575;
+		background: rgba(0, 0, 0, 0.04);
+		padding: 1px 6px;
+		border-radius: 3px;
+	}
+
+	.millicache-footer-status__check-desc {
+		margin: 0;
+		font-size: 13px;
+		color: #50575e;
+		line-height: 1.5;
+	}
+
+	.millicache-footer-status__empty {
+		color: #757575;
+		font-style: italic;
+	}
+
 	.millicache-footer-status__payload {
 		width: 100%;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;

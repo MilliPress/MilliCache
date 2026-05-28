@@ -111,6 +111,8 @@ final class StatusBuilder {
 			$payload['dropin']  = Utils::validate_advanced_cache_file();
 		}
 
+		$checks = $this->gather_checks( $payload );
+
 		$payload['debug'] = array(
 			'plugin'       => array(
 				'name'         => $this->plugin_name,
@@ -122,7 +124,8 @@ final class StatusBuilder {
 			'flags'        => $this->gather_flags(),
 			'plugins'      => $this->gather_plugins(),
 			'theme'        => $this->gather_theme(),
-			'health'       => $this->compute_health( $payload ),
+			'checks'       => $checks,
+			'health'       => $this->compute_health( $checks ),
 			'generated_at' => gmdate( 'c' ),
 		);
 
@@ -273,43 +276,156 @@ final class StatusBuilder {
 	}
 
 	/**
-	 * Compute the health-dot indicator from the assembled payload.
+	 * Enumerate every health check MilliCache runs, with the current result.
 	 *
-	 * The dropin block uses the existing convention: empty array = missing,
-	 * `{type, custom, outdated}` = present. WP_CACHE is read from the
-	 * constant directly since it isn't a field in any payload block.
+	 * Each check has a stable `id`, a translated `label`, a `status` (one of
+	 * `good` / `recommended` / `critical` — matching WordPress Site Health's
+	 * vocabulary), a `description` explaining the result, and an optional
+	 * `value` carrying the observed signal.
+	 *
+	 * Checks that depend on install-wide data (the drop-in, storage server
+	 * memory) are omitted on per-site multisite — the React modal and Site
+	 * Health cards both degrade gracefully.
 	 *
 	 * @since 1.7.0
 	 *
 	 * @param array<string, mixed> $payload The (in-progress) payload.
-	 * @return string One of `'ok'`, `'warning'`, `'error'`.
+	 * @return array<int, array{id: string, label: string, status: string, description: string, value?: string}>
 	 */
-	private function compute_health( array $payload ): string {
+	private function gather_checks( array $payload ): array {
 		$dropin  = is_array( $payload['dropin'] ?? null ) ? $payload['dropin'] : null;
 		$storage = is_array( $payload['storage'] ?? null ) ? $payload['storage'] : array();
+		$info    = is_array( $storage['info'] ?? null ) ? $storage['info'] : array();
+		$memory  = is_array( $info['Memory'] ?? null ) ? $info['Memory'] : array();
 
-		$dropin_present = is_array( $dropin ) && ! empty( $dropin );
-		$wp_cache_on    = defined( 'WP_CACHE' ) && WP_CACHE;
-		$connected      = ! empty( $storage['connected'] );
+		$checks            = array();
+		$is_per_site_ms    = null === $dropin;
+		$dropin_is_present = is_array( $dropin ) && ! empty( $dropin );
+		$wp_cache_on       = defined( 'WP_CACHE' ) && WP_CACHE;
+		$connected         = ! empty( $storage['connected'] );
 
-		// Per-site multisite carries a thin storage block; if drop-in info
-		// isn't included (install-wide), trust the connection signal alone.
-		$skip_dropin_check = null === $dropin;
+		// Drop-in presence — install-wide signal, omitted on per-site multisite.
+		if ( ! $is_per_site_ms ) {
+			$checks[] = array(
+				'id'          => 'dropin_present',
+				'label'       => __( 'advanced-cache.php drop-in is installed', 'millicache' ),
+				'status'      => $dropin_is_present ? 'good' : 'critical',
+				'description' => $dropin_is_present
+					? __( 'The drop-in is in place — MilliCache can intercept page requests early.', 'millicache' )
+					: __( 'The drop-in is missing. Re-install it from MilliCache settings; without it, no pages are cached.', 'millicache' ),
+				'value'       => $dropin_is_present
+					? ( is_string( $dropin['type'] ?? null ) ? $dropin['type'] : 'file' )
+					: __( 'missing', 'millicache' ),
+			);
 
-		if ( ( ! $skip_dropin_check && ! $dropin_present ) || ! $wp_cache_on || ! $connected ) {
-			return 'error';
+			if ( $dropin_is_present ) {
+				$outdated      = ! empty( $dropin['outdated'] );
+				$customized    = ! empty( $dropin['custom'] );
+				$dropin_status = ( $outdated || $customized ) ? 'recommended' : 'good';
+
+				if ( $outdated ) {
+					$dropin_text  = __( 'The installed drop-in is older than the version bundled with the plugin. Re-install it to pick up improvements and bug fixes.', 'millicache' );
+					$dropin_value = __( 'outdated', 'millicache' );
+				} elseif ( $customized ) {
+					$dropin_text  = __( "The drop-in differs from the bundled version. MilliCache won't overwrite your changes, but plugin updates require manual merging.", 'millicache' );
+					$dropin_value = __( 'customized', 'millicache' );
+				} else {
+					$dropin_text  = __( 'The drop-in matches the bundled version.', 'millicache' );
+					$dropin_value = __( 'current', 'millicache' );
+				}
+
+				$checks[] = array(
+					'id'          => 'dropin_current',
+					'label'       => __( 'advanced-cache.php drop-in is current', 'millicache' ),
+					'status'      => $dropin_status,
+					'description' => $dropin_text,
+					'value'       => $dropin_value,
+				);
+			}
 		}
 
-		$info     = is_array( $storage['info'] ?? null ) ? $storage['info'] : array();
-		$memory   = is_array( $info['Memory'] ?? null ) ? $info['Memory'] : array();
-		$max_mem  = is_numeric( $memory['maxmemory'] ?? null ) ? (int) $memory['maxmemory'] : 0;
-		$policy   = $memory['maxmemory_policy'] ?? null;
+		// WP_CACHE constant — always checked.
+		$checks[] = array(
+			'id'          => 'wp_cache_constant',
+			'label'       => __( 'WP_CACHE constant is enabled', 'millicache' ),
+			'status'      => $wp_cache_on ? 'good' : 'critical',
+			'description' => $wp_cache_on
+				? __( 'WP_CACHE is defined and truthy — WordPress will load the advanced-cache.php drop-in.', 'millicache' )
+				: __( "WP_CACHE is not defined or false in wp-config.php. WordPress won't load the drop-in, so MilliCache can't intercept page requests.", 'millicache' ),
+			'value'       => $wp_cache_on ? 'true' : 'false',
+		);
 
-		$policy_ok       = ! is_string( $policy ) || '' === $policy || 'allkeys-lru' === $policy;
-		$server_warning  = array() !== $info && ( 0 === $max_mem || ! $policy_ok );
-		$dropin_warning  = is_array( $dropin ) && ( ! empty( $dropin['outdated'] ) || ! empty( $dropin['custom'] ) );
+		// Storage connectivity — always checked.
+		$checks[] = array(
+			'id'          => 'storage_connected',
+			'label'       => __( 'Storage backend is reachable', 'millicache' ),
+			'status'      => $connected ? 'good' : 'critical',
+			'description' => $connected
+				? __( 'MilliCache successfully connected to its configured storage server.', 'millicache' )
+				: __( 'MilliCache cannot reach the configured storage server. Cache reads and writes are failing — check the host, port, and credentials.', 'millicache' ),
+			'value'       => $connected
+				? __( 'connected', 'millicache' )
+				: __( 'disconnected', 'millicache' ),
+		);
 
-		return ( $server_warning || $dropin_warning ) ? 'warning' : 'ok';
+		// Storage server limits — install-wide; skip on per-site multisite or
+		// when the storage server isn't reachable to begin with.
+		if ( ! $is_per_site_ms && $connected && array() !== $info ) {
+			$max_mem    = is_numeric( $memory['maxmemory'] ?? null ) ? (int) $memory['maxmemory'] : 0;
+			$max_mem_ok = $max_mem > 0;
+
+			$checks[] = array(
+				'id'          => 'storage_max_memory',
+				'label'       => __( 'Storage backend has a memory limit', 'millicache' ),
+				'status'      => $max_mem_ok ? 'good' : 'recommended',
+				'description' => $max_mem_ok
+					? __( 'A maxmemory limit is configured — the storage server can evict entries when full.', 'millicache' )
+					: __( 'No maxmemory limit is set on the storage server. Without one, the cache can grow until it crowds out other workloads on the host.', 'millicache' ),
+				'value'       => is_string( $memory['maxmemory_human'] ?? null ) ? $memory['maxmemory_human'] : 'n/a',
+			);
+
+			$policy    = $memory['maxmemory_policy'] ?? null;
+			$policy_ok = ! is_string( $policy ) || '' === $policy || 'allkeys-lru' === $policy;
+
+			$checks[] = array(
+				'id'          => 'storage_eviction_policy',
+				'label'       => __( 'Storage eviction policy is allkeys-lru', 'millicache' ),
+				'status'      => $policy_ok ? 'good' : 'recommended',
+				'description' => $policy_ok
+					? __( 'The storage server is configured with allkeys-lru, the recommended policy for a cache workload.', 'millicache' )
+					: __( 'For a cache workload, allkeys-lru is recommended so the server can automatically evict least-recently-used entries when full.', 'millicache' ),
+				'value'       => is_string( $policy ) ? $policy : 'n/a',
+			);
+		}
+
+		return $checks;
+	}
+
+	/**
+	 * Reduce a checks list to a single health verdict.
+	 *
+	 * `critical` wins over `recommended` wins over `good`. Mirrors how the
+	 * footer pill, Site Health cards, and CLI all derive a one-word answer
+	 * from the same structured signal.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param array<int, array{status: string}> $checks The checks list from {@see self::gather_checks()}.
+	 * @return string One of `'ok'`, `'warning'`, `'error'`.
+	 */
+	private function compute_health( array $checks ): string {
+		$has_warning = false;
+
+		foreach ( $checks as $check ) {
+			if ( 'critical' === $check['status'] ) {
+				return 'error';
+			}
+			if ( 'recommended' === $check['status'] ) {
+				$has_warning = true;
+			}
+		}
+
+		return $has_warning ? 'warning' : 'ok';
 	}
 
 	/**

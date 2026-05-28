@@ -95,7 +95,7 @@ describe( 'StatusBuilder/build', function () {
 		} );
 	} );
 
-	describe( 'compute_health', function () {
+	describe( 'gather_checks', function () {
 		beforeEach( function () {
 			$this->builder = make_status_builder();
 			$this->healthy = array(
@@ -109,6 +109,7 @@ describe( 'StatusBuilder/build', function () {
 					'info'      => array(
 						'Memory' => array(
 							'maxmemory'        => 536870912,
+							'maxmemory_human'  => '512M',
 							'maxmemory_policy' => 'allkeys-lru',
 						),
 					),
@@ -116,68 +117,120 @@ describe( 'StatusBuilder/build', function () {
 			);
 		} );
 
-		it( 'returns ok when all signals are green', function () {
-			$result = invoke_builder_method( $this->builder, 'compute_health', array( $this->healthy ) );
-			expect( $result )->toBe( 'ok' );
+		it( 'emits good for every check on a fully healthy payload', function () {
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $this->healthy ) );
+
+			expect( count( $checks ) )->toBeGreaterThan( 0 );
+			foreach ( $checks as $check ) {
+				expect( $check )->toHaveKey( 'id' );
+				expect( $check )->toHaveKey( 'status' );
+				expect( $check['status'] )->toBe( 'good' );
+			}
 		} );
 
-		it( 'returns error when drop-in is missing (empty array)', function () {
+		it( 'flags dropin_present as critical when the drop-in is missing', function () {
 			$payload = $this->healthy;
 			$payload['dropin'] = array();
-			$result = invoke_builder_method( $this->builder, 'compute_health', array( $payload ) );
-			expect( $result )->toBe( 'error' );
+
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $payload ) );
+			$by_id  = array_column( $checks, null, 'id' );
+
+			expect( $by_id )->toHaveKey( 'dropin_present' );
+			expect( $by_id['dropin_present']['status'] )->toBe( 'critical' );
 		} );
 
-		it( 'returns error when storage is disconnected', function () {
-			$payload = $this->healthy;
-			$payload['storage']['connected'] = false;
-			$result = invoke_builder_method( $this->builder, 'compute_health', array( $payload ) );
-			expect( $result )->toBe( 'error' );
-		} );
-
-		it( 'returns warning when drop-in is outdated', function () {
+		it( 'flags dropin_current as recommended when outdated', function () {
 			$payload = $this->healthy;
 			$payload['dropin']['outdated'] = true;
-			$result = invoke_builder_method( $this->builder, 'compute_health', array( $payload ) );
-			expect( $result )->toBe( 'warning' );
+
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $payload ) );
+			$by_id  = array_column( $checks, null, 'id' );
+
+			expect( $by_id['dropin_current']['status'] )->toBe( 'recommended' );
 		} );
 
-		it( 'returns warning when drop-in is customized', function () {
+		it( 'flags storage_connected as critical when disconnected', function () {
 			$payload = $this->healthy;
-			$payload['dropin']['custom'] = true;
-			$result = invoke_builder_method( $this->builder, 'compute_health', array( $payload ) );
-			expect( $result )->toBe( 'warning' );
+			$payload['storage']['connected'] = false;
+
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $payload ) );
+			$by_id  = array_column( $checks, null, 'id' );
+
+			expect( $by_id['storage_connected']['status'] )->toBe( 'critical' );
 		} );
 
-		it( 'returns warning when no maxmemory is set', function () {
+		it( 'flags storage_max_memory as recommended when unset', function () {
 			$payload = $this->healthy;
 			$payload['storage']['info']['Memory']['maxmemory'] = 0;
-			$result = invoke_builder_method( $this->builder, 'compute_health', array( $payload ) );
-			expect( $result )->toBe( 'warning' );
+
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $payload ) );
+			$by_id  = array_column( $checks, null, 'id' );
+
+			expect( $by_id['storage_max_memory']['status'] )->toBe( 'recommended' );
 		} );
 
-		it( 'returns warning when maxmemory policy is not allkeys-lru', function () {
+		it( 'flags storage_eviction_policy as recommended when not allkeys-lru', function () {
 			$payload = $this->healthy;
 			$payload['storage']['info']['Memory']['maxmemory_policy'] = 'noeviction';
-			$result = invoke_builder_method( $this->builder, 'compute_health', array( $payload ) );
-			expect( $result )->toBe( 'warning' );
+
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $payload ) );
+			$by_id  = array_column( $checks, null, 'id' );
+
+			expect( $by_id['storage_eviction_policy']['status'] )->toBe( 'recommended' );
 		} );
 
-		it( 'returns ok on per-site multisite (thin storage, no dropin key) when connected', function () {
+		it( 'omits install-wide checks on per-site multisite (no dropin key)', function () {
 			$payload = array(
 				'storage' => array( 'connected' => true ),
-				// `dropin` absent → install-wide check skipped.
 			);
-			$result = invoke_builder_method( $this->builder, 'compute_health', array( $payload ) );
-			expect( $result )->toBe( 'ok' );
+
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $payload ) );
+			$by_id  = array_column( $checks, null, 'id' );
+
+			expect( $by_id )->not->toHaveKey( 'dropin_present' );
+			expect( $by_id )->not->toHaveKey( 'dropin_current' );
+			expect( $by_id )->not->toHaveKey( 'storage_max_memory' );
+			expect( $by_id )->not->toHaveKey( 'storage_eviction_policy' );
+			expect( $by_id )->toHaveKey( 'wp_cache_constant' );
+			expect( $by_id )->toHaveKey( 'storage_connected' );
+		} );
+	} );
+
+	describe( 'compute_health', function () {
+		beforeEach( function () {
+			$this->builder = make_status_builder();
 		} );
 
-		it( 'returns error on per-site multisite when storage is disconnected', function () {
-			$payload = array(
-				'storage' => array( 'connected' => false ),
+		it( 'returns ok when every check is good', function () {
+			$checks = array(
+				array( 'id' => 'a', 'status' => 'good' ),
+				array( 'id' => 'b', 'status' => 'good' ),
 			);
-			$result = invoke_builder_method( $this->builder, 'compute_health', array( $payload ) );
-			expect( $result )->toBe( 'error' );
+			expect( invoke_builder_method( $this->builder, 'compute_health', array( $checks ) ) )
+				->toBe( 'ok' );
+		} );
+
+		it( 'returns warning when at least one check is recommended', function () {
+			$checks = array(
+				array( 'id' => 'a', 'status' => 'good' ),
+				array( 'id' => 'b', 'status' => 'recommended' ),
+			);
+			expect( invoke_builder_method( $this->builder, 'compute_health', array( $checks ) ) )
+				->toBe( 'warning' );
+		} );
+
+		it( 'returns error when any check is critical (winning over recommended)', function () {
+			$checks = array(
+				array( 'id' => 'a', 'status' => 'recommended' ),
+				array( 'id' => 'b', 'status' => 'critical' ),
+			);
+			expect( invoke_builder_method( $this->builder, 'compute_health', array( $checks ) ) )
+				->toBe( 'error' );
+		} );
+
+		it( 'returns ok on an empty checks list', function () {
+			expect( invoke_builder_method( $this->builder, 'compute_health', array( array() ) ) )
+				->toBe( 'ok' );
 		} );
 	} );
 
