@@ -45,7 +45,7 @@ body:
         - Redis
         - KeyDB
         - Dragonfly
-        - ValKey
+        - Valkey
         - Other
     validations:
       required: true
@@ -80,6 +80,17 @@ body:
       label: Additional environment info
       description: Hosting provider, OS, other caching plugins, reverse proxy, etc.
       placeholder: "e.g. Kinsta on Ubuntu 24.04, Nginx, no other cache plugins"
+    validations:
+      required: false
+
+  - type: textarea
+    id: debug-info
+    attributes:
+      label: Debug info
+      description: |
+        Paste the sanitized debug snapshot you copied from the MilliCache settings page (admin footer → Status → Copy to clipboard).
+        The snapshot already redacts hosts, credentials, and customer paths.
+      placeholder: "Paste the copied Markdown here."
     validations:
       required: false
 
