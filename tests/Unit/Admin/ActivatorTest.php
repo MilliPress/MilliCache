@@ -87,12 +87,6 @@ describe( 'Activator', function () {
 			expect( $reflection->hasMethod( 'create_advanced_cache_file' ) )->toBeTrue();
 		} );
 
-		it( 'schedule_events is private and static', function () {
-			$method = new ReflectionMethod( Activator::class, 'schedule_events' );
-			expect( $method->isPrivate() )->toBeTrue();
-			expect( $method->isStatic() )->toBeTrue();
-		} );
-
 		it( 'create_advanced_cache_file is private and static', function () {
 			$method = new ReflectionMethod( Activator::class, 'create_advanced_cache_file' );
 			expect( $method->isPrivate() )->toBeTrue();
@@ -125,6 +119,12 @@ describe( 'Activator', function () {
 			} else {
 				expect( $return_type )->toBeNull();
 			}
+		} );
+
+		it( 'schedule_events is public and static so loads can self-heal the schedule', function () {
+			$method = new ReflectionMethod( Activator::class, 'schedule_events' );
+			expect( $method->isPublic() )->toBeTrue();
+			expect( $method->isStatic() )->toBeTrue();
 		} );
 
 		it( 'create_advanced_cache_file returns void', function () {

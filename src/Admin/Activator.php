@@ -47,11 +47,11 @@ final class Activator {
 	 * Schedule the cron events.
 	 *
 	 * @since    1.0.0
-	 * @access   private
+	 * @access   public
 	 *
 	 * @return   void
 	 */
-	private static function schedule_events() {
+	public static function schedule_events() {
 		if ( ! wp_next_scheduled( 'millicache_nightly' ) ) {
 			wp_schedule_event( strtotime( 'tomorrow 3AM' ), 'daily', 'millicache_nightly' );
 		}
