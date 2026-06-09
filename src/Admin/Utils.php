@@ -146,19 +146,12 @@ final class Utils {
 	/**
 	 * Get the size of the cache.
 	 *
-	 * `size` reports the net (deduplicated) bytes held in the storage server
-	 * — the headline number for "how much memory is the cache using". `gross`
-	 * reports the pre-dedup sum, where bodies shared across variants are
-	 * counted once per referencing entry — the basis for the dedup ratio
-	 * (`gross / size`). `saved` is the byte difference (`gross - size`),
-	 * unique` and `largest` round out the picture.
-	 *
 	 * @since   1.0.0
 	 * @access  public static
 	 *
 	 * @param string $flag The flag to search for. Wildcards are allowed.
 	 * @param bool   $reload Whether to reload the cache size from the storage server.
-	 * @return array{index: int, size: int, size_human: string, gross: int, gross_human: string, saved: int, saved_human: string, unique: int, largest: int, largest_human: string} The cache index, net size, gross (pre-dedup) size, savings, unique-body count, and largest body.
+	 * @return array{index: int, size: int, size_human: string, gross: int, gross_human: string, raw: int, raw_human: string, saved: int, saved_human: string, unique: int, largest: int, largest_human: string} The cache index, net size, gross (pre-dedup) size, pre-dedup uncompressed size, dedup-only savings, unique-body count, and largest body.
 	 */
 	public static function get_cache_size( string $flag = '', bool $reload = false ): array {
 		$size = get_site_transient( "millicache_sizes_$flag" );
@@ -172,10 +165,11 @@ final class Utils {
 			}
 		}
 
-		$bytes   = isset( $size['size'] ) && is_numeric( $size['size'] ) ? (int) $size['size'] : 0;
-		$gross   = isset( $size['gross'] ) && is_numeric( $size['gross'] ) ? (int) $size['gross'] : $bytes;
-		$largest = isset( $size['largest'] ) && is_numeric( $size['largest'] ) ? (int) $size['largest'] : 0;
-		$saved   = max( 0, $gross - $bytes );
+		$bytes     = isset( $size['size'] ) && is_numeric( $size['size'] ) ? (int) $size['size'] : 0;
+		$gross     = isset( $size['gross'] ) && is_numeric( $size['gross'] ) ? (int) $size['gross'] : $bytes;
+		$raw       = isset( $size['raw'] ) && is_numeric( $size['raw'] ) ? (int) $size['raw'] : $gross;
+		$largest   = isset( $size['largest'] ) && is_numeric( $size['largest'] ) ? (int) $size['largest'] : 0;
+		$saved     = max( 0, $gross - $bytes );
 
 		return array(
 			'index'         => isset( $size['index'] ) && is_numeric( $size['index'] ) ? (int) $size['index'] : 0,
@@ -183,6 +177,8 @@ final class Utils {
 			'size_human'    => (string) size_format( $bytes, $bytes > 1048576 ? 2 : 0 ),
 			'gross'         => $gross,
 			'gross_human'   => (string) size_format( $gross, $gross > 1048576 ? 2 : 0 ),
+			'raw'           => $raw,
+			'raw_human'     => (string) size_format( $raw, $raw > 1048576 ? 2 : 0 ),
 			'saved'         => $saved,
 			'saved_human'   => (string) size_format( $saved, $saved > 1048576 ? 2 : 0 ),
 			'unique'        => isset( $size['unique'] ) && is_numeric( $size['unique'] ) ? (int) $size['unique'] : 0,

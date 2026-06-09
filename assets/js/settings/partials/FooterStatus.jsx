@@ -1,10 +1,13 @@
-import { useState } from '@wordpress/element';
+import { useState, useEffect } from '@wordpress/element';
 import { Button, Modal, TabPanel, Icon } from '@wordpress/components';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { check, caution, error } from '@wordpress/icons';
 
 const ISSUE_URL = 'https://github.com/MilliPress/MilliCache/issues/new';
 const ISSUE_TEMPLATE = 'bug_report.yml';
+
+// Other surfaces dispatch this on `window` to open the modal.
+const OPEN_MODAL_EVENT = 'millicache:open-status-modal';
 
 // Conservative ceiling for the final new-issue URL.
 const MAX_ISSUE_URL_LENGTH = 8000;
@@ -133,11 +136,11 @@ const ChecksList = ( { checks } ) => {
 							</div>
 							<p className="millicache-footer-status__check-desc">
 								{ c.description }
-								{ c.status !== 'good' && c.docs_url && (
+								{ c.status !== 'good' && c.url && (
 									<>
 										{ ' ' }
 										<a
-											href={ c.docs_url }
+											href={ c.url }
 											target="_blank"
 											rel="noopener noreferrer"
 											className="millicache-footer-status__check-link"
@@ -191,6 +194,12 @@ const DebugTab = ( { markdown, copyState, onCopy, onOpenIssue } ) => (
 const FooterStatus = ( { status } ) => {
 	const [ isOpen, setIsOpen ] = useState( false );
 	const [ copyState, setCopyState ] = useState( 'idle' );
+
+	useEffect( () => {
+		const handler = () => setIsOpen( true );
+		window.addEventListener( OPEN_MODAL_EVENT, handler );
+		return () => window.removeEventListener( OPEN_MODAL_EVENT, handler );
+	}, [] );
 
 	const debug = status?.[ 'debug' ];
 	const health = debug?.health ?? 'loading';

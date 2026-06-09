@@ -12,33 +12,17 @@
 
 namespace MilliCache\Admin\UI;
 
-use MilliCache\Admin\DropIn;
 use MilliCache\Admin\Utils;
 use MilliCache\Engine;
 
 ! defined( 'ABSPATH' ) && exit;
 
 /**
- * Assembles the unified status payload returned by each settings page's
- * `/status` REST endpoint.
- *
- * The payload is the single source of truth for three consumers:
- *
- * - the React Status tab (reads the existing `cache`, `storage`, `dropin`
- *   shapes — backward-compatible);
- * - the React footer Status modal (reads `health` + `markdown`);
- * - the `wp millicache status` CLI command (renders table / markdown / json).
- *
- * Redaction lives at the render layer ({@see self::render_markdown()}), not
- * at the transport layer — the admin-only payload itself carries the
- * unredacted storage block the Status tab needs, while the `markdown` field
- * walks only the safe subset that's appropriate for pasting into a public
- * support ticket.
- *
- * Per-site multisite returns a thin storage shape (`{connected: bool}`)
- * because install-wide storage details live on the Network Admin Status
- * tab; the markdown renderer degrades gracefully when those fields aren't
- * present.
+ * Assembles the unified `/status` REST payload — the single source of truth for
+ * the React Status tab, the footer Status modal (`health` + `markdown`), and
+ * the `wp millicache status` CLI. The payload is unredacted; redaction lives in
+ * {@see self::render_markdown()}. Per-site multisite returns a thin
+ * `{connected}` storage shape.
  *
  * @package    MilliCache
  * @subpackage MilliCache/Admin/UI
@@ -47,15 +31,22 @@ use MilliCache\Engine;
 final class StatusBuilder {
 
 	/**
-	 * Documentation base URL used to anchor `docs_url` on each check.
-	 *
-	 * Kept in sync with {@see \MilliCache\Base\Manager::DOCS_BASE} — duplicated
-	 * here to avoid coupling the payload layer to the Manager hierarchy.
+	 * Documentation base URL for each check's `url` (mirrors
+	 * {@see \MilliCache\Base\Manager::DOCS_BASE}).
 	 *
 	 * @since 1.7.0
 	 * @var string
 	 */
 	private const DOCS_BASE = 'https://millipress.com/docs/millicache';
+
+	/**
+	 * MilliCache Pro upgrade URL.
+	 *
+	 * @since 1.7.0
+	 * @var string
+	 */
+	private const UPGRADE_URL = 'https://millipress.com/millicache-pro';
+
 
 	/**
 	 * The MilliCache engine instance.
@@ -122,24 +113,20 @@ final class StatusBuilder {
 			$payload['dropin']  = Utils::validate_advanced_cache_file();
 		}
 
+		// MilliCache's own per-blog page-cache hit ratio (subsites get their own).
+		$payload['metrics'] = $this->engine->metrics()->read( $network_cache );
+
 		$checks = $this->gather_checks( $payload );
 
 		/**
-		 * Filter the list of MilliCache status checks.
-		 *
-		 * Lets extensions (e.g. MilliCache Pro) append, remove, or reshape
-		 * checks. Each entry should follow the shape produced by
-		 * {@see StatusBuilder::gather_checks()}:
+		 * Filter the status checks. Each entry (see {@see StatusBuilder::gather_checks()}):
 		 *
 		 *   - `id`          (string)   Stable identifier.
 		 *   - `label`       (string)   Short, translated headline.
 		 *   - `status`      (string)   `good`, `recommended`, or `critical`.
 		 *   - `description` (string)   Translated explanation of the result.
 		 *   - `value`       (string)   Optional observed value.
-		 *   - `docs_url`    (string)   Optional URL for the "Learn more" link.
-		 *
-		 * The filtered list drives the footer pill color, the Status checks
-		 * tab, the pill summary count, and the aggregate health verdict.
+		 *   - `url`         (string)   Optional "Learn more" URL.
 		 *
 		 * @since 1.7.0
 		 *
@@ -167,16 +154,9 @@ final class StatusBuilder {
 		);
 
 		/**
-		 * Filter the assembled debug block before markdown rendering.
-		 *
-		 * Lets extensions add their own diagnostic sub-blocks under
-		 * `payload.debug` — useful for MilliCache Pro features whose
-		 * data belongs in the snapshot (e.g. fragment-cache stats).
-		 *
-		 * Reserved keys consumed downstream — `checks`, `health`,
-		 * `generated_at`, `markdown` — should be left intact; replace
-		 * them only with full awareness of how the modal, CLI, and
-		 * Site Health surfaces consume the payload.
+		 * Filter the debug block before markdown rendering — extensions add
+		 * diagnostic sub-blocks. Leave the reserved keys (`checks`, `health`,
+		 * `generated_at`, `markdown`) intact.
 		 *
 		 * @since 1.7.0
 		 *
@@ -185,6 +165,8 @@ final class StatusBuilder {
 		 * @param bool                 $is_network Whether the firing `/status` endpoint is network-scoped.
 		 */
 		$payload['debug'] = apply_filters( 'millicache_status_debug', $debug, $payload, $network_admin );
+
+		$payload['panels'] = $this->gather_panels( $payload );
 
 		$payload['debug']['markdown'] = $this->render_markdown( $payload, $network_admin );
 
@@ -211,11 +193,7 @@ final class StatusBuilder {
 	}
 
 	/**
-	 * Resolve a composer package's installed version via the Composer runtime.
-	 *
-	 * Mirrors MilliBase's own self-version pattern so behavior is consistent
-	 * across the project family; returns null if the runtime class isn't
-	 * autoloadable or the package isn't installed.
+	 * Resolve a composer package's installed version (null if not installed).
 	 *
 	 * @since 1.7.0
 	 *
@@ -266,14 +244,8 @@ final class StatusBuilder {
 	}
 
 	/**
-	 * Gather MilliRules registry stats: total rules + per-package breakdown +
-	 * count of user-defined custom rules from settings.
-	 *
-	 * Returns zeros / an empty map when MilliRules isn't loaded — defensive
-	 * against environments that never call into the rules engine. Per-package
-	 * counts spot bootstrap-regression patterns ("user has 0 WP rules");
-	 * `custom_count` reflects how many enabled rule entries the user
-	 * configured in Settings → Rules, including any that override built-ins.
+	 * Gather MilliRules registry stats (total + per-package + custom count);
+	 * zeros when MilliRules isn't loaded.
 	 *
 	 * @since 1.7.0
 	 *
@@ -307,12 +279,8 @@ final class StatusBuilder {
 	}
 
 	/**
-	 * Sum the enabled rule entries in the site- and (on multisite) network-
-	 * scoped settings.
-	 *
-	 * The count mirrors what {@see \MilliCache\Rules\Custom::register()}
-	 * actually forwards to MilliRules — entries without an `id` or with
-	 * `enabled: false` are skipped, matching the registration filter.
+	 * Sum the enabled, registerable rule entries across site (and network)
+	 * settings — mirrors {@see \MilliCache\Rules\Custom::register()}.
 	 *
 	 * @since 1.7.0
 	 *
@@ -427,21 +395,14 @@ final class StatusBuilder {
 	}
 
 	/**
-	 * Enumerate every health check MilliCache runs, with the current result.
-	 *
-	 * Each check has a stable `id`, a translated `label`, a `status` (one of
-	 * `good` / `recommended` / `critical` — matching WordPress Site Health's
-	 * vocabulary), a `description` explaining the result, and an optional
-	 * `value` carrying the observed signal.
-	 *
-	 * Checks that depend on install-wide data (the drop-in, storage server
-	 * memory) are omitted on per-site multisite — the React modal and Site
-	 * Health cards both degrade gracefully.
+	 * Enumerate every health check with its current result (`status` uses Site
+	 * Health's `good`/`recommended`/`critical`). Install-wide checks (drop-in,
+	 * storage memory) are omitted on per-site multisite.
 	 *
 	 * @since 1.7.0
 	 *
 	 * @param array<string, mixed> $payload The (in-progress) payload.
-	 * @return array<int, array{id: string, label: string, status: string, description: string, value?: string, docs_url?: string}>
+	 * @return array<int, array{id: string, label: string, status: string, description: string, value?: string, url?: string}>
 	 */
 	private function gather_checks( array $payload ): array {
 		$dropin  = is_array( $payload['dropin'] ?? null ) ? $payload['dropin'] : null;
@@ -473,7 +434,7 @@ final class StatusBuilder {
 				'value'       => $dropin_is_present
 					? ( is_string( $dropin['type'] ?? null ) ? $dropin['type'] : 'file' )
 					: __( 'missing', 'millicache' ),
-				'docs_url'    => $dropin_docs,
+				'url'         => $dropin_docs,
 			);
 
 			if ( $dropin_is_present ) {
@@ -498,7 +459,7 @@ final class StatusBuilder {
 					'status'      => $dropin_status,
 					'description' => $dropin_text,
 					'value'       => $dropin_value,
-					'docs_url'    => $dropin_docs,
+					'url'         => $dropin_docs,
 				);
 			}
 		}
@@ -512,7 +473,7 @@ final class StatusBuilder {
 				? __( 'WP_CACHE is defined and truthy. WordPress will load the advanced-cache.php drop-in.', 'millicache' )
 				: __( "WP_CACHE is not defined or false in wp-config.php. WordPress won't load the drop-in, so MilliCache can't intercept page requests.", 'millicache' ),
 			'value'       => $wp_cache_on ? 'true' : 'false',
-			'docs_url'    => $wp_cache_docs,
+			'url'         => $wp_cache_docs,
 		);
 
 		// Storage connectivity — always checked.
@@ -526,7 +487,7 @@ final class StatusBuilder {
 			'value'       => $connected
 				? __( 'connected', 'millicache' )
 				: __( 'disconnected', 'millicache' ),
-			'docs_url'    => $conn_docs,
+			'url'         => $conn_docs,
 		);
 
 		// Storage server limits — install-wide; skip on per-site multisite or
@@ -543,7 +504,7 @@ final class StatusBuilder {
 					? __( 'A maxmemory limit is configured. The storage server can evict entries when full.', 'millicache' )
 					: __( 'No maxmemory limit is set on the storage server. Without one, the cache can grow until it crowds out other workloads on the host.', 'millicache' ),
 				'value'       => is_string( $memory['maxmemory_human'] ?? null ) ? $memory['maxmemory_human'] : 'n/a',
-				'docs_url'    => $mem_docs,
+				'url'         => $mem_docs,
 			);
 
 			$policy    = $memory['maxmemory_policy'] ?? null;
@@ -557,7 +518,7 @@ final class StatusBuilder {
 					? __( 'The storage server is configured with allkeys-lru, the recommended policy for a cache workload.', 'millicache' )
 					: __( 'For a cache workload, allkeys-lru is recommended so the server can automatically evict least-recently-used entries when full.', 'millicache' ),
 				'value'       => is_string( $policy ) ? $policy : 'n/a',
-				'docs_url'    => $policy_docs,
+				'url'         => $policy_docs,
 			);
 		}
 
@@ -565,13 +526,8 @@ final class StatusBuilder {
 	}
 
 	/**
-	 * Reduce a checks list to a single health verdict.
-	 *
-	 * `critical` wins over `recommended` wins over `good`. Mirrors how the
-	 * footer pill, Site Health cards, and CLI all derive a one-word answer
-	 * from the same structured signal. Accepts the wider post-filter shape
-	 * because the {@see 'millicache_status_checks'} hook can produce entries
-	 * without a `status` key — those are treated as `good`.
+	 * Reduce a checks list to a single verdict (`critical` > `recommended` >
+	 * `good`; a missing `status` counts as `good`).
 	 *
 	 * @since 1.7.0
 	 *
@@ -595,13 +551,211 @@ final class StatusBuilder {
 	}
 
 	/**
-	 * Render the assembled payload as Markdown suitable for pasting into a
-	 * GitHub issue.
+	 * Assemble the Status-tab panels (flat descriptors; the React side maps
+	 * `type` → component).
 	 *
-	 * Walks only the subset of the payload that's safe for public sharing —
-	 * storage host/port, credentials, prefix, database index, and the raw
-	 * values of `cache.nocache_paths` / `cache.*_cookies` /
-	 * `cache.ignore_*` are intentionally omitted in favor of counts.
+	 * @since 1.7.0
+	 *
+	 * @param array<string, mixed> $payload The (in-progress) payload.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function gather_panels( array $payload ): array {
+		$cache = is_array( $payload['cache'] ?? null ) ? $payload['cache'] : array();
+
+		$index       = $this->as_int( $cache['index'] ?? null );
+		$size_bytes  = $this->as_int( $cache['size'] ?? null );
+		$raw_bytes   = $this->as_int( $cache['raw'] ?? null );
+		$total_saved = max( 0, $raw_bytes - $size_bytes );
+		$saved_pct   = ( $raw_bytes > 0 && $total_saved > 0 ) ? (int) round( ( $total_saved / $raw_bytes ) * 100 ) : 0;
+
+		$metrics   = is_array( $payload['metrics'] ?? null ) ? $payload['metrics'] : array();
+		$hits      = $this->as_int( $metrics['hits'] ?? null );
+		$misses    = $this->as_int( $metrics['misses'] ?? null );
+		$total     = $hits + $misses;
+		$ratio_pct = ( $total > 0 && is_numeric( $metrics['ratio'] ?? null ) ) ? (float) $metrics['ratio'] : 0.0;
+		$series    = is_array( $metrics['series'] ?? null ) ? $metrics['series'] : array();
+
+		// Secondary context lines for the KPI tiles.
+		$avg_bytes         = $index > 0 ? $size_bytes / $index : 0;
+		$unique            = $this->as_int( $cache['unique'] ?? null );
+		$total_saved_human = (string) size_format( $total_saved, $total_saved > 1048576 ? 2 : 0 );
+
+		$panels = array();
+
+		$panels[] = array(
+			'id'     => 'kpi_entries',
+			'type'   => 'kpi',
+			'label'  => __( 'Entries', 'millicache' ),
+			'value'  => number_format_i18n( $index ),
+			'detail' => $unique > 0
+				? sprintf(
+					/* translators: %s: number of distinct cached bodies, formatted. */
+					_n( '%s unique page', '%s unique pages', $unique, 'millicache' ),
+					number_format_i18n( $unique )
+				)
+				: '',
+			'info'   => array(
+				'title'       => __( 'Cached entries', 'millicache' ),
+				'description' => __( 'Number of distinct cached responses currently held in storage. Each URL variant (including unique query strings) counts as a separate entry.', 'millicache' ),
+			),
+			'weight' => 10,
+		);
+		$panels[] = array(
+			'id'     => 'kpi_size',
+			'type'   => 'kpi',
+			'label'  => __( 'Cache size', 'millicache' ),
+			'value'  => $this->as_string( $cache['size_human'] ?? null, '0 B' ),
+			'detail' => $index > 0
+				? sprintf(
+					/* translators: %s: average entry size in KB, formatted. */
+					__( 'Ø %s KB per entry', 'millicache' ),
+					number_format_i18n( $avg_bytes / 1024, 1 )
+				)
+				: '',
+			'info'   => array(
+				'title'       => __( 'Cache size', 'millicache' ),
+				'description' => __( 'Total bytes stored in the storage backend right now, after compression and deduplication.', 'millicache' ),
+			),
+			'weight' => 20,
+		);
+		$panels[] = array(
+			'id'     => 'kpi_saved',
+			'type'   => 'kpi',
+			'label'  => __( 'Saved storage', 'millicache' ),
+			'value'  => $saved_pct . '%',
+			'detail' => $total_saved > 0
+				? sprintf(
+					/* translators: %s: human-readable bytes saved, e.g. "1.31 MB". */
+					__( '%s saved', 'millicache' ),
+					$total_saved_human
+				)
+				: '',
+			'info'   => array(
+				'title'       => __( 'Saved storage', 'millicache' ),
+				'description' => __( 'How much smaller the stored cache is than the raw response output, thanks to compression and body deduplication. MilliCache stores identical page bodies only once.', 'millicache' ),
+			),
+			'weight' => 30,
+		);
+		$panels[] = array(
+			'id'     => 'kpi_hit_ratio',
+			'type'   => 'kpi',
+			'label'  => __( 'Hit ratio', 'millicache' ),
+			'value'  => $total > 0
+				? number_format_i18n( $ratio_pct, 1 ) . '%'
+				: '—',
+			'series' => $series,
+			'info'   => array(
+				'title'       => __( 'Cache hit ratio', 'millicache' ),
+				'description' => __( 'Share of cacheable front-end requests this site served straight from the page cache over the last 7 days. Misses are requests that had to be generated; uncacheable requests (excluded URLs, custom rules) are not counted.', 'millicache' ),
+			),
+			'weight' => 40,
+		);
+
+		// Rotating Pro teaser — one random line per Status load. `%PRO%` is a
+		// non-printf token (not `%s`) the React side splices with the linked
+		// label, so no line needs its own translators comment. Hidden when Pro
+		// is active so owners aren't upsold what they already have.
+		if ( ! defined( 'MILLICACHE_PRO_VERSION' ) ) {
+			$teasers = array(
+				// Value / performance.
+				__( 'Fast already. Faster with %PRO%.', 'millicache' ),
+				__( 'More hits. Fewer misses. Meet %PRO%.', 'millicache' ),
+				__( 'Turn good cache stats into great ones with %PRO%.', 'millicache' ),
+				__( 'Unlock the full potential of your cache with %PRO%.', 'millicache' ),
+
+				// Entries Browser.
+				__( 'See every cached URL at a glance with %PRO%.', 'millicache' ),
+				__( 'Browse, inspect and purge cached URLs with %PRO%.', 'millicache' ),
+				__( 'Find and clear the exact cache entry with %PRO%.', 'millicache' ),
+				__( 'No guessing: inspect your cache with %PRO%.', 'millicache' ),
+
+				// Rules.
+				__( 'Custom TTL for specific pages? Easy with %PRO%.', 'millicache' ),
+				__( 'HTML for humans, Markdown for AIs? Easy with %PRO%.', 'millicache' ),
+				__( 'Cache by URL, cookie, query string or user with %PRO%.', 'millicache' ),
+				__( 'Short TTL for news, long TTL for docs? Easy with %PRO%.', 'millicache' ),
+				__( 'Cache landing pages longer than blog posts? Easy with %PRO%.', 'millicache' ),
+				__( 'Always cache this, never cache that? Easy with %PRO%.', 'millicache' ),
+				__( 'Different cache behavior for bots and visitors? Easy with %PRO%.', 'millicache' ),
+
+				// Prefetching.
+				__( 'Warm pages before visitors arrive with %PRO%.', 'millicache' ),
+				__( 'Serve warmed pages from the first click with %PRO%.', 'millicache' ),
+				__( 'Keep key pages ready with %PRO%.', 'millicache' ),
+				__( 'Prefetch important URLs automatically with %PRO%.', 'millicache' ),
+
+				// CDN / edge.
+				__( 'Take your cache global with %PRO%.', 'millicache' ),
+				__( 'Serve pages closer to every visitor with %PRO%.', 'millicache' ),
+				__( 'Push cached pages to the edge with %PRO%.', 'millicache' ),
+				__( 'Edge delivery for Cloudflare, Bunny.net and more with %PRO%.', 'millicache' ),
+
+				// Smart invalidation.
+				__( 'Edit a synced pattern. %PRO% clears the right cache entries.', 'millicache' ),
+				__( 'Even smarter cache invalidation, handled by %PRO%.', 'millicache' ),
+
+				// Dynamic sites / WooCommerce.
+				__( 'Better caching for dynamic WordPress sites with %PRO%.', 'millicache' ),
+				__( 'Cache smarter on busy WooCommerce sites with %PRO%.', 'millicache' ),
+
+				// Debugging / confidence.
+				__( "Know exactly what's in your cache with %PRO%.", 'millicache' ),
+				__( 'Debug cache behavior faster with %PRO%.', 'millicache' ),
+				__( 'Less cache mystery. More control with %PRO%.', 'millicache' ),
+
+				// Support / upgrade.
+				__( 'MilliCache already flies. %PRO% adds the afterburner.', 'millicache' ),
+				__( 'Love MilliCache? Power its future with %PRO%.', 'millicache' ),
+			);
+
+			$panels[] = array(
+				'id'        => 'pro_teaser',
+				'type'      => 'pro',
+				'text'      => $teasers[ array_rand( $teasers ) ],
+				'cta_label' => __( 'MilliCache Pro', 'millicache' ),
+				'cta_url'   => self::UPGRADE_URL,
+				'weight'    => 300,
+			);
+		}
+
+		// Breakdown cards.
+		if ( $total > 0 ) {
+			$panels[] = array(
+				'id'          => 'breakdown_hit_ratio',
+				'type'        => 'breakdown',
+				'label'       => __( 'Requests served · last 7 days', 'millicache' ),
+				'series'      => $series,
+				'buckets'     => array(
+					array(
+						'label'   => __( 'Total requests', 'millicache' ),
+						'value'   => $total,
+						'display' => number_format_i18n( $total ),
+						'tone'    => 'total',
+					),
+					array(
+						'label'   => __( 'Cached requests', 'millicache' ),
+						'value'   => $hits,
+						'display' => number_format_i18n( $hits ),
+						'tone'    => 'cached',
+					),
+					array(
+						'label'   => __( 'Uncached requests', 'millicache' ),
+						'value'   => $misses,
+						'display' => number_format_i18n( $misses ),
+						'tone'    => 'uncached',
+					),
+				),
+				// Leads the breakdowns; React widens any `series` breakdown to full width.
+				'weight'      => 190,
+			);
+		}
+
+		return $panels;
+	}
+
+	/**
+	 * Render the payload as support-safe Markdown. Hosts, credentials, and raw
+	 * path/cookie values are omitted in favor of counts.
 	 *
 	 * @since 1.7.0
 	 *
@@ -767,19 +921,9 @@ final class StatusBuilder {
 		$lines[] = '';
 
 		/**
-		 * Filter the Markdown sections appended to the support snapshot.
-		 *
-		 * Each returned string is treated as an independent Markdown block
-		 * and inserted after the standard sections but before the Health
-		 * line. Sections should already include their own bold heading,
-		 * for example:
-		 *
-		 *     **Fragment cache**
-		 *     - Enabled: yes
-		 *     - Index: 1,234 entries
-		 *
-		 * Extensions are responsible for keeping their content
-		 * support-safe — no hosts, credentials, or customer paths.
+		 * Filter extra Markdown sections appended to the support snapshot. Each
+		 * is an independent block with its own bold heading; keep it
+		 * support-safe (no hosts, credentials, or customer paths).
 		 *
 		 * @since 1.7.0
 		 *

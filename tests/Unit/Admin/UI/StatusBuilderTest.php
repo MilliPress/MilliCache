@@ -128,12 +128,12 @@ describe( 'StatusBuilder/build', function () {
 			}
 		} );
 
-		it( 'attaches a docs_url to every check', function () {
+		it( 'attaches a url to every check', function () {
 			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $this->healthy ) );
 
 			foreach ( $checks as $check ) {
-				expect( $check )->toHaveKey( 'docs_url' );
-				expect( $check['docs_url'] )->toStartWith( 'https://millipress.com/docs/millicache/' );
+				expect( $check )->toHaveKey( 'url' );
+				expect( $check['url'] )->toStartWith( 'https://millipress.com/docs/millicache/' );
 			}
 		} );
 
@@ -466,6 +466,247 @@ describe( 'StatusBuilder/build', function () {
 		it( 'documents and applies the millicache_status_markdown_sections filter', function () {
 			$source = file_get_contents( __DIR__ . '/../../../../src/Admin/UI/StatusBuilder.php' );
 			expect( $source )->toContain( "apply_filters( 'millicache_status_markdown_sections'" );
+		} );
+
+		it( 'passes the is_network flag to the status filters at call sites', function () {
+			$source = file_get_contents( __DIR__ . '/../../../../src/Admin/UI/StatusBuilder.php' );
+
+			// Every status filter call site forwards the network-scope flag so
+			// extensions can vary their output between site and network admin.
+			expect( $source )->toContain( "apply_filters( 'millicache_status_checks', \$checks, \$payload, \$network_admin )" );
+			expect( $source )->toContain( "apply_filters( 'millicache_status_debug', \$debug, \$payload, \$network_admin )" );
+		} );
+	} );
+
+	describe( 'gather_panels', function () {
+		beforeEach( function () {
+			$this->builder = make_status_builder();
+
+			// Healthy payload — non-empty cache index, dedup-enabled, storage
+			// connected with maxmemory + INFO Stats present, three custom rules.
+			$this->payload = array(
+				'cache'   => array(
+					'index'         => 412,
+					'size'          => 26_000_000,
+					'size_human'    => '24.8 MB',
+					'gross'         => 41_900_000,
+					'gross_human'   => '40 MB',
+					'raw'           => 130_000_000,
+					'raw_human'     => '124 MB',
+					'saved'         => 15_900_000,
+					'saved_human'   => '15.2 MB',
+					'unique'        => 380,
+					'largest'       => 220_000,
+					'largest_human' => '215 KB',
+				),
+				'storage' => array(
+					'connected' => true,
+					'info'      => array(
+						'Memory' => array(
+							'used_memory'       => 83_000_000,
+							'maxmemory'         => 134_217_728,
+							'maxmemory_human'   => '128 MB',
+							'maxmemory_policy'  => 'allkeys-lru',
+						),
+						'Stats'  => array(
+							'keyspace_hits'   => 18_234,
+							'keyspace_misses' => 987,
+							'evicted_keys'    => 12,
+						),
+					),
+				),
+				'debug'   => array(
+					'rules' => array(
+						'registered_count' => 27,
+						'custom_count'     => 3,
+						'packages'         => array( 'WP' => 18, 'PHP' => 9 ),
+					),
+				),
+				'metrics' => array(
+					'hits'   => 18_234,
+					'misses' => 987,
+					'ratio'  => 94.9,
+					'series' => array(
+						array( 't' => '2026053012', 'hits' => 100, 'misses' => 5 ),
+						array( 't' => '2026053013', 'hits' => 120, 'misses' => 8 ),
+						array( 't' => '2026053014', 'hits' => 90, 'misses' => 4 ),
+					),
+				),
+			);
+		} );
+
+		it( 'emits the four always-on KPI tiles on a healthy payload', function () {
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $this->payload ) );
+			$by_id  = array_column( $panels, null, 'id' );
+
+			expect( $by_id )->toHaveKey( 'kpi_entries' );
+			expect( $by_id )->toHaveKey( 'kpi_size' );
+			expect( $by_id )->toHaveKey( 'kpi_saved' );
+			expect( $by_id )->toHaveKey( 'kpi_hit_ratio' );
+
+			foreach ( array( 'kpi_entries', 'kpi_size', 'kpi_saved', 'kpi_hit_ratio' ) as $id ) {
+				expect( $by_id[ $id ]['type'] )->toBe( 'kpi' );
+				expect( $by_id[ $id ] )->not->toHaveKey( 'description' );
+				expect( $by_id[ $id ] )->toHaveKey( 'info' );
+				expect( $by_id[ $id ]['info'] )->toHaveKey( 'title' );
+				expect( $by_id[ $id ]['info'] )->toHaveKey( 'description' );
+			}
+		} );
+
+		it( 'shows the unique-body count as the Entries context line', function () {
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $this->payload ) );
+			$by_id  = array_column( $panels, null, 'id' );
+
+			expect( $by_id['kpi_entries']['detail'] )->toBe( '380 unique pages' );
+		} );
+
+		it( 'leaves the Entries context line empty when no unique bodies are counted', function () {
+			$payload                     = $this->payload;
+			$payload['cache']['unique']  = 0;
+
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $payload ) );
+			$by_id  = array_column( $panels, null, 'id' );
+
+			expect( $by_id['kpi_entries']['detail'] )->toBe( '' );
+		} );
+
+		it( 'computes Saved storage from raw total (compression + dedup)', function () {
+			// raw=130M, size=26M → saved=104M → 104/130 = 80%.
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $this->payload ) );
+			$by_id  = array_column( $panels, null, 'id' );
+
+			expect( $by_id['kpi_saved']['value'] )->toBe( '80%' );
+			// Context line is the absolute amount saved (130M − 26M = 104M),
+			// not a second dedup % that would clash with the Deduplication card.
+			expect( $by_id['kpi_saved']['detail'] )->toBe( '99.18 MB saved' );
+		} );
+
+		it( 'falls back to dedup-only savings when raw is missing (older payloads)', function () {
+			// With raw absent, total_saved degenerates to max(0, 0 - size) = 0,
+			// so the KPI honestly reports 0% rather than inventing a number.
+			$payload = $this->payload;
+			unset( $payload['cache']['raw'] );
+
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $payload ) );
+			$by_id  = array_column( $panels, null, 'id' );
+
+			expect( $by_id['kpi_saved']['value'] )->toBe( '0%' );
+		} );
+
+		it( 'renders the Hit ratio KPI as a dash when there are no recorded requests', function () {
+			$payload                     = $this->payload;
+			$payload['metrics']['hits']   = 0;
+			$payload['metrics']['misses'] = 0;
+			$payload['metrics']['ratio']  = null;
+
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $payload ) );
+			$by_id  = array_column( $panels, null, 'id' );
+
+			expect( $by_id['kpi_hit_ratio']['value'] )->toBe( '—' );
+		} );
+
+		it( 'carries the sparkline series on the Hit ratio KPI from the metrics counters', function () {
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $this->payload ) );
+			$by_id  = array_column( $panels, null, 'id' );
+
+			expect( $by_id['kpi_hit_ratio'] )->toHaveKey( 'series' );
+			expect( $by_id['kpi_hit_ratio']['value'] )->not->toBe( '—' );
+			expect( count( $by_id['kpi_hit_ratio']['series'] ) )->toBe( 3 );
+		} );
+
+		it( 'does not expose a conditional Storage KPI tile', function () {
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $this->payload ) );
+			$by_id  = array_column( $panels, null, 'id' );
+
+			// Storage utilization detail lives in the modal's debug snapshot.
+			// The dashboard KPI row stays a uniform four-tile grid.
+			expect( $by_id )->not->toHaveKey( 'kpi_storage' );
+		} );
+
+		it( 'emits a single subtle one-line Pro teaser, not per-feature cards', function () {
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $this->payload ) );
+			$by_id  = array_column( $panels, null, 'id' );
+
+			// The Entries/Rules teaser signposts were retired for one subtle
+			// line — no feature pitch while Pro is unreleased.
+			expect( $by_id )->not->toHaveKey( 'entries' );
+			expect( $by_id )->not->toHaveKey( 'rules' );
+
+			expect( $by_id )->toHaveKey( 'pro_teaser' );
+			expect( $by_id['pro_teaser']['type'] )->toBe( 'pro' );
+			expect( $by_id['pro_teaser'] )->not->toHaveKey( 'features' );
+			// One short line picked at random from the pool — each carries the
+			// `%PRO%` token where the linked "MilliCache Pro" label is spliced in.
+			expect( $by_id['pro_teaser']['text'] )->toContain( '%PRO%' );
+			expect( $by_id['pro_teaser']['cta_label'] )->toBe( 'MilliCache Pro' );
+			expect( $by_id['pro_teaser']['cta_url'] )->toStartWith( 'https://millipress.com/' );
+		} );
+
+		it( 'retires the entry/dedup breakdown cards — only the requests-served hero remains', function () {
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $this->payload ) );
+			$by_id  = array_column( $panels, null, 'id' );
+
+			// MC Free's status page was slimmed to the requests-served hero; the
+			// size/age/dedup cards were retired (savings live on the KPI tile).
+			expect( $by_id )->not->toHaveKey( 'breakdown_size' );
+			expect( $by_id )->not->toHaveKey( 'breakdown_age' );
+			expect( $by_id )->not->toHaveKey( 'breakdown_dedup' );
+
+			$breakdowns = array_filter(
+				$panels,
+				static fn( $panel ) => ( $panel['type'] ?? '' ) === 'breakdown'
+			);
+			expect( array_column( $breakdowns, 'id' ) )->toBe( array( 'breakdown_hit_ratio' ) );
+		} );
+
+		it( 'emits the requests-served breakdown from the plugin\'s own hit/miss counters', function () {
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $this->payload ) );
+			$by_id  = array_column( $panels, null, 'id' );
+
+			expect( $by_id )->toHaveKey( 'breakdown_hit_ratio' );
+			expect( $by_id['breakdown_hit_ratio']['type'] )->toBe( 'breakdown' );
+			// Our counters drive total / cached / uncached only — no Redis-server
+			// evictions, no "this isn't the whole story" footnote.
+			expect( $by_id['breakdown_hit_ratio'] )->not->toHaveKey( 'footnote' );
+			expect( array_column( $by_id['breakdown_hit_ratio']['buckets'], 'value' ) )->toBe( array( 19_221, 18_234, 987 ) );
+			expect( array_column( $by_id['breakdown_hit_ratio']['buckets'], 'tone' ) )->toBe( array( 'total', 'cached', 'uncached' ) );
+		} );
+
+		it( 'omits the hit ratio breakdown when there are no recorded requests', function () {
+			$payload                     = $this->payload;
+			$payload['metrics']['hits']   = 0;
+			$payload['metrics']['misses'] = 0;
+			$payload['metrics']['ratio']  = null;
+
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $payload ) );
+			$by_id  = array_column( $panels, null, 'id' );
+
+			expect( $by_id )->not->toHaveKey( 'breakdown_hit_ratio' );
+		} );
+
+		it( 'assigns weight hints so the React side can render in a stable order', function () {
+			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $this->payload ) );
+
+			foreach ( $panels as $panel ) {
+				expect( $panel )->toHaveKey( 'weight' );
+				expect( $panel['weight'] )->toBeInt();
+			}
+		} );
+
+		it( 'keeps the panels list non-extensible — MC Pro replaces the tab, it does not filter panels', function () {
+			$source = file_get_contents( __DIR__ . '/../../../../src/Admin/UI/StatusBuilder.php' );
+
+			// Free owns a fixed panel set; Pro swaps the whole Status tab + adds
+			// a dedicated /metrics endpoint rather than appending panels here.
+			expect( $source )->not->toContain( 'millicache_status_panels' );
+		} );
+
+		it( 'hides the Pro teaser when MILLICACHE_PRO_VERSION is defined', function () {
+			$source = file_get_contents( __DIR__ . '/../../../../src/Admin/UI/StatusBuilder.php' );
+
+			// Without the panels filter, Pro can't drop the teaser itself, so Free
+			// gates it on the Pro constant — owners aren't upsold what they have.
+			expect( $source )->toContain( "! defined( 'MILLICACHE_PRO_VERSION' )" );
 		} );
 	} );
 } );

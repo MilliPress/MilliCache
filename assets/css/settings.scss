@@ -104,6 +104,420 @@
 			max-width: unset;
 		}
 	}
+
+	// Status tab dashboard — KPI and breakdown cards in responsive grids.
+	.millicache-status-dashboard {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+		margin: 0 0 24px;
+	}
+
+	.millicache-status-banner {
+		--millicache-banner-tint: rgba(0, 0, 0, 0.04);
+		--millicache-banner-tint-hover: rgba(0, 0, 0, 0.07);
+		--millicache-banner-dot: #949494;
+
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+		padding: 10px 14px;
+		margin: 0;
+		background: var(--millicache-banner-tint);
+		border: 0;
+		border-radius: 6px;
+		color: inherit;
+		font: inherit;
+		font-size: 13px;
+		line-height: 1.4;
+		text-align: left;
+		cursor: pointer;
+		transition: background-color 120ms ease;
+
+		&:hover,
+		&:focus-visible {
+			background: var(--millicache-banner-tint-hover);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--wp-admin-theme-color, #3858e9);
+			outline-offset: 2px;
+		}
+
+		&--ok {
+			--millicache-banner-tint: rgba(74, 184, 102, 0.1);
+			--millicache-banner-tint-hover: rgba(74, 184, 102, 0.18);
+			--millicache-banner-dot: #4ab866;
+		}
+
+		&--warning {
+			--millicache-banner-tint: rgba(219, 166, 23, 0.12);
+			--millicache-banner-tint-hover: rgba(219, 166, 23, 0.2);
+			--millicache-banner-dot: #dba617;
+		}
+
+		&--error {
+			--millicache-banner-tint: rgba(204, 24, 24, 0.1);
+			--millicache-banner-tint-hover: rgba(204, 24, 24, 0.18);
+			--millicache-banner-dot: #cc1818;
+		}
+
+		&__dot {
+			display: inline-block;
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: var(--millicache-banner-dot);
+			flex-shrink: 0;
+		}
+
+		&__label {
+			font-weight: 600;
+		}
+
+		&__hint {
+			color: #757575;
+			font-size: 12px;
+		}
+	}
+
+	.millicache-status-grid {
+		display: grid;
+		gap: 16px;
+
+		// A panel wrapper opted into spanning every column (the hero chart).
+		&__item--wide {
+			grid-column: 1 / -1;
+		}
+
+		&--kpis {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+
+			@media (max-width: 960px) {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+
+			@media (max-width: 480px) {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		&--breakdowns {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+
+			@media (max-width: 720px) {
+				grid-template-columns: 1fr;
+			}
+		}
+	}
+
+	.millicache-status-kpi,
+	.millicache-status-breakdown {
+		background: #fff;
+		border: 1px solid #dcdcde;
+		border-radius: 8px;
+		padding: 18px 20px;
+		min-width: 0;
+	}
+
+	.millicache-status-kpi {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		// Fill the cell to match the tallest card, without the trailing gap
+		// `height: 100%` leaves below (notably in Firefox).
+		height: -moz-available;
+		height: -webkit-fill-available;
+		overflow: hidden; // Clip the full-bleed sparkline to the rounded corners.
+
+		&__label {
+			display: inline-flex;
+			align-items: center;
+			gap: 2px;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			font-size: 12px;
+			font-weight: 500;
+			color: #757575;
+		}
+
+		&__value {
+			font-size: 34px;
+			font-weight: 600;
+			line-height: 1.15;
+			color: #1e1e1e;
+		}
+
+		&__detail {
+			margin-top: 2px;
+			font-size: 13px;
+			line-height: 1.3;
+			color: #757575;
+		}
+
+		&__spark {
+			display: block;
+			width: auto;
+			height: 46px;
+			margin: -9px -20px -18px;
+		}
+
+		&__spark-area {
+			fill: var(--wp-admin-theme-color, #3858e9);
+			fill-opacity: 0.1;
+			stroke: none;
+		}
+
+		&__spark-line {
+			fill: none;
+			stroke: var(--wp-admin-theme-color, #3858e9);
+			stroke-width: 1.5;
+			stroke-linecap: round;
+			stroke-linejoin: round;
+			vector-effect: non-scaling-stroke;
+		}
+	}
+
+	.millicache-status-breakdown {
+
+		&__header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			margin-bottom: 10px;
+		}
+
+		&__label {
+			font-weight: 600;
+			font-size: 15px;
+		}
+	}
+
+	// Full-width hairline under the chart title.
+	.millicache-status-breakdown--chart .millicache-status-breakdown__header {
+		margin: 0 -20px 16px;
+		padding: 0 20px 14px;
+		border-bottom: 1px solid #e5e5e5;
+	}
+
+	.millicache-status-chart {
+
+		&__stats {
+			display: flex;
+			gap: 40px;
+			margin: 6px 0 12px;
+		}
+
+		// Mirror the KPI eyebrow + value style, one size down.
+		&__stat {
+			display: flex;
+			flex-direction: column-reverse;
+			gap: 4px;
+		}
+
+		&__stat-value {
+			font-size: 28px;
+			font-weight: 600;
+			line-height: 1.15;
+			color: #1e1e1e;
+		}
+
+		&__stat-label {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			font-size: 12px;
+			font-weight: 500;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: #757575;
+		}
+
+		// Dots match the drawn curves: green = total line, blue = uncached.
+		// Literal descendant class (not `&__stat-label`) so the nested wrapper
+		// isn't re-expanded into the selector twice.
+		&__stat.is-total .millicache-status-chart__stat-label::before,
+		&__stat.is-uncached .millicache-status-chart__stat-label::before {
+			content: "";
+			width: 9px;
+			height: 9px;
+			border-radius: 50%;
+			flex: none;
+		}
+
+		&__stat.is-total .millicache-status-chart__stat-label::before {
+			background: #1f9d57;
+		}
+
+		&__stat.is-uncached .millicache-status-chart__stat-label::before {
+			background: #3858e9;
+		}
+
+		&__svg {
+			display: block;
+			width: 100%;
+			height: auto;
+		}
+
+		&__grid {
+			stroke: #f0f0f1;
+			stroke-width: 1;
+		}
+
+		&__axis {
+			fill: #b9bcc2;
+			font-size: 10px;
+		}
+
+		// Total line = top of the green cached band, so it's green.
+		&__line-total {
+			fill: none;
+			stroke: #1f9d57;
+			stroke-width: 2;
+			stroke-linecap: round;
+			stroke-linejoin: round;
+		}
+
+		&__line-misses {
+			fill: none;
+			stroke: #3858e9;
+			stroke-width: 2;
+			stroke-linecap: round;
+			stroke-linejoin: round;
+		}
+
+		&__grad-hits-top {
+			stop-color: #1f9d57;
+			stop-opacity: 0.22;
+		}
+
+		&__grad-misses-top {
+			stop-color: #3858e9;
+			stop-opacity: 0.2;
+		}
+
+		&__grad-fade {
+			stop-color: #fff;
+			stop-opacity: 0;
+		}
+
+		// Hover: tooltip positioning context, crosshair, marker, tooltip.
+		&__plot {
+			position: relative;
+		}
+
+		&__crosshair {
+			stroke: #c3c4c7;
+			stroke-width: 1;
+			stroke-dasharray: 4 3;
+		}
+
+		&__marker {
+			fill: #1f9d57;
+			stroke: #fff;
+			stroke-width: 1.5;
+		}
+
+		&__tooltip {
+			position: absolute;
+			top: 4px;
+			transform: translateX(-50%);
+			z-index: 2;
+			min-width: 132px;
+			padding: 8px 10px;
+			background: #fff;
+			border: 1px solid #dcdcde;
+			border-radius: 6px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+			font-size: 12px;
+			line-height: 1.5;
+			white-space: nowrap;
+			pointer-events: none;
+		}
+
+		&__tooltip-date {
+			margin-bottom: 4px;
+			font-weight: 600;
+			color: #1e1e1e;
+		}
+
+		&__tooltip-row {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+
+			&::before {
+				content: "";
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				flex: none;
+				background: transparent;
+			}
+
+			&.is-total::before {
+				background: #1f9d57;
+			}
+
+			&.is-uncached::before {
+				background: #3858e9;
+			}
+		}
+
+		&__tooltip-label {
+			color: #50575e;
+		}
+
+		&__tooltip-value {
+			margin-left: auto;
+			padding-left: 18px;
+			font-weight: 600;
+			font-variant-numeric: tabular-nums;
+			color: #1e1e1e;
+		}
+	}
+
+	// Subtle one-line Pro teaser.
+	.millicache-status-pro {
+		margin: 4px 0 0;
+		text-align: center;
+		font-size: 13px;
+		color: #757575;
+
+		&__link {
+			display: inline-flex;
+			align-items: center;
+			gap: 3px;
+			font-weight: 500;
+			color: var(--wp-admin-theme-color, #3858e9);
+			text-decoration: none;
+
+			&:hover,
+			&:focus {
+				text-decoration: underline;
+			}
+
+			svg {
+				fill: currentcolor;
+			}
+		}
+	}
+
+	.millicache-pro-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 1px 6px;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #fff;
+		background: var(--wp-admin-theme-color, #3858e9);
+		border-radius: 3px;
+		line-height: 1.6;
+	}
 }
 
 // The footer Status indicator is hydrated by MilliBase's FooterRenderer into
@@ -303,33 +717,5 @@
 
 	.millicache-footer-status__error {
 		color: #cc1818;
-	}
-}
-
-// Popovers are portaled to body (.components-popover__fallback-container),
-// so they live outside #millicache-settings — these rules must be unscoped.
-.millicache-info-popover {
-
-	.components-popover__content {
-		min-width: 300px;
-	}
-
-	.millicache-info-popover__content {
-		padding: 10px;
-
-		p {
-			margin: 0;
-			line-height: 1.5;
-		}
-	}
-
-	.millicache-info-popover__link {
-		color: var(--wp-admin-theme-color, #3858e9);
-		text-decoration: none;
-
-		&:hover,
-		&:focus {
-			text-decoration: underline;
-		}
 	}
 }
