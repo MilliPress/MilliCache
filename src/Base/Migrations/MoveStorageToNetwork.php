@@ -73,7 +73,7 @@ final class MoveStorageToNetwork {
 			sprintf(
 				/* translators: %s: URL to the network admin MilliCache settings page. */
 				__( 'MilliCache: Multisite detected. Your storage settings have been moved to the network level — <a href="%s">manage them under Network Admin → MilliCache</a>.', 'millicache' ),
-				esc_url( network_admin_url( 'settings.php?page=millicache-network' ) )
+				esc_url( network_admin_url( 'settings.php?page=millicache' ) )
 			),
 			'success'
 		);

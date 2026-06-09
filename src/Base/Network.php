@@ -19,7 +19,7 @@ use MilliCache\Engine\Utilities\Multisite;
 ! defined( 'ABSPATH' ) && exit;
 
 /**
- * Wires the network MilliBase Manager (slug `millicache-network`, option
+ * Wires the network MilliBase Manager (slug `millicache`, option
  * `wp_sitemeta['millicache']`) and supplies its full config (UI, CLI,
  * REST, abilities, migrations).
  *

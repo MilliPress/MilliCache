@@ -169,7 +169,7 @@ abstract class Manager {
 		if ( Multisite::is_enabled() && is_super_admin() && ! is_network_admin() ) {
 			$links[] = array(
 				'label' => __( 'Network Settings', 'millicache' ),
-				'url'   => network_admin_url( 'settings.php?page=' . $this->plugin_name . '-network' ),
+				'url'   => network_admin_url( 'settings.php?page=' . $this->plugin_name ),
 			);
 		} else {
 			$links[] = array(
