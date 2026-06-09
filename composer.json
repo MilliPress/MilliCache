@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=7.4",
-        "millipress/millibase": "^2.6.0",
+        "millipress/millibase": "^2.6.1",
         "millipress/millirules": "^1.1.6",
         "predis/predis": "^3.0"
     },
@@ -66,6 +66,9 @@
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "phpstan/extension-installer": true,
             "pestphp/pest-plugin": true
+        },
+        "platform": {
+            "php": "8.3"
         }
     },
     "extra": {
