@@ -26,7 +26,7 @@ git archive --format=tar "$REF" | tar -x -C dist
 rm -f dist/release-please-config*.json
 
 mkdir -p dist/bin
-curl -sL "$STRAUSS_URL" -o dist/bin/strauss.phar
+curl -fsSL --retry 3 --retry-all-errors "$STRAUSS_URL" -o dist/bin/strauss.phar
 
 composer install --no-dev --no-interaction --no-scripts --prefer-dist --working-dir=dist
 
