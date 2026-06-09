@@ -159,15 +159,16 @@ describe( 'CacheEntry', function () {
 	describe( 'round-trip conversion', function () {
 		it( 'maintains data through array conversion', function () {
 			$original_data = array(
-				'output' => '<html>Test Content</html>',
-				'url' => 'example.com/test/',
-				'headers' => array( 'Content-Type: text/html', 'X-Custom: value' ),
-				'status' => 200,
-				'gzip' => true,
-				'updated' => 1700000000,
-				'custom_ttl' => 7200,
-				'custom_grace' => 600,
-				'variant' => array( 'cookies' => array( 'session_id' ), 'unique' => array( 'device' => 'mobile' ) ),
+				'output'        => '<html>Test Content</html>',
+				'url'           => 'example.com/test/',
+				'headers'       => array( 'Content-Type: text/html', 'X-Custom: value' ),
+				'status'        => 200,
+				'gzip'          => true,
+				'updated'       => 1700000000,
+				'size_raw'      => 1234,
+				'custom_ttl'    => 7200,
+				'custom_grace'  => 600,
+				'variant'       => array( 'cookies' => array( 'session_id' ), 'unique' => array( 'device' => 'mobile' ) ),
 			);
 
 			$entry = Entry::from_array( $original_data );

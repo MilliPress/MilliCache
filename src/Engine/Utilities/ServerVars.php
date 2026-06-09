@@ -47,16 +47,19 @@ final class ServerVars {
 	 *
 	 * @since 1.0.0
 	 *
+	 * Scalar values (including numeric vars such as `REQUEST_TIME_FLOAT`) are
+	 * stringified; callers cast as needed. Non-scalars yield an empty string.
+	 *
 	 * @param string $key The server variable key (e.g., 'REQUEST_URI', 'HTTP_HOST').
 	 * @return string The sanitized server variable value, or empty string if not set.
 	 */
 	public static function get( string $key ): string {
-		if ( ! isset( $_SERVER[ $key ] ) || ! is_string( $_SERVER[ $key ] ) ) {
+		if ( ! isset( $_SERVER[ $key ] ) || ! is_scalar( $_SERVER[ $key ] ) ) {
 			return '';
 		}
 
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- We are sanitizing & un-slashing here with PHP native functions.
-		return htmlspecialchars( stripslashes( $_SERVER[ $key ] ), ENT_QUOTES, 'UTF-8' );
+		return htmlspecialchars( stripslashes( (string) $_SERVER[ $key ] ), ENT_QUOTES, 'UTF-8' );
 	}
 
 	/**

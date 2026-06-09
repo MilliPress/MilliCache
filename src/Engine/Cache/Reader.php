@@ -65,12 +65,8 @@ final class Reader {
 	}
 
 	/**
-	 * Get cache entry by hash.
-	 *
-	 * The Storage layer is responsible for resolving the request entry's
-	 * `output` field through the content-addressable output keyspace, so the
-	 * Entry returned here always carries the actual body bytes (or empty when
-	 * the response was empty).
+	 * Get a cache entry by hash (Storage resolves the body, so the Entry always
+	 * carries its actual bytes).
 	 *
 	 * @since 1.0.0
 	 *
@@ -245,10 +241,13 @@ final class Reader {
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- We need to output the cache.
 		echo $entry->output;
 
-		// If regenerating in background, finish request and continue.
-		if ( $regenerate && function_exists( 'fastcgi_finish_request' ) ) {
+		// Deliver now (when the SAPI allows) so post-response work can't delay it.
+		if ( function_exists( 'fastcgi_finish_request' ) ) {
 			fastcgi_finish_request();
-		} else {
+		}
+
+		// A fresh hit is done; a stale serve keeps the script alive to regenerate.
+		if ( ! $regenerate ) {
 			exit;
 		}
 	}

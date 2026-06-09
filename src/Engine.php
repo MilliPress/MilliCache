@@ -18,11 +18,11 @@ use MilliRules\MilliRules;
 use MilliRules\Rules as RulesRegistry;
 use MilliCache\Engine\Cache;
 use MilliCache\Engine\Flags;
+use MilliCache\Engine\Metrics;
 use MilliCache\Engine\Options;
 use MilliCache\Engine\Request;
 use MilliCache\Engine\Response;
 use MilliCache\Engine\Utilities\Multisite;
-use MilliCache\Rules;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -136,6 +136,15 @@ final class Engine {
 	 * @var Cache\Invalidation\Manager|null The clearing handler instance.
 	 */
 	private ?Cache\Invalidation\Manager $invalidation_manager;
+
+	/**
+	 * The metrics subsystem (request-scoped writes, reads, nightly rollup).
+	 *
+	 * @since 1.7.0
+	 *
+	 * @var Metrics\Manager|null
+	 */
+	private ?Metrics\Manager $metrics = null;
 
 	/**
 	 * Request processor.
@@ -258,6 +267,9 @@ final class Engine {
 		// Register the shutdown function to expire/delete cache flags.
 		register_shutdown_function( fn() => $this->invalidation()->get_queue()->execute() );
 
+		// Flush buffered metrics post-response.
+		register_shutdown_function( fn() => null !== $this->metrics ? $this->metrics->flush() : null );
+
 		// Always set the initial header.
 		$this->headers()->set_status( 'miss' );
 
@@ -305,18 +317,10 @@ final class Engine {
 	}
 
 	/**
-	 * Initialize MilliRules and register MilliCache rules.
-	 *
-	 * All rule registrations happen at this PHP-phase entry point. PHP-typed
-	 * rules register directly (PHP package is loaded by {@see MilliRules::init()}).
-	 * WP-typed rules are queued as pending by MilliRules (their conditions/actions
-	 * reference the not-yet-loaded WP package) and finalize when
-	 * {@see MilliRules::load_packages()} fires at plugins_loaded:1.
-	 *
-	 * Insertion order in the pending queue determines override precedence:
-	 * {@see Rules\WordPress} queues its built-ins first; {@see Rules\Custom}
-	 * queues settings rules after, so unlocked same-ID overrides win the
-	 * last-write race on flush. Locked built-ins still reject overrides.
+	 * Initialize MilliRules and register MilliCache rules. PHP-typed rules
+	 * register now; WP-typed rules queue as pending and finalize at
+	 * plugins_loaded:1. Insertion order sets override precedence (unlocked
+	 * same-ID overrides win; locked built-ins reject overrides).
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -376,7 +380,7 @@ final class Engine {
 	 */
 	public function get_settings( ?string $module = null ): array {
 		if ( $module ) {
-			return is_array( $this->settings[ $module ] ) ? $this->settings[ $module ] : array();
+			return is_array( $this->settings[ $module ] ?? null ) ? $this->settings[ $module ] : array();
 		}
 
 		return $this->settings;
@@ -506,11 +510,9 @@ final class Engine {
 	}
 
 	/**
-	 * Get rules manager for fluent API access.
+	 * Get the rules manager for fluent API access.
 	 *
-	 * Provides access to the MilliRules API via a fluent interface.
-	 *
-	 * Example usage:
+	 * Example:
 	 * ```php
 	 * millicache()->rules()->create('my:custom-rule', 'wp')
 	 *     ->order(10)
@@ -608,10 +610,25 @@ final class Engine {
 	}
 
 	/**
-	 * Get cache clearing interface.
+	 * Get the metrics subsystem (writes, reads, nightly rollup).
 	 *
-	 * Provides a fluent API for cache invalidation operations.
-	 * Example: Engine::instance()->clear()->by_targets($targets)
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @return Metrics\Manager The metrics subsystem.
+	 */
+	public function metrics(): Metrics\Manager {
+		if ( null === $this->metrics ) {
+			$settings = $this->get_settings( 'metrics' );
+			$detailed = isset( $settings['active'] ) && (bool) $settings['active'];
+
+			$this->metrics = new Metrics\Manager( $this->storage(), $this->flags()->get_prefix(), $detailed );
+		}
+		return $this->metrics;
+	}
+
+	/**
+	 * Get the cache clearing interface (fluent invalidation API).
 	 *
 	 * @since 1.0.0
 	 * @access public
@@ -623,13 +640,9 @@ final class Engine {
 	}
 
 	/**
-	 * Detect how MilliCache is installed by mirroring {@see self::autoload()}'s
-	 * vendor-autoload probes.
-	 *
-	 * Returns `'composer'` when a host (`<wp-root>/vendor/autoload.php`) loads
-	 * the plugin, `'standalone'` when the plugin ships its own `vendor/`, and
-	 * `'unknown'` when neither path resolves. Order mirrors {@see self::autoload()}
-	 * so the value reflects which loader actually fired.
+	 * Detect the installation mode by mirroring {@see self::autoload()}'s probe
+	 * order: `'composer'` (host vendor/autoload), `'standalone'` (own `vendor/`),
+	 * or `'unknown'`.
 	 *
 	 * @since 1.7.0
 	 * @access public

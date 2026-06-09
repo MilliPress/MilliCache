@@ -127,4 +127,24 @@ describe( 'ServerVars', function () {
 			expect( $request_info['HTTPS'] )->toBe( 'on' );
 		} );
 	} );
+
+	describe( 'numeric (non-string) vars', function () {
+		it( 'stringifies a float var like REQUEST_TIME_FLOAT so callers can cast', function () {
+			$_SERVER['REQUEST_TIME_FLOAT'] = 1700000000.5;
+			expect( ServerVars::get( 'REQUEST_TIME_FLOAT' ) )->toBe( '1700000000.5' );
+			expect( (float) ServerVars::get( 'REQUEST_TIME_FLOAT' ) )->toBe( 1700000000.5 );
+		} );
+
+		it( 'stringifies an int var', function () {
+			$_SERVER['MC_INT'] = 8080;
+			expect( ServerVars::get( 'MC_INT' ) )->toBe( '8080' );
+			unset( $_SERVER['MC_INT'] );
+		} );
+
+		it( 'returns empty string for non-scalar values', function () {
+			$_SERVER['MC_ARR'] = array( 'x' );
+			expect( ServerVars::get( 'MC_ARR' ) )->toBe( '' );
+			unset( $_SERVER['MC_ARR'] );
+		} );
+	} );
 } );

@@ -293,12 +293,8 @@ class Storage {
 	}
 
 	/**
-	 * Get cache entries with metadata and optional output.
-	 *
-	 * Returns per-entry data keyed by cache hash, with flags always included.
-	 * By default, only reads the small meta-field; set $include_output to also
-	 * transfer the (potentially large) output body, which is dereferenced from
-	 * the content-addressable output keyspace.
+	 * Get cache entries (keyed by hash, flags always included). `$include_output`
+	 * also transfers the dereferenced output body.
 	 *
 	 * @since 1.4.0
 	 * @access public
@@ -577,9 +573,17 @@ class Storage {
 				$meta['variant'] = $data['variant'];
 			}
 
+			// Surfaced top-level so get_cache_size can HMGET both without parsing every entry's meta JSON.
+			$size_raw    = isset( $data['size_raw'] ) && is_numeric( $data['size_raw'] )
+				? (int) $data['size_raw']
+				: strlen( $output );
+			$updated_top = is_numeric( $meta['updated'] ) ? (int) $meta['updated'] : time();
+
 			$fields = array(
-				'output' => $output_hash,
-				'meta'   => (string) wp_json_encode( $meta ),
+				'output'   => $output_hash,
+				'meta'     => (string) wp_json_encode( $meta ),
+				'updated'  => $updated_top,
+				'size_raw' => $size_raw,
 			);
 
 			// Prepare flag keys and add them to fields.
@@ -908,6 +912,168 @@ class Storage {
 	}
 
 	/**
+	 * Build the Redis hash key for a metrics bucket resolution —
+	 * `<storage-prefix>:m:<site-prefix><resolution>` (e.g. `mll:m:h`, `mll:m:1:d`).
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param string $prefix     Site/network prefix (`''`, `'1:'`, `'1:2:'`).
+	 * @param string $resolution Bucket resolution (`h` or `d`).
+	 * @return string
+	 */
+	private function metrics_key( string $prefix, string $resolution ): string {
+		return $this->prefix . ':m:' . $prefix . $resolution;
+	}
+
+	/**
+	 * Add deltas to metrics counter fields (HINCRBY batch).
+	 *
+	 * Best-effort: storage errors are swallowed so metrics can never disrupt
+	 * a request.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param string             $prefix     Site/network prefix.
+	 * @param string             $resolution Bucket resolution (`h` or `d`).
+	 * @param array<string, int> $deltas     Field name => increment.
+	 * @return void
+	 */
+	public function metrics_increment( string $prefix, string $resolution, array $deltas ): void {
+		if ( empty( $deltas ) ) {
+			return;
+		}
+
+		try {
+			$key = $this->metrics_key( $prefix, $resolution );
+			$this->client->pipeline(
+				function ( $pipe ) use ( $key, $deltas ) {
+					foreach ( $deltas as $field => $delta ) {
+						$pipe->hincrby( $key, (string) $field, $delta );
+					}
+				}
+			);
+		} catch ( PredisException $e ) {
+			unset( $e ); // Best-effort metrics.
+		}
+	}
+
+	/**
+	 * Overwrite metrics counter fields with absolute values (HSET batch).
+	 *
+	 * Used by the daily rollup so re-running it is idempotent.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param string             $prefix     Site/network prefix.
+	 * @param string             $resolution Bucket resolution (`h` or `d`).
+	 * @param array<string, int> $values     Field name => absolute value.
+	 * @return void
+	 */
+	public function metrics_set( string $prefix, string $resolution, array $values ): void {
+		if ( empty( $values ) ) {
+			return;
+		}
+
+		try {
+			$key = $this->metrics_key( $prefix, $resolution );
+			$this->client->pipeline(
+				function ( $pipe ) use ( $key, $values ) {
+					foreach ( $values as $field => $value ) {
+						$pipe->hset( $key, (string) $field, $value );
+					}
+				}
+			);
+		} catch ( PredisException $e ) {
+			unset( $e ); // Best-effort metrics.
+		}
+	}
+
+	/**
+	 * Read every metrics counter field for a resolution (HGETALL).
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param string $prefix     Site/network prefix.
+	 * @param string $resolution Bucket resolution (`h` or `d`).
+	 * @return array<string, int> Field name => value.
+	 */
+	public function metrics_read( string $prefix, string $resolution ): array {
+		try {
+			$raw = $this->client->hgetall( $this->metrics_key( $prefix, $resolution ) );
+		} catch ( PredisException $e ) {
+			return array();
+		}
+
+		$fields = array();
+		foreach ( $raw as $field => $value ) {
+			if ( is_numeric( $value ) ) {
+				$fields[ (string) $field ] = (int) $value;
+			}
+		}
+
+		return $fields;
+	}
+
+	/**
+	 * Delete the named metrics counter fields (HDEL).
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param string        $prefix     Site/network prefix.
+	 * @param string        $resolution Bucket resolution (`h` or `d`).
+	 * @param array<string> $fields     Field names to remove.
+	 * @return void
+	 */
+	public function metrics_delete( string $prefix, string $resolution, array $fields ): void {
+		if ( empty( $fields ) ) {
+			return;
+		}
+
+		try {
+			$this->client->hdel( $this->metrics_key( $prefix, $resolution ), array_values( $fields ) );
+		} catch ( PredisException $e ) {
+			unset( $e ); // Best-effort metrics.
+		}
+	}
+
+	/**
+	 * List the distinct site/network prefixes that have stored metrics
+	 * (scans `<storage-prefix>:m:*`), for the nightly rollup.
+	 *
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @return array<string> Distinct site/network prefixes.
+	 */
+	public function metrics_prefixes(): array {
+		if ( ! isset( $this->client ) ) {
+			return array();
+		}
+
+		$base     = $this->prefix . ':m:';
+		$base_len = strlen( $base );
+		$prefixes = array();
+
+		try {
+			foreach ( new Predis\Collection\Iterator\Keyspace( $this->client, $base . '*' ) as $key ) {
+				if ( ! is_string( $key ) ) {
+					continue;
+				}
+
+				// Drop the base and the trailing resolution char (`h`/`d`).
+				$prefix = substr( $key, $base_len, -1 );
+				if ( ! in_array( $prefix, $prefixes, true ) ) {
+					$prefixes[] = $prefix;
+				}
+			}
+		} catch ( PredisException $e ) {
+			return array();
+		}
+
+		return $prefixes;
+	}
+
+	/**
 	 * Clear stale and deleted cache entries, running on shutdown.
 	 *
 	 * @since 1.0.0
@@ -1150,7 +1316,8 @@ class Storage {
 	/**
 	 * Get the size of the cache.
 	 *
-	 * Reports four numbers, all derived from the same Redis pipeline pass:
+	 * Reports the headline size numbers, all derived from the same Redis
+	 * pipeline pass:
 	 *
 	 * - `size` (net / physical): each unique body is counted once. Reflects how
 	 *   much memory the storage server is actually holding for cached output.
@@ -1159,6 +1326,9 @@ class Storage {
 	 *   body it points to, even if multiple entries share the same body in
 	 *   the deduplicated output keyspace. The ratio `gross / size` is the
 	 *   dedup factor.
+	 * - `raw`: like `gross` but in pre-compression bytes — each entry
+	 *   contributes its original HTML length (the per-entry `size_raw`). Falls
+	 *   back to compressed body size for entries cached before it was tracked.
 	 * - `unique`: number of distinct stored bodies (denominator that explains
 	 *   the dedup ratio).
 	 * - `largest`: byte length of the biggest single stored body — surfaces
@@ -1168,7 +1338,7 @@ class Storage {
 	 * @access public
 	 *
 	 * @param string $flag Get cache by flag. Supports wildcards.
-	 * @return false|array{index: int, size: int, gross: int, unique: int, largest: int} The entry count, net (physical) size, gross (pre-dedup) size, unique-body count, and largest body, in bytes.
+	 * @return false|array{index: int, size: int, gross: int, raw: int, unique: int, largest: int} The entry count, net (physical) size, gross (pre-dedup) size, pre-dedup uncompressed size, unique-body count, and largest body.
 	 */
 	public function get_cache_size( string $flag = '' ) {
 		try {
@@ -1180,6 +1350,7 @@ class Storage {
 				'index'   => 0,
 				'size'    => 0,
 				'gross'   => 0,
+				'raw'     => 0,
 				'unique'  => 0,
 				'largest' => 0,
 			);
@@ -1188,22 +1359,39 @@ class Storage {
 				return $empty;
 			}
 
-			// Phase 1: collect each entry's output_hash.
-			$by_flag       = ! empty( $flag );
-			$output_hashes = $this->client->pipeline(
+			// Entries written before `size_raw` existed return null for
+			// that slot; we fall back to compressed body length downstream so
+			// they contribute zero compression savings (graceful under-count).
+			$by_flag = ! empty( $flag );
+			$entries = $this->client->pipeline(
 				function ( $pipe ) use ( $keys, $by_flag ) {
 					foreach ( $keys as $key ) {
-						$pipe->hget( $by_flag ? $this->toggle_cache_key( $key ) : $key, 'output' );
+						$pipe->hmget(
+							$by_flag ? $this->toggle_cache_key( $key ) : $key,
+							array( 'output', 'size_raw' )
+						);
 					}
 				}
 			);
 
-			if ( ! is_array( $output_hashes ) ) {
+			if ( ! is_array( $entries ) ) {
 				return array_merge( $empty, array( 'index' => count( $keys ) ) );
 			}
 
-			$entry_hashes = array_map( 'strval', $output_hashes );
-			$unique       = array_values( array_unique( array_filter( $entry_hashes ) ) );
+			$entry_hashes   = array();
+			$entry_orig_raw = array();
+			foreach ( $entries as $row ) {
+				$hash = '';
+				$orig = null;
+				if ( is_array( $row ) ) {
+					$hash = isset( $row[0] ) && is_scalar( $row[0] ) ? (string) $row[0] : '';
+					$orig = isset( $row[1] ) && is_numeric( $row[1] ) ? (int) $row[1] : null;
+				}
+				$entry_hashes[]   = $hash;
+				$entry_orig_raw[] = $orig;
+			}
+
+			$unique = array_values( array_unique( array_filter( $entry_hashes ) ) );
 
 			if ( empty( $unique ) ) {
 				return $empty;
@@ -1226,22 +1414,26 @@ class Storage {
 			}
 
 			$gross       = 0;
+			$raw         = 0;
 			$valid_count = 0;
-			foreach ( $entry_hashes as $output_hash ) {
+			foreach ( $entry_hashes as $i => $output_hash ) {
 				if ( '' === $output_hash ) {
 					continue;
 				}
 				$size = $hash_sizes[ $output_hash ] ?? 0;
-				if ( $size > 0 ) {
-					$gross += $size;
-					++$valid_count;
+				if ( $size <= 0 ) {
+					continue;
 				}
+				$gross += $size;
+				$raw   += $entry_orig_raw[ $i ] ?? $size;
+				++$valid_count;
 			}
 
 			return array(
 				'index'   => $valid_count,
 				'size'    => array_sum( $hash_sizes ),
 				'gross'   => $gross,
+				'raw'     => $raw,
 				'unique'  => count( $hash_sizes ),
 				'largest' => $hash_sizes ? max( $hash_sizes ) : 0,
 			);
@@ -1314,6 +1506,11 @@ class Storage {
 				'keydb_version',
 				'dragonfly_version',
 				'tcp_port',
+			),
+			'Stats'  => array(
+				'keyspace_hits',
+				'keyspace_misses',
+				'evicted_keys',
 			),
 		);
 

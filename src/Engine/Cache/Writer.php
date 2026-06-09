@@ -202,7 +202,8 @@ final class Writer {
 				$entry->updated,
 				$entry->custom_ttl,
 				$entry->custom_grace,
-				$entry->variant
+				$entry->variant,
+				$entry->size_raw
 			);
 		}
 
@@ -215,7 +216,8 @@ final class Writer {
 			$entry->updated,
 			$entry->custom_ttl,
 			$entry->custom_grace,
-			$entry->variant
+			$entry->variant,
+			$entry->size_raw
 		);
 	}
 
