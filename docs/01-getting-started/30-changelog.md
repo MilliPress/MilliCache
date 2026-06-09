@@ -8,6 +8,17 @@ menu_order: 30
 
 ## [1.7.0-beta.2](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.1...v1.7.0-beta.2) (2026-06-09)
 
+Here's a friendly intro for the 1.7.0-beta.2 release:
+
+---
+
+This beta brings the biggest admin overhaul in a while. The Status tab has been rebuilt from the ground up with KPI cards, a 7-day hit-ratio sparkline, and a full-width requests chart — and the same diagnostic story now flows into WordPress's native Site Health screens, so admins troubleshooting from Tools → Site Health see MilliCache's drop-in state, storage connectivity, and WP_CACHE status right alongside core checks.
+
+The footer gets a new Status pill that summarizes overall health at a glance and opens a modal with a structured per-check breakdown (good/warning/critical, with docs links) alongside the existing debug snapshot. That snapshot is also the source of truth for a revamped `wp millicache status` CLI command and a prefilled GitHub issue template, making bug reports a one-click affair.
+
+On the metrics side, hit and miss counts are now recorded in the response path (hourly buckets, rolled up nightly, scoped per blog) with preloader requests sensibly excluded. The admin bar gains live cache-size fetching on menu open and a fix for "Clear Current View" that was accidentally wiping the entire cache when a shared flag existed.
+
+Rounding things out: the nightly maintenance schedule now self-heals on load so it can't silently go missing after an update, a `ping()` probe gives Site Health an accurate storage-reachability signal, and the `install_mode()` helper reports whether MilliCache is running standalone or Composer-loaded.
 
 ### Features
 
