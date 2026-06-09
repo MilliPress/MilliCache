@@ -2,6 +2,8 @@ version: 2
 updates:
   - package-ecosystem: "composer"
     directory: "/"
+    # Open PRs against the active dev branch, not the default branch (main)
+    target-branch: "next"
     schedule:
       interval: "weekly"
     groups:
@@ -24,6 +26,7 @@ updates:
 
   - package-ecosystem: "npm"
     directory: "/"
+    target-branch: "next"
     schedule:
       interval: "monthly"
     groups:
@@ -33,5 +36,6 @@ updates:
 
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "next"
     schedule:
       interval: "weekly"
