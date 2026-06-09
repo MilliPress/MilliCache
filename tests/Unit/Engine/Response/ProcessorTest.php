@@ -220,6 +220,43 @@ describe( 'ResponseManager', function () {
 		} );
 	} );
 
+	describe( 'preloader metrics exclusion', function () {
+		// is_internal_request() reads only ServerVars + a const, so an
+		// instance without the constructor's manager dependencies suffices.
+		$invoke = function ( ?string $ua ) {
+			if ( null === $ua ) {
+				unset( $_SERVER['HTTP_USER_AGENT'] );
+			} else {
+				$_SERVER['HTTP_USER_AGENT'] = $ua;
+			}
+
+			$processor = ( new ReflectionClass( Processor::class ) )->newInstanceWithoutConstructor();
+			$method    = new ReflectionMethod( Processor::class, 'is_internal_request' );
+			$method->setAccessible( true );
+
+			$result = $method->invoke( $processor );
+			unset( $_SERVER['HTTP_USER_AGENT'] );
+
+			return $result;
+		};
+
+		it( 'flags a MilliCache/ User-Agent as the preloader', function () use ( $invoke ) {
+			expect( $invoke( 'MilliCache/1.2; +https://millipress.com' ) )->toBeTrue();
+		} );
+
+		it( 'does not flag ordinary visitor User-Agents', function () use ( $invoke ) {
+			expect( $invoke( 'Mozilla/5.0 (X11; Linux) Chrome/120' ) )->toBeFalse();
+		} );
+
+		it( 'requires the marker at the start, not merely present', function () use ( $invoke ) {
+			expect( $invoke( 'Proxy via MilliCache/1.2' ) )->toBeFalse();
+		} );
+
+		it( 'treats a missing User-Agent as a normal request', function () use ( $invoke ) {
+			expect( $invoke( null ) )->toBeFalse();
+		} );
+	} );
+
 	describe( 'constructor signature', function () {
 		it( 'constructor takes 5 parameters', function () {
 			$method = new ReflectionMethod( Processor::class, '__construct' );

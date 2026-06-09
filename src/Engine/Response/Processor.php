@@ -12,11 +12,13 @@
 
 namespace MilliCache\Engine\Response;
 
+use MilliCache\Engine;
 use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Entry;
 use MilliCache\Engine\Cache\Manager as CacheManager;
 use MilliCache\Engine\Flags;
 use MilliCache\Engine\Request\Processor as RequestManager;
+use MilliCache\Engine\Utilities\ServerVars;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -178,8 +180,15 @@ final class Processor {
 			$this->headers->set_reason( $result['reason'] );
 		}
 
+		// Count a cacheable miss — but not the background regenerate of a
+		// stale hit (already counted as a hit), nor uncacheable responses.
+		$regenerate = $this->state->should_fcgi_regenerate();
+		if ( ! $regenerate && $result['cached'] ) {
+			$this->record_miss_metric( strlen( $output ) );
+		}
+
 		// Return output (null for background FCGI tasks).
-		return $this->state->should_fcgi_regenerate() ? null : $output;
+		return $regenerate ? null : $output;
 	}
 
 	/**
@@ -303,6 +312,13 @@ final class Processor {
 		// Set status header.
 		$status = $state->should_fcgi_regenerate() ? 'stale' : 'hit';
 		$this->headers->set_status( $status );
+
+		// Record the hit before output() flushes and exits (written post-response).
+		$this->record_hit_metric(
+			$entry,
+			$result['result']->flags,
+			$state->should_fcgi_regenerate()
+		);
 
 		// Output the cache.
 		$this->cache_manager->get_reader()->output(
@@ -432,5 +448,78 @@ final class Processor {
 		$validator = $this->cache_manager->get_validator();
 		$time_left = $validator->time_to_expiry( $entry );
 		$this->headers->set( 'Expires', $validator->format_time_remaining( $time_left ) );
+	}
+
+	/**
+	 * Buffer a cache-hit metric (prefix from the entry's flags, pre-WP safe).
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param Entry         $entry The entry being served.
+	 * @param array<string> $flags The entry's flags (storage prefix stripped).
+	 * @param bool          $stale Whether the entry is served stale.
+	 * @return void
+	 */
+	private function record_hit_metric( Entry $entry, array $flags, bool $stale ): void {
+		if ( $this->is_internal_request() ) {
+			return;
+		}
+
+		Engine::instance()->metrics()->record()->hit(
+			Flags::detect_prefix( $flags ),
+			$entry->size_raw,
+			$this->elapsed_ms(),
+			$stale
+		);
+	}
+
+	/**
+	 * Buffer a genuine cacheable miss (prefix from {@see Flags::get_prefix()}).
+	 * Flushed immediately, not via the Engine shutdown flush — this runs in the
+	 * output-buffer callback, which PHP executes *after* shutdown functions.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param int $bytes Bytes of the freshly generated response.
+	 * @return void
+	 */
+	private function record_miss_metric( int $bytes ): void {
+		if ( $this->is_internal_request() ) {
+			return;
+		}
+
+		$record = Engine::instance()->metrics()->record();
+		$record->miss(
+			$this->flags->get_prefix(),
+			$bytes,
+			$this->elapsed_ms()
+		);
+		$record->flush();
+	}
+
+	/**
+	 * Milliseconds elapsed since the request started.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return int
+	 */
+	private function elapsed_ms(): int {
+		$start = ServerVars::has( 'REQUEST_TIME_FLOAT' )
+			? (float) ServerVars::get( 'REQUEST_TIME_FLOAT' )
+			: microtime( true );
+
+		return (int) round( ( microtime( true ) - $start ) * 1000 );
+	}
+
+	/**
+	 * Whether this is MilliCache's own internal request.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return bool
+	 */
+	private function is_internal_request(): bool {
+		return 0 === strpos( ServerVars::get( 'HTTP_USER_AGENT' ), 'MilliCache/' );
 	}
 }
