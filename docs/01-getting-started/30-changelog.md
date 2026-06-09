@@ -6,6 +6,36 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.0-beta.2](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.1...v1.7.0-beta.2) (2026-06-09)
+
+
+### Features
+
+* **adminbar:** animate + 500ms delay before post-clear recount ([00c7dc1](https://github.com/MilliPress/MilliCache/commit/00c7dc1199e1768c21f6432be3c436f44190d3db))
+* **adminbar:** live cache size + bounded current-view clear ([3877451](https://github.com/MilliPress/MilliCache/commit/38774516beb6e970597a37512d0c9d0b81fdd0fb))
+* **admin:** count user-defined custom rules in the snapshot ([ab0d686](https://github.com/MilliPress/MilliCache/commit/ab0d686e954866dfb2fdf4016b79ce99d7cbfe0f))
+* **admin:** docs links per check, "warnings" pill label, rules in snapshot ([38307a4](https://github.com/MilliPress/MilliCache/commit/38307a4e60a2fea6e389ac8db6a30244327210bf))
+* **admin:** expose three extension filters on the status snapshot ([28c8cf1](https://github.com/MilliPress/MilliCache/commit/28c8cf1b59de5c0b90efea6bd902ff72bbb31cc8))
+* **admin:** footer Status indicator with unified status payload ([dd72515](https://github.com/MilliPress/MilliCache/commit/dd72515259044f3654f75e91614697e05e96028a))
+* **admin:** integrate with the WordPress Site Health screens ([2470fb8](https://github.com/MilliPress/MilliCache/commit/2470fb87100c16adabc171b163f158376294d361))
+* **admin:** make the status extension filters scope-aware ([9498b55](https://github.com/MilliPress/MilliCache/commit/9498b55031c3f881c79fe2867f98d3ed35942089))
+* **admin:** per-check breakdown in the footer Status modal ([52e58c9](https://github.com/MilliPress/MilliCache/commit/52e58c970d82df3e0de35323ff0b16dc99841b0b))
+* **admin:** rebuild the Status tab — fixed panels, KPI/chart cards, lean Pro teaser ([1ef92ca](https://github.com/MilliPress/MilliCache/commit/1ef92ca5a3bbe78e0819a099d23a19520a6aad1d))
+* **engine:** expose install_mode() to report how MilliCache is loaded ([788e079](https://github.com/MilliPress/MilliCache/commit/788e0793fe65d35bd2d55131f50e7d485ab9ac31))
+* **metrics:** record hit/miss in the response path, excluding the preloader ([f42780f](https://github.com/MilliPress/MilliCache/commit/f42780ff1dbe442732f06f8e25bfd09ae591a656))
+* **metrics:** time-bucketed per-blog hit/miss metrics engine ([e031f9c](https://github.com/MilliPress/MilliCache/commit/e031f9cde4164537eb5ca476aef2e0d4496a1f2e))
+* **storage:** add ping() active reachability probe ([85068a2](https://github.com/MilliPress/MilliCache/commit/85068a2f099ee123e81de2d2e6ce23ab96a2fc82))
+* **ui:** Add footer with MilliCache version to Network and Site settings pages ([bfe5a1f](https://github.com/MilliPress/MilliCache/commit/bfe5a1f20db0a542c041f1e74a66bf3a17efbedf))
+* **ui:** Add footer with MilliCache version to Network and Site settings pages ([130dcc7](https://github.com/MilliPress/MilliCache/commit/130dcc79f88e509535f98950ef33abe680bfdd0d))
+
+
+### Bug Fixes
+
+* **admin:** color the Status modal check icons ([4ab80b3](https://github.com/MilliPress/MilliCache/commit/4ab80b3d487b6b8855bf30d02621cc1c1fdfa79a))
+* **cron:** self-heal the nightly maintenance schedule on load ([32f8579](https://github.com/MilliPress/MilliCache/commit/32f857987539ded6daa798d15f6e9286fe0adc4c))
+* **settings:** register the metrics.active default so it survives resolution ([f079f91](https://github.com/MilliPress/MilliCache/commit/f079f9146e59598aaa6b99f890c9c17d11e72a6d))
+* **workflow:** make polish-release-pr idempotent across reruns ([077c0c8](https://github.com/MilliPress/MilliCache/commit/077c0c8b4e3f9258522a3d950134db64be4a2fa3))
+
 ## [1.7.0-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.6.2...v1.7.0-beta.1) (2026-05-13)
 
 This release introduces a new **bucket framework** for response variants. Before, the cache treated every request producing the same URL as one entry — which meant sites returning different content based on a cookie, header, or user state had to either disable caching for those pages or fight invalidation manually. Now any rule condition can split requests into separate buckets — cookie values (consent state, A/B test arm, currency), auth tokens, or the `Accept` header. That last one is especially useful for sites optimizing for AI agents: pair MilliCache with something like [`roots/post-content-to-markdown`](https://github.com/roots/post-content-to-markdown), and the Markdown variant your AI crawlers fetch and the HTML variant your browsers fetch live under the same page context — publish or update a post, and both invalidate together instead of drifting out of sync. Paired with content-addressable body deduplication, identical response bodies are stored once and shared across every bucket that produces them, so variants that happen to land on the same output don't pay for duplicate storage.
