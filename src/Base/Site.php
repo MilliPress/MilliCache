@@ -49,8 +49,8 @@ final class Site extends Manager {
 	/**
 	 * Get the per-site MilliBase Settings instance.
 	 *
-	 * Holds `cache` and `rules` on multisite; on single-site it additionally
-	 * holds `storage` (since there is no separate network scope to host it).
+	 * Holds `cache`, `rules`, and `metrics` on multisite; on single-site it
+	 * additionally holds `storage` (since there is no separate network scope).
 	 *
 	 * @since 1.7.0
 	 *
@@ -99,6 +99,9 @@ final class Site extends Manager {
 			),
 			'rules' => array(
 				'items' => array(),
+			),
+			'metrics' => array(
+				'active' => false,
 			),
 		);
 

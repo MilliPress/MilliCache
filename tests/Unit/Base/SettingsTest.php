@@ -129,13 +129,16 @@ describe( 'Settings', function () {
 		$defaults = Site::settings()->get_default_settings();
 
 		expect( $defaults )->toBeArray();
-		expect( $defaults )->toHaveKeys( array( 'storage', 'cache', 'rules' ) );
+		expect( $defaults )->toHaveKeys( array( 'storage', 'cache', 'rules', 'metrics' ) );
 		expect( $defaults['storage']['host'] )->toBe( '127.0.0.1' );
 		expect( $defaults['storage']['port'] )->toBe( 6379 );
 		expect( $defaults['storage']['username'] )->toBe( '' );
 		expect( $defaults['cache']['ttl'] )->toBe( DAY_IN_SECONDS );
 		expect( $defaults['cache']['grace'] )->toBe( MONTH_IN_SECONDS );
 		expect( $defaults['cache']['gzip'] )->toBeTrue();
+		// Registered so the resolver keeps a persisted `metrics.active` (Pro's
+		// detailed-metrics gate) instead of dropping it as an unknown key.
+		expect( $defaults['metrics']['active'] )->toBeFalse();
 	} );
 
 	it( 'provides merged settings', function () {
