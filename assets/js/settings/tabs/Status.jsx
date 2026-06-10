@@ -194,6 +194,11 @@ const axisTop = ( max ) => {
 	return step * mag;
 };
 
+// Horizontal inset (viewBox units) for the axis labels. The chart runs
+// edge-to-edge (the plot bleeds past the card padding), so the line/area/grid
+// fill the full width while the labels keep this gap from the card edges.
+const AXIS_PAD = 20;
+
 const compact = ( n ) => {
 	if ( n >= 1000000 ) {
 		return `${ +( n / 1000000 ).toFixed( 1 ) }M`;
@@ -246,7 +251,7 @@ const TrendChart = ( { series } ) => {
 	const cachedArea = `${ totalLine } L${ reversedUncached.slice( 1 ) } Z`;
 
 	const dayLabels = days.map( ( d, i ) => ( {
-		x: xAt( i ),
+		x: i === 0 ? AXIS_PAD : i === n - 1 ? W - AXIS_PAD : xAt( i ),
 		label: `${ d.date.slice( 6, 8 ) }.${ d.date.slice( 4, 6 ) }`,
 		anchor: i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle',
 	} ) );
@@ -342,17 +347,19 @@ const TrendChart = ( { series } ) => {
 					className="millicache-status-chart__line-misses"
 					d={ uncachedLine }
 				/>
-				{ ticks.map( ( t ) => (
-					<text
-						key={ `ylabel-${ t }` }
-						className="millicache-status-chart__axis"
-						x={ pad.l + 2 }
-						y={ yAt( t ) - 3 }
-						textAnchor="start"
-					>
-						{ compact( Math.round( t ) ) }
-					</text>
-				) ) }
+				{ ticks
+					.filter( ( t ) => t > 0 )
+					.map( ( t ) => (
+						<text
+							key={ `ylabel-${ t }` }
+							className="millicache-status-chart__axis"
+							x={ AXIS_PAD }
+							y={ yAt( t ) - 3 }
+							textAnchor="start"
+						>
+							{ compact( Math.round( t ) ) }
+						</text>
+					) ) }
 				{ dayLabels.map( ( d ) => (
 					<text
 						key={ d.x }

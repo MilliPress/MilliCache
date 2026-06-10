@@ -352,7 +352,7 @@
 		}
 
 		&__stat.is-uncached .millicache-status-chart__stat-label::before {
-			background: #3858e9;
+			background: var(--wp-admin-theme-color, #3858e9);
 		}
 
 		&__svg {
@@ -382,7 +382,7 @@
 
 		&__line-misses {
 			fill: none;
-			stroke: #3858e9;
+			stroke: var(--wp-admin-theme-color, #3858e9);
 			stroke-width: 2;
 			stroke-linecap: round;
 			stroke-linejoin: round;
@@ -394,7 +394,7 @@
 		}
 
 		&__grad-misses-top {
-			stop-color: #3858e9;
+			stop-color: var(--wp-admin-theme-color, #3858e9);
 			stop-opacity: 0.2;
 		}
 
@@ -404,8 +404,13 @@
 		}
 
 		// Hover: tooltip positioning context, crosshair, marker, tooltip.
+		// Bleed past the card's 20px horizontal padding so the plot fills the
+		// full card width (edge to edge); axis labels keep their inset via the
+		// chart's AXIS_PAD. Header/stats keep their padding.
 		&__plot {
 			position: relative;
+			margin-left: -20px;
+			margin-right: -20px;
 		}
 
 		&__crosshair {
@@ -462,7 +467,7 @@
 			}
 
 			&.is-uncached::before {
-				background: #3858e9;
+				background: var(--wp-admin-theme-color, #3858e9);
 			}
 		}
 
