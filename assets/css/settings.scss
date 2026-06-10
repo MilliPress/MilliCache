@@ -105,6 +105,21 @@
 		}
 	}
 
+	// Centered loading container for tab content that resolves async
+	// (Status payload). Mirrors the Pro Entries/Rules loading state.
+	.millicache-loading {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		min-height: 60vh;
+
+		.components-spinner {
+			width: 48px;
+			height: 48px;
+		}
+	}
+
 	// Status tab dashboard — KPI and breakdown cards in responsive grids.
 	.millicache-status-dashboard {
 		display: flex;
@@ -243,7 +258,7 @@
 		}
 
 		&__value {
-			font-size: 34px;
+			font-size: 28px;
 			font-weight: 600;
 			line-height: 1.15;
 			color: #1e1e1e;

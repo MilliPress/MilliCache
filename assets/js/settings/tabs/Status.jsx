@@ -469,6 +469,17 @@ const Panel = ( { panel } ) => {
 const StatusTab = ( { status } ) => {
 	const { isLoadingSettings } = window.MilliBase.hooks.useSettings();
 
+	// Initial load: the status payload hasn't resolved yet — show a centered
+	// spinner (matching the Pro Entries/Rules tabs) instead of an empty
+	// dashboard. Once status is present, a later refetch keeps the dashboard.
+	if ( isLoadingSettings && ! status ) {
+		return (
+			<div className="millicache-loading">
+				<Spinner />
+			</div>
+		);
+	}
+
 	const panels = Array.isArray( status?.panels )
 		? sortByWeight( status.panels )
 		: [];
@@ -488,7 +499,6 @@ const StatusTab = ( { status } ) => {
 
 	return (
 		<div className="millicache-status-dashboard">
-			{ isLoadingSettings && <Spinner /> }
 			{ status && (
 				<>
 					{ /* Hidden when healthy; the footer Status pill still opens the modal. */ }
