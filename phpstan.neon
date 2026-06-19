@@ -1,5 +1,6 @@
 parameters:
   level: 9
+  phpVersion: 70400
   paths:
     - millicache.php
     - advanced-cache.php

@@ -956,7 +956,7 @@ final class StatusBuilder {
 	 * @param string $default Fallback when `$value` isn't a string.
 	 * @return string
 	 */
-	private function as_string( mixed $value, string $default = '' ): string {
+	private function as_string( $value, string $default = '' ): string {
 		return is_string( $value ) ? $value : $default;
 	}
 
@@ -969,7 +969,7 @@ final class StatusBuilder {
 	 * @param int   $default Fallback when `$value` isn't numeric.
 	 * @return int
 	 */
-	private function as_int( mixed $value, int $default = 0 ): int {
+	private function as_int( $value, int $default = 0 ): int {
 		return is_numeric( $value ) ? (int) $value : $default;
 	}
 }

@@ -399,7 +399,7 @@ final class SiteHealth {
 	 * @param string $default Fallback when `$value` isn't a string.
 	 * @return string
 	 */
-	private function as_string( mixed $value, string $default = '' ): string {
+	private function as_string( $value, string $default = '' ): string {
 		return is_string( $value ) ? $value : $default;
 	}
 }

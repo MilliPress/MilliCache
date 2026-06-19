@@ -65,7 +65,7 @@ final class StorageCLI {
 		/** @var string $password */
 		$password = $storage_settings['enc_password'] ?? '';
 
-		$is_socket = str_starts_with( $host, '/' );
+		$is_socket = 0 === strpos( $host, '/' );
 
 		\WP_CLI::line(
 			sprintf(
