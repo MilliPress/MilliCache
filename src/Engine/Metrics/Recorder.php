@@ -43,19 +43,18 @@ final class Recorder {
 	public const RES_DAILY = 'd';
 
 	/**
-	 * How many days of hourly buckets to keep. Covers the 7-day view plus the
-	 * "vs. previous period" delta (needs twice the window).
+	 * Default days of hourly buckets to keep.
 	 *
 	 * @var int
 	 */
-	public const RETAIN_HOURLY_DAYS = 14;
+	public const RETAIN_HOURLY_DAYS = 7;
 
 	/**
-	 * How many days of daily buckets to keep.
+	 * Default days of daily buckets to keep.
 	 *
 	 * @var int
 	 */
-	public const RETAIN_DAILY_DAYS = 365;
+	public const RETAIN_DAILY_DAYS = 30;
 
 	/**
 	 * Storage seam the counters are written through.
@@ -72,6 +71,13 @@ final class Recorder {
 	private bool $detailed;
 
 	/**
+	 * Retention window in days per resolution (resolution key => days).
+	 *
+	 * @var array<string, int>
+	 */
+	private array $retention;
+
+	/**
 	 * Pending counter deltas for the current request (metric => delta).
 	 *
 	 * @var array<string, int>
@@ -83,12 +89,17 @@ final class Recorder {
 	 *
 	 * @since 1.7.0
 	 *
-	 * @param Store $store    Counter persistence seam.
-	 * @param bool  $detailed Record the detailed Pro field set (default: hit/miss only).
+	 * @param Store              $store     Counter persistence seam.
+	 * @param bool               $detailed  Record the detailed Pro field set (default: hit/miss only).
+	 * @param array<string, int> $retention Days to keep per resolution (`RES_*` => days); missing keys fall back to the defaults.
 	 */
-	public function __construct( Store $store, bool $detailed = false ) {
-		$this->store    = $store;
-		$this->detailed = $detailed;
+	public function __construct( Store $store, bool $detailed = false, array $retention = array() ) {
+		$this->store     = $store;
+		$this->detailed  = $detailed;
+		$this->retention = $retention + array(
+			self::RES_HOURLY => self::RETAIN_HOURLY_DAYS,
+			self::RES_DAILY  => self::RETAIN_DAILY_DAYS,
+		);
 	}
 
 	/**
@@ -208,9 +219,9 @@ final class Recorder {
 	public function prune( ?int $now = null ): void {
 		$now = $now ?? time();
 
-		foreach ( array( self::RES_HOURLY, self::RES_DAILY ) as $resolution ) {
+		foreach ( $this->retention as $resolution => $days ) {
 			$fields  = array_keys( $this->store->read( $resolution ) );
-			$expired = self::expired_fields( $fields, $resolution, $now );
+			$expired = self::expired_fields( $fields, $resolution, $days, $now );
 
 			if ( ! empty( $expired ) ) {
 				$this->store->delete_fields( $resolution, $expired );
@@ -290,11 +301,11 @@ final class Recorder {
 	 *
 	 * @param array<string> $fields     Field names to test.
 	 * @param string        $resolution Resolution key.
+	 * @param int           $days       Retention window in days.
 	 * @param int           $now        Reference time.
 	 * @return array<string> Fields whose bucket is older than the window.
 	 */
-	public static function expired_fields( array $fields, string $resolution, int $now ): array {
-		$days   = self::RES_DAILY === $resolution ? self::RETAIN_DAILY_DAYS : self::RETAIN_HOURLY_DAYS;
+	public static function expired_fields( array $fields, string $resolution, int $days, int $now ): array {
 		$cutoff = self::bucket_key( $now - ( $days * DAY_IN_SECONDS ), $resolution );
 
 		$expired = array();

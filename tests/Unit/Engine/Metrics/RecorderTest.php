@@ -211,7 +211,7 @@ describe( 'Recorder', function () {
 
 	describe( 'prune', function () {
 		it( 'removes hourly buckets older than the retention window, keeps recent', function () {
-			$old    = gmdate( 'YmdH', $this->ts - 20 * DAY_IN_SECONDS ); // > 14 days
+			$old    = gmdate( 'YmdH', $this->ts - 20 * DAY_IN_SECONDS ); // > 7 days
 			$recent = gmdate( 'YmdH', $this->ts - 2 * DAY_IN_SECONDS );  // within window
 			$this->store->increment( Recorder::RES_HOURLY, array(
 				"$old:hit"    => 1,
@@ -225,9 +225,9 @@ describe( 'Recorder', function () {
 			expect( $hourly )->not->toHaveKey( "$old:hit" );
 		} );
 
-		it( 'removes daily buckets older than a year', function () {
-			$old    = gmdate( 'Ymd', $this->ts - 400 * DAY_IN_SECONDS );
-			$recent = gmdate( 'Ymd', $this->ts - 100 * DAY_IN_SECONDS );
+		it( 'removes daily buckets older than the retention window', function () {
+			$old    = gmdate( 'Ymd', $this->ts - 40 * DAY_IN_SECONDS ); // > 30 days
+			$recent = gmdate( 'Ymd', $this->ts - 10 * DAY_IN_SECONDS ); // within window
 			$this->store->set_fields( Recorder::RES_DAILY, array(
 				"$old:hit"    => 1,
 				"$recent:hit" => 1,
@@ -239,13 +239,41 @@ describe( 'Recorder', function () {
 			expect( $daily )->toHaveKey( "$recent:hit" );
 			expect( $daily )->not->toHaveKey( "$old:hit" );
 		} );
+
+		it( 'honours custom retention windows', function () {
+			// 2-day hourly / 7-day daily — both fixtures survive the defaults.
+			$recorder = new Recorder( $this->store, false, array(
+				Recorder::RES_HOURLY => 2,
+				Recorder::RES_DAILY  => 7,
+			) );
+
+			$hourly_old  = gmdate( 'YmdH', $this->ts - 3 * DAY_IN_SECONDS );  // > 2, < 7 days
+			$hourly_kept = gmdate( 'YmdH', $this->ts - DAY_IN_SECONDS );
+			$daily_old   = gmdate( 'Ymd', $this->ts - 10 * DAY_IN_SECONDS );  // > 7, < 30 days
+			$daily_kept  = gmdate( 'Ymd', $this->ts - 2 * DAY_IN_SECONDS );
+			$this->store->increment( Recorder::RES_HOURLY, array(
+				"$hourly_old:hit"  => 1,
+				"$hourly_kept:hit" => 1,
+			) );
+			$this->store->set_fields( Recorder::RES_DAILY, array(
+				"$daily_old:hit"  => 1,
+				"$daily_kept:hit" => 1,
+			) );
+
+			$recorder->prune( $this->ts );
+
+			expect( $this->store->read( Recorder::RES_HOURLY ) )->toHaveKey( "$hourly_kept:hit" );
+			expect( $this->store->read( Recorder::RES_HOURLY ) )->not->toHaveKey( "$hourly_old:hit" );
+			expect( $this->store->read( Recorder::RES_DAILY ) )->toHaveKey( "$daily_kept:hit" );
+			expect( $this->store->read( Recorder::RES_DAILY ) )->not->toHaveKey( "$daily_old:hit" );
+		} );
 	} );
 
 	describe( 'expired_fields', function () {
 		it( 'selects fields strictly older than the cutoff (lexicographic = chronological)', function () {
 			$fields = array( '2026052914:hit', '2026053014:hit' );
-			// Cutoff at ~14 days before 2026-05-30 14:00 lands inside the gap.
-			$expired = Recorder::expired_fields( $fields, Recorder::RES_HOURLY, gmmktime( 14, 0, 0, 6, 13, 2026 ) );
+			// A 14-day cutoff before 2026-06-13 14:00 lands inside the gap.
+			$expired = Recorder::expired_fields( $fields, Recorder::RES_HOURLY, 14, gmmktime( 14, 0, 0, 6, 13, 2026 ) );
 			expect( $expired )->toBe( array( '2026052914:hit' ) );
 		} );
 	} );

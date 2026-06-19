@@ -622,7 +622,17 @@ final class Engine {
 			$settings = $this->get_settings( 'metrics' );
 			$detailed = isset( $settings['active'] ) && (bool) $settings['active'];
 
-			$this->metrics = new Metrics\Manager( $this->storage(), $this->flags()->get_prefix(), $detailed );
+			$retention = array();
+			foreach ( array(
+				Metrics\Recorder::RES_HOURLY => 'retention_hourly',
+				Metrics\Recorder::RES_DAILY  => 'retention_daily',
+			) as $resolution => $key ) {
+				if ( is_numeric( $settings[ $key ] ?? null ) ) {
+					$retention[ $resolution ] = max( 1, (int) $settings[ $key ] );
+				}
+			}
+
+			$this->metrics = new Metrics\Manager( $this->storage(), $this->flags()->get_prefix(), $detailed, $retention );
 		}
 		return $this->metrics;
 	}

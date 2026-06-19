@@ -48,6 +48,13 @@ final class Manager {
 	private bool $detailed;
 
 	/**
+	 * Days to keep per resolution on the nightly prune (`RES_*` => days).
+	 *
+	 * @var array<string, int>
+	 */
+	private array $retention;
+
+	/**
 	 * The request-scoped write collector, built on first {@see self::record()}.
 	 *
 	 * @var Collector|null
@@ -59,14 +66,16 @@ final class Manager {
 	 *
 	 * @since 1.7.0
 	 *
-	 * @param Storage $storage  Storage instance.
-	 * @param string  $prefix   Current blog's metrics prefix.
-	 * @param bool    $detailed Record the detailed Pro field set on writes.
+	 * @param Storage            $storage   Storage instance.
+	 * @param string             $prefix    Current blog's metrics prefix.
+	 * @param bool               $detailed  Record the detailed Pro field set on writes.
+	 * @param array<string, int> $retention Days to keep per resolution (`RES_*` => days).
 	 */
-	public function __construct( Storage $storage, string $prefix, bool $detailed ) {
-		$this->storage  = $storage;
-		$this->prefix   = $prefix;
-		$this->detailed = $detailed;
+	public function __construct( Storage $storage, string $prefix, bool $detailed, array $retention = array() ) {
+		$this->storage   = $storage;
+		$this->prefix    = $prefix;
+		$this->detailed  = $detailed;
+		$this->retention = $retention;
 	}
 
 	/**
@@ -131,7 +140,8 @@ final class Manager {
 	 */
 	public function rollup(): void {
 		foreach ( $this->storage->metrics_prefixes() as $prefix ) {
-			( new Recorder( new StorageStore( $this->storage, $prefix ) ) )->rollup();
+			$recorder = new Recorder( new StorageStore( $this->storage, $prefix ), false, $this->retention );
+			$recorder->rollup();
 		}
 	}
 }
