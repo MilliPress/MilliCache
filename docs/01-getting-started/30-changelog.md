@@ -8,7 +8,13 @@ menu_order: 30
 
 ## [1.7.0-beta.3](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.2...v1.7.0-beta.3) (2026-06-20)
 
-This beta brings high-availability storage to MilliCache. Alongside single-server setups, it adds first-class support for Redis Replication and Sentinel, inferred automatically from the shape of `MC_STORAGE_HOST` with no separate mode flag to manage: a host string is single-node, a `master` map enables master/replica replication, and a `service` map enables Sentinel-managed failover. The connection layer is also more resilient: a misconfigured connection now disables the cache and serves the site uncached instead of silently falling back to localhost, and a connection failure fails fast so a brief storage outage can no longer slow down every request. Cache analytics gain configurable hit/miss retention windows, letting you decide how much history to keep.
+This beta brings meaningful improvements to how MilliCache understands and communicates your storage setup, plus a round of admin polish to make the free tier feel more complete.
+
+The headline addition is a new `Connection` class that infers your storage topology directly from the shape of `MC_STORAGE_HOST` — single node, replication, or Sentinel — and surfaces that information everywhere it matters: the Status tab, the CLI, and the settings screen. If a connection fails, the cache now fails fast rather than silently degrading, and a misconfigured array disables the cache explicitly instead of falling back to localhost without warning.
+
+On the metrics side, hit and miss retention windows are now configurable. The defaults (7 days of hourly buckets, 30 days of daily) cover the Status tab's chart out of the box, but you can tune them via `metrics.retention_hourly` and `metrics.retention_daily` if your needs differ.
+
+The admin UI also got some attention: the Status tab now shows a properly centered loading spinner while the status payload resolves, the free-tier chart has been brought in line with the Pro Insights dashboard (edge-to-edge plot, cleaner axis labels, themed colors), and a stale network settings URL has been corrected.
 
 ### Features
 
