@@ -8,6 +8,11 @@ menu_order: 30
 
 ## [1.7.0-beta.3](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.2...v1.7.0-beta.3) (2026-06-20)
 
+Here's a release note intro for 1.7.0-beta.3:
+
+---
+
+This beta brings a round of storage and admin polish. The biggest addition is a new `Connection` class that infers your storage topology directly from the shape of `MC_STORAGE_HOST` — single node, replication, or Sentinel — and surfaces that topology consistently across the Status tab, CLI, and settings page. Hit/miss retention windows are now configurable per resolution (hourly and daily), and the Status tab gets a centered loading indicator and chart refinements ported from Pro. A network settings URL fix and a handful of dependency updates round things out.
 
 ### Features
 
