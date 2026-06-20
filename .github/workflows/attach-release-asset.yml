@@ -28,7 +28,7 @@ jobs:
       # the REF env var below. fetch-tags ensures the requested tag is
       # available locally for `git archive`.
       - name: Checkout workflow source
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-tags: true
           fetch-depth: 0
