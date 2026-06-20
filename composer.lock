@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5a17bd33ccb238d6da9bc81e5a669cc1",
+    "content-hash": "8d78f02df8908036c909f25ff0295a8d",
     "packages": [
         {
             "name": "millipress/millibase",
