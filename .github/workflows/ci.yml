@@ -45,7 +45,7 @@ jobs:
           client-id: ${{ secrets.MILLIPRESS_BOT_CLIENT_ID }}
           private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # App token (when present) lets the rebuild push trigger PR
           # `synchronize` events so required checks re-run on the rebuild
@@ -120,7 +120,7 @@ jobs:
         # Pest 4.x requires PHP 8.3+, so we only test on supported versions
         php: ['8.3', '8.4', '8.5']
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
@@ -149,7 +149,7 @@ jobs:
     name: PHPStan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -178,7 +178,7 @@ jobs:
     name: WordPress Code Style
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
