@@ -228,7 +228,7 @@ By default, these don't affect the cache key:
 | Metric           | Cache Hit  | Cache Miss        |
 |------------------|------------|-------------------|
 | Response Time    | 5-15ms     | 200-2000ms        |
-| PHP Execution    | None       | Full WordPress    |
+| PHP Execution    | Minimal    | Full WordPress    |
 | Database Queries | 0          | Typically 20-100+ |
 | Memory Usage     | Minimal    | Full application  |
 
