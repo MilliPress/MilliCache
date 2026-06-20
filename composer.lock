@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "millipress/millibase",
-            "version": "v2.6.1",
+            "version": "v2.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/MilliPress/MilliBase.git",
-                "reference": "7de7c73af39eed09bd92f47b59d21e020ad7f73e"
+                "reference": "043abf098a764da2278edd28d819ed01fd1f77fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/MilliPress/MilliBase/zipball/7de7c73af39eed09bd92f47b59d21e020ad7f73e",
-                "reference": "7de7c73af39eed09bd92f47b59d21e020ad7f73e",
+                "url": "https://api.github.com/repos/MilliPress/MilliBase/zipball/043abf098a764da2278edd28d819ed01fd1f77fb",
+                "reference": "043abf098a764da2278edd28d819ed01fd1f77fb",
                 "shasum": ""
             },
             "require": {
@@ -73,9 +73,9 @@
             "description": "Declarative WordPress settings framework. Define your settings page in PHP arrays — sections, fields, tabs, validation — and get a React UI automatically.",
             "support": {
                 "issues": "https://github.com/MilliPress/MilliBase/issues",
-                "source": "https://github.com/MilliPress/MilliBase/tree/v2.6.1"
+                "source": "https://github.com/MilliPress/MilliBase/tree/v2.6.2"
             },
-            "time": "2026-06-09T09:11:45+00:00"
+            "time": "2026-06-09T22:38:39+00:00"
         },
         {
             "name": "millipress/millirules",
