@@ -106,15 +106,65 @@ define( 'MC_STORAGE_PREFIX', 'siteb' );
 
 ### All Connection Constants
 
-| Constant                | Default     | Description                           |
-|-------------------------|-------------|---------------------------------------|
-| `MC_STORAGE_HOST`       | `127.0.0.1` | Hostname, IP, socket, or `tls://host` |
-| `MC_STORAGE_PORT`       | `6379`      | TCP port (0 for sockets)              |
-| `MC_STORAGE_USERNAME`   | `''`        | ACL username (default user if empty)  |
-| `MC_STORAGE_PASSWORD`   | `''`        | AUTH password                         |
-| `MC_STORAGE_DB`         | `0`         | Database number (0-15)                |
-| `MC_STORAGE_PERSISTENT` | `true`      | Use persistent connections            |
-| `MC_STORAGE_PREFIX`     | `mll`       | Key prefix                            |
+| Constant                  | Default     | Description                                               |
+|---------------------------|-------------|-----------------------------------------------------------|
+| `MC_STORAGE_HOST`         | `127.0.0.1` | Hostname, IP, socket, `tls://host`, or a node array (see below) |
+| `MC_STORAGE_PORT`         | `6379`      | TCP port (0 for sockets)                                  |
+| `MC_STORAGE_USERNAME`     | `''`        | ACL username (default user if empty)                      |
+| `MC_STORAGE_PASSWORD`     | `''`        | AUTH password                                             |
+| `MC_STORAGE_DB`           | `0`         | Database number (0-15)                                    |
+| `MC_STORAGE_PERSISTENT`   | `true`      | Use persistent connections                                |
+| `MC_STORAGE_PREFIX`       | `mll`       | Key prefix                                                |
+| `MC_STORAGE_TIMEOUT`      | `1.0`       | Connection timeout in seconds                             |
+| `MC_STORAGE_READ_TIMEOUT` | `2.0`       | Read/write timeout in seconds                             |
+
+### Timeouts
+
+`MC_STORAGE_TIMEOUT` (default `1.0`) bounds connecting to the server, so an
+unreachable backend falls back to uncached WordPress quickly instead of stalling
+the request. `MC_STORAGE_READ_TIMEOUT` (default `2.0`) bounds waiting for a
+command response; raise it only if you serve very large cached responses over a
+slow link.
+
+## High Availability: Replication & Sentinel
+
+For read-scaling, a node-local replica, or automatic failover, set
+`MC_STORAGE_HOST` to an array. A `master` key selects replication; a `service`
+key selects Sentinel. These modes are configured in `wp-config.php` only; the
+Settings screen shows a read-only notice when an array is active.
+
+`MC_STORAGE_USERNAME`, `MC_STORAGE_PASSWORD`, and `MC_STORAGE_DB` apply to every
+node. Each address is `host`, `host:port`, or `tls://host[:port]`.
+
+### Replication (master + replicas)
+
+```php
+define( 'MC_STORAGE_HOST', array(
+    'master'   => 'master.example.com',                     // writes
+    'replicas' => array( '127.0.0.1', 'replica.tld:6380' ), // reads
+) );
+
+define( 'MC_STORAGE_PASSWORD', 'shared-secret' );  // applied to all nodes
+```
+
+`replicas` is optional and accepts a single address or a list. Replication is
+asynchronous, so a just-written entry may briefly lag on a replica.
+
+### Sentinel (managed failover)
+
+```php
+define( 'MC_STORAGE_HOST', array(
+    'service'   => 'mymaster',
+    'sentinels' => array( '10.0.0.1:26379', '10.0.0.2:26379' ),
+) );
+```
+
+Sentinel discovers the master and re-resolves it on failover. Cluster mode
+(sharding across multiple masters) is not supported.
+
+A misconfigured array (both `master` and `service`, Sentinel without
+`sentinels`, or no recognized key) disables the cache and logs the reason rather
+than connecting to the wrong server.
 
 ## Recommended Server Configuration
 
@@ -215,6 +265,8 @@ Error: Connection timed out
 - Check server resources
 - Verify network connectivity
 - Check firewall rules
+- If the backend is healthy but distant, raise `MC_STORAGE_TIMEOUT` (connection)
+  or `MC_STORAGE_READ_TIMEOUT` (command response) above their `1.0`/`2.0` second defaults
 
 ## Cloud Provider Options
 
@@ -232,14 +284,14 @@ For managed services, use the provided connection details in your MilliCache con
 
 ## Performance Tips
 
-1. **Run locally when possible** — Same-machine Redis has lowest latency
-2. **Use persistent connections** — Reduces connection overhead
-3. **Enable compression** — `MC_CACHE_GZIP` reduces network transfer
-4. **Size memory appropriately** — Avoid frequent evictions
-5. **Monitor with `wp millicache stats`** — Track cache efficiency
+1. **Run locally when possible**: Same-machine Redis has lowest latency
+2. **Use persistent connections**: Reduces connection overhead
+3. **Enable compression**: `MC_CACHE_GZIP` reduces network transfer
+4. **Size memory appropriately**: Avoid frequent evictions
+5. **Monitor with `wp millicache stats`**: Track cache efficiency
 
 ## Next Steps
 
-- [Configuration Reference](../02-configuration/02-reference.md) — All settings
-- [WP-CLI Commands](../06-wp-cli/01-commands.md) — Command reference
-- [Troubleshooting](../09-troubleshooting/01-common-issues.md) — Common issues
+- [Configuration Reference](../02-configuration/02-reference.md): All settings
+- [WP-CLI Commands](../06-wp-cli/01-commands.md): Command reference
+- [Troubleshooting](../09-troubleshooting/01-common-issues.md): Common issues
