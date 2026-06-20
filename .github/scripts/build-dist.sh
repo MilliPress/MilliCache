@@ -26,7 +26,23 @@ git archive --format=tar "$REF" | tar -x -C dist
 rm -f dist/release-please-config*.json
 
 mkdir -p dist/bin
-curl -fsSL --retry 3 --retry-all-errors "$STRAUSS_URL" -o dist/bin/strauss.phar
+
+# Download Strauss and verify it actually runs. `curl -f` rejects HTTP errors
+# but not a truncated/corrupt 200 response, which used to slip through and then
+# fail with a cryptic exit 1 at the `strauss.phar` step below. Verify the phar
+# executes (and retry the whole fetch) so a bad download fails here, loudly.
+for attempt in 1 2 3; do
+	if curl -fsSL --retry 3 --retry-all-errors "$STRAUSS_URL" -o dist/bin/strauss.phar \
+		&& php dist/bin/strauss.phar --version >/dev/null 2>&1; then
+		break
+	fi
+	if [ "$attempt" = 3 ]; then
+		echo "error: could not obtain a working strauss.phar from $STRAUSS_URL" >&2
+		exit 1
+	fi
+	echo "strauss.phar download/verify failed (attempt $attempt); retrying..." >&2
+	sleep 3
+done
 
 composer install --no-dev --no-interaction --no-scripts --prefer-dist --working-dir=dist
 
