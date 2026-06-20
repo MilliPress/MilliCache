@@ -98,6 +98,8 @@ final class Network extends Manager {
 				'db'           => 0,
 				'persistent'   => true,
 				'prefix'       => 'mll',
+				'timeout'      => 1.0,
+				'read_timeout' => 2.0,
 			),
 			'rules'   => array(
 				'items' => array(),

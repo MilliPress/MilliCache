@@ -300,4 +300,48 @@ describe( 'Storage', function () {
 			expect( $result )->toBeFalse();
 		} );
 	} );
+
+	describe( 'Layer-1 fail-fast', function () {
+		it( 'dials the connection at most once per request', function () {
+			$settings = array(
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'prefix'     => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			// A stub client whose every command throws the connect-failure
+			// exception Predis 3.x actually raises (StreamInitException, a sibling
+			// of ConnectionException — not a subclass). The first call should trip
+			// the memoized flag; the second should short-circuit without touching
+			// the client.
+			$stub = new class() extends \Predis\Client {
+				public int $calls = 0;
+
+				public function __call( $command_id, $arguments ) {
+					++$this->calls;
+					throw new \Predis\Connection\Resource\Exception\StreamInitException( 'Operation timed out' );
+				}
+			};
+
+			$client_prop = new \ReflectionProperty( Storage::class, 'client' );
+			$client_prop->setAccessible( true );
+			$client_prop->setValue( $storage, $stub );
+
+			$failed_prop = new \ReflectionProperty( Storage::class, 'connection_failed' );
+			$failed_prop->setAccessible( true );
+
+			expect( $failed_prop->getValue( $storage ) )->toBeFalse();
+
+			$first  = suppressing_errors( fn() => $storage->lock( 'test-hash' ) );
+			$second = suppressing_errors( fn() => $storage->set_count( 'test-set' ) );
+
+			expect( $first )->toBeFalse();
+			expect( $second )->toBe( 0 );
+			expect( $stub->calls )->toBe( 1 );
+			expect( $failed_prop->getValue( $storage ) )->toBeTrue();
+		} );
+	} );
 } );
