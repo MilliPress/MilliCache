@@ -13,6 +13,7 @@
 namespace MilliCache\Admin\UI;
 
 use MilliCache\Admin\Utils;
+use MilliCache\Core\Connection;
 use MilliCache\Engine;
 
 ! defined( 'ABSPATH' ) && exit;
@@ -470,8 +471,8 @@ final class StatusBuilder {
 			'label'       => __( 'WP_CACHE constant is enabled', 'millicache' ),
 			'status'      => $wp_cache_on ? 'good' : 'critical',
 			'description' => $wp_cache_on
-				? __( 'WP_CACHE is defined and truthy. WordPress will load the advanced-cache.php drop-in.', 'millicache' )
-				: __( "WP_CACHE is not defined or false in wp-config.php. WordPress won't load the drop-in, so MilliCache can't intercept page requests.", 'millicache' ),
+				? __( '<code>WP_CACHE</code> is defined and truthy. WordPress will load the advanced-cache.php drop-in.', 'millicache' )
+				: __( "<code>WP_CACHE</code> is not defined or false in wp-config.php. WordPress won't load the drop-in, so MilliCache can't intercept page requests.", 'millicache' ),
 			'value'       => $wp_cache_on ? 'true' : 'false',
 			'url'         => $wp_cache_docs,
 		);
@@ -489,6 +490,47 @@ final class StatusBuilder {
 				: __( 'disconnected', 'millicache' ),
 			'url'         => $conn_docs,
 		);
+
+		// Storage connection mode (multi-node only): lists the nodes.
+		$cfg  = is_array( $storage['config'] ?? null ) ? $storage['config'] : array();
+		$mode = is_string( $cfg['mode'] ?? null ) ? $cfg['mode'] : 'single';
+
+		if ( $connected && 'single' !== $mode ) {
+			$labels = array();
+			foreach ( is_array( $cfg['nodes'] ?? null ) ? $cfg['nodes'] : array() as $cfg_node ) {
+				if ( ! is_array( $cfg_node ) ) {
+					continue;
+				}
+				$label = Connection::node_label( $cfg_node );
+				$role  = '' !== $label['role'] ? ' (' . esc_html( $label['role'] ) . ')' : '';
+				// The host:port (developer-supplied via constant) is escaped and
+				// wrapped in its own <code> element; the role sits outside it.
+				$labels[] = '<code>' . esc_html( $label['address'] ) . '</code>' . $role;
+			}
+			$node_list = implode( ', ', $labels );
+
+			if ( 'sentinel' === $mode ) {
+				$service     = is_string( $cfg['service'] ?? null ) ? esc_html( $cfg['service'] ) : '';
+				$mode_detail = sprintf(
+					// translators: %1$s is the Sentinel service name, %2$s the sentinel node list (each host in its own <code> element).
+					__( 'Sentinel-managed failover for service "%1$s" via %2$s.', 'millicache' ),
+					$service,
+					$node_list
+				);
+			} else {
+				// translators: %s is the comma-separated node list (each host in its own <code> element).
+				$mode_detail = sprintf( __( 'Master/replica replication across %s.', 'millicache' ), $node_list );
+			}
+
+			$checks[] = array(
+				'id'          => 'storage_mode',
+				'label'       => __( 'Storage connection mode', 'millicache' ),
+				'status'      => 'good',
+				'description' => $mode_detail,
+				'value'       => $mode,
+				'url'         => self::DOCS_BASE . '/08-storage-backends/01-overview#high-availability-replication--sentinel',
+			);
+		}
 
 		// Storage server limits — install-wide; skip on per-site multisite or
 		// when the storage server isn't reachable to begin with.
@@ -825,6 +867,7 @@ final class StatusBuilder {
 
 		$lines[] = '**Storage**';
 		$lines[] = sprintf( '- Connected: %s', ! empty( $storage['connected'] ) ? 'yes' : 'no' );
+		$lines[] = sprintf( '- Mode: %s', $this->as_string( $cfg['mode'] ?? null, 'single' ) );
 		if ( array() !== $info ) {
 			$lines[] = sprintf( '- Server: %s', $this->as_string( $server['version'] ?? null, 'n/a' ) );
 			$lines[] = sprintf( '- Used memory: %s', $this->as_string( $memory['used_memory_human'] ?? null, 'n/a' ) );

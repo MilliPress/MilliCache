@@ -11,6 +11,8 @@
 
 namespace MilliCache\Admin\CLI;
 
+use MilliCache\Core\Connection;
+
 ! defined( 'ABSPATH' ) && exit;
 
 /**
@@ -49,21 +51,36 @@ final class StorageCLI {
 			\WP_CLI::error( __( 'redis-cli is not installed or not in PATH. Please install Redis tools.', 'millicache' ) );
 		}
 
-		// Get storage settings.
+		// Get storage settings and resolve the topology.
 		$storage_settings = millicache()->get_settings( 'storage' );
+		$topology         = ( new Connection( $storage_settings ) )->describe();
+		$mode             = is_string( $topology['mode'] ?? null ) ? $topology['mode'] : 'single';
 
-		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
-		/** @var string $host */
-		$host = $storage_settings['host'] ?? '127.0.0.1';
-		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
-		/** @var int $port */
-		$port = $storage_settings['port'] ?? 6379;
-		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
-		/** @var int $db */
-		$db = $storage_settings['db'] ?? 0;
-		// phpcs:ignore Generic.Commenting.DocComment.MissingShort -- Type hint for PHPStan.
-		/** @var string $password */
-		$password = $storage_settings['enc_password'] ?? '';
+		// redis-cli targets a single node, so advanced modes need narrowing.
+		if ( 'disabled' === $mode ) {
+			$reason = is_string( $topology['reason'] ?? null ) && '' !== $topology['reason']
+				? $topology['reason']
+				: __( 'MC_STORAGE_HOST is misconfigured.', 'millicache' );
+			\WP_CLI::error( $reason . ' ' . __( 'The cache is disabled.', 'millicache' ) );
+		}
+
+		if ( 'sentinel' === $mode ) {
+			\WP_CLI::error( __( 'Interactive CLI is not available for Sentinel topologies. Connect redis-cli to a specific data node directly.', 'millicache' ) );
+		}
+
+		if ( 'single' === $mode ) {
+			$host = is_string( $topology['host'] ?? null ) ? $topology['host'] : '127.0.0.1';
+			$port = is_numeric( $topology['port'] ?? null ) ? (int) $topology['port'] : 6379;
+		} else {
+			// Replication: describe() lists the master first.
+			$nodes  = is_array( $topology['nodes'] ?? null ) ? $topology['nodes'] : array();
+			$master = is_array( $nodes[0] ?? null ) ? $nodes[0] : array();
+			$host   = is_string( $master['host'] ?? null ) ? $master['host'] : '127.0.0.1';
+			$port   = isset( $master['port'] ) && is_numeric( $master['port'] ) ? (int) $master['port'] : 6379;
+		}
+
+		$db       = is_int( $storage_settings['db'] ?? null ) ? $storage_settings['db'] : 0;
+		$password = is_string( $storage_settings['enc_password'] ?? null ) ? $storage_settings['enc_password'] : '';
 
 		$is_socket = 0 === strpos( $host, '/' );
 

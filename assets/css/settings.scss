@@ -689,12 +689,15 @@
 		margin-bottom: 4px;
 	}
 
+	// Status value: a neutral pill/badge (not code).
 	.millicache-footer-status__check-value {
+		flex-shrink: 0;
 		font-size: 11px;
-		color: #757575;
+		font-weight: 500;
 		background: rgba(0, 0, 0, 0.04);
-		padding: 1px 6px;
-		border-radius: 3px;
+		padding: 2px 10px;
+		border-radius: 10px;
+		white-space: nowrap;
 	}
 
 	.millicache-footer-status__check-desc {

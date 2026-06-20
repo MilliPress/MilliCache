@@ -1,4 +1,4 @@
-import { useState, useEffect } from '@wordpress/element';
+import { useState, useEffect, createInterpolateElement } from '@wordpress/element';
 import { Button, Modal, TabPanel, Icon } from '@wordpress/components';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { check, caution, error } from '@wordpress/icons';
@@ -98,6 +98,16 @@ const summarize = ( health, checks ) => {
 	return __( 'Healthy', 'millicache' );
 };
 
+// Render a check description, turning any <code> markup into a real element.
+const withCode = ( text ) =>
+	text.includes( '<code' )
+		? createInterpolateElement( text, {
+				code: (
+					<code className="millicache-footer-status__check-code" />
+				),
+		  } )
+		: text;
+
 const ChecksList = ( { checks } ) => {
 	if ( ! checks || checks.length === 0 ) {
 		return (
@@ -129,13 +139,13 @@ const ChecksList = ( { checks } ) => {
 							<div className="millicache-footer-status__check-head">
 								<strong>{ c.label }</strong>
 								{ c.value && (
-									<code className="millicache-footer-status__check-value">
+									<span className="millicache-footer-status__check-value">
 										{ c.value }
-									</code>
+									</span>
 								) }
 							</div>
 							<p className="millicache-footer-status__check-desc">
-								{ c.description }
+								{ withCode( c.description ) }
 								{ c.status !== 'good' && c.url && (
 									<>
 										{ ' ' }

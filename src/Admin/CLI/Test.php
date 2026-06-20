@@ -11,6 +11,8 @@
 
 namespace MilliCache\Admin\CLI;
 
+use MilliCache\Core\Connection;
+
 ! defined( 'ABSPATH' ) && exit;
 
 /**
@@ -46,26 +48,18 @@ final class Test {
 		\WP_CLI::line( __( 'Testing Redis connection...', 'millicache' ) );
 		\WP_CLI::line( '' );
 
-		$settings = millicache()->get_settings( 'storage' );
-		$host     = is_string( $settings['host'] ?? null ) ? $settings['host'] : '127.0.0.1';
-		$port     = is_int( $settings['port'] ?? null ) ? $settings['port'] : 6379;
+		$storage        = millicache()->storage();
+		$storage_status = $storage->get_status();
+		$config         = $storage_status['config'];
 
-		if ( strpos( $host, '/' ) === 0 ) {
-			// translators: %s is the Unix socket path.
-			\WP_CLI::line( sprintf( __( 'Server: %s (socket)', 'millicache' ), $host ) );
-		} else {
-			// translators: %1$s is the Redis host, %2$d is the port.
-			\WP_CLI::line( sprintf( __( 'Server: %1$s:%2$d', 'millicache' ), $host, $port ) );
-		}
-
+		// translators: %s is the resolved server target (host:port or topology).
+		\WP_CLI::line( sprintf( __( 'Server: %s', 'millicache' ), $this->server_summary( $config ) ) );
 		\WP_CLI::line( '' );
 
 		$tests = array();
 		$all_passed = true;
 
 		// Test 1: Connection.
-		$storage        = millicache()->storage();
-		$storage_status = $storage->get_status();
 
 		if ( $storage_status['connected'] ) {
 			$tests[] = array(
@@ -87,7 +81,7 @@ final class Test {
 			// Test 2: Ping.
 			$start = microtime( true );
 			try {
-				$ping_result = $storage->is_connected();
+				$ping_result = $storage->ping();
 				$latency = round( ( microtime( true ) - $start ) * 1000, 2 );
 				$tests[] = array(
 					'test'   => __( 'Ping', 'millicache' ),
@@ -186,5 +180,59 @@ final class Test {
 		} else {
 			\WP_CLI::error( __( 'Some tests failed.', 'millicache' ) );
 		}
+	}
+
+	/**
+	 * Render the resolved server target for the header line.
+	 *
+	 * @since 1.7.0
+	 * @access private
+	 *
+	 * @param array<mixed> $config The storage config from get_status().
+	 * @return string The host:port (single) or the topology with node addresses.
+	 */
+	private function server_summary( array $config ): string {
+		$mode = is_string( $config['mode'] ?? null ) ? $config['mode'] : 'single';
+
+		if ( 'disabled' === $mode ) {
+			$reason = is_string( $config['reason'] ?? null ) && '' !== $config['reason']
+				? $config['reason']
+				: __( 'misconfigured MC_STORAGE_HOST', 'millicache' );
+
+			// translators: %s is the reason the storage connection is disabled.
+			return sprintf( __( 'disabled (%s)', 'millicache' ), $reason );
+		}
+
+		if ( 'single' === $mode ) {
+			$host = is_string( $config['host'] ?? null ) ? $config['host'] : '127.0.0.1';
+
+			if ( 0 === strpos( $host, '/' ) ) {
+				// translators: %s is the Unix socket path.
+				return sprintf( __( '%s (socket)', 'millicache' ), $host );
+			}
+
+			$port = is_numeric( $config['port'] ?? null ) ? (int) $config['port'] : 6379;
+			return $host . ':' . $port;
+		}
+
+		// Replication / sentinel: list each node's address (and role).
+		$labels = array();
+		foreach ( is_array( $config['nodes'] ?? null ) ? $config['nodes'] : array() as $node ) {
+			if ( ! is_array( $node ) ) {
+				continue;
+			}
+			$label    = Connection::node_label( $node );
+			$labels[] = $label['address'] . ( '' !== $label['role'] ? ' (' . $label['role'] . ')' : '' );
+		}
+		$list = implode( ', ', $labels );
+
+		if ( 'sentinel' === $mode ) {
+			$service = is_string( $config['service'] ?? null ) ? $config['service'] : '';
+			// translators: %1$s is the Sentinel service name, %2$s the sentinel node addresses.
+			return sprintf( __( 'sentinel "%1$s" via %2$s', 'millicache' ), $service, $list );
+		}
+
+		// translators: %s is the comma-separated node addresses.
+		return sprintf( __( 'replication: %s', 'millicache' ), $list );
 	}
 }
