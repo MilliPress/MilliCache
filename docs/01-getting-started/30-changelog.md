@@ -6,6 +6,29 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.0-beta.3](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.2...v1.7.0-beta.3) (2026-06-20)
+
+This beta brings meaningful improvements to how MilliCache understands and communicates your storage setup, plus a round of admin polish to make the free tier feel more complete.
+
+The headline addition is a new `Connection` class that infers your storage topology directly from the shape of `MC_STORAGE_HOST` — single node, replication, or Sentinel — and surfaces that information everywhere it matters: the Status tab, the CLI, and the settings screen. If a connection fails, the cache now fails fast rather than silently degrading, and a misconfigured array disables the cache explicitly instead of falling back to localhost without warning.
+
+On the metrics side, hit and miss retention windows are now configurable. The defaults (7 days of hourly buckets, 30 days of daily) cover the Status tab's chart out of the box, but you can tune them via `metrics.retention_hourly` and `metrics.retention_daily` if your needs differ.
+
+The admin UI also got some attention: the Status tab now shows a properly centered loading spinner while the status payload resolves, the free-tier chart has been brought in line with the Pro Insights dashboard (edge-to-edge plot, cleaner axis labels, themed colors), and a stale network settings URL has been corrected.
+
+### Features
+
+* **admin:** centered loading indicator on the Status tab ([534d7b0](https://github.com/MilliPress/MilliCache/commit/534d7b0923dc9832732f6cb2db2f6e4bd1385d49))
+* **admin:** polish free Status chart to match Pro ([4841e79](https://github.com/MilliPress/MilliCache/commit/4841e794e5e0c78edbea182b31c933f5ce652ecb))
+* **admin:** surface storage topology across CLI, status, and settings ([3f34067](https://github.com/MilliPress/MilliCache/commit/3f34067fc312b831ee26825f7727e53f3b9d56e2))
+* **metrics:** make hit/miss retention windows configurable ([45257b5](https://github.com/MilliPress/MilliCache/commit/45257b5094ef9a187915bb2decbe718af6ef0f38))
+* **storage:** extract Connection class with shape-inferred topology ([afdfdce](https://github.com/MilliPress/MilliCache/commit/afdfdce1784b9505190e05b2d5ee2d150885e258))
+
+
+### Bug Fixes
+
+* **network:** Update network settings URL for MilliCache management ([4861431](https://github.com/MilliPress/MilliCache/commit/486143110f438e4df99edb84d6a0bf6d72437227))
+
 ## [1.7.0-beta.2](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.1...v1.7.0-beta.2) (2026-06-09)
 
 Here's a friendly intro for the 1.7.0-beta.2 release:
