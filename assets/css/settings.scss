@@ -119,6 +119,40 @@
 		}
 	}
 
+	// Skeleton loading state — shimmer placeholders sized to mirror the real
+	// KPI bars and chart so the Status dashboard fills in without a layout jump.
+	.millicache-skeleton {
+		display: block;
+		border-radius: 4px;
+		background: linear-gradient(90deg, #f0f0f1 25%, #e4e4e7 37%, #f0f0f1 63%);
+		background-size: 400% 100%;
+		animation: millicache-skeleton-shimmer 1.4s ease infinite;
+	}
+
+	@keyframes millicache-skeleton-shimmer {
+
+		0% {
+			background-position: 100% 50%;
+		}
+
+		100% {
+			background-position: 0 50%;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+
+		.millicache-skeleton {
+			animation: none;
+		}
+	}
+
+	// Stand-in for the full-width trend chart while the series loads.
+	.millicache-status-chart__plot--skeleton {
+		height: 180px;
+		border-radius: 6px;
+	}
+
 	// Status tab dashboard — KPI and breakdown cards in responsive grids.
 	.millicache-status-dashboard {
 		display: flex;

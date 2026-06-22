@@ -1,4 +1,3 @@
-import { Spinner } from '@wordpress/components';
 import { useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
@@ -456,6 +455,58 @@ const BreakdownCard = ( { panel } ) => {
 	);
 };
 
+// Shimmer placeholders shown on the first load.
+const SkeletonBar = ( { width, height } ) => (
+	<span
+		className="millicache-skeleton"
+		style={ { width, height } }
+		aria-hidden="true"
+	/>
+);
+
+const KpiSkeleton = () => (
+	<div className="millicache-status-kpi">
+		<SkeletonBar width="55%" height={ 10 } />
+		<SkeletonBar width="42%" height={ 26 } />
+		<SkeletonBar width="72%" height={ 12 } />
+	</div>
+);
+
+const ChartSkeleton = () => (
+	<div className="millicache-status-breakdown millicache-status-breakdown--chart">
+		<div className="millicache-status-breakdown__header">
+			<SkeletonBar width={ 160 } height={ 14 } />
+		</div>
+		<div className="millicache-status-chart__stats">
+			<SkeletonBar width={ 90 } height={ 34 } />
+			<SkeletonBar width={ 90 } height={ 34 } />
+		</div>
+		<span
+			className="millicache-skeleton millicache-status-chart__plot--skeleton"
+			aria-hidden="true"
+		/>
+	</div>
+);
+
+const StatusSkeleton = () => (
+	<div
+		className="millicache-status-dashboard"
+		aria-busy="true"
+		aria-label={ __( 'Loading cache status…', 'millicache' ) }
+	>
+		<div className="millicache-status-grid millicache-status-grid--kpis">
+			{ [ 0, 1, 2, 3 ].map( ( i ) => (
+				<KpiSkeleton key={ i } />
+			) ) }
+		</div>
+		<div className="millicache-status-grid millicache-status-grid--breakdowns">
+			<div className="millicache-status-grid__item--wide">
+				<ChartSkeleton />
+			</div>
+		</div>
+	</div>
+);
+
 const PANEL_TYPES = {
 	kpi: KpiTile,
 	breakdown: BreakdownCard,
@@ -467,17 +518,10 @@ const Panel = ( { panel } ) => {
 };
 
 const StatusTab = ( { status } ) => {
-	const { isLoadingSettings } = window.MilliBase.hooks.useSettings();
-
-	// Initial load: the status payload hasn't resolved yet — show a centered
-	// spinner (matching the Pro Entries/Rules tabs) instead of an empty
-	// dashboard. Once status is present, a later refetch keeps the dashboard.
-	if ( isLoadingSettings && ! status ) {
-		return (
-			<div className="millicache-loading">
-				<Spinner />
-			</div>
-		);
+	const hasPanels = Array.isArray( status?.panels );
+	const hasError = status?.error || status?.connected === false;
+	if ( ! hasPanels && ! hasError ) {
+		return <StatusSkeleton />;
 	}
 
 	const panels = Array.isArray( status?.panels )
