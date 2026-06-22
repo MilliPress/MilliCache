@@ -1,6 +1,13 @@
 name: Polish Release PR (next)
 
 # Adds a prose intro to the newest changelog entry on release PRs.
+#
+# The intro is wrapped in <!-- mc:auto sha=... --> markers carrying a signature
+# of the bullet list it was generated from. This makes the polish:
+#   - refresh when new changes land (sha changes -> regenerate),
+#   - idempotent / loop-safe (sha matches -> skip, so our own push is a no-op),
+#   - non-destructive (any human-authored prose -> skip, never overwritten).
+# release-bundle.yml strips the markers before publishing the GitHub release.
 
 on:
   pull_request:
@@ -41,14 +48,64 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: gh pr checkout "$PR_NUMBER"
 
-      - name: Skip if last commit is our own polish
+      - name: Analyze newest changelog entry
         id: guard
         run: |
-          last_subject=$(git log -1 --format=%s)
-          if [ "$last_subject" = "docs(changelog): polish release notes" ]; then
-            echo "Last commit is the polish bot's own commit - skipping to avoid loop."
+          set -euo pipefail
+          CHANGELOG_FILE=docs/01-getting-started/30-changelog.md
+
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          git log --no-merges "$PREV_TAG"..HEAD --pretty=format:'%h %s%n%b%n---' > /tmp/cl-commits.md
+
+          # Split the changelog into three pieces so older entries are never touched:
+          #   HEADER = everything before the first '## ' heading
+          #   NEWEST = the most recent entry (first '## ' up to the next '## ')
+          #   OLDER  = everything from the second '## ' to EOF
+          awk '
+            BEGIN { section = 0 }
+            /^## / { section++ }
+            section == 0 { print > "/tmp/cl-header.md" }
+            section == 1 { print > "/tmp/cl-newest.md" }
+            section >= 2 { print > "/tmp/cl-older.md" }
+          ' "$CHANGELOG_FILE"
+          touch /tmp/cl-header.md /tmp/cl-older.md
+
+          if [ ! -s /tmp/cl-newest.md ]; then
+            echo "::warning::Could not locate a newest entry in the changelog - skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Stable inputs: the heading (line 1) and the bullet sections (from the
+          # first '### ' onward). The prose is spliced BETWEEN them.
+          head -1 /tmp/cl-newest.md > /tmp/cl-heading.md
+          awk '/^### / { found=1 } found { print }' /tmp/cl-newest.md > /tmp/cl-bullets.md
+
+          # Intro region = the lines between the heading and the first '### '.
+          awk 'NR==1 { next } /^### / { exit } { print }' /tmp/cl-newest.md > /tmp/cl-intro.md
+
+          # Signature of the bullets the prose is derived from. When this changes,
+          # the auto intro is regenerated; when it matches, we skip (loop-safe).
+          BULLETS_HASH=$(sha256sum /tmp/cl-bullets.md | cut -c1-12)
+          echo "$BULLETS_HASH" > /tmp/cl-bullets-hash.txt
+
+          # Existing marker signature (if any) and any human-authored prose
+          # (non-blank intro lines outside the mc:auto markers).
+          STORED_SHA=$(grep -oE 'mc:auto sha=[a-f0-9]+' /tmp/cl-intro.md | head -1 | sed 's/.*sha=//' || true)
+          HUMAN=$(awk '
+            /<!-- mc:auto/   { inauto=1; next }
+            /<!-- \/mc:auto/ { inauto=0; next }
+            !inauto && NF    { print }
+          ' /tmp/cl-intro.md)
+
+          if [ -n "$HUMAN" ]; then
+            echo "Newest entry has human-authored intro prose - leaving it untouched."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif [ -n "$STORED_SHA" ] && [ "$STORED_SHA" = "$BULLETS_HASH" ]; then
+            echo "Auto intro already current for these changes - nothing to do."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
+            echo "Generating/refreshing the auto intro (sha ${STORED_SHA:-none} -> $BULLETS_HASH)."
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -58,96 +115,47 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Polish changelog via LLM proxy
+      - name: Generate intro via LLM proxy
         if: steps.guard.outputs.skip != 'true'
         run: |
           set -euo pipefail
-
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD)
-          COMMITS=$(git log --no-merges "$PREV_TAG"..HEAD --pretty=format:'%h %s%n%b%n---')
           CHANGELOG_FILE=docs/01-getting-started/30-changelog.md
 
-          # Split the changelog into three pieces:
-          #   HEADER      = front matter + title (everything before the first '## ' heading)
-          #   NEWEST      = the most recent entry (from the first '## ' through the line before the second '## ')
-          #   OLDER       = everything from the second '## ' to EOF (older releases — never modified)
-          # This guarantees older entries stay byte-for-byte identical regardless of what the LLM returns.
-          awk '
-            BEGIN { section = 0 }
-            /^## / { section++ }
-            section == 0 { print > "/tmp/cl-header.md" }
-            section == 1 { print > "/tmp/cl-newest.md" }
-            section >= 2 { print > "/tmp/cl-older.md" }
-          ' "$CHANGELOG_FILE"
-
-          if [ ! -s /tmp/cl-newest.md ]; then
-            echo "::warning::Could not locate a newest entry in the changelog — skipping polish."
-            exit 0
-          fi
-
-          # Ensure all three files exist even if some are empty.
-          touch /tmp/cl-header.md /tmp/cl-older.md
-
-          # Further split the newest entry into:
-          #   HEADING    = the first line (the '## [version](...)' heading + date)
-          #   BULLETS    = the auto-generated sections + bullets only — starting at the
-          #                first '### ' subsection header. Any prose that a previous
-          #                polish run inserted between the heading and the bullets is
-          #                discarded here so the splice stays idempotent across reruns
-          #                (without this, each rerun appended a new prose block above
-          #                the previous one — see release v1.7.0-beta.1 regression).
-          # We send only BULLETS (with the heading for context) to the LLM and ask it to
-          # produce ONLY a paragraph or two of prose. We then splice:
-          #   heading + blank line + LLM prose + blank line + original BULLETS
-          # The original bullet list stays exactly as release-please generated it.
-          head -1 /tmp/cl-newest.md > /tmp/cl-heading.md
-          awk '/^### / { found=1 } found { print }' /tmp/cl-newest.md > /tmp/cl-bullets.md
-
-          BULLETS=$(cat /tmp/cl-bullets.md)
           HEADING=$(cat /tmp/cl-heading.md)
+          BULLETS=$(cat /tmp/cl-bullets.md)
+          COMMITS=$(cat /tmp/cl-commits.md)
+          BULLETS_HASH=$(cat /tmp/cl-bullets-hash.txt)
+
+          # Authoritative list of user-facing configuration constants. The LLM may
+          # only name constants from here, which prevents both internal dot-notation
+          # and invented constant names.
+          CONSTANTS=$(grep -ohE 'MC_[A-Z0-9_]+' docs/02-configuration/02-reference.md | sort -u | paste -sd, - || true)
 
           SYSTEM_PROMPT=$(cat <<'EOF'
           You are writing a short, friendly intro for one MilliCache release. MilliCache is a WordPress plugin that makes sites faster by caching pages.
 
-          The release's auto-generated bullet list will appear AFTER your text in the published changelog (the workflow handles the splicing). So do NOT include the bullets, the version heading, or any section headings (Features, Bug Fixes, etc.) in your output. Just produce the prose introduction that goes BETWEEN the heading and the bullets.
+          The release's auto-generated bullet list appears AFTER your text in the published changelog (the workflow handles the splicing). So do NOT include the bullets, the version heading, or any section headings (Features, Bug Fixes, etc.) in your output. Produce ONLY the prose introduction that goes between the heading and the bullets.
 
-          AUDIENCE: a regular WordPress site owner. They write posts, install plugins, manage their site through the dashboard. They do NOT read PHP, they do NOT know what Redis is, they do NOT recognize class names like "Resolver" or "Hasher" or "Cache Manager", they do NOT care about commit messages, file paths, or implementation details. If they wanted to read source code they'd be reading the source code, not the changelog.
+          AUDIENCE: someone who runs a WordPress site and has chosen to add a page cache. They understand site-owner and hosting concepts and the names of common cache servers, but they are not reading your source code.
 
-          TONE: friendly, plain English. You can be a bit funny when it fits naturally — don't force it. Use a simple example to illustrate a change when it helps the reader picture what it means for them ("if you run a shop with different language versions of the same page..."). Concrete and specific beats abstract and general.
+          VOCABULARY:
+          - ALLOWED (these are user-facing and are often the actual headline of a release): Redis, Valkey, KeyDB, Dragonfly, replication, Sentinel, failover, connection, cache hit/miss, TTL, multisite, and configuration constant names like MC_STORAGE_HOST.
+          - BANNED code-level jargon: class / function / method names (e.g. "the Connection class", "Resolver::add()"), internal API names, file paths (e.g. "src/Engine/"), and implementation phrases ("content-addressable keyspace", "ref-counted GC", "the X layer", "under the hood", "PHP-phase"). If you cannot explain a change without one of these, you are describing it at the wrong level: step back and say what it CHANGES FOR THE USER.
 
-          STRICT WHAT-NOT-TO-DO RULES:
+          CONFIGURATION CONSTANTS: when a change adds or adjusts a way to configure the plugin (beyond the settings screen), name the relevant constant using its EXACT name from the list provided in the user message. Never use internal dot-notation such as "storage.host" or "metrics.retention_hourly" - users never type that. If a configurable option has no matching constant in the list, describe it in plain words and do NOT invent a constant name.
 
-          1. NO TECHNICAL JARGON. Never mention any of these:
-             - Class names, function names, method names (e.g. "Resolver::add()", "the Hasher class")
-             - Internal API names (e.g. "Reader/Writer/Manager APIs", "the Storage layer")
-             - Implementation details (e.g. "content-addressable keyspace", "SHA-1 hashes", "ref-counted GC", "<prefix>:o:<hash>", "Redis MGET")
-             - File paths or directory names (e.g. "src/Engine/Cache/")
-             - Phrases like "under the hood", "internally", "the X layer" — these signal you're about to leak implementation detail
-             - "PHP-phase", "WordPress-phase", or other engine-internal terms
+          NEVER FABRICATE CAPABILITIES. Do not write "no code changes required", "no setup needed", "automatically", "out of the box", "configure it from the admin", "with one click", etc. unless the changes explicitly say so. MilliCache free has no admin UI for rules - defining a rule requires writing code.
 
-             If you can't explain a change without one of these, you're describing it at the wrong level. Step back: what does this CHANGE FOR THE USER? Describe that.
-
-          2. NEVER FABRICATE CAPABILITIES. Do not write phrases like:
-             - "no code changes required"
-             - "no setup needed"
-             - "automatically"
-             - "out of the box"
-             - "configure it from the admin"
-             - "with one click"
-             ...unless the bullets EXPLICITLY say so. MilliCache free has no admin UI for rules — defining a rule requires writing code in a settings or PHP file. Even when a feature works "automatically" in the sense that no manual flag is needed, do not say so unless the bullets confirm it.
-
-          3. STAY GROUNDED IN THE BULLETS. Every claim in your prose must trace back to something in the bullet list you received. If you can't point to the bullet that supports a sentence, delete the sentence.
-
-          4. WHEN UNSURE, OMIT. A short, vague intro ("This release improves how MilliCache handles X") is much better than a confident wrong claim.
+          STAY GROUNDED. Every claim in your prose must trace back to one of the changes you were given. If you cannot point to the change that supports a sentence, delete the sentence. When unsure, omit: a short, vague intro beats a confident wrong claim.
 
           OUTPUT FORMAT (strict):
           - Output ONLY prose paragraphs. No version heading. No bullets. No section headings. No code fences. No preamble like "Here is the summary".
-          - Length: 1–3 short paragraphs. For a release with only one bug fix, a single sentence is enough.
+          - Length: 1-3 short paragraphs. For a release with only one bug fix, a single sentence is enough.
           - Do not end with a sign-off, signature, or "Happy caching!" type closer. Just stop after the last sentence.
           EOF
           )
 
-          USER_CONTENT=$(printf 'Release heading (for context, do NOT repeat in output):\n\n%s\n\nAuto-generated changelog sections + bullets (write a friendly intro for these — do NOT include them in output):\n\n%s\n\n---\n\nRecent commits (additional context, do not include verbatim):\n\n%s' "$HEADING" "$BULLETS" "$COMMITS")
+          USER_CONTENT=$(printf 'Release heading (for context, do NOT repeat in output):\n\n%s\n\nThe changes in this release. Each has a subject and a body explaining the why and the user impact - base your intro primarily on these:\n\n%s\n\nValid configuration constants you may name (use these EXACT names, never internal dot-notation; if none fits, use plain words):\n\n%s\n\nThe published changelog will show this auto-generated bullet list AFTER your intro (do NOT repeat it in your output):\n\n%s' "$HEADING" "$COMMITS" "$CONSTANTS" "$BULLETS")
 
           PAYLOAD=$(jq -n \
             --arg model    "$LLM_MODEL" \
@@ -170,15 +178,12 @@ jobs:
           echo "$response" | jq -r '.choices[0].message.content' > /tmp/cl-prose.md
 
           if [ ! -s /tmp/cl-prose.md ]; then
-            echo "::warning::Polished prose came back empty — keeping the auto-generated entry."
+            echo "::warning::Polished prose came back empty - keeping the auto-generated entry."
             exit 0
           fi
 
-          # Defensive cleanup: if the LLM violated instructions and included a heading or
-          # bullets, strip them so we don't end up with duplicates after splicing.
-          # 1. Drop any leading lines that start with '#' (heading the LLM accidentally included).
-          # 2. Stop at the first '### Features' or '### Bug Fixes' line if the LLM started
-          #    pasting the bullets back.
+          # Defensive cleanup: if the LLM included a heading or started pasting the
+          # bullets back, strip them so we do not end up with duplicates.
           awk '
             BEGIN { started = 0 }
             /^### (Features|Bug Fixes|Performance|Dependencies)/ { exit }
@@ -188,26 +193,26 @@ jobs:
           ' /tmp/cl-prose.md > /tmp/cl-prose-clean.md
 
           if [ ! -s /tmp/cl-prose-clean.md ]; then
-            echo "::warning::Polished prose was empty after cleanup — keeping the auto-generated entry."
+            echo "::warning::Polished prose was empty after cleanup - keeping the auto-generated entry."
             exit 0
           fi
 
-          # Reassemble the newest entry: heading + blank + prose + blank + original bullets.
+          # Reassemble the newest entry:
+          #   heading + blank + <!-- mc:auto sha=... --> + prose + <!-- /mc:auto --> + blank + bullets
           {
             cat /tmp/cl-heading.md
             printf '\n'
+            printf '<!-- mc:auto sha=%s -->\n' "$BULLETS_HASH"
             cat /tmp/cl-prose-clean.md
-            # Ensure trailing blank line on the prose if missing.
             if [ -n "$(tail -c 1 /tmp/cl-prose-clean.md 2>/dev/null)" ]; then printf '\n'; fi
-            printf '\n'
+            printf '<!-- /mc:auto -->\n\n'
             cat /tmp/cl-bullets.md
           } > /tmp/cl-newest-final.md
 
-          # Reassemble the full changelog: header + polished newest + older entries.
           cat /tmp/cl-header.md /tmp/cl-newest-final.md /tmp/cl-older.md > "$CHANGELOG_FILE"
 
           if [ ! -s "$CHANGELOG_FILE" ]; then
-            echo "::error::Reassembled changelog is empty — aborting."
+            echo "::error::Reassembled changelog is empty - aborting."
             exit 1
           fi
 

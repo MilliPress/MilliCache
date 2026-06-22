@@ -72,6 +72,11 @@ jobs:
               found { print }
             ' "$CHANGELOG_PATH" > /tmp/changelog.md
 
+            # Strip the polish bot's internal markers so they never reach the
+            # published release notes (they're invisible in rendered Markdown,
+            # but we keep the release body clean).
+            sed -i '/<!-- \/\?mc:auto/d' /tmp/changelog.md
+
             if [ ! -s /tmp/changelog.md ]; then
               echo "## ${TAG_NAME}" > /tmp/changelog.md
             fi
