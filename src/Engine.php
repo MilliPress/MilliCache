@@ -389,7 +389,7 @@ final class Engine {
 	/**
 	 * Load the settings tree.
 	 *
-	 * On multisite, storage lives in its own network-scoped Settings instance.
+	 * On multisite, storage and metrics live in their own network-scoped Settings instance.
 	 *
 	 * @since 1.7.0
 	 *
@@ -402,6 +402,7 @@ final class Engine {
 		if ( Multisite::is_enabled() ) {
 			// Merge network settings.
 			$settings['storage'] = (array) Network::settings()->get( 'storage' );
+			$settings['metrics'] = (array) Network::settings()->get( 'metrics' );
 		}
 
 		return $settings;
