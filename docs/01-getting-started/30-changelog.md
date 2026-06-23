@@ -6,6 +6,15 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.0-beta.4](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.3...v1.7.0-beta.4) (2026-06-23)
+
+
+### Features
+
+* **settings:** Include metrics in network-scoped Settings instance for multisite ([59d2fa5](https://github.com/MilliPress/MilliCache/commit/59d2fa5ad339c9de43c9aef6699aa97e4cdf8b4b))
+* **settings:** preserve storage connection settings across a full reset ([77772b1](https://github.com/MilliPress/MilliCache/commit/77772b1fd5c7c54acaeca85eebe04a8a1a374eda))
+* **settings:** skeleton loading state for the Status dashboard ([d5b48a7](https://github.com/MilliPress/MilliCache/commit/d5b48a7a629e79770d5fe3d96325bcd14648bb4f))
+
 ## [1.7.0-beta.3](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.2...v1.7.0-beta.3) (2026-06-20)
 
 This beta brings high-availability storage to MilliCache. Alongside single-server setups, it adds first-class support for Redis Replication and Sentinel, inferred automatically from the shape of `MC_STORAGE_HOST` with no separate mode flag to manage: a host string is single-node, a `master` map enables master/replica replication, and a `service` map enables Sentinel-managed failover. The connection layer is also more resilient: a misconfigured connection now disables the cache and serves the site uncached instead of silently falling back to localhost, and a connection failure fails fast so a brief storage outage can no longer slow down every request. Cache analytics gain configurable hit/miss retention windows, letting you decide how much history to keep.
