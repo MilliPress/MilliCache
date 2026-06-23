@@ -8,6 +8,9 @@ menu_order: 30
 
 ## [1.7.0-beta.4](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.3...v1.7.0-beta.4) (2026-06-23)
 
+<!-- mc:auto sha=b0f77a5e6129 -->
+A full settings reset now leaves your storage connection intact. The six connection settings (`MC_STORAGE_HOST`, `MC_STORAGE_PORT`, `MC_STORAGE_USERNAME`, `MC_STORAGE_PASSWORD`, `MC_STORAGE_DB`, `MC_STORAGE_PERSISTENT`) are preserved across resets, so clearing caching behavior no longer silently disconnects your cache server or forces a password re-entry. On multisite installs, the network-scoped settings instance now includes metrics. The Status dashboard also gains a shimmer skeleton on first load in place of a spinner that never appeared.
+<!-- /mc:auto -->
 
 ### Features
 
