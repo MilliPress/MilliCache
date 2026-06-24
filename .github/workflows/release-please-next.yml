@@ -61,4 +61,5 @@ jobs:
       version: ${{ needs.release-please.outputs.version }}
       sha: ${{ needs.release-please.outputs.sha }}
       prerelease: true
+      update_packagist: true
     secrets: inherit
