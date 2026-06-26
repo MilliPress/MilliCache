@@ -344,4 +344,198 @@ describe( 'Storage', function () {
 			expect( $failed_prop->getValue( $storage ) )->toBeTrue();
 		} );
 	} );
+
+	describe( 'key/value surface', function () {
+		$kv_settings = array(
+			'host'       => '127.0.0.1',
+			'port'       => 9999, // Invalid port to trigger graceful degradation.
+			'prefix'     => 'test',
+			'persistent' => false,
+		);
+
+		it( 'returns null from get when storage is unavailable', function () use ( $kv_settings ) {
+			$storage = new Storage( $kv_settings );
+			$result  = suppressing_errors( fn() => $storage->get( 'oc:missing' ) );
+
+			expect( $result )->toBeNull();
+		} );
+
+		it( 'returns false from set when storage is unavailable', function () use ( $kv_settings ) {
+			$storage = new Storage( $kv_settings );
+			$result  = suppressing_errors( fn() => $storage->set( 'oc:key', 'value' ) );
+
+			expect( $result )->toBeFalse();
+		} );
+
+		it( 'returns 0 from delete when storage is unavailable', function () use ( $kv_settings ) {
+			$storage = new Storage( $kv_settings );
+			$result  = suppressing_errors( fn() => $storage->delete( 'oc:key' ) );
+
+			expect( $result )->toBe( 0 );
+		} );
+
+		it( 'returns an empty array from get_multiple when storage is unavailable', function () use ( $kv_settings ) {
+			$storage = new Storage( $kv_settings );
+			$result  = suppressing_errors( fn() => $storage->get_multiple( array( 'oc:a', 'oc:b' ) ) );
+
+			expect( $result )->toBe( array() );
+		} );
+
+		it( 'short-circuits get_multiple with no keys without touching storage', function () {
+			$settings = array(
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'prefix'     => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			$stub = new class() extends \Predis\Client {
+				public int $calls = 0;
+
+				public function __call( $command_id, $arguments ) {
+					++$this->calls;
+					return null;
+				}
+			};
+
+			$client_prop = new \ReflectionProperty( Storage::class, 'client' );
+			$client_prop->setAccessible( true );
+			$client_prop->setValue( $storage, $stub );
+
+			expect( $storage->get_multiple( array() ) )->toBe( array() );
+			expect( $stub->calls )->toBe( 0 );
+		} );
+
+		it( 'reads many keys in one MGET, prefixing and mapping misses to null', function () {
+			$settings = array(
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'prefix'     => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			// A stub whose MGET returns a positional list with a miss in the
+			// middle, so we can assert order-preserving remapping onto the
+			// original caller keys and that MGET is called variadically.
+			$stub = new class() extends \Predis\Client {
+				/** @var array<int, array{0: string, 1: array<mixed>}> */
+				public array $commands = array();
+
+				public function __call( $command_id, $arguments ) {
+					$id               = strtolower( (string) $command_id );
+					$this->commands[] = array( $id, $arguments );
+
+					if ( 'mget' === $id ) {
+						return array( 'val-a', null, 'val-c' );
+					}
+
+					return null;
+				}
+			};
+
+			$client_prop = new \ReflectionProperty( Storage::class, 'client' );
+			$client_prop->setAccessible( true );
+			$client_prop->setValue( $storage, $stub );
+
+			$result = $storage->get_multiple( array( 'oc:a', 'oc:b', 'oc:c' ) );
+
+			expect( $result )->toBe(
+				array(
+					'oc:a' => 'val-a',
+					'oc:b' => null,
+					'oc:c' => 'val-c',
+				)
+			);
+			// MGET must receive discrete, prefixed arguments, not one nested array.
+			expect( $stub->commands[0] )->toBe( array( 'mget', array( 'test:oc:a', 'test:oc:b', 'test:oc:c' ) ) );
+		} );
+
+		it( 'returns 0 from delete_by_pattern when storage is unavailable', function () use ( $kv_settings ) {
+			$storage = new Storage( $kv_settings );
+			$result  = suppressing_errors( fn() => $storage->delete_by_pattern( 'oc:*' ) );
+
+			expect( $result )->toBe( 0 );
+		} );
+
+		it( 'short-circuits delete with no keys without touching storage', function () {
+			$settings = array(
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'prefix'     => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			$stub = new class() extends \Predis\Client {
+				public int $calls = 0;
+
+				public function __call( $command_id, $arguments ) {
+					++$this->calls;
+					return null;
+				}
+			};
+
+			$client_prop = new \ReflectionProperty( Storage::class, 'client' );
+			$client_prop->setAccessible( true );
+			$client_prop->setValue( $storage, $stub );
+
+			expect( $storage->delete() )->toBe( 0 );
+			expect( $stub->calls )->toBe( 0 );
+		} );
+
+		it( 'prefixes keys and issues commands correctly', function () {
+			$settings = array(
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'prefix'     => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			// A stub client that records each dispatched command and returns
+			// canned values, so we can assert exactly how Storage prefixes keys
+			// and that DEL is called variadically (not with a nested array arg).
+			$stub = new class() extends \Predis\Client {
+				/** @var array<int, array{0: string, 1: array<mixed>}> */
+				public array $commands = array();
+
+				public function __call( $command_id, $arguments ) {
+					$id               = strtolower( (string) $command_id );
+					$this->commands[] = array( $id, $arguments );
+
+					switch ( $id ) {
+						case 'get':
+							return 'stored-value';
+						case 'set':
+							return 'OK';
+						case 'del':
+							return count( $arguments );
+						default:
+							return null;
+					}
+				}
+			};
+
+			$client_prop = new \ReflectionProperty( Storage::class, 'client' );
+			$client_prop->setAccessible( true );
+			$client_prop->setValue( $storage, $stub );
+
+			expect( $storage->get( 'oc:foo' ) )->toBe( 'stored-value' );
+			expect( $storage->set( 'oc:foo', 'bar', 30 ) )->toBeTrue();
+			expect( $storage->set( 'oc:foo', 'bar' ) )->toBeTrue();
+			expect( $storage->delete( 'oc:a', 'oc:b' ) )->toBe( 2 );
+
+			expect( $stub->commands[0] )->toBe( array( 'get', array( 'test:oc:foo' ) ) );
+			expect( $stub->commands[1] )->toBe( array( 'set', array( 'test:oc:foo', 'bar', 'EX', 30 ) ) );
+			expect( $stub->commands[2] )->toBe( array( 'set', array( 'test:oc:foo', 'bar' ) ) );
+			// DEL must receive two discrete arguments, not one nested array.
+			expect( $stub->commands[3] )->toBe( array( 'del', array( 'test:oc:a', 'test:oc:b' ) ) );
+		} );
+	} );
 } );

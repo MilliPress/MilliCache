@@ -691,7 +691,7 @@ class Storage {
 				$this->client->srem( $output_refs, array( $referrer ) );
 				$remaining = $this->client->scard( $output_refs );
 				if ( 0 === (int) $remaining ) {
-					$this->client->del( array( $output_key, $output_refs ) );
+					$this->delete_prefixed( array( $output_key, $output_refs ) );
 				}
 
 				return null;
@@ -769,6 +769,193 @@ class Storage {
 			fn() => $this->client->scard( $this->toggle_key( $key ) ),
 			0,
 			'Storage::set_count failed'
+		);
+	}
+
+	/**
+	 * Build a fully-prefixed key for the generic key/value surface.
+	 *
+	 * The caller owns the entire namespace after the storage prefix (e.g.
+	 * `oc:group:id`); this only guarantees every key and scan pattern stays
+	 * inside MilliCache's `<prefix>:` keyspace, so a pattern delete can never
+	 * reach another application's keys and never needs `FLUSHDB`.
+	 *
+	 * @since 1.7.0
+	 * @access private
+	 *
+	 * @param string $key The caller-namespaced key, without the storage prefix.
+	 * @return string The fully-prefixed key.
+	 */
+	private function prefixed_key( string $key ): string {
+		return $this->prefix . ':' . $key;
+	}
+
+	/**
+	 * Delete already-prefixed keys with a single variadic `DEL`.
+	 *
+	 * @since 1.7.0
+	 * @access private
+	 *
+	 * @param array<string> $keys Fully-prefixed keys.
+	 * @return int The number of keys removed.
+	 */
+	private function delete_prefixed( array $keys ): int {
+		if ( empty( $keys ) ) {
+			return 0;
+		}
+
+		return (int) $this->client->del( ...array_values( $keys ) );
+	}
+
+	/**
+	 * Read a raw string value through the generic key/value surface.
+	 *
+	 * The low-level counterpart to {@see self::get_cache()}: a plain `GET`
+	 * with no body dereferencing, flags or metadata. Serialization is the
+	 * caller's concern.
+	 *
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @param string $key The caller-namespaced key.
+	 * @return string|null The stored value, or null on a miss or unavailable storage.
+	 */
+	public function get( string $key ): ?string {
+		return $this->execute(
+			function () use ( $key ) {
+				$value = $this->client->get( $this->prefixed_key( $key ) );
+				return is_string( $value ) ? $value : null;
+			},
+			null,
+			'Storage::get failed'
+		);
+	}
+
+	/**
+	 * Read many raw string values in a single round-trip (`MGET`).
+	 *
+	 * The batched counterpart to {@see self::get()}.
+	 *
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @param array<int, string> $keys The caller-namespaced keys to read.
+	 * @return array<string, string|null> Caller key => stored value (or null on a
+	 *                                     miss). Empty when storage is unavailable.
+	 */
+	public function get_multiple( array $keys ): array {
+		if ( empty( $keys ) ) {
+			return array();
+		}
+
+		$keys = array_values( $keys );
+
+		return $this->execute(
+			function () use ( $keys ) {
+				$prefixed = array_map( array( $this, 'prefixed_key' ), $keys );
+
+				$values = $this->client->mget( ...$prefixed );
+
+				$result = array();
+				foreach ( $keys as $i => $key ) {
+					$result[ $key ] = isset( $values[ $i ] ) && is_string( $values[ $i ] ) ? $values[ $i ] : null;
+				}
+
+				return $result;
+			},
+			array(),
+			'Storage::get_multiple failed'
+		);
+	}
+
+	/**
+	 * Write a raw string value through the generic key/value surface.
+	 *
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @param string $key   The caller-namespaced key.
+	 * @param string $value The value to store. Serialization is the caller's concern.
+	 * @param int    $ttl   Optional expiry in seconds; 0 stores without expiry.
+	 * @return bool Whether the write succeeded.
+	 */
+	public function set( string $key, string $value, int $ttl = 0 ): bool {
+		return $this->execute(
+			function () use ( $key, $value, $ttl ) {
+				$full   = $this->prefixed_key( $key );
+				$result = $ttl > 0
+					? $this->client->set( $full, $value, 'EX', $ttl )
+					: $this->client->set( $full, $value );
+
+				return (bool) $result;
+			},
+			false,
+			'Storage::set failed'
+		);
+	}
+
+	/**
+	 * Delete one or more keys from the generic key/value surface.
+	 *
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @param string ...$keys The caller-namespaced keys to delete.
+	 * @return int The number of keys removed.
+	 */
+	public function delete( string ...$keys ): int {
+		if ( empty( $keys ) ) {
+			return 0;
+		}
+
+		return $this->execute(
+			fn() => $this->delete_prefixed( array_map( array( $this, 'prefixed_key' ), $keys ) ),
+			0,
+			'Storage::delete failed'
+		);
+	}
+
+	/**
+	 * Delete every key matching a glob pattern within MilliCache's keyspace.
+	 *
+	 * SCANs `<prefix>:<pattern>` with a cursor (never the blocking `KEYS`) and
+	 * removes matches in batches. The pattern is always scoped under the
+	 * storage prefix, so a caller namespace (e.g. `oc:*`) can be flushed
+	 * without ever touching page-cache keys or resorting to `FLUSHDB`.
+	 *
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @param string $pattern The caller-namespaced glob pattern (e.g. `oc:*`).
+	 * @return int The number of keys removed.
+	 */
+	public function delete_by_pattern( string $pattern ): int {
+		return $this->execute(
+			function () use ( $pattern ) {
+				$deleted = 0;
+				$batch   = array();
+
+				foreach ( new Predis\Collection\Iterator\Keyspace( $this->client, $this->prefixed_key( $pattern ) ) as $key ) {
+					if ( ! is_string( $key ) ) {
+						continue;
+					}
+
+					$batch[] = $key;
+
+					if ( count( $batch ) >= 512 ) {
+						$deleted += $this->delete_prefixed( $batch );
+						$batch    = array();
+					}
+				}
+
+				if ( ! empty( $batch ) ) {
+					$deleted += $this->delete_prefixed( $batch );
+				}
+
+				return $deleted;
+			},
+			0,
+			'Storage::delete_by_pattern failed'
 		);
 	}
 
