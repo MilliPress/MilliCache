@@ -8,10 +8,12 @@
  * It initializes the caching engine by loading the autoloader, creating a \MilliCache\Engine instance, and calling start().
  *
  *
+ * Plugin Name: MilliCache Full-Site Cache
  * Description: MilliCache Drop-in file, enabling advanced WordPress caching.
  * Plugin URI:  https://www.millipress.com/millicache
  * Version:     1.1.1
  * Author:      Philipp Wellmer <hello@millipress.com>
+ * Author URI:  https://www.millipress.com
  *
  * @package MilliCache
  * @since 1.0.0
