@@ -193,6 +193,11 @@ final class Manager {
 		// Add to the clearer queue.
 		$this->enqueue_flags( $flags, $expire, false );
 
+		// Fire WordPress action.
+		if ( function_exists( 'do_action' ) ) {
+			do_action( 'millicache_cache_cleared_by_urls', $urls, $expire );
+		}
+
 		return $this;
 	}
 
@@ -303,7 +308,7 @@ final class Manager {
 
 		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
-			do_action( 'millicache_cleared_by_networks', $network_ids, $expire );
+			do_action( 'millicache_cache_cleared_by_networks', $network_ids, $expire );
 		}
 
 		return $this;

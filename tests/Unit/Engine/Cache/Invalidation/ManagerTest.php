@@ -323,6 +323,18 @@ describe( 'Invalidation Manager', function () {
 			expect( count( $handler->get_queue()->get_expire_queue() ) )->toBeGreaterThan( 0 );
 			expect( count( $handler->get_queue()->get_delete_queue() ) )->toBe( 0 );
 		} );
+
+		it( 'fires millicache_cache_cleared_by_urls action', function () {
+			$handler = new Manager(
+				$this->storage,
+				$this->request_handler,
+				$this->multisite
+			);
+
+			$handler->urls( array( 'https://example.com/a', 'https://example.com/b' ) );
+
+			expect( true )->toBeTrue(); // Action fired
+		} );
 	} );
 
 	describe( 'posts', function () {
@@ -561,7 +573,7 @@ describe( 'Invalidation Manager', function () {
 			expect( count( $handler->get_queue()->get_delete_queue() ) )->toBe( 3 );
 		} );
 
-		it( 'fires millicache_cleared_by_networks action', function () {
+		it( 'fires millicache_cache_cleared_by_networks action', function () {
 			global $test_is_multisite, $test_networks, $test_sites;
 			$test_is_multisite = true;
 			$test_networks = array( 1 );

@@ -63,6 +63,21 @@ add_action( 'millicache_entry_deleted', function( $hash, $key, $flags ) {
 
 ### Cache Clearing Events
 
+#### millicache_cache_cleared_by_urls
+
+Fires after cache is cleared by URLs.
+
+```php
+add_action( 'millicache_cache_cleared_by_urls', function( $urls, $expire ) {
+    // $urls   - Array of cleared URLs
+    // $expire - Whether expire mode was used
+
+    foreach ( $urls as $url ) {
+        error_log( "Cleared cache for URL: $url" );
+    }
+}, 10, 2 );
+```
+
 #### millicache_cache_cleared_by_posts
 
 Fires after cache is cleared by post IDs.
@@ -104,12 +119,12 @@ add_action( 'millicache_cache_cleared_by_sites', function( $site_ids, $network_i
 }, 10, 3 );
 ```
 
-#### millicache_cleared_by_networks
+#### millicache_cache_cleared_by_networks
 
 Fires after cache is cleared by network IDs.
 
 ```php
-add_action( 'millicache_cleared_by_networks', function( $network_ids, $expire ) {
+add_action( 'millicache_cache_cleared_by_networks', function( $network_ids, $expire ) {
     // $network_ids - Array of network IDs
     // $expire      - Whether expire mode was used
 }, 10, 2 );
