@@ -1194,11 +1194,11 @@ class Storage {
 			foreach ( $this->get_cache_keys_by_flag( $sets['mll:expired-flags'] ) as $key ) {
 				$result = $this->get_cache( $key );
 				if ( $result ) {
-					list($data, , $locked) = $result;
+					list($data, $flags, $locked) = $result;
 					if ( $data && ! $locked ) {
 						$updated          = isset( $data['updated'] ) && is_numeric( $data['updated'] ) ? (int) $data['updated'] : time();
 						$data['updated']  = $updated - $ttl;
-						$this->set_cache( $key, $data, array() );
+						$this->set_cache( $key, $data, $flags );
 					}
 				}
 			}

@@ -86,6 +86,18 @@ if ( ! function_exists( 'did_action' ) ) {
 	}
 }
 
+if ( ! function_exists( 'do_action' ) ) {
+	function do_action( $hook, ...$args ) {
+		return null;
+	}
+}
+
+if ( ! function_exists( 'wp_json_encode' ) ) {
+	function wp_json_encode( $data, $options = 0, $depth = 512 ) {
+		return json_encode( $data, $options, $depth );
+	}
+}
+
 if ( ! function_exists( 'trailingslashit' ) ) {
 	function trailingslashit( $value ) {
 		return rtrim( $value, '/' ) . '/';
