@@ -43,20 +43,44 @@ add_action( 'millicache_entry_stored', function( $hash, $key, $flags, $data ) {
 Fires before a cache entry is deleted.
 
 ```php
-add_action( 'millicache_entry_deleting', function( $hash, $key, $flags ) {
-    error_log( "Deleting cache: $key" );
-}, 10, 3 );
+add_action( 'millicache_entry_deleting', function( $hash, $key, $flags, $url ) {
+    error_log( "Deleting cache: $url" );
+}, 10, 4 );
 ```
 
 #### millicache_entry_deleted
 
-Fires after a cache entry is deleted.
+Fires after a cache entry is deleted. The `$url` argument lets a listener mirror
+the eviction elsewhere (for example, purging a CDN/edge cache by URL) without
+having to resolve the hash back to a request.
 
 ```php
-add_action( 'millicache_entry_deleted', function( $hash, $key, $flags ) {
-    // Notify external systems
-    cdn_notify_purged( $key );
-}, 10, 3 );
+add_action( 'millicache_entry_deleted', function( $hash, $key, $flags, $url ) {
+    // $hash  - Cache hash
+    // $key   - Cache key
+    // $flags - Array of canonical flags (e.g. "2:post:123"), as emitted by
+    //          millicache_cache_cleared_by_flags
+    // $url   - The original request URL of the deleted entry
+
+    cdn_purge_url( $url );
+}, 10, 4 );
+```
+
+#### millicache_entry_expired
+
+Fires after a cache entry is expired (aged out) by flag, e.g. via
+`millicache()->clear()->flags( ..., $expire = true )`. Unlike deletion, the
+entry and its flag membership are preserved; only its freshness is reset, so
+the origin regenerates the response on the next request. Edge/CDN mirrors
+should treat this as a purge signal too, since the cached body is now stale.
+
+The payload matches `millicache_entry_deleted` exactly: `$hash`, `$key`,
+canonical `$flags`, and `$url`.
+
+```php
+add_action( 'millicache_entry_expired', function( $hash, $key, $flags, $url ) {
+    cdn_purge_url( $url );
+}, 10, 4 );
 ```
 
 ---
