@@ -88,6 +88,14 @@ if ( ! function_exists( 'did_action' ) ) {
 
 if ( ! function_exists( 'do_action' ) ) {
 	function do_action( $hook, ...$args ) {
+		global $test_did_actions;
+		if ( ! isset( $test_did_actions ) ) {
+			$test_did_actions = array();
+		}
+		$test_did_actions[] = array(
+			'hook' => $hook,
+			'args' => $args,
+		);
 		return null;
 	}
 }

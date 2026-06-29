@@ -587,23 +587,31 @@ class Storage {
 					return false;
 				}
 
-				$flags       = $this->filter_flag_fields( array_keys( $entry_fields ) );
+				$raw_flags   = $this->filter_flag_fields( array_keys( $entry_fields ) );
 				$output_hash = isset( $entry_fields['output'] ) && is_scalar( $entry_fields['output'] ) ? (string) $entry_fields['output'] : '';
+
+				// Canonical site-prefixed flags (e.g. 2:post:123).
+				$flags = array_map( array( $this, 'toggle_flag_key' ), $raw_flags );
+
+				// Decode the original request URL.
+				$meta = $this->parse_meta( $entry_fields['meta'] ?? null );
+				$url  = isset( $meta['url'] ) && is_string( $meta['url'] ) ? $meta['url'] : '';
 
 				/**
 				 * Fires before a cache entry is deleted in the storage server.
 				 *
 				 * @param string $hash The cache URL hash.
 				 * @param string $key The cache key.
-				 * @param array  $flags The flags associated with the cache.
+				 * @param array  $flags The canonical flags associated with the cache.
+				 * @param string $url The original request URL.
 				 */
-				do_action( 'millicache_entry_deleting', $hash, $key, $flags );
+				do_action( 'millicache_entry_deleting', $hash, $key, $flags, $url );
 
 				$this->client->transaction(
-					function ( $tx ) use ( $key, $flags ) {
+					function ( $tx ) use ( $key, $raw_flags ) {
 
 						// Delete flags and remove the key from the sets associated with the flags.
-						foreach ( $flags as $flag ) {
+						foreach ( $raw_flags as $flag ) {
 							// Remove the key from the set of the flag.
 							$tx->srem( $flag, $key );
 
@@ -629,9 +637,10 @@ class Storage {
 				 *
 				 * @param string $hash The cache URL hash.
 				 * @param string $key The cache key.
-				 * @param array  $flags The flags associated with the cache.
+				 * @param array  $flags The canonical flags associated with the cache.
+				 * @param string $url The original request URL.
 				 */
-				do_action( 'millicache_entry_deleted', $hash, $key, $flags );
+				do_action( 'millicache_entry_deleted', $hash, $key, $flags, $url );
 
 				return true;
 			},
@@ -1199,6 +1208,24 @@ class Storage {
 						$updated          = isset( $data['updated'] ) && is_numeric( $data['updated'] ) ? (int) $data['updated'] : time();
 						$data['updated']  = $updated - $ttl;
 						$this->set_cache( $key, $data, $flags );
+
+						$url = isset( $data['url'] ) && is_string( $data['url'] ) ? $data['url'] : '';
+
+						/**
+						 * Fires after a cache entry is expired (aged out) in the storage server.
+						 *
+						 * Unlike deletion, the entry and its flag membership are preserved;
+						 * only its freshness is reset. Edge/CDN mirrors should treat this as
+						 * a purge signal since the origin will regenerate the response.
+						 *
+						 * @since 1.7.0
+						 *
+						 * @param string $hash The cache URL hash.
+						 * @param string $key The cache key.
+						 * @param array  $flags The canonical flags associated with the cache.
+						 * @param string $url The original request URL, for edge/CDN mirrors.
+						 */
+						do_action( 'millicache_entry_expired', $key, $this->toggle_cache_key( $key ), $flags, $url );
 					}
 				}
 			}

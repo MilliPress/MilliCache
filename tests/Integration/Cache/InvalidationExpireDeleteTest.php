@@ -110,4 +110,50 @@ describe( 'Invalidation expire/delete by flag (integration)', function () {
 		// It is gone: delete-by-flag reached it because the link survived expiry.
 		expect( (int) $this->redis->exists( 'mc_itest:c:hashfix' ) )->toBe( 0 );
 	} );
+
+	it( 'emits millicache_entry_deleted carrying the entry URL for edge mirrors', function () {
+		global $test_did_actions;
+		$test_did_actions = array();
+
+		( $this->seed )( 'hashurl', 'post:1' );
+
+		$this->storage->clear_cache_by_sets( array( 'mll:deleted-flags' => array( 'post:1' ) ), 100 );
+
+		$deleted = array_values(
+			array_filter(
+				$test_did_actions,
+				fn( $a ) => 'millicache_entry_deleted' === $a['hook']
+			)
+		);
+
+		expect( $deleted )->toHaveCount( 1 );
+		// Payload shape: (hash, key, flags, url). Flags are canonical, not storage keys.
+		expect( $deleted[0]['args'][3] )->toBe( 'https://example.com/x' );
+		expect( $deleted[0]['args'][2] )->toContain( 'post:1' );
+		expect( $deleted[0]['args'][2] )->not->toContain( 'mc_itest:f:post:1' );
+	} );
+
+	it( 'emits millicache_entry_expired with the URL when an entry is aged by flag', function () {
+		global $test_did_actions;
+		$test_did_actions = array();
+
+		( $this->seed )( 'hashexp', 'post:1' );
+
+		$this->storage->clear_cache_by_sets( array( 'mll:expired-flags' => array( 'post:1' ) ), 100 );
+
+		$expired = array_values(
+			array_filter(
+				$test_did_actions,
+				fn( $a ) => 'millicache_entry_expired' === $a['hook']
+			)
+		);
+
+		expect( $expired )->toHaveCount( 1 );
+		// Same (hash, key, flags, url) shape as entry_deleted; flags are canonical.
+		expect( $expired[0]['args'][0] )->toBe( 'hashexp' );
+		expect( $expired[0]['args'][1] )->toBe( 'mc_itest:c:hashexp' );
+		expect( $expired[0]['args'][2] )->toContain( 'post:1' );
+		expect( $expired[0]['args'][2] )->not->toContain( 'mc_itest:f:post:1' );
+		expect( $expired[0]['args'][3] )->toBe( 'https://example.com/x' );
+	} );
 } );
