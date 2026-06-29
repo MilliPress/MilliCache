@@ -1180,27 +1180,25 @@ class Storage {
 	 * @return void
 	 */
 	public function clear_cache_by_sets( array $sets, int $ttl ): void {
-		// Delete the stored entries for the deleted flags.
-		if ( isset( $sets['mll:deleted-flags'] ) ) {
-			foreach ( array_unique( $sets['mll:deleted-flags'] ) as $flag ) {
-				foreach ( $this->get_cache_keys_by_flag( $flag ) as $key ) {
-					$this->delete_cache( $key );
-				}
+		// Delete the stored entries for the deleted flags. Every flag is resolved
+		// to its keys in one pipelined round-trip, de-duplicated so keys shared by
+		// overlapping flags are deleted once rather than re-read per flag.
+		if ( ! empty( $sets['mll:deleted-flags'] ) ) {
+			foreach ( $this->get_cache_keys_by_flag( $sets['mll:deleted-flags'] ) as $key ) {
+				$this->delete_cache( $key );
 			}
 		}
 
 		// Expire the stored entries for the expired flags.
-		if ( isset( $sets['mll:expired-flags'] ) ) {
-			foreach ( array_unique( $sets['mll:expired-flags'] ) as $flag ) {
-				foreach ( $this->get_cache_keys_by_flag( $flag ) as $key ) {
-					$result = $this->get_cache( $key );
-					if ( $result ) {
-						list($data, , $locked) = $result;
-						if ( $data && ! $locked ) {
-							$updated          = isset( $data['updated'] ) && is_numeric( $data['updated'] ) ? (int) $data['updated'] : time();
-							$data['updated']  = $updated - $ttl;
-							$this->set_cache( $key, $data, array() );
-						}
+		if ( ! empty( $sets['mll:expired-flags'] ) ) {
+			foreach ( $this->get_cache_keys_by_flag( $sets['mll:expired-flags'] ) as $key ) {
+				$result = $this->get_cache( $key );
+				if ( $result ) {
+					list($data, , $locked) = $result;
+					if ( $data && ! $locked ) {
+						$updated          = isset( $data['updated'] ) && is_numeric( $data['updated'] ) ? (int) $data['updated'] : time();
+						$data['updated']  = $updated - $ttl;
+						$this->set_cache( $key, $data, array() );
 					}
 				}
 			}
@@ -1234,38 +1232,55 @@ class Storage {
 	}
 
 	/**
-	 * Get cache keys by a given flag.
+	 * Get cache keys for one or more flags in a single pipelined round-trip.
 	 *
 	 * @since 1.0.0
-	 * @access public
 	 *
-	 * @param string $flag The cache flag. Wildcards supported.
-	 * @return array<string> The cache keys associated with the flag.
+	 * @param string|array<string> $flags The cache flag(s). Wildcards supported.
+	 * @return array<string> The de-duplicated cache keys across all flags.
 	 */
-	public function get_cache_keys_by_flag( string $flag ): array {
+	public function get_cache_keys_by_flag( $flags ): array {
+		$flags = is_array( $flags ) ? $flags : array( $flags );
+		$flags = array_values( array_unique( array_filter( $flags, 'is_string' ) ) );
+
+		if ( empty( $flags ) ) {
+			return array();
+		}
+
 		return $this->execute(
-			function () use ( $flag ) {
-				// Get all keys in the set associated with the flag with wildcard support.
-				$members = preg_match( '/[*?]/', $flag )
-					? array_merge(
-						array(),
-						...array_filter(
-							(array) $this->client->pipeline(
-								function ( $pipe ) use ( $flag ) {
-									foreach ( $this->get_cache_keys_by_pattern( $this->toggle_flag_key( $flag ) ) as $key ) {
-										$pipe->smembers( $key );
-									}
-								}
-							),
-							'is_array'
-						)
-					)
-					: $this->client->smembers( $this->toggle_flag_key( $flag ) );
+			function () use ( $flags ) {
+				// Expand every flag to the concrete flag-set key(s) to read.
+				$set_keys = array();
+				foreach ( $flags as $flag ) {
+					if ( preg_match( '/[*?]/', $flag ) ) {
+						// Wildcard: scan for the flag-set keys it matches.
+						foreach ( $this->get_cache_keys_by_pattern( $this->toggle_flag_key( $flag ) ) as $set_key ) {
+							$set_keys[] = $set_key;
+						}
+					} else {
+						$set_keys[] = $this->toggle_flag_key( $flag );
+					}
+				}
 
-				// smembers()/pipeline return mixed; keep only string members.
-				$members = array_values( array_filter( (array) $members, 'is_string' ) );
+				$set_keys = array_values( array_unique( $set_keys ) );
 
-				// Remove prefix from keys.
+				if ( empty( $set_keys ) ) {
+					return array();
+				}
+
+				// Read every flag set in one pipeline.
+				$results = (array) $this->client->pipeline(
+					function ( $pipe ) use ( $set_keys ) {
+						foreach ( $set_keys as $set_key ) {
+							$pipe->smembers( $set_key );
+						}
+					}
+				);
+
+				// Flatten members, keep strings, strip the cache-key prefix.
+				$members = array_merge( array(), ...array_filter( $results, 'is_array' ) );
+				$members = array_values( array_filter( $members, 'is_string' ) );
+
 				return array_map(
 					function ( string $key ) {
 						return $this->toggle_cache_key( $key );
@@ -1274,7 +1289,7 @@ class Storage {
 				);
 			},
 			array(),
-			'Unable to get entries with flag from the storage server'
+			'Unable to get entries with flags from the storage server'
 		);
 	}
 

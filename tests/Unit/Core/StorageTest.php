@@ -251,6 +251,173 @@ describe( 'Storage', function () {
 		} );
 	} );
 
+	describe( 'get_cache_keys_by_flag', function () {
+		it( 'resolves many flags in one pipeline and de-duplicates shared keys', function () {
+			$settings = array(
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'prefix'     => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			// A stub whose pipeline() runs the queued SMEMBERS against canned sets
+			// and counts how many pipelines were opened, so we can prove the
+			// lookups batch into a single round-trip. Two flags share a member.
+			$stub = new class() extends \Predis\Client {
+				public int $pipelines = 0;
+				/** @var array<int, string> */
+				public array $smembers_calls = array();
+				/** @var array<string, array<string>> */
+				public array $sets = array(
+					'test:f:post:1' => array( 'test:c:hashA', 'test:c:hashB' ),
+					'test:f:post:2' => array( 'test:c:hashB', 'test:c:hashC' ),
+				);
+
+				public function pipeline( ...$arguments ) {
+					++$this->pipelines;
+					$callback = $arguments[0] ?? null;
+
+					$pipe = new class() {
+						/** @var array<int, string> */
+						public array $queued = array();
+
+						public function __call( $command_id, $arguments ) {
+							if ( 'smembers' === strtolower( (string) $command_id ) ) {
+								$this->queued[] = (string) ( $arguments[0] ?? '' );
+							}
+							return $this;
+						}
+					};
+
+					if ( is_callable( $callback ) ) {
+						$callback( $pipe );
+					}
+
+					foreach ( $pipe->queued as $set_key ) {
+						$this->smembers_calls[] = $set_key;
+					}
+
+					return array_map(
+						fn( $set_key ) => $this->sets[ $set_key ] ?? array(),
+						$pipe->queued
+					);
+				}
+
+				public function __call( $command_id, $arguments ) {
+					return null;
+				}
+			};
+
+			$client_prop = new \ReflectionProperty( Storage::class, 'client' );
+			$client_prop->setAccessible( true );
+			$client_prop->setValue( $storage, $stub );
+
+			$keys = $storage->get_cache_keys_by_flag( array( 'post:1', 'post:2', 'post:1' ) );
+
+			sort( $keys );
+			expect( $keys )->toBe( array( 'hashA', 'hashB', 'hashC' ) );
+			// One pipeline, one SMEMBERS per unique flag set.
+			expect( $stub->pipelines )->toBe( 1 );
+			expect( $stub->smembers_calls )->toBe( array( 'test:f:post:1', 'test:f:post:2' ) );
+		} );
+
+		it( 'accepts a single flag string', function () {
+			$settings = array(
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'prefix'     => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			$stub = new class() extends \Predis\Client {
+				/** @var array<int, string> */
+				public array $smembers_calls = array();
+				/** @var array<string, array<string>> */
+				public array $sets = array(
+					'test:f:post:1' => array( 'test:c:hashA', 'test:c:hashB' ),
+				);
+
+				public function pipeline( ...$arguments ) {
+					$callback = $arguments[0] ?? null;
+
+					$pipe = new class() {
+						/** @var array<int, string> */
+						public array $queued = array();
+
+						public function __call( $command_id, $arguments ) {
+							if ( 'smembers' === strtolower( (string) $command_id ) ) {
+								$this->queued[] = (string) ( $arguments[0] ?? '' );
+							}
+							return $this;
+						}
+					};
+
+					if ( is_callable( $callback ) ) {
+						$callback( $pipe );
+					}
+
+					foreach ( $pipe->queued as $set_key ) {
+						$this->smembers_calls[] = $set_key;
+					}
+
+					return array_map(
+						fn( $set_key ) => $this->sets[ $set_key ] ?? array(),
+						$pipe->queued
+					);
+				}
+
+				public function __call( $command_id, $arguments ) {
+					return null;
+				}
+			};
+
+			$client_prop = new \ReflectionProperty( Storage::class, 'client' );
+			$client_prop->setAccessible( true );
+			$client_prop->setValue( $storage, $stub );
+
+			$keys = $storage->get_cache_keys_by_flag( 'post:1' );
+
+			sort( $keys );
+			expect( $keys )->toBe( array( 'hashA', 'hashB' ) );
+			expect( $stub->smembers_calls )->toBe( array( 'test:f:post:1' ) );
+		} );
+
+		it( 'returns an empty array for no flags without opening a pipeline', function () {
+			$settings = array(
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'prefix'     => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			$stub = new class() extends \Predis\Client {
+				public int $pipelines = 0;
+
+				public function pipeline( ...$arguments ) {
+					++$this->pipelines;
+					return array();
+				}
+
+				public function __call( $command_id, $arguments ) {
+					return null;
+				}
+			};
+
+			$client_prop = new \ReflectionProperty( Storage::class, 'client' );
+			$client_prop->setAccessible( true );
+			$client_prop->setValue( $storage, $stub );
+
+			expect( $storage->get_cache_keys_by_flag( array() ) )->toBe( array() );
+			expect( $stub->pipelines )->toBe( 0 );
+		} );
+	} );
+
 	describe( 'cache operations', function () {
 		it( 'returns null when getting non-existent cache', function () {
 			$settings = array(
