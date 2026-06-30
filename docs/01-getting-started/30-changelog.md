@@ -8,6 +8,15 @@ menu_order: 30
 
 ## [1.7.0-beta.5](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.4...v1.7.0-beta.5) (2026-06-30)
 
+<!-- mc:auto sha=a3b5e42afc99 -->
+This release tightens the storage and hook layers ahead of the 1.7.0 stable cut.
+
+The most important fix addresses a regression introduced in v1.6.2: expiring a cache entry by flag was silently stripping its flag memberships, leaving it orphaned and unreachable by subsequent flag-based clears until its TTL naturally elapsed. Flag membership is now preserved correctly on expiry.
+
+On the hooks side, all cache-invalidation actions are now named consistently under the `millicache_cache_cleared_by_<target>` pattern — `millicache_cache_cleared_by_urls` is new, and `millicache_cleared_by_networks` has been renamed to `millicache_cache_cleared_by_networks`. **This is a breaking change for any code listening on the old name.** Entry deletion and expiry hooks (`millicache_entry_deleting`, `millicache_entry_deleted`, and the new `millicache_entry_expired`) now carry the entry URL and canonical flags (e.g. `2:post:123`) as additional arguments, giving edge/CDN integrations a complete signal directly from the storage layer. Flag-to-key resolution when clearing by sets is also now batched into a single pipeline, reducing Redis round-trips proportionally to flag fan-out.
+
+Finally, `Storage` gains a generic key/value surface (`get`, `get_multiple`, `set`, `delete`, `delete_by_pattern`) so Pro drop-ins such as an object-cache driver can reuse MilliCache's existing Redis connection and fail-fast logic without opening a second one.
+<!-- /mc:auto -->
 
 ### Features
 
