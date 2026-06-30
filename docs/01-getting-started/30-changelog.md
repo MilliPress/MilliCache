@@ -6,6 +6,35 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.0-beta.5](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.4...v1.7.0-beta.5) (2026-06-30)
+
+<!-- mc:auto sha=a3b5e42afc99 -->
+This release tightens the storage and hook layers ahead of the 1.7.0 stable cut.
+
+The most important fix addresses a regression introduced in v1.6.2: expiring a cache entry by flag was silently stripping its flag memberships, leaving it orphaned and unreachable by subsequent flag-based clears until its TTL naturally elapsed. Flag membership is now preserved correctly on expiry.
+
+On the hooks side, all cache-invalidation actions are now named consistently under the `millicache_cache_cleared_by_<target>` pattern — `millicache_cache_cleared_by_urls` is new, and `millicache_cleared_by_networks` has been renamed to `millicache_cache_cleared_by_networks`. **This is a breaking change for any code listening on the old name.** Entry deletion and expiry hooks (`millicache_entry_deleting`, `millicache_entry_deleted`, and the new `millicache_entry_expired`) now carry the entry URL and canonical flags (e.g. `2:post:123`) as additional arguments, giving edge/CDN integrations a complete signal directly from the storage layer. Flag-to-key resolution when clearing by sets is also now batched into a single pipeline, reducing Redis round-trips proportionally to flag fan-out.
+
+Finally, `Storage` gains a generic key/value surface (`get`, `get_multiple`, `set`, `delete`, `delete_by_pattern`) so Pro drop-ins such as an object-cache driver can reuse MilliCache's existing Redis connection and fail-fast logic without opening a second one.
+<!-- /mc:auto -->
+
+### Features
+
+* **hooks:** standardize cache-cleared action names ([1dedb37](https://github.com/MilliPress/MilliCache/commit/1dedb3796bb47aaa2605adb56242171f8d6e8827))
+* **plugin:** Add author information and plugin URI to advanced cache file ([ef97d53](https://github.com/MilliPress/MilliCache/commit/ef97d532432a62e883dffa575e467769db38801f))
+* **storage:** add generic key/value surface for reuse by drop-ins ([a1d195c](https://github.com/MilliPress/MilliCache/commit/a1d195c171a79f5f622dd50b562dbe6c8f00844e))
+* **storage:** emit URL + canonical flags from entry deletion/expiry hooks ([d2445b1](https://github.com/MilliPress/MilliCache/commit/d2445b14a74d9eaf90cff3ee28dfd5cc010202be))
+
+
+### Bug Fixes
+
+* **storage:** preserve flag membership when expiring a cache entry ([7c83b33](https://github.com/MilliPress/MilliCache/commit/7c83b3388ae5efffa876487a4a674140e1046fda))
+
+
+### Performance
+
+* **storage:** batch flag-to-key resolution when clearing by sets ([1ee0b65](https://github.com/MilliPress/MilliCache/commit/1ee0b65e51e96db7efb41eb8a6db2825eee9f318))
+
 ## [1.7.0-beta.4](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.3...v1.7.0-beta.4) (2026-06-23)
 
 A full settings reset now leaves your storage connection intact, so clearing your caching behavior no longer disconnects your cache server or forces you to re-enter the connection details.
