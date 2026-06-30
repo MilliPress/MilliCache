@@ -6,6 +6,26 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.0-beta.5](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.4...v1.7.0-beta.5) (2026-06-30)
+
+
+### Features
+
+* **hooks:** standardize cache-cleared action names ([1dedb37](https://github.com/MilliPress/MilliCache/commit/1dedb3796bb47aaa2605adb56242171f8d6e8827))
+* **plugin:** Add author information and plugin URI to advanced cache file ([ef97d53](https://github.com/MilliPress/MilliCache/commit/ef97d532432a62e883dffa575e467769db38801f))
+* **storage:** add generic key/value surface for reuse by drop-ins ([a1d195c](https://github.com/MilliPress/MilliCache/commit/a1d195c171a79f5f622dd50b562dbe6c8f00844e))
+* **storage:** emit URL + canonical flags from entry deletion/expiry hooks ([d2445b1](https://github.com/MilliPress/MilliCache/commit/d2445b14a74d9eaf90cff3ee28dfd5cc010202be))
+
+
+### Bug Fixes
+
+* **storage:** preserve flag membership when expiring a cache entry ([7c83b33](https://github.com/MilliPress/MilliCache/commit/7c83b3388ae5efffa876487a4a674140e1046fda))
+
+
+### Performance
+
+* **storage:** batch flag-to-key resolution when clearing by sets ([1ee0b65](https://github.com/MilliPress/MilliCache/commit/1ee0b65e51e96db7efb41eb8a6db2825eee9f318))
+
 ## [1.7.0-beta.4](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.3...v1.7.0-beta.4) (2026-06-23)
 
 A full settings reset now leaves your storage connection intact, so clearing your caching behavior no longer disconnects your cache server or forces you to re-enter the connection details.
