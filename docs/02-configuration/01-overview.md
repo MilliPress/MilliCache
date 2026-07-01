@@ -111,6 +111,18 @@ How cache entries differentiate from each other:
 | `MC_CACHE_UNIQUE`   | `[]`    | Static deployment-level keys folded into every request hash                |
 | `MC_CACHE_BUCKETS`  | `[]`    | Per-request signal → token map (Accept negotiation, language, device, …) |
 
+### Update Settings
+
+Plugin update behavior:
+
+| Constant               | Default | Description                        |
+|------------------------|---------|------------------------------------|
+| `MC_UPDATE_PRERELEASE` | `false` | Opt in to prerelease (beta) builds |
+
+Update checks can be disabled with the `millicache_updates` filter. See the
+[Constants Reference](02-reference.md#update-constants) and
+[Hooks & Filters](../07-developers/02-hooks-filters.md#millicache_updates) for details.
+
 ## Common Configurations
 
 ### High-Traffic Site

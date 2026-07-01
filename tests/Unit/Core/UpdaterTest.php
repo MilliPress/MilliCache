@@ -198,10 +198,11 @@ describe( 'Updater', function () {
 			expect( $action_hooks )->toContain( 'delete_site_transient_update_plugins' );
 		} );
 
-		it( 'skips hook registration when filter returns false', function () {
+		it( 'registers hooks regardless of the millicache_updates filter', function () {
 			global $test_filters, $test_actions;
 
-			// The Pest.php apply_filters mock checks $test_filters[$hook] for overrides.
+			// The filter is evaluated at update-check time, not construction time,
+			// so hooks are always registered even when updates are disabled.
 			$test_filters['millicache_updates'] = false;
 
 			$loader  = new Loader();
@@ -212,9 +213,30 @@ describe( 'Updater', function () {
 			$filter_hooks = array_column( $test_filters, 'hook' );
 			$action_hooks = array_column( $test_actions, 'hook' );
 
-			expect( $filter_hooks )->not->toContain( 'site_transient_update_plugins' );
-			expect( $filter_hooks )->not->toContain( 'plugins_api' );
-			expect( $action_hooks )->not->toContain( 'delete_site_transient_update_plugins' );
+			expect( $filter_hooks )->toContain( 'site_transient_update_plugins' );
+			expect( $filter_hooks )->toContain( 'plugins_api' );
+			expect( $action_hooks )->toContain( 'delete_site_transient_update_plugins' );
+		} );
+	} );
+
+	describe( 'millicache_updates filter', function () {
+
+		it( 'injects no update when the filter disables update checks', function () {
+			global $test_wp_remote_get_response, $test_filters;
+			$test_wp_remote_get_response         = mock_http_response( mock_remote_info( '2.0.0' ) );
+			$test_filters['millicache_updates'] = false;
+
+			$loader  = new Loader();
+			$updater = new Updater( $loader );
+
+			$transient            = new stdClass();
+			$transient->response  = array();
+			$transient->no_update = array();
+
+			$result = $updater->check_for_update( $transient );
+
+			expect( $result->response )->not->toHaveKey( MILLICACHE_BASENAME );
+			expect( $result->no_update )->not->toHaveKey( MILLICACHE_BASENAME );
 		} );
 	} );
 

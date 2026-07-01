@@ -442,6 +442,26 @@ add_filter( 'millicache_rest_status_response', function( $status ) {
 
 ---
 
+### Update Filters
+
+#### millicache_updates
+
+Filter whether MilliCache checks MilliPress.com for plugin updates. Return
+`false` to disable update checks entirely, which stops the remote request and
+hides the update notice on the Plugins screen.
+
+The filter is evaluated at update-check time (when WordPress refreshes the
+`update_plugins` transient), so it can be added from a theme's `functions.php`
+or another plugin and still be honored.
+
+```php
+add_filter( 'millicache_updates', '__return_false' );
+```
+
+**Default:** `true`
+
+---
+
 ## Hook Usage Examples
 
 ### Notify CDN on Cache Clear

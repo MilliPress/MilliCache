@@ -364,6 +364,27 @@ define( 'MC_CACHE_IGNORE_REQUEST_KEYS', [
 ] );
 ```
 
+## Update Constants
+
+### MC_UPDATE_PRERELEASE
+
+```php
+define( 'MC_UPDATE_PRERELEASE', true );
+```
+
+| Property  | Value     |
+|-----------|-----------|
+| Default   | `false`   |
+| Type      | `boolean` |
+
+Opt in to prerelease builds. When defined truthy, the plugin requests
+prerelease versions from the update endpoint, so beta and release-candidate
+builds surface as available updates. Leave undefined to receive stable
+releases only.
+
+To turn update checks off entirely, use the [`millicache_updates`](../07-developers/02-hooks-filters.md#millicache_updates)
+filter.
+
 ## WordPress Cache Constants
 
 Standard WordPress constants that affect MilliCache behavior.
