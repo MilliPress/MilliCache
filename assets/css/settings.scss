@@ -655,11 +655,19 @@
 		.millicache-footer-status__tabs {
 
 			.components-tab-panel__tabs {
+				position: sticky;
+				top: 0;
+				z-index: 2;
+				background: #fff;
 				margin: 0 -24px 16px;
 				padding: 0 24px;
 				border-top: 1px solid #dcdcde;
 				border-bottom: 1px solid #dcdcde;
 			}
+		}
+
+		&.has-scrolled-content .millicache-footer-status__tabs .components-tab-panel__tabs {
+			border-top-color: transparent;
 		}
 	}
 
@@ -700,6 +708,10 @@
 
 		&--good {
 			color: #4ab866;
+		}
+
+		&--info {
+			color: #757575;
 		}
 
 		&--warning {

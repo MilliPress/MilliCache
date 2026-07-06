@@ -1,7 +1,11 @@
-import { useState, useEffect, createInterpolateElement } from '@wordpress/element';
+import {
+	useState,
+	useEffect,
+	createInterpolateElement,
+} from '@wordpress/element';
 import { Button, Modal, TabPanel, Icon } from '@wordpress/components';
 import { __, _n, sprintf } from '@wordpress/i18n';
-import { check, caution, error } from '@wordpress/icons';
+import { check, caution, error, info } from '@wordpress/icons';
 
 const ISSUE_URL = 'https://github.com/MilliPress/MilliCache/issues/new';
 const ISSUE_TEMPLATE = 'bug_report.yml';
@@ -15,7 +19,14 @@ const MAX_ISSUE_URL_LENGTH = 8000;
 const KNOWN_BACKENDS = [ 'Redis', 'KeyDB', 'Dragonfly', 'Valkey' ];
 
 const CHECK_ICONS = {
-	good: { icon: check, className: 'millicache-footer-status__check-icon--good' },
+	good: {
+		icon: check,
+		className: 'millicache-footer-status__check-icon--good',
+	},
+	info: {
+		icon: info,
+		className: 'millicache-footer-status__check-icon--info',
+	},
 	recommended: {
 		icon: caution,
 		className: 'millicache-footer-status__check-icon--warning',
@@ -36,11 +47,11 @@ const resolveBackend = ( serverVersion ) => {
 
 const buildIssueUrl = ( status ) => {
 	const params = new URLSearchParams( { template: ISSUE_TEMPLATE } );
-	const debug = status?.[ 'debug' ];
+	const debug = status?.debug;
 	const pluginVersion = debug?.plugin?.version;
 	const wpVersion = debug?.versions?.wp;
 	const phpVersion = debug?.versions?.php;
-	const backend = resolveBackend( status?.storage?.info?.[ 'Server' ]?.version );
+	const backend = resolveBackend( status?.storage?.info?.Server?.version );
 	const markdown = debug?.markdown;
 
 	if ( pluginVersion ) {
@@ -70,6 +81,8 @@ const buildIssueUrl = ( status ) => {
 
 /**
  * Pick a short status-aware label that summarizes the failing checks count.
+ * @param health
+ * @param checks
  */
 const summarize = ( health, checks ) => {
 	if ( health === 'loading' ) {
@@ -77,7 +90,9 @@ const summarize = ( health, checks ) => {
 	}
 
 	const critical = checks.filter( ( c ) => c.status === 'critical' ).length;
-	const recommended = checks.filter( ( c ) => c.status === 'recommended' ).length;
+	const recommended = checks.filter(
+		( c ) => c.status === 'recommended'
+	).length;
 
 	if ( critical > 0 ) {
 		return sprintf(
@@ -102,9 +117,7 @@ const summarize = ( health, checks ) => {
 const withCode = ( text ) =>
 	text.includes( '<code' )
 		? createInterpolateElement( text, {
-				code: (
-					<code className="millicache-footer-status__check-code" />
-				),
+				code: <code className="millicache-footer-status__check-code" />,
 		  } )
 		: text;
 
@@ -186,7 +199,11 @@ const DebugTab = ( { markdown, copyState, onCopy, onOpenIssue } ) => (
 		/>
 
 		<div className="millicache-footer-status__actions">
-			<Button variant="primary" onClick={ onCopy } disabled={ ! markdown }>
+			<Button
+				variant="primary"
+				onClick={ onCopy }
+				disabled={ ! markdown }
+			>
 				{ copyState === 'copied'
 					? __( 'Copied!', 'millicache' )
 					: copyState === 'manual'
@@ -211,7 +228,7 @@ const FooterStatus = ( { status } ) => {
 		return () => window.removeEventListener( OPEN_MODAL_EVENT, handler );
 	}, [] );
 
-	const debug = status?.[ 'debug' ];
+	const debug = status?.debug;
 	const health = debug?.health ?? 'loading';
 	const markdown = debug?.markdown ?? '';
 	const checks = Array.isArray( debug?.checks ) ? debug.checks : [];
@@ -259,7 +276,9 @@ const FooterStatus = ( { status } ) => {
 					className="millicache-footer-status__dot"
 					aria-hidden="true"
 				/>
-				<span className="millicache-footer-status__label">{ label }</span>
+				<span className="millicache-footer-status__label">
+					{ label }
+				</span>
 			</button>
 
 			{ isOpen && (

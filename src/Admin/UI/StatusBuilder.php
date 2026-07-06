@@ -124,7 +124,9 @@ final class StatusBuilder {
 		 *
 		 *   - `id`          (string)   Stable identifier.
 		 *   - `label`       (string)   Short, translated headline.
-		 *   - `status`      (string)   `good`, `recommended`, or `critical`.
+		 *   - `status`      (string)   `good`, `info`, `recommended`, or `critical`.
+		 *                              `info` is for neutral facts and features that
+		 *                              are off by choice; it never degrades health.
 		 *   - `description` (string)   Translated explanation of the result.
 		 *   - `value`       (string)   Optional observed value.
 		 *   - `url`         (string)   Optional "Learn more" URL.
@@ -136,6 +138,7 @@ final class StatusBuilder {
 		 * @param bool                             $is_network Whether the firing `/status` endpoint is network-scoped.
 		 */
 		$checks = apply_filters( 'millicache_status_checks', $checks, $payload, $network_admin );
+		$checks = $this->order_checks( $checks );
 
 		$debug = array(
 			'plugin'       => array(
@@ -525,7 +528,7 @@ final class StatusBuilder {
 			$checks[] = array(
 				'id'          => 'storage_mode',
 				'label'       => __( 'Storage connection mode', 'millicache' ),
-				'status'      => 'good',
+				'status'      => 'info',
 				'description' => $mode_detail,
 				'value'       => $mode,
 				'url'         => self::DOCS_BASE . '/08-storage-backends/01-overview#high-availability-replication--sentinel',
@@ -568,8 +571,43 @@ final class StatusBuilder {
 	}
 
 	/**
+	 * Order checks by severity — what needs attention first: `critical`,
+	 * `recommended`, `info`, then `good` (a missing or unknown `status` sorts
+	 * with `recommended`, matching the UI's fallback icon). Decorated with the
+	 * original index so same-severity checks keep their contribution order on
+	 * PHP 7.4, where `usort()` isn't stable.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array<int, array<string, mixed>> $checks The (possibly filtered) checks list.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function order_checks( array $checks ): array {
+		$rank = array(
+			'critical'    => 0,
+			'recommended' => 1,
+			'info'        => 2,
+			'good'        => 3,
+		);
+
+		$decorated = array();
+		foreach ( array_values( $checks ) as $i => $check ) {
+			$status      = is_string( $check['status'] ?? null ) ? $check['status'] : '';
+			$decorated[] = array( $rank[ $status ] ?? 1, $i, $check );
+		}
+
+		usort(
+			$decorated,
+			static fn ( array $a, array $b ): int => array( $a[0], $a[1] ) <=> array( $b[0], $b[1] )
+		);
+
+		return array_map( static fn ( array $d ) => $d[2], $decorated );
+	}
+
+	/**
 	 * Reduce a checks list to a single verdict (`critical` > `recommended` >
-	 * `good`; a missing `status` counts as `good`).
+	 * `good`; a missing `status` counts as `good`, and `info` is neutral like
+	 * `good`).
 	 *
 	 * @since 1.7.0
 	 *
