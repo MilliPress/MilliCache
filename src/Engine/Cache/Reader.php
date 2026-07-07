@@ -243,6 +243,11 @@ final class Reader {
 			header( 'Age: ' . max( 0, time() - $entry->updated ) );
 		}
 
+		// No downstream cache for background regeneration.
+		if ( $regenerate ) {
+			header( 'Cache-Control: no-cache' );
+		}
+
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- We need to output the cache.
 		echo $entry->output;
 

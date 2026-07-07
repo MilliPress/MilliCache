@@ -52,6 +52,67 @@ describe('Writer', function () {
 		});
 	});
 
+	describe('validate_headers', function () {
+		it('keeps ordinary response headers, including repeated ones', function () {
+			$result = $this->writer->validate_headers(array(
+				'Content-Type: text/html; charset=UTF-8',
+				'Link: <https://example.test/wp-json/>; rel="https://api.w.org/"',
+				'Link: <https://example.test/?p=9>; rel=shortlink',
+			));
+
+			expect($result['cacheable'])->toBeTrue();
+			expect($result['headers'])->toBe(array(
+				'Content-Type: text/html; charset=UTF-8',
+				'Link: <https://example.test/wp-json/>; rel="https://api.w.org/"',
+				'Link: <https://example.test/?p=9>; rel=shortlink',
+			));
+		});
+
+		it('strips our own X-MilliCache-* diagnostics', function () {
+			$result = $this->writer->validate_headers(array(
+				'Content-Type: text/html',
+				'X-MilliCache-Status: hit',
+				'X-MilliCache-Key: abc123',
+			));
+
+			expect($result['headers'])->toBe(array('Content-Type: text/html'));
+		});
+
+		it('strips the per-hop Age header', function () {
+			$result = $this->writer->validate_headers(array(
+				'Content-Type: text/html',
+				'Age: 33',
+			));
+
+			expect($result['headers'])->toBe(array('Content-Type: text/html'));
+		});
+
+		it('strips the bare serve-time Cache-Control: no-cache', function () {
+			$result = $this->writer->validate_headers(array(
+				'Content-Type: text/html',
+				'Cache-Control: no-cache',
+			));
+
+			expect($result['headers'])->toBe(array('Content-Type: text/html'));
+		});
+
+		it('keeps multi-directive Cache-Control values intact', function () {
+			$result = $this->writer->validate_headers(array(
+				'Cache-Control: no-cache, must-revalidate, max-age=0',
+			));
+
+			expect($result['headers'])->toBe(array('Cache-Control: no-cache, must-revalidate, max-age=0'));
+		});
+
+		it('keeps an s-maxage Cache-Control untouched', function () {
+			$result = $this->writer->validate_headers(array(
+				'Cache-Control: s-maxage=30',
+			));
+
+			expect($result['headers'])->toBe(array('Cache-Control: s-maxage=30'));
+		});
+	});
+
 	describe('create_entry', function () {
 		it('creates entry with basic data', function () {
 			$entry = $this->writer->create_entry(

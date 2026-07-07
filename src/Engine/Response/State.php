@@ -70,6 +70,13 @@ final class State {
 	private bool $cache_served = false;
 
 	/**
+	 * Served entry's stored headers, stashed for reuse when regenerating.
+	 *
+	 * @var array<string>|null
+	 */
+	private ?array $regen_headers = null;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 1.0.0
@@ -201,6 +208,32 @@ final class State {
 	 */
 	public function was_cache_served(): bool {
 		return $this->cache_served;
+	}
+
+	/**
+	 * Create a modified copy carrying the served entry's stored headers, reused
+	 * as the header base when regenerating (the live table is frozen by then).
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param array<string> $headers Stored response headers ("Key: Value").
+	 * @return self New instance carrying the regeneration header base.
+	 */
+	public function with_regen_headers( array $headers ): self {
+		$copy                = clone $this;
+		$copy->regen_headers = $headers;
+		return $copy;
+	}
+
+	/**
+	 * Get the stashed regeneration header base, if any.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return array<string>|null Stored headers to reuse, or null when not regenerating.
+	 */
+	public function get_regen_headers(): ?array {
+		return $this->regen_headers;
 	}
 
 	/**

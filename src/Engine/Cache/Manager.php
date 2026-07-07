@@ -231,10 +231,35 @@ final class Manager {
 			);
 		}
 
+		/**
+		 * Filter the response headers stored with a cache entry.
+		 *
+		 * Runs on every store (miss and SWR regen). Listeners must be
+		 * replace-not-append so it stays idempotent across both.
+		 *
+		 * @since 1.7.0
+		 *
+		 * @param array<string> $headers Response headers ("Key: Value"), already scrubbed of per-hop headers.
+		 * @param array<string> $flags   Canonical persisted flags: the Redis form minus the "<storage_prefix>:f:" key prefix. Multisite carries the site/network prefix (e.g. "2:post:9"); single-site is unprefixed (e.g. "post:9").
+		 * @param array{url: string, variant: array<string,mixed>|null, status: int, ttl: int, grace: int} $context Store-time context; ttl/grace in effective seconds, non-null variant marks a private entry.
+		 */
+		$headers = apply_filters(
+			'millicache_entry_headers',
+			$header_check['headers'],
+			$flags,
+			array(
+				'url'     => $url,
+				'variant' => $variant,
+				'status'  => $status,
+				'ttl'     => $custom_ttl ?? $this->config->ttl,
+				'grace'   => $custom_grace ?? $this->config->grace,
+			)
+		);
+
 		// Create a cache entry.
 		$entry = $this->writer->create_entry(
 			$output,
-			$header_check['headers'],
+			$headers,
 			$status,
 			$custom_ttl,
 			$custom_grace,

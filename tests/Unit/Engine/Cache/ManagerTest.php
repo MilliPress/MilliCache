@@ -275,5 +275,43 @@ describe('Handler', function () {
 			expect($result['cached'])->toBeFalse();
 			expect($result['reason'])->toBe('Storage failed');
 		});
+
+		it('stores the headers returned by the millicache_entry_headers filter', function () {
+			global $test_filters;
+			$test_filters['millicache_entry_headers'] = array(
+				'Content-Type: text/html',
+				'Cache-Tag: 2:home,2:post:9',
+				'Cache-Control: s-maxage=30',
+			);
+
+			$this->storage->shouldReceive('is_available')->andReturn(true);
+			$this->storage->shouldReceive('perform_cache')
+				->with(
+					'hash',
+					Mockery::on(function ($data) {
+						return $data['headers'] === array(
+							'Content-Type: text/html',
+							'Cache-Tag: 2:home,2:post:9',
+							'Cache-Control: s-maxage=30',
+						);
+					}),
+					// The flags handed to the filter are the ones being stored.
+					array('2:home', '2:post:9'),
+					Mockery::any()
+				)
+				->andReturn(true);
+
+			$result = $this->handler->cache_output(
+				'hash',
+				'<html>Test</html>',
+				array('2:home', '2:post:9'),
+				200,
+				array('Content-Type: text/html')
+			);
+
+			unset($test_filters['millicache_entry_headers']);
+
+			expect($result['cached'])->toBeTrue();
+		});
 	});
 });

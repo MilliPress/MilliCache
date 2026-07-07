@@ -125,8 +125,11 @@ final class Writer {
 						break 2;
 					}
 				}
-			} elseif ( strpos( $key, 'x-millicache' ) === false ) {
-				// Ignore our own headers, add all others.
+			} elseif (
+				false === strpos( $key, 'x-millicache' )
+				&& 'age' !== $key
+				&& ! ( 'cache-control' === $key && 'no-cache' === strtolower( $value ) )
+			) {
 				$filtered_headers[] = $header;
 			}
 		}

@@ -144,7 +144,11 @@ final class Processor {
 		$custom_ttl   = $this->state->get_ttl_override();
 		$custom_grace = $this->state->get_grace_override();
 		$variant      = $this->request_manager->get_variant();
-		$headers      = headers_list();
+
+		// On regen the live header table is frozen (headers already sent), so
+		// reuse the served entry's stored headers instead of headers_list().
+		$regen_headers = $this->state->get_regen_headers();
+		$headers       = null !== $regen_headers ? $regen_headers : headers_list();
 
 		// Bypass storage entirely for unsupported Vary directives.
 		$vary_bypass = $this->should_bypass_for_vary( $headers );
@@ -301,6 +305,11 @@ final class Processor {
 		// Get the cache entry (guaranteed to exist if serve is true).
 		$entry = $result['entry'];
 		assert( $entry instanceof Entry );
+
+		// Stash the served entry's headers to reuse when regenerating.
+		if ( $state->should_fcgi_regenerate() ) {
+			$state = $state->with_regen_headers( $entry->headers );
+		}
 
 		// Set debug headers if enabled.
 		$this->set_debug_headers(
