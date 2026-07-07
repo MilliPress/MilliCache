@@ -238,6 +238,11 @@ final class Reader {
 			}
 		}
 
+		// State this response's age (RFC 9111).
+		if ( $entry->updated > 0 ) {
+			header( 'Age: ' . max( 0, time() - $entry->updated ) );
+		}
+
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- We need to output the cache.
 		echo $entry->output;
 
