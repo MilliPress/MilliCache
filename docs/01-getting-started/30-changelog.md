@@ -6,6 +6,23 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.0-beta.6](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.5...v1.7.0-beta.6) (2026-07-08)
+
+
+### Features
+
+* **cache:** cap entries at 5MB raw to protect Redis from oversized responses ([2e2511f](https://github.com/MilliPress/MilliCache/commit/2e2511fa8df6cf45a9d31379d82961a5afa9aad1))
+* **response:** emit Age header on cache hits (RFC 9111) ([035bd24](https://github.com/MilliPress/MilliCache/commit/035bd24a13e7e86295b72c11e58ec97bc4445f2d))
+* **status:** informational check tier, severity ordering, sticky modal tabs ([ec6a249](https://github.com/MilliPress/MilliCache/commit/ec6a2497d4c9b072441adf4b5582f25ff785d3a8))
+* **updater:** honor millicache_updates at check time + add prerelease opt-in ([0153b35](https://github.com/MilliPress/MilliCache/commit/0153b357dd79796c7d5f50d8f3777f000498a311))
+
+
+### Bug Fixes
+
+* **cache:** stop SWR regeneration from storing serve-time headers ([2447389](https://github.com/MilliPress/MilliCache/commit/2447389c4184d79bb169cc8444a2334c6ac2cf75))
+* **drop-in:** remove Plugin Name header so the drop-in is not listed as a plugin ([c532c15](https://github.com/MilliPress/MilliCache/commit/c532c15925856f0017206c1b10b64feaf84b1c3c))
+* **release:** isolate Strauss from setup-php's github-oauth token ([85b642e](https://github.com/MilliPress/MilliCache/commit/85b642eead3f8c4eec2e1eefbfef0ea3efb3a951))
+
 ## [1.7.0-beta.5](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.4...v1.7.0-beta.5) (2026-06-30)
 
 <!-- mc:auto sha=a3b5e42afc99 -->
