@@ -8,6 +8,15 @@ menu_order: 30
 
 ## [1.7.0-beta.6](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.5...v1.7.0-beta.6) (2026-07-08)
 
+<!-- mc:auto sha=e82d844d39a5 -->
+Stale-while-revalidate regeneration was storing serve-time headers — including injected `Age` and `Cache-Control: no-cache` — causing regenerated entries to replay `no-cache` forever and remain edge-uncached. That is fixed: a new `millicache_entry_headers` filter runs at the single store chokepoint for both miss-capture and background regen, serve-time headers are scrubbed before storage, and regen now uses the original stored headers as its base rather than the frozen post-`fastcgi_finish_request()` header table.
+
+Cache hits now emit an `Age` header per RFC 9111, so downstream CDN edges subtract elapsed time from the freshness window and expire their copy in sync with this entry rather than resetting to a full lifetime.
+
+A new 5 MB entry size cap (`MAX_ENTRY_SIZE`) rejects oversized responses — such as PDF exports — before they reach Redis, preventing `maxmemory` exhaustion and legitimate-page eviction.
+
+The Status panel gains an informational check tier (gray info icon, no health impact) for neutral facts and features that are off by choice, with checks now ordered by severity. The `millicache_updates` filter is evaluated at update-check time rather than constructor time, so filters registered in `functions.php` or mu-plugins are honored. Define `MC_UPDATE_PRERELEASE` to opt a site into prerelease builds.
+<!-- /mc:auto -->
 
 ### Features
 
