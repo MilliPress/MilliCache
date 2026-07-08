@@ -224,6 +224,42 @@ add_filter( 'millicache_settings_defaults', function( $defaults ) {
 
 ---
 
+### Cache Entry Filters
+
+#### millicache_entry_headers
+
+Filter the response headers stored with a cache entry. Runs on every store: a fresh cache miss and a stale-while-revalidate background regeneration alike. Because it runs on regeneration too, headers derived from the entry's flags (such as edge cache tags or `Cache-Control: s-maxage`) always match the flags being persisted and cannot drift.
+
+```php
+add_filter( 'millicache_entry_headers', function( $headers, $flags, $context ) {
+    // Leave private (per-cookie/variant) entries off shared caches.
+    if ( null !== $context['variant'] ) {
+        return $headers;
+    }
+
+    // Replace it, don't append: strip the header we own before re-adding it.
+    $headers = array_values( array_filter(
+        $headers,
+        fn( $h ) => stripos( $h, 'Cache-Tag:' ) !== 0
+    ) );
+
+    $headers[] = 'Cache-Tag: ' . implode( ',', $flags );
+
+    return $headers;
+}, 10, 3 );
+```
+
+**Parameters:**
+
+- `$headers` (`string[]`) — Response headers as `"Key: Value"` strings, already scrubbed of MilliCache's own and per-hop headers.
+- `$flags` (`string[]`) — Canonical flags persisted with the entry, in the same form Redis stores minus the `<storage_prefix>:f:` key prefix. On multisite these carry the site/network prefix (e.g. `2:post:9`); on single-site they are unprefixed (e.g. `post:9`).
+- `$context` (`array`) — Store-time context: `url` (string), `variant` (array|null; non-null marks a private entry), `status` (int), `ttl` (int seconds), `grace` (int seconds).
+
+> [!IMPORTANT]
+> Listeners must be replace-not-append: strip any header they own before re-adding it, so the filter stays idempotent across the miss and regeneration passes.
+
+---
+
 ### Cache Clearing Filters
 
 #### millicache_flags_related_to_post
