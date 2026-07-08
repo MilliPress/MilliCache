@@ -31,8 +31,8 @@
     "env:destroy": "wp-env destroy",
     "env:cli": "wp-env run cli",
     "env:redis-cli": "wp-env run cli bash -c 'redis-cli -h ${1:-redis}'",
-    "env:e2e": "npx playwright test step --workers=1",
-    "env:e2e:performance": "npx playwright test performance --workers=1",
+    "env:e2e": "playwright install chromium && npx playwright test step --workers=1",
+    "env:e2e:performance": "playwright install chromium && npx playwright test performance --workers=1",
     "env:e2e:performance:results": "node tests/e2e/performance/results.js"
   }
 }
