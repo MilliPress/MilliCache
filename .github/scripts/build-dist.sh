@@ -46,7 +46,13 @@ done
 
 composer install --no-dev --no-interaction --no-scripts --prefer-dist --working-dir=dist
 
-(cd dist && php bin/strauss.phar -q)
+# Strauss bundles its own (older) Composer, which loads the global
+# github-oauth token that setup-php injects on CI. Recent Actions
+# GITHUB_TOKEN formats trip that Composer's token validation ("contains
+# invalid characters"), aborting Strauss before it does any work — a
+# silent exit 1 under -q. Strauss needs no network here (packages are
+# already vendored), so hand it a throwaway, auth-free COMPOSER_HOME.
+(cd dist && COMPOSER_HOME="$(mktemp -d)" php bin/strauss.phar -q)
 
 sed -i 's/namespace MilliRules\\Builders;/namespace MilliCache\\Deps\\MilliRules\\Builders;/' dist/stubs/*.php
 
