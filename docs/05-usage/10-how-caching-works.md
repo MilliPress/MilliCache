@@ -216,6 +216,7 @@ X-MilliCache-Status: hit
 - WP-CLI commands
 - Pages with `DONOTCACHEPAGE` constant
 - Requests matching excluded cookies/paths
+- Responses larger than 5MB (raw size, before compression)
 
 ## Cache Key Components
 

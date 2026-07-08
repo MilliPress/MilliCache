@@ -193,6 +193,7 @@ Error: Permission denied [unix:///var/run/redis/redis.sock]
    - **Excluded cookie?** Check `MC_CACHE_NOCACHE_COOKIES`
    - **Excluded path?** Check `MC_CACHE_NOCACHE_PATHS`
    - **TTL = 0?** Check `MC_CACHE_TTL`
+   - **Oversized response?** Responses larger than 5MB (before compression) are never stored
 
 4. **Verify WP_CACHE:**
    ```bash
