@@ -1,6 +1,7 @@
 /deps/
 /vendor/
 /artifacts/
+/dist/
 node_modules/
 .phpunit.cache/
 
