@@ -8,6 +8,11 @@ menu_order: 30
 
 ## [1.7.0-beta.6](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.5...v1.7.0-beta.6) (2026-07-08)
 
+<!-- mc:auto sha=bb2a617acc59 -->
+This release fixes a significant stale-while-revalidate bug where background regeneration was capturing and storing serve-time headers — including injected `Age`, collapsed `Link` sets, and `Cache-Control: no-cache` — causing regenerated entries to replay `no-cache` forever and remain edge-uncached. The fix scrubs per-hop headers before storage, reuses the original entry's clean headers as the regeneration base, and introduces a new `millicache_entry_headers` filter at the single store chokepoint so extensions can contribute headers derived from the authoritative flag set.
+
+On the features side, cache hits now emit an `Age` header per RFC 9111, letting downstream shared caches (CDN edges) correctly subtract elapsed time from the freshness window. The Status page gains an informational check tier for neutral facts and opted-out features, checks are now ordered by severity, and the modal tab bar stays pinned while content scrolls. The updater now evaluates the `millicache_updates` filter at check time rather than construction time — honoring filters registered in `functions.php` or mu-plugins — and a new `MC_UPDATE_PRERELEASE` constant lets sites opt in to prerelease builds. The drop-in `advanced-cache.php` no longer appears in the regular plugins list after its `Plugin Name` header was removed.
+<!-- /mc:auto -->
 
 ### Features
 
