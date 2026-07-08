@@ -186,8 +186,8 @@ final class Manager {
 	/**
 	 * Create and store cache entry.
 	 *
-	 * Single storage path for all consumers. Validates status and headers,
-	 * creates the entry, compresses, and stores it.
+	 * Single storage path for all consumers. Validates status, size, and
+	 * headers, creates the entry, compresses, and stores it.
 	 *
 	 * @since 1.0.0
 	 *
@@ -219,6 +219,15 @@ final class Manager {
 			return array(
 				'cached' => false,
 				'reason' => $status_check['reason'],
+			);
+		}
+
+		// Check if the response size allows caching.
+		$size_check = $this->writer->validate_size( strlen( $output ) );
+		if ( ! $size_check['cacheable'] ) {
+			return array(
+				'cached' => false,
+				'reason' => $size_check['reason'],
 			);
 		}
 

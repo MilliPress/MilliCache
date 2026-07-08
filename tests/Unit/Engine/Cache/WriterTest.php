@@ -52,6 +52,36 @@ describe('Writer', function () {
 		});
 	});
 
+	describe('validate_size', function () {
+		it('allows caching below the size limit', function () {
+			$result = $this->writer->validate_size(1024);
+
+			expect($result['cacheable'])->toBeTrue();
+			expect($result['reason'])->toBe('');
+		});
+
+		it('allows caching exactly at the size limit', function () {
+			$result = $this->writer->validate_size(Writer::MAX_ENTRY_SIZE);
+
+			expect($result['cacheable'])->toBeTrue();
+		});
+
+		it('disallows caching above the size limit', function () {
+			$result = $this->writer->validate_size(Writer::MAX_ENTRY_SIZE + 1);
+
+			expect($result['cacheable'])->toBeFalse();
+			expect($result['reason'])->toContain('exceeds');
+		});
+
+		it('reports both sizes in the reason', function () {
+			$result = $this->writer->validate_size(42 * 1048576);
+
+			expect($result['cacheable'])->toBeFalse();
+			expect($result['reason'])->toContain('42.0MB');
+			expect($result['reason'])->toContain('5MB');
+		});
+	});
+
 	describe('validate_headers', function () {
 		it('keeps ordinary response headers, including repeated ones', function () {
 			$result = $this->writer->validate_headers(array(

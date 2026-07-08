@@ -177,6 +177,15 @@ describe('Handler', function () {
 			expect($result['reason'])->toBe('Server error response');
 		});
 
+		it('does not cache responses above the size limit', function () {
+			$output = str_repeat('a', Writer::MAX_ENTRY_SIZE + 1);
+
+			$result = $this->handler->cache_output('hash', $output, array(), 200, array());
+
+			expect($result['cached'])->toBeFalse();
+			expect($result['reason'])->toContain('exceeds');
+		});
+
 		it('includes custom TTL and grace', function () {
 			$output = '<html>Test</html>';
 
