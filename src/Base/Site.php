@@ -163,9 +163,10 @@ final class Site extends Manager {
 				'buttons'    => array( $this->clear_cache_button() ),
 				'menu_items' => array(
 					array(
-						'label' => __( 'Get Help', 'millicache' ),
-						'icon'  => 'lifesaver',
-						'url'   => self::SUPPORT_URL,
+						'label'    => __( 'Get Help', 'millicache' ),
+						'icon'     => 'lifesaver',
+						'url'      => self::SUPPORT_URL,
+						'position' => 110,
 					),
 				),
 			),
