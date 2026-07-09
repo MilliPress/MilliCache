@@ -547,7 +547,7 @@ final class StatusBuilder {
 				'status'      => $max_mem_ok ? 'good' : 'recommended',
 				'description' => $max_mem_ok
 					? __( 'A maxmemory limit is configured. The storage server can evict entries when full.', 'millicache' )
-					: __( 'No maxmemory limit is set on the storage server. Without one, the cache can grow until it crowds out other workloads on the host.', 'millicache' ),
+					: __( 'No maxmemory limit is set on the storage server. Without one, the cache can grow until it crowds out other workloads on the host. Set one live with <code>redis-cli CONFIG SET maxmemory 512mb</code>, or run the same command inside <code>wp millicache cli</code>.', 'millicache' ),
 				'value'       => is_string( $memory['maxmemory_human'] ?? null ) ? $memory['maxmemory_human'] : 'n/a',
 				'url'         => $mem_docs,
 			);
@@ -561,7 +561,7 @@ final class StatusBuilder {
 				'status'      => $policy_ok ? 'good' : 'recommended',
 				'description' => $policy_ok
 					? __( 'The storage server is configured with allkeys-lru, the recommended policy for a cache workload.', 'millicache' )
-					: __( 'For a cache workload, allkeys-lru is recommended so the server can automatically evict least-recently-used entries when full.', 'millicache' ),
+					: __( 'For a cache workload, allkeys-lru is recommended so the server can automatically evict least-recently-used entries when full. Set it live with <code>redis-cli CONFIG SET maxmemory-policy allkeys-lru</code>, or run the same command inside <code>wp millicache cli</code>.', 'millicache' ),
 				'value'       => is_string( $policy ) ? $policy : 'n/a',
 				'url'         => $policy_docs,
 			);

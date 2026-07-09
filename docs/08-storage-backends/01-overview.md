@@ -190,13 +190,45 @@ requirepass your-strong-password
 
 ### Memory Sizing
 
-| Site Size | Recommended Memory |
-|-----------|-------------------|
-| Small (< 100 pages) | 64 MB |
-| Medium (100-1000 pages) | 128-256 MB |
-| Large (1000+ pages) | 512 MB+ |
+| Site Size               | Recommended Memory  |
+|-------------------------|---------------------|
+| Small (< 100 pages)     | 64 MB               |
+| Medium (100-1000 pages) | 128-256 MB          |
+| Large (1000+ pages)     | 512 MB+             |
 
 The `allkeys-lru` eviction policy automatically removes least-recently-used entries when memory is full.
+
+### Applying Settings at Runtime
+
+You don't have to edit the Redis configuration file to change these. The memory
+limit and eviction policy can both be applied live with `CONFIG SET`, with no
+restart:
+
+```bash
+redis-cli CONFIG SET maxmemory 512mb
+redis-cli CONFIG SET maxmemory-policy allkeys-lru
+```
+
+To target the exact server MilliCache is configured to use (host, port,
+database, and password) without looking those details up, open a session with
+`wp millicache cli` and run the commands there:
+
+```bash
+wp millicache cli
+127.0.0.1:6379> CONFIG SET maxmemory 512mb
+127.0.0.1:6379> CONFIG SET maxmemory-policy allkeys-lru
+127.0.0.1:6379> quit
+```
+
+`CONFIG SET` takes effect immediately but is lost on the next Redis restart. To
+make the change permanent, either add the same directives to your Redis
+configuration file, or run `CONFIG REWRITE` to write the running configuration
+back to that file (this requires Redis to already be started from a config
+file):
+
+```bash
+redis-cli CONFIG REWRITE
+```
 
 ## Testing Your Connection
 
