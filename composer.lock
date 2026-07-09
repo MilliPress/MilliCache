@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d414c64914b21b46084c66b9ccd36d31",
+    "content-hash": "3acaa9622c86b96c998ef439a1bc6e1c",
     "packages": [
         {
             "name": "millipress/millibase",
-            "version": "v2.6.7",
+            "version": "v2.6.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/MilliPress/MilliBase.git",
-                "reference": "00ce1f53c9474622d4df798eb3bfc85c14b8c8da"
+                "reference": "53576b59d1d4853d5391fcc774923a6038ce3934"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/MilliPress/MilliBase/zipball/00ce1f53c9474622d4df798eb3bfc85c14b8c8da",
-                "reference": "00ce1f53c9474622d4df798eb3bfc85c14b8c8da",
+                "url": "https://api.github.com/repos/MilliPress/MilliBase/zipball/53576b59d1d4853d5391fcc774923a6038ce3934",
+                "reference": "53576b59d1d4853d5391fcc774923a6038ce3934",
                 "shasum": ""
             },
             "require": {
@@ -73,9 +73,9 @@
             "description": "Declarative WordPress settings framework. Define your settings page in PHP arrays — sections, fields, tabs, validation — and get a React UI automatically.",
             "support": {
                 "issues": "https://github.com/MilliPress/MilliBase/issues",
-                "source": "https://github.com/MilliPress/MilliBase/tree/v2.6.7"
+                "source": "https://github.com/MilliPress/MilliBase/tree/v2.6.8"
             },
-            "time": "2026-07-08T14:12:07+00:00"
+            "time": "2026-07-09T20:31:50+00:00"
         },
         {
             "name": "millipress/millirules",
@@ -3314,18 +3314,18 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "f3cd286075d77e060417bf42edcc29917deab05e"
+                "reference": "b0ff8a841002c8ff71a23d0b100a7a24fd54ba18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/f3cd286075d77e060417bf42edcc29917deab05e",
-                "reference": "f3cd286075d77e060417bf42edcc29917deab05e",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/b0ff8a841002c8ff71a23d0b100a7a24fd54ba18",
+                "reference": "b0ff8a841002c8ff71a23d0b100a7a24fd54ba18",
                 "shasum": ""
             },
             "conflict": {
                 "3f/pygmentize": "<1.2",
                 "adaptcms/adaptcms": "<=1.3",
-                "admidio/admidio": "<=5.0.9",
+                "admidio/admidio": "<=5.0.11",
                 "adodb/adodb-php": "<=5.22.9",
                 "aheinze/cockpit": "<2.2",
                 "aimeos/ai-admin-graphql": ">=2022.04.1,<2022.10.10|>=2023.04.1,<2023.10.6|>=2024.04.1,<2024.07.2",
@@ -3443,7 +3443,7 @@
                 "clickstorm/cs-seo": ">=6,<6.8|>=7,<7.5|>=8,<8.4|>=9,<9.3",
                 "co-stack/fal_sftp": "<0.2.6",
                 "cockpit-hq/cockpit": "<=2.14",
-                "code16/sharp": "<9.22",
+                "code16/sharp": "<9.22.3",
                 "codeception/codeception": "<3.1.3|>=4,<4.1.22",
                 "codeigniter/framework": "<3.1.10",
                 "codeigniter4/framework": "<4.7.2",
@@ -4235,7 +4235,7 @@
                 "twig/intl-extra": "<3.26",
                 "twig/markdown-extra": "<3.26",
                 "twig/twig": "<3.27",
-                "typicms/core": "<16.1.7",
+                "typicms/core": "<12.0.5|>=13,<13.0.9|>=14,<14.0.27|>=15,<15.0.29|>=16,<16.1.7",
                 "typo3/cms": "<9.5.29|>=10,<10.4.35|>=11,<11.5.23|>=12,<12.2",
                 "typo3/cms-backend": "<10.4.57|>=11,<11.5.51|>=12,<12.4.46|>=13,<13.4.31|>=14,<14.3.3",
                 "typo3/cms-belog": ">=10,<=10.4.47|>=11,<=11.5.41|>=12,<=12.4.24|>=13,<=13.4.2",
@@ -4424,7 +4424,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-08T02:37:08+00:00"
+            "time": "2026-07-09T17:55:12+00:00"
         },
         {
             "name": "sebastian/cli-parser",
