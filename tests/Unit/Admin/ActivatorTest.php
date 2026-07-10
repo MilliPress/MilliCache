@@ -106,9 +106,10 @@ describe( 'Activator', function () {
 			}
 		} );
 
-		it( 'activate method takes no parameters', function () {
+		it( 'activate method takes one optional source dir', function () {
 			$method = new ReflectionMethod( Activator::class, 'activate' );
-			expect( $method->getNumberOfParameters() )->toBe( 0 );
+			expect( $method->getNumberOfParameters() )->toBe( 1 );
+			expect( $method->getNumberOfRequiredParameters() )->toBe( 0 );
 		} );
 
 		it( 'schedule_events returns void', function () {

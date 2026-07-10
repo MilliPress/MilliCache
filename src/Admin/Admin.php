@@ -141,6 +141,48 @@ final class Admin {
 		$this->loader->add_filter( 'dashboard_glance_items', $this, 'add_dashboard_glance_cache_size', 999 );
 		$this->loader->add_action( 'millicache_cache_storing', $this, 'delete_cache_size_transient' );
 		$this->loader->add_action( 'millicache_cache_deleted', $this, 'delete_cache_size_transient' );
+
+		// Drop-in self-heal.
+		$this->loader->add_action( 'activated_plugin', $this, 'heal_dropin' );
+		$this->loader->add_action( 'deactivated_plugin', $this, 'heal_dropin' );
+		$this->loader->add_action( 'upgrader_process_complete', $this, 'heal_dropin' );
+	}
+
+	/**
+	 * Re-point the advanced-cache.php drop-in at the loaded MilliCache copy.
+	 *
+	 * Plugin (de)activations and updates are the moments the responsible copy
+	 * can change, or a stale drop-in from a removed copy can surface; healing
+	 * on those events keeps regular requests free of filesystem checks.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param mixed $plugin The toggled plugin's basename ((de)activated_plugin),
+	 *                      or the upgrader instance (upgrader_process_complete).
+	 * @return void
+	 */
+	public function heal_dropin( $plugin = '' ): void {
+		// The toggled copy's own (de)activator is authoritative.
+		if ( is_string( $plugin ) && '' !== $plugin
+			&& file_exists( WP_PLUGIN_DIR . '/' . dirname( $plugin ) . '/advanced-cache.php' )
+		) {
+			return;
+		}
+
+		// Constants claimed by a since-deactivated standalone are stale;
+		// the successor's own activation wires the drop-in.
+		if ( defined( 'MILLICACHE_BASENAME' ) && substr_count( MILLICACHE_BASENAME, '/' ) <= 1 ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+			if ( ! is_plugin_active( MILLICACHE_BASENAME ) ) {
+				return;
+			}
+		}
+
+		// DropIn may resolve from an older co-resident copy.
+		if ( method_exists( DropIn::class, 'heal' ) ) {
+			DropIn::heal();
+		}
 	}
 
 	/**

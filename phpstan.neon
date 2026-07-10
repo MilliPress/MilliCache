@@ -31,3 +31,9 @@ parameters:
       identifier: assign.propertyType
       path: src/Admin/Admin.php
       count: 1
+    # Runtime guard against older co-resident MilliCache copies whose DropIn
+    # predates heal(); statically always-true here.
+    -
+      identifier: function.alreadyNarrowedType
+      path: src/Admin/Admin.php
+      count: 1

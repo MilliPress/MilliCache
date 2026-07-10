@@ -65,34 +65,22 @@ if ( file_exists( __DIR__ . '/functions.php' ) ) {
 	require_once __DIR__ . '/functions.php';
 }
 
-if ( ! function_exists( 'activate_millicache' ) ) {
-	/**
-	 * The code that runs during plugin activation.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return void
-	 */
-	function activate_millicache() {
-		\MilliCache\Admin\Activator::activate();
+/*
+ * Closures, not shared function names: with two co-resident copies each hook
+ * must install the drop-in of its own folder — __DIR__ pins that.
+ */
+register_activation_hook(
+	__FILE__,
+	static function () {
+		\MilliCache\Admin\Activator::activate( __DIR__ );
 	}
-}
-
-if ( ! function_exists( 'deactivate_millicache' ) ) {
-	/**
-	 * The code that runs during plugin deactivation.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return void
-	 */
-	function deactivate_millicache() {
+);
+register_deactivation_hook(
+	__FILE__,
+	static function () {
 		\MilliCache\Admin\Deactivator::deactivate();
 	}
-}
-
-register_activation_hook( __FILE__, 'activate_millicache' );
-register_deactivation_hook( __FILE__, 'deactivate_millicache' );
+);
 
 // Begin execution of the plugin.
 MilliCache\MilliCache::instance()->run();

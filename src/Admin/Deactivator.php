@@ -61,10 +61,14 @@ final class Deactivator {
 	}
 
 	/**
-	 * Remove the advanced-cache.php file.
+	 * Remove the advanced-cache.php file — or hand it to a successor copy.
 	 *
-	 * DropIn::remove() owns the customization safeguard; this method maps the
-	 * outcome to an admin notice.
+	 * A co-resident MilliCache copy that stays active (e.g. a bundling
+	 * extension) can claim the drop-in via `millicache_dropin_successor_dir`;
+	 * deactivation then re-points the file in one write instead of removing
+	 * it and leaving the page cache off. Without a successor,
+	 * DropIn::remove() owns the customization safeguard and this method maps
+	 * the outcome to an admin notice.
 	 *
 	 * @since    1.0.0
 	 * @access   private
@@ -72,6 +76,21 @@ final class Deactivator {
 	 * @return   void
 	 */
 	private static function remove_advanced_cache_file() {
+		/**
+		 * Filters the folder of the MilliCache copy taking over the drop-in.
+		 *
+		 * @since 1.7.0
+		 *
+		 * @param string $successor_dir Plugin folder containing advanced-cache.php,
+		 *                              or empty string to remove the drop-in.
+		 */
+		$successor = apply_filters( 'millicache_dropin_successor_dir', '' );
+
+		if ( $successor && is_readable( $successor . '/advanced-cache.php' ) ) {
+			DropIn::install( 'advanced-cache.php', $successor, true );
+			return;
+		}
+
 		switch ( DropIn::remove() ) {
 			case 'removed':
 				Admin::add_notice( __( 'MilliCache deactivated & advanced-cache.php removed.', 'millicache' ), 'success' );
