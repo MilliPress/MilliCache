@@ -8,6 +8,9 @@ menu_order: 30
 
 ## [1.7.0-beta.7](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.6...v1.7.0-beta.7) (2026-07-10)
 
+<!-- mc:auto sha=19d754483250 -->
+Multi-copy installations — where MilliCache and a bundling plugin such as MilliCache Pro are active side-by-side — now hand off `advanced-cache.php` cleanly instead of leaving it in a broken state. Deactivating one copy re-points the drop-in to whichever sibling is still active, activation installs the drop-in belonging to the copy actually being activated, and a new self-heal step corrects a stale drop-in automatically after any plugin activation, deactivation, or update.
+<!-- /mc:auto -->
 
 ### Features
 
