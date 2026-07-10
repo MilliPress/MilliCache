@@ -54,8 +54,6 @@ composer install --no-dev --no-interaction --no-scripts --prefer-dist --working-
 # already vendored), so hand it a throwaway, auth-free COMPOSER_HOME.
 (cd dist && COMPOSER_HOME="$(mktemp -d)" php bin/strauss.phar -q)
 
-sed -i 's/namespace MilliRules\\Builders;/namespace MilliCache\\Deps\\MilliRules\\Builders;/' dist/stubs/*.php
-
 jq '.autoload.classmap = ["deps/"]' dist/composer.json > dist/composer.json.tmp \
   && mv dist/composer.json.tmp dist/composer.json
 
