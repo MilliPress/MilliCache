@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3acaa9622c86b96c998ef439a1bc6e1c",
+    "content-hash": "66db32295326e47ddf97dabad62ecfbb",
     "packages": [
         {
             "name": "millipress/millibase",
@@ -79,16 +79,16 @@
         },
         {
             "name": "millipress/millirules",
-            "version": "v1.1.6",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/MilliPress/MilliRules.git",
-                "reference": "07c604cbf5f630c5a43a0f7a71e6fab21662c90a"
+                "reference": "3ac0e0fed72462824942646c54d098fbc60bc523"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/MilliPress/MilliRules/zipball/07c604cbf5f630c5a43a0f7a71e6fab21662c90a",
-                "reference": "07c604cbf5f630c5a43a0f7a71e6fab21662c90a",
+                "url": "https://api.github.com/repos/MilliPress/MilliRules/zipball/3ac0e0fed72462824942646c54d098fbc60bc523",
+                "reference": "3ac0e0fed72462824942646c54d098fbc60bc523",
                 "shasum": ""
             },
             "require": {
@@ -141,9 +141,9 @@
             "description": "A declarative rule engine for PHP that turns complex conditional logic into readable when-then rules. Features a fluent builder API, lazy-loaded context for performance, smart operator inference, and works seamlessly in pure PHP or WordPress.",
             "support": {
                 "issues": "https://github.com/MilliPress/MilliRules/issues",
-                "source": "https://github.com/MilliPress/MilliRules/tree/v1.1.6"
+                "source": "https://github.com/MilliPress/MilliRules/tree/v1.2.0"
             },
-            "time": "2026-05-28T20:51:17+00:00"
+            "time": "2026-07-10T10:05:23+00:00"
         },
         {
             "name": "predis/predis",
@@ -3314,12 +3314,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "b0ff8a841002c8ff71a23d0b100a7a24fd54ba18"
+                "reference": "b2e645043972cdf13f7b82d2af54365ab4f678e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/b0ff8a841002c8ff71a23d0b100a7a24fd54ba18",
-                "reference": "b0ff8a841002c8ff71a23d0b100a7a24fd54ba18",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/b2e645043972cdf13f7b82d2af54365ab4f678e1",
+                "reference": "b2e645043972cdf13f7b82d2af54365ab4f678e1",
                 "shasum": ""
             },
             "conflict": {
@@ -3359,8 +3359,10 @@
                 "aoe/restler": "<1.7.1",
                 "apache-solr-for-typo3/solr": "<2.8.3",
                 "apereo/phpcas": "<1.6",
-                "api-platform/core": "<3.4.17|>=4,<4.0.22|>=4.1,<4.1.5",
+                "api-platform/core": "<4.1.29|>=4.2,<4.2.25|>=4.3,<4.3.8",
                 "api-platform/graphql": "<3.4.17|>=4,<4.0.22|>=4.1,<4.1.5",
+                "api-platform/hal": ">=4,<4.1.29|>=4.2,<4.2.25|>=4.3,<4.3.8",
+                "api-platform/json-api": ">=4,<4.1.29|>=4.2,<4.2.25|>=4.3,<4.3.8",
                 "appwrite/server-ce": "<=1.2.1",
                 "arc/web": "<3",
                 "area17/twill": "<1.2.5|>=2,<2.5.3",
@@ -4144,7 +4146,7 @@
                 "sylius/grid-bundle": "<1.10.1",
                 "sylius/paypal-plugin": "<1.6.2|>=1.7,<1.7.2|>=2,<2.0.2",
                 "sylius/resource-bundle": ">=1,<1.3.14|>=1.4,<1.4.7|>=1.5,<1.5.2|>=1.6,<1.6.4",
-                "sylius/sylius": "<1.9.12|>=1.10,<1.10.16|>=1.11,<1.11.17|>=1.12,<=1.12.22|>=1.13,<=1.13.14|>=1.14,<=1.14.17|>=2,<=2.0.15|>=2.1,<=2.1.11|>=2.2,<=2.2.2",
+                "sylius/sylius": "<1.9.12|>=1.10,<1.10.16|>=1.11,<1.11.17|>=1.12,<=1.12.22|>=1.13,<=1.13.14|>=1.14,<=1.14.17|>=2,<2.0.18|>=2.1,<2.1.15|>=2.2,<2.2.6",
                 "symbiote/silverstripe-advancedworkflow": "<6.4.5|>=7,<7.1.3|>=7.2,<7.2.1",
                 "symbiote/silverstripe-multivaluefield": ">=3,<3.1",
                 "symbiote/silverstripe-queuedjobs": ">=3,<3.0.2|>=3.1,<3.1.4|>=4,<4.0.7|>=4.1,<4.1.2|>=4.2,<4.2.4|>=4.3,<4.3.3|>=4.4,<4.4.3|>=4.5,<4.5.1|>=4.6,<4.6.4",
@@ -4316,6 +4318,7 @@
                 "winter/wn-system-module": "<1.2.4",
                 "wintercms/winter": "<=1.2.3",
                 "wireui/wireui": "<1.19.3|>=2,<2.1.3",
+                "wnx/laravel-backup-restore": "<=1.9.3",
                 "woocommerce/woocommerce": "<6.6|>=8.8,<8.8.5|>=8.9,<8.9.3",
                 "wp-cli/wp-cli": ">=0.12,<2.5",
                 "wp-graphql/wp-graphql": "<=1.14.5",
@@ -4329,7 +4332,7 @@
                 "xpressengine/xpressengine": "<3.0.15",
                 "yab/quarx": "<2.4.5",
                 "yansongda/pay": "<=3.7.19",
-                "yeswiki/yeswiki": "<4.6.4",
+                "yeswiki/yeswiki": "<4.6.6",
                 "yetiforce/yetiforce-crm": "<6.5",
                 "yidashi/yii2cmf": "<=2",
                 "yii2mod/yii2-cms": "<1.9.2",
@@ -4424,7 +4427,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-09T17:55:12+00:00"
+            "time": "2026-07-10T16:24:10+00:00"
         },
         {
             "name": "sebastian/cli-parser",
