@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.0-beta.7](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.6...v1.7.0-beta.7) (2026-07-10)
+
+
+### Features
+
+* hand the advanced-cache.php drop-in between co-resident MilliCache copies ([80d5ab9](https://github.com/MilliPress/MilliCache/commit/80d5ab9b56f496b1549afd6c621ed5c00ff42673))
+
 ## [1.7.0-beta.6](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.5...v1.7.0-beta.6) (2026-07-08)
 
 <!-- mc:auto sha=e82d844d39a5 -->
