@@ -731,10 +731,6 @@ final class StatusBuilder {
 			'weight' => 40,
 		);
 
-		// Rotating Pro teaser — one random line per Status load. `%PRO%` is a
-		// non-printf token (not `%s`) the React side splices with the linked
-		// label, so no line needs its own translators comment. Hidden when Pro
-		// is active so owners aren't upsold what they already have.
 		if ( ! defined( 'MILLICACHE_PRO_VERSION' ) ) {
 			$teasers = array(
 				// Value / performance.
