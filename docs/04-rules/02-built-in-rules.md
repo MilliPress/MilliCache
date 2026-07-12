@@ -64,6 +64,7 @@ Unlocked — can be overridden by custom rules at order `2+`:
 
 | Rule ID                              | Condition                | Result |
 |--------------------------------------|--------------------------|--------|
+| `millicache:wp:search`               | Search results page      | Bypass |
 | `millicache:wp:logged-in`            | User is logged in        | Bypass |
 | `millicache:wp:response:code`        | HTTP status ≠ 200        | Bypass |
 | `millicache:wp:const:donotcachepage` | `DONOTCACHEPAGE` defined | Bypass |
