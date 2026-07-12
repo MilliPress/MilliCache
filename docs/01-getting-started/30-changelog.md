@@ -8,6 +8,11 @@ menu_order: 30
 
 ## [1.7.0-beta.8](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.7...v1.7.0-beta.8) (2026-07-12)
 
+<!-- mc:auto sha=c92544f4a49d -->
+Search results are now bypassed by default — visitor-controlled search terms create one cache entry per distinct query, an unbounded key space with a poor hit ratio that bots can exploit to evict valuable pages. The new `millicache:wp:search` rule is unlocked, so you can override it with a custom rule of the same ID if you want search results cached. Entries cached before upgrading are served until they expire; clear the cache to drop them immediately.
+
+The Status tab and WordPress Site Health checks have both been overhauled. Status checks now display as a plain subject ("WP_CACHE constant") with a separate verdict pill ("Enabled"), so a failing check can no longer show a contradictory label. Site Health now runs the same unified checks as the Status tab, so storage issues, memory policy problems, and issues from Pro modules are all surfaced — not only the drop-in, `WP_CACHE`, and storage connection. Package versions in the debug info are also cleaned up (no more four-segment Composer padding or `v` prefix).
+<!-- /mc:auto -->
 
 ### Features
 
