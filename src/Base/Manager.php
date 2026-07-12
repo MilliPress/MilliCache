@@ -200,7 +200,7 @@ abstract class Manager {
 	 *
 	 * @since 1.7.0
 	 *
-	 * @return array<string, string>
+	 * @return array<string, string|int>
 	 */
 	protected function status_tab(): array {
 		return array(
@@ -208,6 +208,7 @@ abstract class Manager {
 			'title'     => __( 'Status', 'millicache' ),
 			'type'      => 'custom',
 			'component' => 'MilliCacheStatus',
+			'position'  => 10,
 		);
 	}
 

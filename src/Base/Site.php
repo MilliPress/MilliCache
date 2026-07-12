@@ -180,6 +180,7 @@ final class Site extends Manager {
 				array(
 					'name'     => 'settings',
 					'title'    => __( 'Settings', 'millicache' ),
+					'position' => 90,
 					'sections' => Multisite::is_enabled()
 						? array( Sections\Cache::config() )
 						: array( Sections\Storage::config(), Sections\Cache::config() ),

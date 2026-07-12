@@ -169,6 +169,7 @@ final class Network extends Manager {
 				array(
 					'name'     => 'settings',
 					'title'    => __( 'Settings', 'millicache' ),
+					'position' => 90,
 					'sections' => array( Sections\Storage::config() ),
 				),
 			),
