@@ -6,6 +6,22 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.0-beta.8](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.7...v1.7.0-beta.8) (2026-07-12)
+
+
+### Features
+
+* **rules:** skip caching search result pages by default ([4bf4be3](https://github.com/MilliPress/MilliCache/commit/4bf4be35f1f02ef6a1a1a13a255bbb0bc358f795))
+* **settings:** order the settings tabs by declared position ([d8f208a](https://github.com/MilliPress/MilliCache/commit/d8f208a97f3169a9f7df1a2b6c7f93d17f8000ec))
+* **site-health:** surface every status issue, not just the drop-in ([7a2d793](https://github.com/MilliPress/MilliCache/commit/7a2d7934d68019ed8d45329a3dab956cf07ef748))
+* **status:** show each check as a subject and a verdict ([f863b98](https://github.com/MilliPress/MilliCache/commit/f863b98d0570c6d33dee25ddf7667fdaf55db787))
+
+
+### Bug Fixes
+
+* **status:** call the deduplication count unique responses, not pages ([52447f9](https://github.com/MilliPress/MilliCache/commit/52447f9dbdc27c0c60cc54e639c177c2a3d78485))
+* **status:** show clean package versions in the debug info ([4deacaf](https://github.com/MilliPress/MilliCache/commit/4deacaf0de21a07fb3524a6b909fa18651f776e7))
+
 ## [1.7.0-beta.7](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.6...v1.7.0-beta.7) (2026-07-10)
 
 <!-- mc:auto sha=19d754483250 -->
