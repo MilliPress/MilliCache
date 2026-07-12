@@ -8,6 +8,23 @@ menu_order: 30
 
 ## [1.7.0](https://github.com/MilliPress/MilliCache/compare/v1.6.2...v1.7.0) (2026-07-12)
 
+MilliCache 1.7.0 is a big step forward. The full feature list is long, so here are the highlights:
+
+**Redis Replication & Sentinel**
+MilliCache now supports high-availability setups. For most sites we still recommend simply running Redis or Valkey on the host server, but larger projects that need a more resilient topology are now covered.
+
+**Status Graphs**
+You can finally see how your cache is actually performing. A rebuilt Status dashboard charts your hit and miss ratio over time, so you can tell at a glance whether the cache is doing its job. On Multisite you also get network-wide stats.
+
+**Cache Buckets**
+Store different versions of the same request, for example based on a request header. This is really handy with plugins like roots/post-content-to-markdown, where you want to cache and serve different responses for the same URL: HTML for humans, Markdown for AI. In MilliCache that's a single rule.
+
+**Deduplication**
+Byte-identical responses are stored only once. MilliCache content-addresses each response body, so any requests that produce the exact same HTML (whether it's /?foo and /?foo=bar, or two entirely different URLs) share a single stored copy in Redis. Less memory, same speed.
+
+**Cache Health**
+Beyond the graphs, MilliCache now integrates with WordPress Site Health, so issues surface where you'd expect them: you won't miss it if, for example, your drop-in file is not in place.
+
 
 ### Features
 
