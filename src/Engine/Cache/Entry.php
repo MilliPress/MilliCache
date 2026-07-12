@@ -71,6 +71,13 @@ final class Entry {
 	public int $updated;
 
 	/**
+	 * Pre-compression body length in bytes (for gzip + dedup savings reporting).
+	 *
+	 * @var int
+	 */
+	public int $size_raw;
+
+	/**
 	 * Custom TTL for this specific entry (optional).
 	 *
 	 * @var int|null
@@ -85,11 +92,8 @@ final class Entry {
 	public ?int $custom_grace;
 
 	/**
-	 * Variant dimensions that differentiate this entry (optional).
-	 *
-	 * Contains cookie names and unique variables that caused this
-	 * cache entry to be stored separately from the default variant.
-	 * Null when this is the default (anonymous, no unique vars) variant.
+	 * Variant dimensions (cookies/vars) that stored this entry separately from
+	 * the default variant; null for the default.
 	 *
 	 * @var array<string,mixed>|null
 	 */
@@ -100,15 +104,16 @@ final class Entry {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string                   $output       Cached HTML/content.
-	 * @param string                   $url          Human-readable URL identifying this entry.
-	 * @param array<string>            $headers      HTTP headers.
-	 * @param int                      $status       HTTP status code.
-	 * @param bool                     $gzip         Is content gzipped.
-	 * @param int                      $updated      Timestamp when cached.
-	 * @param int|null                 $custom_ttl   Custom TTL override.
-	 * @param int|null                 $custom_grace Custom grace override.
-	 * @param array<string,mixed>|null $variant      Variant dimensions.
+	 * @param string                       $output        Cached HTML/content.
+	 * @param string                       $url           Human-readable URL identifying this entry.
+	 * @param array<string>                $headers       HTTP headers.
+	 * @param int                          $status        HTTP status code.
+	 * @param bool                         $gzip          Is content gzipped.
+	 * @param int                          $updated       Timestamp when cached.
+	 * @param int|null                     $custom_ttl    Custom TTL override.
+	 * @param int|null                     $custom_grace  Custom grace override.
+	 * @param array<array-key, mixed>|null $variant       Variant dimensions.
+	 * @param int|null                     $size_raw      Pre-compression size; defaults to `strlen($output)` when null.
 	 */
 	public function __construct(
 		string $output,
@@ -119,17 +124,19 @@ final class Entry {
 		int $updated,
 		?int $custom_ttl = null,
 		?int $custom_grace = null,
-		?array $variant = null
+		?array $variant = null,
+		?int $size_raw = null
 	) {
-		$this->output       = $output;
-		$this->url          = $url;
-		$this->headers      = $headers;
-		$this->status       = $status;
-		$this->gzip         = $gzip;
-		$this->updated      = $updated;
-		$this->custom_ttl   = null !== $custom_ttl ? $custom_ttl : null;
-		$this->custom_grace = null !== $custom_grace ? $custom_grace : null;
-		$this->variant      = $variant;
+		$this->output        = $output;
+		$this->url           = $url;
+		$this->headers       = $headers;
+		$this->status        = $status;
+		$this->gzip          = $gzip;
+		$this->updated       = $updated;
+		$this->custom_ttl    = null !== $custom_ttl ? $custom_ttl : null;
+		$this->custom_grace  = null !== $custom_grace ? $custom_grace : null;
+		$this->variant       = $variant;
+		$this->size_raw = null !== $size_raw ? $size_raw : strlen( $output );
 	}
 
 	/**
@@ -150,7 +157,8 @@ final class Entry {
 			isset( $data['updated'] ) && is_numeric( $data['updated'] ) ? (int) $data['updated'] : time(),
 			isset( $data['custom_ttl'] ) && is_numeric( $data['custom_ttl'] ) ? (int) $data['custom_ttl'] : null,
 			isset( $data['custom_grace'] ) && is_numeric( $data['custom_grace'] ) ? (int) $data['custom_grace'] : null,
-			isset( $data['variant'] ) && is_array( $data['variant'] ) ? $data['variant'] : null
+			isset( $data['variant'] ) && is_array( $data['variant'] ) ? $data['variant'] : null,
+			isset( $data['size_raw'] ) && is_numeric( $data['size_raw'] ) ? (int) $data['size_raw'] : null
 		);
 	}
 
@@ -163,12 +171,13 @@ final class Entry {
 	 */
 	public function to_array(): array {
 		$data = array(
-			'output'  => $this->output,
-			'url'     => $this->url,
-			'headers' => $this->headers,
-			'status'  => $this->status,
-			'gzip'    => $this->gzip,
-			'updated' => $this->updated,
+			'output'        => $this->output,
+			'url'           => $this->url,
+			'headers'       => $this->headers,
+			'status'        => $this->status,
+			'gzip'          => $this->gzip,
+			'updated'       => $this->updated,
+			'size_raw'      => $this->size_raw,
 		);
 
 		if ( null !== $this->custom_ttl ) {

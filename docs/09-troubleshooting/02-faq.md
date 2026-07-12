@@ -346,6 +346,7 @@ Common bypass reasons:
 - Excluded path
 - POST request
 - Non-200 response
+- Response larger than 5MB
 
 ### Why is cache not clearing?
 

@@ -159,16 +159,35 @@ $storage->is_connected();
 $storage->get_status();
 ```
 
+#### Two-keyspace layout
+
+The Storage layer splits each cache entry into two Redis hashes plus a reference set:
+
+| Keyspace                  | Purpose                                                              |
+|---------------------------|----------------------------------------------------------------------|
+| `<prefix>:c:<hash>`       | Request entry — headers, status, flags, variant, `output_ref` (sha1) |
+| `<prefix>:o:<hash>`       | Body bytes, content-addressable, deduplicated across variants        |
+| `<prefix>:o:<hash>:refs`  | SET of request entries referencing this body                         |
+
+`set_cache()` writes the body to `o:<hash>` (no-op if present), `SADD`s the request key into the refs SET, and stores the SHA-1 in the request entry's `output` field. `get_cache()` follows the pointer to the body. `delete_cache()` decrements the refs SET; the body is GC'd when SCARD hits zero.
+
+The split is invisible at the cache-layer API: `Reader`, `Writer`, and `Manager` work with regular `Entry` value objects.
+
 ### Settings
 
-Configuration management via MilliBase, accessed through the Engine singleton.
+Configuration management via MilliBase. Each scope owns its own
+`\MilliBase\Settings` instance and the defaults that back it.
 
-**Access:** `Settings::instance()` returns a `\MilliBase\Settings` instance.
+**Access:** `Site::settings()` and `Network::settings()` each return a
+`\MilliBase\Settings` instance. On single-site, `Network::settings()`
+delegates to `Site::settings()` so callers can read `storage` from either
+without branching.
 
 ```php
-use MilliCache\Core\Settings;
+use MilliCache\Base\Network;
+use MilliCache\Base\Site;
 
-$settings = Settings::instance();
+$settings = Site::settings();
 
 // Get settings
 $ttl   = $settings->get( 'cache.ttl' );
@@ -180,6 +199,9 @@ $settings->set( 'cache.ttl', 3600 );
 // Import/Export
 $settings->export( 'cache' );
 $settings->import( $data );
+
+// Network-scoped (multisite) — `storage` lives here on multisite
+$storage = Network::settings()->get( 'storage' );
 ```
 
 ### Cache Manager

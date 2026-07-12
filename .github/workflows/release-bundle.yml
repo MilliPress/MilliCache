@@ -1,0 +1,191 @@
+name: Release Bundle (reusable)
+
+# Builds millicache.zip, uploads it to a draft release, then publishes it.
+# Optionally notifies MilliCache-Pro and updates Packagist (main-only).
+# Called by release-please.yml and release-please-next.yml.
+
+on:
+  workflow_call:
+    inputs:
+      tag_name:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+      sha:
+        required: true
+        type: string
+      prerelease:
+        required: false
+        type: boolean
+        default: false
+      notify_pro:
+        required: false
+        type: boolean
+        default: false
+      update_packagist:
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Upload Asset
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.sha }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Download performance results
+        uses: actions/download-artifact@v8
+        with:
+          name: performance-results
+          path: /tmp/performance
+        continue-on-error: true
+
+      - name: Extract release notes for current version
+        env:
+          VERSION: ${{ inputs.version }}
+          TAG_NAME: ${{ inputs.tag_name }}
+        run: |
+          CHANGELOG_PATH="docs/01-getting-started/30-changelog.md"
+
+          if [ -f "$CHANGELOG_PATH" ]; then
+            awk -v ver="$VERSION" '
+              /^## \[?[0-9]/ {
+                if (found) exit
+                if (index($0, ver)) found=1
+              }
+              found { print }
+            ' "$CHANGELOG_PATH" > /tmp/changelog.md
+
+            # Strip the polish bot's internal markers so they never reach the
+            # published release notes (they're invisible in rendered Markdown,
+            # but we keep the release body clean).
+            sed -i '/<!-- \/\?mc:auto/d' /tmp/changelog.md
+
+            if [ ! -s /tmp/changelog.md ]; then
+              echo "## ${TAG_NAME}" > /tmp/changelog.md
+            fi
+          else
+            echo "## ${TAG_NAME}" > /tmp/changelog.md
+          fi
+
+          echo "Release notes for version $VERSION:"
+          cat /tmp/changelog.md
+
+      - name: Append performance summary to changelog
+        run: |
+          if [ -f /tmp/performance/performance-results.md ]; then
+            echo "" >> /tmp/changelog.md
+            echo "" >> /tmp/changelog.md
+            cat /tmp/performance/performance-results.md >> /tmp/changelog.md
+            echo "Performance summary appended to changelog"
+          else
+            echo "No performance results found, skipping"
+          fi
+
+      - name: Build dist
+        run: ./.github/scripts/build-dist.sh
+
+      - name: Create release archive
+        run: |
+          cd dist
+          zip -rq "../millicache.zip" .
+
+      - name: Upload release asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ inputs.tag_name }}
+        run: gh release upload "$TAG_NAME" millicache.zip --clobber
+
+      - name: Update release notes with performance results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ inputs.tag_name }}
+        run: |
+          if [ -f /tmp/changelog.md ] && [ -s /tmp/changelog.md ]; then
+            gh release edit "$TAG_NAME" --notes-file /tmp/changelog.md
+            echo "Release notes updated"
+          else
+            echo "No changelog file found, skipping"
+          fi
+
+  publish:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Promote draft to published
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ inputs.tag_name }}
+          REPO: ${{ github.repository }}
+        run: gh release edit "$TAG_NAME" --repo "$REPO" --draft=false
+
+      - name: Mint App installation token for Pro dispatch
+        if: ${{ inputs.notify_pro }}
+        id: pro-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.MILLIPRESS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
+          owner: MilliPress
+          repositories: MilliCache-Pro
+
+      - name: Notify MilliCache-Pro of the new release
+        if: ${{ inputs.notify_pro }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ steps.pro-token.outputs.token }}
+          VERSION: ${{ inputs.version }}
+          TAG_NAME: ${{ inputs.tag_name }}
+        run: |
+          gh api -X POST repos/MilliPress/MilliCache-Pro/dispatches \
+            -f event_type=millicache-released \
+            -F "client_payload[version]=$VERSION" \
+            -F "client_payload[tag]=$TAG_NAME"
+
+      - name: Update Packagist
+        if: ${{ inputs.update_packagist }}
+        env:
+          PACKAGIST_API_TOKEN: ${{ secrets.PACKAGIST_API_TOKEN }}
+          REPO_URL: https://github.com/${{ github.repository }}
+        run: |
+          curl -s -X POST "https://packagist.org/api/update-package?username=ouun&apiToken=${PACKAGIST_API_TOKEN}" \
+            -d "{\"repository\":{\"url\":\"${REPO_URL}\"}}" \
+            -H "Content-Type: application/json"
+
+      - name: Release summary
+        env:
+          TAG: ${{ inputs.tag_name }}
+          VERSION: ${{ inputs.version }}
+          REPO: ${{ github.repository }}
+          LABEL: ${{ inputs.prerelease && 'Prerelease' || 'Release' }}
+          CHANNEL: ${{ inputs.prerelease && 'next (prerelease)' || 'stable' }}
+        run: |
+          {
+            echo "## ${LABEL} ${TAG} Published"
+            echo ""
+            echo "| Property | Value |"
+            echo "|----------|-------|"
+            echo "| Version | ${VERSION} |"
+            echo "| Tag | ${TAG} |"
+            echo "| Channel | ${CHANNEL} |"
+            echo ""
+            echo "[View Release](https://github.com/${REPO}/releases/tag/${TAG})"
+          } >> $GITHUB_STEP_SUMMARY

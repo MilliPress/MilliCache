@@ -43,25 +43,64 @@ add_action( 'millicache_entry_stored', function( $hash, $key, $flags, $data ) {
 Fires before a cache entry is deleted.
 
 ```php
-add_action( 'millicache_entry_deleting', function( $hash, $key, $flags ) {
-    error_log( "Deleting cache: $key" );
-}, 10, 3 );
+add_action( 'millicache_entry_deleting', function( $hash, $key, $flags, $url ) {
+    error_log( "Deleting cache: $url" );
+}, 10, 4 );
 ```
 
 #### millicache_entry_deleted
 
-Fires after a cache entry is deleted.
+Fires after a cache entry is deleted. The `$url` argument lets a listener mirror
+the eviction elsewhere (for example, purging a CDN/edge cache by URL) without
+having to resolve the hash back to a request.
 
 ```php
-add_action( 'millicache_entry_deleted', function( $hash, $key, $flags ) {
-    // Notify external systems
-    cdn_notify_purged( $key );
-}, 10, 3 );
+add_action( 'millicache_entry_deleted', function( $hash, $key, $flags, $url ) {
+    // $hash  - Cache hash
+    // $key   - Cache key
+    // $flags - Array of canonical flags (e.g. "2:post:123"), as emitted by
+    //          millicache_cache_cleared_by_flags
+    // $url   - The original request URL of the deleted entry
+
+    cdn_purge_url( $url );
+}, 10, 4 );
+```
+
+#### millicache_entry_expired
+
+Fires after a cache entry is expired (aged out) by flag, e.g. via
+`millicache()->clear()->flags( ..., $expire = true )`. Unlike deletion, the
+entry and its flag membership are preserved; only its freshness is reset, so
+the origin regenerates the response on the next request. Edge/CDN mirrors
+should treat this as a purge signal too, since the cached body is now stale.
+
+The payload matches `millicache_entry_deleted` exactly: `$hash`, `$key`,
+canonical `$flags`, and `$url`.
+
+```php
+add_action( 'millicache_entry_expired', function( $hash, $key, $flags, $url ) {
+    cdn_purge_url( $url );
+}, 10, 4 );
 ```
 
 ---
 
 ### Cache Clearing Events
+
+#### millicache_cache_cleared_by_urls
+
+Fires after cache is cleared by URLs.
+
+```php
+add_action( 'millicache_cache_cleared_by_urls', function( $urls, $expire ) {
+    // $urls   - Array of cleared URLs
+    // $expire - Whether expire mode was used
+
+    foreach ( $urls as $url ) {
+        error_log( "Cleared cache for URL: $url" );
+    }
+}, 10, 2 );
+```
 
 #### millicache_cache_cleared_by_posts
 
@@ -104,12 +143,12 @@ add_action( 'millicache_cache_cleared_by_sites', function( $site_ids, $network_i
 }, 10, 3 );
 ```
 
-#### millicache_cleared_by_networks
+#### millicache_cache_cleared_by_networks
 
 Fires after cache is cleared by network IDs.
 
 ```php
-add_action( 'millicache_cleared_by_networks', function( $network_ids, $expire ) {
+add_action( 'millicache_cache_cleared_by_networks', function( $network_ids, $expire ) {
     // $network_ids - Array of network IDs
     // $expire      - Whether expire mode was used
 }, 10, 2 );
@@ -185,6 +224,42 @@ add_filter( 'millicache_settings_defaults', function( $defaults ) {
 
 ---
 
+### Cache Entry Filters
+
+#### millicache_entry_headers
+
+Filter the response headers stored with a cache entry. Runs on every store: a fresh cache miss and a stale-while-revalidate background regeneration alike. Because it runs on regeneration too, headers derived from the entry's flags (such as edge cache tags or `Cache-Control: s-maxage`) always match the flags being persisted and cannot drift.
+
+```php
+add_filter( 'millicache_entry_headers', function( $headers, $flags, $context ) {
+    // Leave private (per-cookie/variant) entries off shared caches.
+    if ( null !== $context['variant'] ) {
+        return $headers;
+    }
+
+    // Replace it, don't append: strip the header we own before re-adding it.
+    $headers = array_values( array_filter(
+        $headers,
+        fn( $h ) => stripos( $h, 'Cache-Tag:' ) !== 0
+    ) );
+
+    $headers[] = 'Cache-Tag: ' . implode( ',', $flags );
+
+    return $headers;
+}, 10, 3 );
+```
+
+**Parameters:**
+
+- `$headers` (`string[]`) — Response headers as `"Key: Value"` strings, already scrubbed of MilliCache's own and per-hop headers.
+- `$flags` (`string[]`) — Canonical flags persisted with the entry, in the same form Redis stores minus the `<storage_prefix>:f:` key prefix. On multisite these carry the site/network prefix (e.g. `2:post:9`); on single-site they are unprefixed (e.g. `post:9`).
+- `$context` (`array`) — Store-time context: `url` (string), `variant` (array|null; non-null marks a private entry), `status` (int), `ttl` (int seconds), `grace` (int seconds).
+
+> [!IMPORTANT]
+> Listeners must be replace-not-append: strip any header they own before re-adding it, so the filter stays idempotent across the miss and regeneration passes.
+
+---
+
 ### Cache Clearing Filters
 
 #### millicache_flags_related_to_post
@@ -247,6 +322,51 @@ add_filter( 'millicache_settings_clear_site_options', function( $options ) {
     return $options;
 } );
 ```
+
+---
+
+### Bucket Extension
+
+Buckets are short canonical tokens folded into the cache key to differentiate per-request signals. MilliCache does **not** expose a runtime hook filter for buckets — `advanced-cache.php` runs before any plugin or mu-plugin loads, so a `add_filter()` callback registered on `plugins_loaded` would never run during cache lookup. The lookup hash and the write hash would diverge, producing a permanent cache miss.
+
+Buckets are extended through two paths whose timing matches MilliCache's boot order:
+
+#### Static bucket configuration
+
+Lookup tables for resolvers go in the [`MC_CACHE_BUCKETS`](../02-configuration/02-reference.md#mc_cache_buckets) constant. Read during Config construction, available when the cache key is generated.
+
+```php
+define( 'MC_CACHE_BUCKETS', [
+    'tenant' => [ 'acme' => 'acme', 'globex' => 'glx' ],
+    'ab'     => [ 'control' => 'a', 'variant' => 'b' ],
+] );
+```
+
+Defining a lookup table doesn't bucket anything by itself; a *resolver* still has to read the table and call `add_bucket()`.
+
+#### Runtime bucket extension via the rules engine
+
+For per-request bucket resolution that depends on conditions (URL match, header presence, cookie value, etc.), use the **rules engine**. Rules are evaluated during the early PHP phase, in time to influence the request hash.
+
+The `set_bucket` PHP-phase action calls into:
+
+```php
+\MilliCache\Engine\Request\Bucket\Resolver::add_bucket( string $name, string $token ): void
+```
+
+`add_bucket()` is the programmatic extension point. Programmatic additions take precedence over built-in resolutions when names collide.
+
+Example: bucket A/B test arms from a cookie:
+
+```
+Condition: cookie ab_arm matches /^[ab]$/
+Action:    set_bucket name="ab" token="{cookie:ab_arm}"
+```
+
+The rule fires per request; the action calls `$resolver->add_bucket('ab', $cookie_value)`. Cache entries for arm A and arm B stay distinct, but if the rendered HTML happens to be byte-identical they automatically share storage via the content-addressable output keyspace.
+
+> [!NOTE]
+> Regular WordPress plugins cannot extend buckets at the cache-lookup phase because they load after `advanced-cache.php`. To influence cache differentiation, ship a settings update (extending `MC_CACHE_BUCKETS`) or register rules.
 
 ---
 
@@ -355,6 +475,26 @@ add_filter( 'millicache_rest_status_response', function( $status ) {
     return $status;
 } );
 ```
+
+---
+
+### Update Filters
+
+#### millicache_updates
+
+Filter whether MilliCache checks MilliPress.com for plugin updates. Return
+`false` to disable update checks entirely, which stops the remote request and
+hides the update notice on the Plugins screen.
+
+The filter is evaluated at update-check time (when WordPress refreshes the
+`update_plugins` transient), so it can be added from a theme's `functions.php`
+or another plugin and still be honored.
+
+```php
+add_filter( 'millicache_updates', '__return_false' );
+```
+
+**Default:** `true`
 
 ---
 

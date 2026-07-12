@@ -135,6 +135,22 @@ describe( 'State', function () {
 		} );
 	} );
 
+	describe( 'regen headers', function () {
+		it( 'returns null before any headers are stashed', function () {
+			expect( State::create( 'h' )->get_regen_headers() )->toBeNull();
+		} );
+
+		it( 'stashes headers on a new immutable instance', function () {
+			$context = State::create( 'h' );
+			$headers = array( 'Content-Type: text/html', 'Cache-Tag: 2:home' );
+			$with    = $context->with_regen_headers( $headers );
+
+			expect( $with->get_regen_headers() )->toBe( $headers );
+			expect( $context->get_regen_headers() )->toBeNull();
+			expect( spl_object_hash( $context ) )->not->toBe( spl_object_hash( $with ) );
+		} );
+	} );
+
 	describe( 'chaining', function () {
 		it( 'allows chaining multiple modifications', function () {
 			$context = State::create( 'test-hash' )

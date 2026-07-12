@@ -111,8 +111,8 @@ final class Admin {
 	 * @return   void
 	 */
 	private function load_dependencies() {
-		new Adminbar( $this->loader, $this->engine );
-		new UI( $this->engine, $this->plugin_name, $this->version );
+		new Adminbar( $this->loader );
+		new UI( $this->loader, $this->engine, $this->plugin_name, $this->version );
 	}
 
 	/**
@@ -134,16 +134,62 @@ final class Admin {
 		$this->loader->add_action( 'admin_init', $this, 'undefined_cache_notice' );
 
 		// Notices.
+		$this->loader->add_action( 'millicache_admin_notice', $this, 'add_notice', 10, 2 );
 		$this->loader->add_action( is_network_admin() ? 'network_admin_notices' : 'admin_notices', $this, 'display_notices' );
 
 		// Cache Size.
 		$this->loader->add_filter( 'dashboard_glance_items', $this, 'add_dashboard_glance_cache_size', 999 );
 		$this->loader->add_action( 'millicache_cache_storing', $this, 'delete_cache_size_transient' );
 		$this->loader->add_action( 'millicache_cache_deleted', $this, 'delete_cache_size_transient' );
+
+		// Drop-in self-heal.
+		$this->loader->add_action( 'activated_plugin', $this, 'heal_dropin' );
+		$this->loader->add_action( 'deactivated_plugin', $this, 'heal_dropin' );
+		$this->loader->add_action( 'upgrader_process_complete', $this, 'heal_dropin' );
+	}
+
+	/**
+	 * Re-point the advanced-cache.php drop-in at the loaded MilliCache copy.
+	 *
+	 * Plugin (de)activations and updates are the moments the responsible copy
+	 * can change, or a stale drop-in from a removed copy can surface; healing
+	 * on those events keeps regular requests free of filesystem checks.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param mixed $plugin The toggled plugin's basename ((de)activated_plugin),
+	 *                      or the upgrader instance (upgrader_process_complete).
+	 * @return void
+	 */
+	public function heal_dropin( $plugin = '' ): void {
+		// The toggled copy's own (de)activator is authoritative.
+		if ( is_string( $plugin ) && '' !== $plugin
+			&& file_exists( WP_PLUGIN_DIR . '/' . dirname( $plugin ) . '/advanced-cache.php' )
+		) {
+			return;
+		}
+
+		// Constants claimed by a since-deactivated standalone are stale;
+		// the successor's own activation wires the drop-in.
+		if ( defined( 'MILLICACHE_BASENAME' ) && substr_count( MILLICACHE_BASENAME, '/' ) <= 1 ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+			if ( ! is_plugin_active( MILLICACHE_BASENAME ) ) {
+				return;
+			}
+		}
+
+		// DropIn may resolve from an older co-resident copy.
+		if ( method_exists( DropIn::class, 'heal' ) ) {
+			DropIn::heal();
+		}
 	}
 
 	/**
 	 * Add a notice to the admin area.
+	 *
+	 * Can be called directly or triggered via:
+	 *     do_action( 'millicache_admin_notice', 'Saved.', 'success' );
 	 *
 	 * @since    1.0.0
 	 * @access   public
@@ -186,7 +232,20 @@ final class Admin {
 			printf(
 				'<div class="notice notice-%s is-dismissible"><p><b>Page Cache: </b>%s</p></div>',
 				esc_attr( $notice['type'] ),
-				esc_html( $notice['message'] )
+				wp_kses(
+					$notice['message'],
+					array(
+						'a'      => array(
+							'href'   => array(),
+							'target' => array(),
+							'rel'    => array(),
+						),
+						'strong' => array(),
+						'em'     => array(),
+						'code'   => array(),
+						'br'     => array(),
+					)
+				)
 			);
 		}
 	}
@@ -230,7 +289,7 @@ final class Admin {
 	 * @return   void
 	 */
 	public function enqueue_settings_assets( string $admin_page ) {
-		if ( 'settings_page_millicache' !== $admin_page ) {
+		if ( false === strpos( $admin_page, 'page_millicache' ) ) {
 			return;
 		}
 
@@ -290,11 +349,11 @@ final class Admin {
 	 */
 	public function delete_cache_size_transient(): void {
 		// Delete single-site cache size transient.
-		delete_site_transient( 'millicache_size_' . $this->engine->flags()->get_prefix() . '*' );
+		delete_site_transient( 'millicache_sizes_' . $this->engine->flags()->get_prefix() . '*' );
 
-		if ( is_multisite() ) {
+		if ( $this->engine->multisite()->is_enabled() ) {
 			// Delete network-wide cache size transient.
-			delete_site_transient( 'millicache_size_' . $this->engine->flags()->get_prefix( '*' ) . '*' );
+			delete_site_transient( 'millicache_sizes_' . $this->engine->flags()->get_prefix( '*' ) . '*' );
 		}
 	}
 }

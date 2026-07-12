@@ -64,17 +64,6 @@ final class Updater {
 	 * @param Loader $loader The plugin hook loader.
 	 */
 	public function __construct( Loader $loader ) {
-		/**
-		 * Filters whether update checks are enabled.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param bool $enabled Whether to enable update checks. Default true.
-		 */
-		if ( ! apply_filters( 'millicache_updates', true ) ) {
-			return;
-		}
-
 		$loader->add_filter( 'site_transient_update_plugins', $this, 'check_for_update' );
 		$loader->add_filter( 'plugins_api', $this, 'plugin_information', 10, 3 );
 		$loader->add_action( 'delete_site_transient_update_plugins', $this, 'clear_update_cache' );
@@ -210,14 +199,37 @@ final class Updater {
 	 * @return object|null The decoded remote info, or null on failure.
 	 */
 	private function get_remote_info(): ?object {
+		/**
+		 * Filters whether update checks are enabled.
+		 *
+		 * Evaluated here, at update-check time, rather than when the Updater is
+		 * constructed (plugin-include time), so that a filter added from a
+		 * theme's functions.php or another plugin is registered in time to be
+		 * honored. Returning false stops the remote request and hides the update notice.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param bool $enabled Whether to enable update checks. Default true.
+		 */
+		if ( ! apply_filters( 'millicache_updates', true ) ) {
+			return null;
+		}
+
 		$cached = get_site_transient( self::TRANSIENT_KEY );
 
 		if ( false !== $cached && is_object( $cached ) ) {
 			return $cached;
 		}
 
+		$url = self::ENDPOINT_URL;
+
+		// Opt in to prerelease builds by defining MC_UPDATE_PRERELEASE as true.
+		if ( defined( 'MC_UPDATE_PRERELEASE' ) && MC_UPDATE_PRERELEASE ) {
+			$url = add_query_arg( 'prerelease', '1', $url );
+		}
+
 		$response = wp_remote_get(
-			self::ENDPOINT_URL,
+			$url,
 			array(
 				'timeout' => 10,
 				'headers' => array(

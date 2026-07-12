@@ -64,6 +64,7 @@ Unlocked — can be overridden by custom rules at order `2+`:
 
 | Rule ID                              | Condition                | Result |
 |--------------------------------------|--------------------------|--------|
+| `millicache:wp:search`               | Search results page      | Bypass |
 | `millicache:wp:logged-in`            | User is logged in        | Bypass |
 | `millicache:wp:response:code`        | HTTP status ≠ 200        | Bypass |
 | `millicache:wp:const:donotcachepage` | `DONOTCACHEPAGE` defined | Bypass |
@@ -108,11 +109,12 @@ This means:
 
 Available in `php` rules (before WordPress):
 
-| Action                       | Description            | Example                          |
-|------------------------------|------------------------|----------------------------------|
-| `do_cache( $bool, $reason )` | Enable/disable caching | `->do_cache( false, 'Preview' )` |
-| `set_ttl( $seconds )`        | Override TTL           | `->set_ttl( 3600 )`              |
-| `set_grace( $seconds )`      | Override grace period  | `->set_grace( 86400 )`           |
+| Action                          | Description                 | Example                                |
+|---------------------------------|-----------------------------|----------------------------------------|
+| `do_cache( $bool, $reason )`    | Enable/disable caching      | `->do_cache( false, 'Preview' )`       |
+| `set_ttl( $seconds )`           | Override TTL                | `->set_ttl( 3600 )`                    |
+| `set_grace( $seconds )`         | Override grace period       | `->set_grace( 86400 )`                 |
+| `set_bucket( $name, $token )`   | Add a bucket to the hash    | `->set_bucket( 'device', 'mobile' )`   |
 
 ### WordPress Phase Actions
 

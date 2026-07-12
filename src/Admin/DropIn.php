@@ -169,6 +169,115 @@ final class DropIn {
 	}
 
 	/**
+	 * Re-point the drop-in at the loaded plugin copy when it boots another one.
+	 *
+	 * The loaded copy is the one MILLICACHE_DIR names: plugin main files claim
+	 * the constant first-writer-wins, so an active standalone outranks an
+	 * extension's bundle, and a stale drop-in never gets a vote. Divergence is
+	 * judged by path, not version, so install() runs forced. An absent drop-in
+	 * stays absent — healing never installs, so it cannot undo a deactivation.
+	 *
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @param string      $filename     Drop-in filename ('advanced-cache.php').
+	 * @param string|null $expected_dir Plugin folder that should own the drop-in. Defaults to MILLICACHE_DIR.
+	 * @return null|string install() result, 'absent', 'unchanged', or null when no expected source is known.
+	 */
+	public static function heal( string $filename = 'advanced-cache.php', ?string $expected_dir = null ): ?string {
+		$expected_dir = $expected_dir ?? ( defined( 'MILLICACHE_DIR' ) ? MILLICACHE_DIR : null );
+
+		if ( null === $expected_dir ) {
+			return null;
+		}
+
+		if ( ! self::exists( $filename ) ) {
+			return 'absent';
+		}
+
+		$current = self::current_source_dir( $filename );
+
+		if ( null !== $current && self::same_path( $current, $expected_dir ) ) {
+			return 'unchanged';
+		}
+
+		$result = self::install( $filename, $expected_dir, true );
+
+		if ( in_array( $result, array( 'symlinked', 'copied' ), true ) ) {
+			/**
+			 * Fires after a drop-in was re-pointed to the loaded plugin copy.
+			 *
+			 * @since 1.7.0
+			 *
+			 * @param string      $filename     Drop-in filename.
+			 * @param string      $expected_dir Plugin folder now backing the drop-in.
+			 * @param string|null $current      Folder it booted before, if known.
+			 */
+			do_action( 'millicache_dropin_healed', $filename, $expected_dir, $current );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Resolve the plugin folder the installed drop-in boots from.
+	 *
+	 * Symlinks resolve via readlink(); plain copies via the `$engine_path` /
+	 * `$plugin_path` literal that install() rewrites. Null when the drop-in
+	 * is absent or its source cannot be determined (e.g. a manually copied
+	 * file still resolving relative to wp-content).
+	 *
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @param string $filename Drop-in filename ('advanced-cache.php').
+	 * @return string|null Absolute path to the source plugin folder, or null.
+	 */
+	public static function current_source_dir( string $filename = 'advanced-cache.php' ): ?string {
+		$destination = self::destination( $filename );
+
+		if ( is_link( $destination ) ) {
+			$target = readlink( $destination );
+
+			return false === $target ? null : dirname( $target );
+		}
+
+		if ( ! is_readable( $destination ) ) {
+			return null;
+		}
+
+		$content = file_get_contents( $destination );
+		if ( false === $content || ! preg_match( '/\$(?:engine|plugin)_path\s*=\s*\'([^\']+)\';/', $content, $matches ) ) {
+			return null;
+		}
+
+		return $matches[1];
+	}
+
+	/**
+	 * Whether two paths name the same directory, resolving symlinks.
+	 *
+	 * Falls back to a string comparison when either side does not resolve
+	 * (e.g., a broken symlink target), so a dead path never equals a live one.
+	 *
+	 * @since 1.7.0
+	 * @access private
+	 *
+	 * @param string $a First path.
+	 * @param string $b Second path.
+	 */
+	private static function same_path( string $a, string $b ): bool {
+		$real_a = realpath( $a );
+		$real_b = realpath( $b );
+
+		if ( false !== $real_a && false !== $real_b ) {
+			return $real_a === $real_b;
+		}
+
+		return untrailingslashit( $a ) === untrailingslashit( $b );
+	}
+
+	/**
 	 * Whether the destination's version is higher than the bundled source.
 	 *
 	 * Returns false if either version header is missing — only an explicit

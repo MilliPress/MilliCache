@@ -109,4 +109,34 @@ describe( 'Flags', function () {
 			expect( $flags )->toContain( 'post:3' );
 		} );
 	} );
+
+	describe( 'detect_prefix', function () {
+		// The url flag is stored UNPREFIXED; the site prefix lives on the
+		// content/fallback flags (real shapes, verified against live Redis).
+		it( 'returns empty prefix on single-site', function () {
+			expect( Flags::detect_prefix( array( 'url:abc123', 'home', 'archive:post' ) ) )->toBe( '' );
+		} );
+
+		it( 'returns the site prefix on multisite, ignoring the unprefixed url flag', function () {
+			expect( Flags::detect_prefix( array( 'url:abc123', '1:home', '1:archive:post' ) ) )->toBe( '1:' );
+		} );
+
+		it( 'returns the network and site prefix on multi-network', function () {
+			expect( Flags::detect_prefix( array( 'url:abc123', '1:2:home', '1:2:archive:post' ) ) )->toBe( '1:2:' );
+		} );
+
+		it( 'anchors on the prefixed fallback flag in the minimal case', function () {
+			expect( Flags::detect_prefix( array( 'url:abc123', '3:flag' ) ) )->toBe( '3:' );
+		} );
+
+		it( 'takes the shortest run, so a numeric-named flag cannot lengthen it', function () {
+			// `2:2024:archive` starts numeric after the prefix; the real `2:`
+			// from `2:home` must still win (shortest run).
+			expect( Flags::detect_prefix( array( 'url:abc', '2:home', '2:2024:archive' ) ) )->toBe( '2:' );
+		} );
+
+		it( 'returns empty when only the unprefixed url flag is present', function () {
+			expect( Flags::detect_prefix( array( 'url:abc123' ) ) )->toBe( '' );
+		} );
+	} );
 } );

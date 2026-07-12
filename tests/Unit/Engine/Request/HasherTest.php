@@ -231,14 +231,150 @@ describe('Hasher', function () {
 			expect($variant['unique'])->toBe(array( 'device', 'mobile' ));
 		});
 
-		it('includes auth header in unique when present', function () {
+		it('exposes auth header as an "auth" bucket when present', function () {
 			$_COOKIE = array();
 			$_SERVER['HTTP_AUTHORIZATION'] = 'Bearer token123';
 			$this->hasher->generate();
 
 			$variant = $this->hasher->get_variant();
 			expect($variant)->not->toBeNull();
-			expect($variant['unique'])->toHaveKey('mc-auth-header');
+			expect($variant)->toHaveKey('buckets');
+			expect($variant['buckets'])->toHaveKey('auth');
+			expect($variant['buckets']['auth'])->toBe(md5('Bearer token123'));
+		});
+	});
+
+	describe('Accept negotiation bucket', function () {
+		beforeEach(function () {
+			$this->bucket_config   = new Config(
+				3600, 600, true, false,
+				array(), array(), array(), array(), array(),
+				array( 'accept' => array( 'text/markdown' => 'md' ) )
+			);
+			$this->bucket_parser   = new Parser($this->bucket_config);
+			$this->bucket_resolver = new \MilliCache\Engine\Request\Bucket\Resolver($this->bucket_config);
+			$this->bucket_hasher   = new Hasher($this->bucket_config, $this->bucket_parser, $this->bucket_resolver);
+		});
+
+		it('returns null bucket when no Accept header is sent', function () {
+			unset($_SERVER['HTTP_ACCEPT']);
+			$this->bucket_hasher->generate();
+
+			expect($this->bucket_resolver->get('accept'))->toBeNull();
+		});
+
+		it('returns null bucket for wildcard Accept', function () {
+			$_SERVER['HTTP_ACCEPT'] = '*/*';
+			$this->bucket_hasher->generate();
+
+			expect($this->bucket_resolver->get('accept'))->toBeNull();
+		});
+
+		it('returns md bucket when text/markdown is the top preference', function () {
+			$_SERVER['HTTP_ACCEPT'] = 'text/markdown';
+			$this->bucket_hasher->generate();
+
+			expect($this->bucket_resolver->get('accept'))->toBe('md');
+		});
+
+		it('routes a typical browser Accept to the default bucket', function () {
+			$_SERVER['HTTP_ACCEPT'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8';
+			$this->bucket_hasher->generate();
+
+			expect($this->bucket_resolver->get('accept'))->toBeNull();
+		});
+
+		it('honors q-value preference (md preferred wins)', function () {
+			$_SERVER['HTTP_ACCEPT'] = 'text/html;q=0.5, text/markdown;q=1.0';
+			$this->bucket_hasher->generate();
+
+			expect($this->bucket_resolver->get('accept'))->toBe('md');
+		});
+
+		it('produces different hashes for default and md buckets', function () {
+			$_SERVER['HTTP_ACCEPT'] = 'text/html';
+			$this->bucket_hasher->generate();
+			$default_hash = $this->bucket_hasher->get_hash();
+
+			$_SERVER['HTTP_ACCEPT'] = 'text/markdown';
+			$md_resolver = new \MilliCache\Engine\Request\Bucket\Resolver($this->bucket_config);
+			$md_hasher   = new Hasher($this->bucket_config, $this->bucket_parser, $md_resolver);
+			$md_hasher->generate();
+
+			expect($md_hasher->get_hash())->not->toBe($default_hash);
+		});
+
+		it('surfaces the bucket in the variant for debug headers', function () {
+			$_COOKIE = array();
+			$_SERVER['HTTP_ACCEPT'] = 'text/markdown';
+			$this->bucket_hasher->generate();
+
+			$variant = $this->bucket_hasher->get_variant();
+
+			expect($variant)->not->toBeNull();
+			expect($variant['buckets']['accept'])->toBe('md');
+		});
+
+		it('does not bucket when no accept map is configured', function () {
+			$bare_config   = create_test_config();
+			$bare_resolver = new \MilliCache\Engine\Request\Bucket\Resolver($bare_config);
+			$bare_hasher   = new Hasher($bare_config, new Parser($bare_config), $bare_resolver);
+			$_SERVER['HTTP_ACCEPT'] = 'text/markdown';
+			$bare_hasher->generate();
+
+			expect($bare_resolver->get('accept'))->toBeNull();
+		});
+	});
+
+	describe('Resolver::add programmatic extension', function () {
+		it('merges programmatically added buckets into the resolved set', function () {
+			$resolver = new \MilliCache\Engine\Request\Bucket\Resolver($this->config);
+			$resolver->add('language', 'en');
+			$resolver->add('tenant', 'acme');
+
+			$hasher = new Hasher($this->config, $this->parser, $resolver);
+			$hasher->generate();
+
+			expect($resolver->get('language'))->toBe('en');
+			expect($resolver->get('tenant'))->toBe('acme');
+		});
+
+		it('silently drops empty names and tokens', function () {
+			$resolver = new \MilliCache\Engine\Request\Bucket\Resolver($this->config);
+			$resolver->add('good', 'ok');
+			$resolver->add('', 'no-name');
+			$resolver->add('no-token', '');
+
+			$hasher = new Hasher($this->config, $this->parser, $resolver);
+			$hasher->generate();
+
+			expect($resolver->all())->toBe(array( 'good' => 'ok' ));
+		});
+
+		it('a programmatically added bucket changes the hash', function () {
+			$base_hasher = new Hasher($this->config, $this->parser);
+			$base_hasher->generate();
+			$base_hash = $base_hasher->get_hash();
+
+			$resolver = new \MilliCache\Engine\Request\Bucket\Resolver($this->config);
+			$resolver->add('tenant', 'acme');
+
+			$tenant_hasher = new Hasher($this->config, $this->parser, $resolver);
+			$tenant_hasher->generate();
+
+			expect($tenant_hasher->get_hash())->not->toBe($base_hash);
+		});
+
+		it('overrides built-in resolver output when names collide', function () {
+			$_SERVER['HTTP_AUTHORIZATION'] = 'Bearer real-token';
+
+			$resolver = new \MilliCache\Engine\Request\Bucket\Resolver($this->config);
+			$resolver->add('auth', 'forced');
+
+			$hasher = new Hasher($this->config, $this->parser, $resolver);
+			$hasher->generate();
+
+			expect($resolver->get('auth'))->toBe('forced');
 		});
 	});
 });

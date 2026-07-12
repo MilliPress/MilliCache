@@ -12,11 +12,13 @@
 
 namespace MilliCache\Engine\Response;
 
+use MilliCache\Engine;
 use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Entry;
 use MilliCache\Engine\Cache\Manager as CacheManager;
 use MilliCache\Engine\Flags;
 use MilliCache\Engine\Request\Processor as RequestManager;
+use MilliCache\Engine\Utilities\ServerVars;
 
 ! defined( 'ABSPATH' ) && exit;
 
@@ -143,13 +145,29 @@ final class Processor {
 		$custom_grace = $this->state->get_grace_override();
 		$variant      = $this->request_manager->get_variant();
 
-		// Cache the output.
+		// On regen the live header table is frozen (headers already sent), so
+		// reuse the served entry's stored headers instead of headers_list().
+		$regen_headers = $this->state->get_regen_headers();
+		$headers       = null !== $regen_headers ? $regen_headers : headers_list();
+
+		// Bypass storage entirely for unsupported Vary directives.
+		$vary_bypass = $this->should_bypass_for_vary( $headers );
+		if ( null !== $vary_bypass ) {
+			if ( ! $this->state->should_fcgi_regenerate() ) {
+				$this->headers->set_status( 'bypass' );
+			}
+			$this->headers->set_reason( $vary_bypass );
+			return $this->state->should_fcgi_regenerate() ? null : $output;
+		}
+
+		// Store the response. Identical bodies across variants are deduplicated
+		// automatically by the Storage layer's content-addressable output keyspace.
 		$result = $this->cache_manager->cache_output(
-			$this->state->get_request_hash(),
+			$this->request_manager->get_hasher()->get_hash() ?? '',
 			$output,
 			$flags,
 			$status,
-			headers_list(),
+			$headers,
 			$custom_ttl,
 			$custom_grace,
 			$url,
@@ -166,8 +184,95 @@ final class Processor {
 			$this->headers->set_reason( $result['reason'] );
 		}
 
+		// Count a cacheable miss — but not the background regenerate of a
+		// stale hit (already counted as a hit), nor uncacheable responses.
+		$regenerate = $this->state->should_fcgi_regenerate();
+		if ( ! $regenerate && $result['cached'] ) {
+			$this->record_miss_metric( strlen( $output ) );
+		}
+
 		// Return output (null for background FCGI tasks).
-		return $this->state->should_fcgi_regenerate() ? null : $output;
+		return $regenerate ? null : $output;
+	}
+
+	/**
+	 * Decide whether to bypass storage entirely based on Vary directives.
+	 *
+	 * Vary: *, Vary: Cookie, and Vary on any header outside the supported
+	 * allowlist (Accept, Accept-Encoding) make a response unsafe to cache
+	 * without a richer keying mechanism. Returns a human-readable bypass
+	 * reason when storage should be skipped, or null to proceed.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @param array<string> $headers Response headers ("Key: Value" strings).
+	 * @return string|null Bypass reason, or null to allow caching.
+	 */
+	private function should_bypass_for_vary( array $headers ): ?string {
+		$vary = $this->extract_header_value( $headers, 'vary' );
+		if ( '' === $vary ) {
+			return null;
+		}
+
+		$tokens = $this->parse_vary( $vary );
+
+		if ( in_array( '*', $tokens, true ) ) {
+			return 'Vary: * is uncacheable';
+		}
+
+		$allowed = array( 'accept', 'accept-encoding' );
+		foreach ( $tokens as $token ) {
+			if ( ! in_array( $token, $allowed, true ) ) {
+				return 'Vary: ' . $token . ' is not supported';
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Extract a single header value from a "Key: Value" header list.
+	 *
+	 * Returns the trimmed value of the last occurrence of the named header
+	 * (matching is case-insensitive). Returns an empty string when missing.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @param array<string> $headers Header lines.
+	 * @param string        $name    Lowercase header name.
+	 * @return string Header value, or empty string.
+	 */
+	private function extract_header_value( array $headers, string $name ): string {
+		$value = '';
+		foreach ( $headers as $header ) {
+			if ( false === strpos( $header, ':' ) ) {
+				continue;
+			}
+			list( $key, $candidate ) = explode( ':', $header, 2 );
+			if ( strtolower( trim( $key ) ) === $name ) {
+				$value = trim( $candidate );
+			}
+		}
+		return $value;
+	}
+
+	/**
+	 * Parse a Vary header value into a list of lowercased, deduplicated tokens.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @param string $vary Vary header value.
+	 * @return array<string> Tokens.
+	 */
+	private function parse_vary( string $vary ): array {
+		$tokens = array();
+		foreach ( explode( ',', $vary ) as $token ) {
+			$token = strtolower( trim( $token ) );
+			if ( '' !== $token ) {
+				$tokens[] = $token;
+			}
+		}
+		return array_values( array_unique( $tokens ) );
 	}
 
 	/**
@@ -201,6 +306,11 @@ final class Processor {
 		$entry = $result['entry'];
 		assert( $entry instanceof Entry );
 
+		// Stash the served entry's headers to reuse when regenerating.
+		if ( $state->should_fcgi_regenerate() ) {
+			$state = $state->with_regen_headers( $entry->headers );
+		}
+
 		// Set debug headers if enabled.
 		$this->set_debug_headers(
 			$state,
@@ -211,6 +321,13 @@ final class Processor {
 		// Set status header.
 		$status = $state->should_fcgi_regenerate() ? 'stale' : 'hit';
 		$this->headers->set_status( $status );
+
+		// Record the hit before output() flushes and exits (written post-response).
+		$this->record_hit_metric(
+			$entry,
+			$result['result']->flags,
+			$state->should_fcgi_regenerate()
+		);
 
 		// Output the cache.
 		$this->cache_manager->get_reader()->output(
@@ -249,20 +366,28 @@ final class Processor {
 		?int $custom_ttl = null,
 		?int $custom_grace = null
 	): array {
-		$hash = $this->request_manager->get_hasher()->get_hash();
-		if ( ! $hash ) {
-			$hash = $this->request_manager->process();
+		if ( ! $this->request_manager->get_hasher()->get_hash() ) {
+			$this->request_manager->process();
+		}
+
+		$vary_bypass = $this->should_bypass_for_vary( $headers );
+		if ( null !== $vary_bypass ) {
+			return array(
+				'cached' => false,
+				'reason' => $vary_bypass,
+			);
 		}
 
 		return $this->cache_manager->cache_output(
-			$hash,
+			$this->request_manager->get_hasher()->get_hash() ?? '',
 			$output,
 			$this->collect_flags(),
 			$status,
 			$headers,
 			$custom_ttl,
 			$custom_grace,
-			$this->request_manager->get_url() ?? ''
+			$this->request_manager->get_url() ?? '',
+			$this->request_manager->get_variant()
 		);
 	}
 
@@ -332,5 +457,78 @@ final class Processor {
 		$validator = $this->cache_manager->get_validator();
 		$time_left = $validator->time_to_expiry( $entry );
 		$this->headers->set( 'Expires', $validator->format_time_remaining( $time_left ) );
+	}
+
+	/**
+	 * Buffer a cache-hit metric (prefix from the entry's flags, pre-WP safe).
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param Entry         $entry The entry being served.
+	 * @param array<string> $flags The entry's flags (storage prefix stripped).
+	 * @param bool          $stale Whether the entry is served stale.
+	 * @return void
+	 */
+	private function record_hit_metric( Entry $entry, array $flags, bool $stale ): void {
+		if ( $this->is_internal_request() ) {
+			return;
+		}
+
+		Engine::instance()->metrics()->record()->hit(
+			Flags::detect_prefix( $flags ),
+			$entry->size_raw,
+			$this->elapsed_ms(),
+			$stale
+		);
+	}
+
+	/**
+	 * Buffer a genuine cacheable miss (prefix from {@see Flags::get_prefix()}).
+	 * Flushed immediately, not via the Engine shutdown flush — this runs in the
+	 * output-buffer callback, which PHP executes *after* shutdown functions.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param int $bytes Bytes of the freshly generated response.
+	 * @return void
+	 */
+	private function record_miss_metric( int $bytes ): void {
+		if ( $this->is_internal_request() ) {
+			return;
+		}
+
+		$record = Engine::instance()->metrics()->record();
+		$record->miss(
+			$this->flags->get_prefix(),
+			$bytes,
+			$this->elapsed_ms()
+		);
+		$record->flush();
+	}
+
+	/**
+	 * Milliseconds elapsed since the request started.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return int
+	 */
+	private function elapsed_ms(): int {
+		$start = ServerVars::has( 'REQUEST_TIME_FLOAT' )
+			? (float) ServerVars::get( 'REQUEST_TIME_FLOAT' )
+			: microtime( true );
+
+		return (int) round( ( microtime( true ) - $start ) * 1000 );
+	}
+
+	/**
+	 * Whether this is MilliCache's own internal request.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return bool
+	 */
+	private function is_internal_request(): bool {
+		return 0 === strpos( ServerVars::get( 'HTTP_USER_AGENT' ), 'MilliCache/' );
 	}
 }

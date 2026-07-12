@@ -332,8 +332,8 @@ final class RequestFlags {
 						 *
 						 * @param array $custom_flags The custom flags.
 						 */
-						$custom_flags = apply_filters( 'millicache_flags_for_request', array() );
-						if ( is_array( $custom_flags ) && ! empty( $custom_flags ) ) {
+						$custom_flags = (array) apply_filters( 'millicache_flags_for_request', array() );
+						if ( ! empty( $custom_flags ) ) {
 							foreach ( $custom_flags as $flag ) {
 								if ( is_string( $flag ) && '' !== $flag ) {
 									millicache()->flags()->add( $flag );

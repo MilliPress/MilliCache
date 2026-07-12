@@ -65,42 +65,32 @@ final class Reader {
 	}
 
 	/**
-	 * Get cache entry by hash.
+	 * Get a cache entry by hash (Storage resolves the body, so the Entry always
+	 * carries its actual bytes).
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $hash The request hash.
-	 * @return Result The cache result (hit, miss, or stale).
+	 * @return Result The cache result (hit or miss).
 	 */
 	public function get( string $hash ): Result {
 		if ( ! $this->storage->is_available() ) {
 			return Result::miss();
 		}
 
-		// Look for an existing cache entry by request hash.
 		$result = $this->storage->get_cache( $hash );
 
-		// No cache found.
 		if ( ! $result ) {
 			return Result::miss();
 		}
 
-		// Unpack the result.
 		list( $cache, $flags, $locked ) = $result;
 
-		// No valid cache data.
-		if ( ! is_array( $cache ) || empty( $cache ) ) {
+		if ( empty( $cache ) ) {
 			return Result::miss();
 		}
 
-		// Convert to Entry.
-		$entry = Entry::from_array( $cache );
-
-		// Convert locked to boolean (storage returns string).
-		$is_locked = ! empty( $locked );
-
-		// Return cache result with entry and metadata.
-		return Result::hit( $entry, $flags, $is_locked );
+		return Result::hit( Entry::from_array( $cache ), $flags, ! empty( $locked ) );
 	}
 
 	/**
@@ -248,13 +238,26 @@ final class Reader {
 			}
 		}
 
+		// State this response's age (RFC 9111).
+		if ( $entry->updated > 0 ) {
+			header( 'Age: ' . max( 0, time() - $entry->updated ) );
+		}
+
+		// No downstream cache for background regeneration.
+		if ( $regenerate ) {
+			header( 'Cache-Control: no-cache' );
+		}
+
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- We need to output the cache.
 		echo $entry->output;
 
-		// If regenerating in background, finish request and continue.
-		if ( $regenerate && function_exists( 'fastcgi_finish_request' ) ) {
+		// Deliver now (when the SAPI allows) so post-response work can't delay it.
+		if ( function_exists( 'fastcgi_finish_request' ) ) {
 			fastcgi_finish_request();
-		} else {
+		}
+
+		// A fresh hit is done; a stale serve keeps the script alive to regenerate.
+		if ( ! $regenerate ) {
 			exit;
 		}
 	}

@@ -170,6 +170,30 @@ final class Flags {
 	}
 
 	/**
+	 * Derive a stored entry's site/network prefix from its flags.
+	 * The pre-WP, read-side counterpart to {@see self::get_prefix()}.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param array<string> $flags Entry flags, storage prefix already stripped.
+	 * @return string The prefix (`''`, `'{site}:'`, or `'{network}:{site}:'`).
+	 */
+	public static function detect_prefix( array $flags ): string {
+		$prefix = null;
+
+		foreach ( $flags as $flag ) {
+			if ( preg_match( '/^(?:\d+:)+/', $flag, $matches ) ) {
+				$run = $matches[0];
+				if ( null === $prefix || strlen( $run ) < strlen( $prefix ) ) {
+					$prefix = $run;
+				}
+			}
+		}
+
+		return $prefix ?? '';
+	}
+
+	/**
 	 * Get the prefix for flags (site:network: or empty).
 	 *
 	 * @since 1.0.0

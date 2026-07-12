@@ -10,7 +10,8 @@
  */
 
 use MilliBase\Settings as BaseSettings;
-use MilliCache\Core\Settings;
+use MilliCache\Base\Network;
+use MilliCache\Base\Site;
 use MilliCache\Engine;
 use MilliCache\Rules\Actions\PHP\DoCache;
 use MilliCache\Rules\Actions\PHP\SetGrace;
@@ -50,7 +51,6 @@ function reset_rules_state(): void {
 				'unique'          => array(),
 			),
 			'rules' => array(
-				'load'  => false,
 				'items' => array(),
 			),
 		)
@@ -119,22 +119,26 @@ function reset_test_globals(): void {
 	$GLOBALS['test_filters']         = array();
 	$GLOBALS['test_actions']         = array();
 	$GLOBALS['test_site_transients'] = array();
+	$GLOBALS['test_is_multisite']    = false;
 }
 
 /**
- * Reset the Settings singleton so tests can install their own instance.
+ * Reset the Settings singletons so tests can install their own instances.
  */
 function reset_settings_singleton(): void {
-	$property = ( new ReflectionClass( Settings::class ) )->getProperty( 'instance' );
-	$property->setAccessible( true );
-	$property->setValue( null, null );
+	foreach ( array( Site::class, Network::class ) as $class ) {
+		$property = ( new ReflectionClass( $class ) )->getProperty( 'settings' );
+		$property->setAccessible( true );
+		$property->setValue( null, null );
+	}
 }
 
 /**
  * Install a Settings instance backed by the provided defaults.
  *
  * Uses MilliBase's standalone mode so no WordPress option/database is touched
- * and no hooks are registered.
+ * and no hooks are registered. Injected as the per-site instance — rules,
+ * cache, and (on single-site) storage all live there.
  *
  * @param array<string, array<string, mixed>> $defaults Module => key => value defaults.
  */
@@ -146,7 +150,7 @@ function install_test_settings( array $defaults ): void {
 		)
 	);
 
-	Settings::inject( $settings );
+	Site::inject_settings( $settings );
 }
 
 /**

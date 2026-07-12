@@ -125,8 +125,8 @@ final class Parser {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string,string> $cookies The input cookies.
-	 * @return array<string,string> The filtered cookies.
+	 * @param array<string, mixed> $cookies The input cookies.
+	 * @return array<string, mixed> The filtered cookies.
 	 */
 	public function parse_cookies( array $cookies ): array {
 		return array_filter(

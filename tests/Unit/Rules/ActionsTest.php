@@ -11,6 +11,7 @@
 use MilliCache\Rules\Actions\PHP\DoCache;
 use MilliCache\Rules\Actions\PHP\SetTtl;
 use MilliCache\Rules\Actions\PHP\SetGrace;
+use MilliCache\Rules\Actions\PHP\SetBucket;
 use MilliCache\Rules\Actions\WP\AddFlag;
 use MilliCache\Rules\Actions\WP\RemoveFlag;
 use MilliCache\Rules\Actions\WP\ClearCache;
@@ -97,6 +98,31 @@ describe( 'Rule Actions', function () {
 			$context = Mockery::mock( Context::class );
 			$action  = new SetGrace( array( 'type' => 'set_grace' ), $context );
 			expect( $action->get_type() )->toBe( 'set_grace' );
+		} );
+	} );
+
+	describe( 'SetBucket Action', function () {
+		it( 'class exists', function () {
+			expect( class_exists( SetBucket::class ) )->toBeTrue();
+		} );
+
+		it( 'extends BaseAction', function () {
+			$reflection = new ReflectionClass( SetBucket::class );
+			expect( $reflection->isSubclassOf( 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
+		} );
+
+		it( 'has get_type method', function () {
+			expect( method_exists( SetBucket::class, 'get_type' ) )->toBeTrue();
+		} );
+
+		it( 'has execute method', function () {
+			expect( method_exists( SetBucket::class, 'execute' ) )->toBeTrue();
+		} );
+
+		it( 'returns correct action type', function () {
+			$context = Mockery::mock( Context::class );
+			$action  = new SetBucket( array( 'type' => 'set_bucket' ), $context );
+			expect( $action->get_type() )->toBe( 'set_bucket' );
 		} );
 	} );
 
@@ -284,12 +310,21 @@ describe( 'Rule Actions', function () {
 			expect( Rules::get_action_meta( 'set_ttl' )->get_scope() )->toBe( '' );
 			expect( Rules::get_action_meta( 'set_grace' )->get_scope() )->toBe( '' );
 			expect( Rules::get_action_meta( 'do_cache' )->get_scope() )->toBe( '' );
+			expect( Rules::get_action_meta( 'set_bucket' )->get_scope() )->toBe( '' );
 		} );
 
 		it( 'exposes caching actions under the caching category', function () {
 			expect( Rules::get_action_meta( 'set_ttl' )->get_categories() )->toContain( 'caching' );
 			expect( Rules::get_action_meta( 'set_grace' )->get_categories() )->toContain( 'caching' );
 			expect( Rules::get_action_meta( 'do_cache' )->get_categories() )->toContain( 'caching' );
+			expect( Rules::get_action_meta( 'set_bucket' )->get_categories() )->toContain( 'caching' );
+		} );
+
+		it( 'declares set_bucket arguments (name, token)', function () {
+			$args = Rules::get_action_meta( 'set_bucket' )->get_arguments();
+			expect( $args )->toHaveCount( 2 );
+			expect( $args[0]->get_type() )->toBe( 'string' );
+			expect( $args[1]->get_type() )->toBe( 'string' );
 		} );
 
 		it( 'stores the action type string (not the class name) on ActionMeta', function () {
@@ -350,6 +385,7 @@ describe( 'Rule Actions', function () {
 			expect( is_subclass_of( DoCache::class, 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
 			expect( is_subclass_of( SetTtl::class, 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
 			expect( is_subclass_of( SetGrace::class, 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
+			expect( is_subclass_of( SetBucket::class, 'MilliRules\Actions\BaseAction' ) )->toBeTrue();
 		} );
 
 		it( 'all WP actions extend BaseAction', function () {
@@ -365,6 +401,7 @@ describe( 'Rule Actions', function () {
 				( new DoCache( array( 'type' => 'do_cache' ), $context ) )->get_type(),
 				( new SetTtl( array( 'type' => 'set_ttl' ), $context ) )->get_type(),
 				( new SetGrace( array( 'type' => 'set_grace' ), $context ) )->get_type(),
+				( new SetBucket( array( 'type' => 'set_bucket' ), $context ) )->get_type(),
 				( new AddFlag( array( 'type' => 'add_flag' ), $context ) )->get_type(),
 				( new RemoveFlag( array( 'type' => 'remove_flag' ), $context ) )->get_type(),
 				( new ClearCache( array( 'type' => 'clear_cache' ), $context ) )->get_type(),

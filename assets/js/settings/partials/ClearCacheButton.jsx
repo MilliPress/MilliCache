@@ -9,9 +9,10 @@ import {
 import { __ } from '@wordpress/i18n';
 
 const ClearCacheButton = ( { status, triggerAction, isSaving } ) => {
-	const { isLoadingAction } = window.MilliBase.hooks.useSettings();
+	const { isLoadingAction, config } = window.MilliBase.hooks.useSettings();
 	const [ isModalOpen, setIsModalOpen ] = useState( false );
 	const [ targets, setTargets ] = useState( [] );
+	const isNetworkAdmin = config?.isNetworkAdmin === true;
 
 	const handleClose = () => {
 		setIsModalOpen( false );
@@ -50,14 +51,20 @@ const ClearCacheButton = ( { status, triggerAction, isSaving } ) => {
 					title={ __( 'Clear Cache', 'millicache' ) }
 					onRequestClose={ handleClose }
 					focusOnMount="firstContentElement"
+					size="medium"
 				>
 					<Flex direction="column">
 						<FlexItem>
 							<p>
-								{ __(
-									'Enter one or more Cache Flags, Post-IDs or URLs for which you want to clear the cache. You can use wildcards (*) to clear multiple related flags.',
-									'millicache'
-								) }
+								{ isNetworkAdmin
+									? __(
+											'Enter one or more flag patterns to clear across the network. Use a site-prefixed pattern like "5:*" to clear every entry on a specific site, "*:posts" to clear a flag on every site, or "5:posts" for a single flag on a single site. Leave empty to clear the entire network cache.',
+											'millicache'
+									  )
+									: __(
+											'Enter one or more Cache Flags, Post-IDs or URLs for which you want to clear the cache. You can use wildcards (*) to clear multiple related flags.',
+											'millicache'
+									  ) }
 							</p>
 						</FlexItem>
 						<FlexItem>
@@ -75,7 +82,9 @@ const ClearCacheButton = ( { status, triggerAction, isSaving } ) => {
 						<FlexItem>
 							<Button isPrimary onClick={ handleClear }>
 								{ targets.length === 0
-									? __( 'Clear Website Cache', 'millicache' )
+									? isNetworkAdmin
+										? __( 'Clear Network Cache', 'millicache' )
+										: __( 'Clear Website Cache', 'millicache' )
 									: __(
 											'Clear Cache of Targets',
 											'millicache'

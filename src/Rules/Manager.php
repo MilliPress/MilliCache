@@ -207,6 +207,17 @@ final class Manager {
 	}
 
 	/**
+	 * Get IDs of rules that overrode a previously registered same-ID rule.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return array<int, string> Overriding rule IDs.
+	 */
+	public function overridden_rule_ids(): array {
+		return PackageManager::get_overridden_rule_ids();
+	}
+
+	/**
 	 * Get the list of valid match types ('all', 'any', 'none').
 	 *
 	 * Proxies to the Rules::MATCH_TYPES constant.

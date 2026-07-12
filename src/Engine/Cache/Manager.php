@@ -186,8 +186,8 @@ final class Manager {
 	/**
 	 * Create and store cache entry.
 	 *
-	 * Single storage path for all consumers. Validates status and headers,
-	 * creates the entry, compresses, and stores it.
+	 * Single storage path for all consumers. Validates status, size, and
+	 * headers, creates the entry, compresses, and stores it.
 	 *
 	 * @since 1.0.0
 	 *
@@ -222,6 +222,15 @@ final class Manager {
 			);
 		}
 
+		// Check if the response size allows caching.
+		$size_check = $this->writer->validate_size( strlen( $output ) );
+		if ( ! $size_check['cacheable'] ) {
+			return array(
+				'cached' => false,
+				'reason' => $size_check['reason'],
+			);
+		}
+
 		// Validate response headers.
 		$header_check = $this->writer->validate_headers( $headers );
 		if ( ! $header_check['cacheable'] ) {
@@ -231,10 +240,35 @@ final class Manager {
 			);
 		}
 
+		/**
+		 * Filter the response headers stored with a cache entry.
+		 *
+		 * Runs on every store (miss and SWR regen). Listeners must be
+		 * replace-not-append so it stays idempotent across both.
+		 *
+		 * @since 1.7.0
+		 *
+		 * @param array<string> $headers Response headers ("Key: Value"), already scrubbed of per-hop headers.
+		 * @param array<string> $flags   Canonical persisted flags: the Redis form minus the "<storage_prefix>:f:" key prefix. Multisite carries the site/network prefix (e.g. "2:post:9"); single-site is unprefixed (e.g. "post:9").
+		 * @param array{url: string, variant: array<string,mixed>|null, status: int, ttl: int, grace: int} $context Store-time context; ttl/grace in effective seconds, non-null variant marks a private entry.
+		 */
+		$headers = apply_filters(
+			'millicache_entry_headers',
+			$header_check['headers'],
+			$flags,
+			array(
+				'url'     => $url,
+				'variant' => $variant,
+				'status'  => $status,
+				'ttl'     => $custom_ttl ?? $this->config->ttl,
+				'grace'   => $custom_grace ?? $this->config->grace,
+			)
+		);
+
 		// Create a cache entry.
 		$entry = $this->writer->create_entry(
 			$output,
-			$header_check['headers'],
+			$headers,
 			$status,
 			$custom_ttl,
 			$custom_grace,
@@ -266,7 +300,7 @@ final class Manager {
 	 */
 	public function get_status( bool $network = false ): array {
 		$flag = $network
-			? Engine::instance()->flags()->add_key_prefix( 'site', '*' )
+			? Engine::instance()->flags()->add_key_prefix( '*', '*' )
 			: Engine::instance()->flags()->add_key_prefix( '*' );
 
 		$cache = array(

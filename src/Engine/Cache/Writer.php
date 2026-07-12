@@ -30,6 +30,21 @@ use MilliCache\Engine\Utilities\PatternMatcher;
 final class Writer {
 
 	/**
+	 * Maximum raw (pre-compression) entry size in bytes (5MB).
+	 *
+	 * Redis executes commands on a single thread, so multi-megabyte values
+	 * stall all other clients while they are serialized onto the wire.
+	 * Capping the raw buffer at 5MB keeps gzipped HTML entries near the
+	 * ~1MB value size Redis handles comfortably and rejects runaway
+	 * responses (e.g. binary exports) before they can fill the instance
+	 * and evict legitimate pages.
+	 *
+	 * @since 1.7.0
+	 * @var int
+	 */
+	public const MAX_ENTRY_SIZE = 5242880;
+
+	/**
 	 * Cache configuration.
 	 *
 	 * @var Config
@@ -70,6 +85,32 @@ final class Writer {
 			return array(
 				'cacheable' => false,
 				'reason'    => 'Server error response',
+			);
+		}
+
+		return array(
+			'cacheable' => true,
+			'reason'    => '',
+		);
+	}
+
+	/**
+	 * Check if the response size allows caching.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param int $size Raw (pre-compression) response size in bytes.
+	 * @return array{cacheable: bool, reason: string} Array with cacheable flag and reason.
+	 */
+	public function validate_size( int $size ): array {
+		if ( $size > self::MAX_ENTRY_SIZE ) {
+			return array(
+				'cacheable' => false,
+				'reason'    => sprintf(
+					'Response size %.1fMB exceeds the %dMB cache limit',
+					$size / 1048576,
+					self::MAX_ENTRY_SIZE / 1048576
+				),
 			);
 		}
 
@@ -125,8 +166,11 @@ final class Writer {
 						break 2;
 					}
 				}
-			} elseif ( strpos( $key, 'x-millicache' ) === false ) {
-				// Ignore our own headers, add all others.
+			} elseif (
+				false === strpos( $key, 'x-millicache' )
+				&& 'age' !== $key
+				&& ! ( 'cache-control' === $key && 'no-cache' === strtolower( $value ) )
+			) {
 				$filtered_headers[] = $header;
 			}
 		}
@@ -202,7 +246,8 @@ final class Writer {
 				$entry->updated,
 				$entry->custom_ttl,
 				$entry->custom_grace,
-				$entry->variant
+				$entry->variant,
+				$entry->size_raw
 			);
 		}
 
@@ -215,7 +260,8 @@ final class Writer {
 			$entry->updated,
 			$entry->custom_ttl,
 			$entry->custom_grace,
-			$entry->variant
+			$entry->variant,
+			$entry->size_raw
 		);
 	}
 

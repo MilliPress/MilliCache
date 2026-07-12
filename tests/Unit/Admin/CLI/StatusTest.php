@@ -10,7 +10,6 @@
 
 use MilliCache\Admin\CLI\Status;
 
-// Ensure constants are defined.
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', '/tmp/' );
 }
@@ -31,6 +30,11 @@ describe( 'CLI/Status', function () {
 		it( 'has __invoke method', function () {
 			$reflection = new ReflectionClass( Status::class );
 			expect( $reflection->hasMethod( '__invoke' ) )->toBeTrue();
+		} );
+
+		it( 'uses OutputTrait', function () {
+			$reflection = new ReflectionClass( Status::class );
+			expect( $reflection->getTraitNames() )->toContain( \MilliCache\Admin\CLI\OutputTrait::class );
 		} );
 	} );
 
@@ -62,32 +66,39 @@ describe( 'CLI/Status', function () {
 	describe( 'WP-CLI docblock', function () {
 		it( 'has DESCRIPTION section in docblock', function () {
 			$method = new ReflectionMethod( Status::class, '__invoke' );
-			$docblock = $method->getDocComment();
-			expect( $docblock )->toContain( '## DESCRIPTION' );
+			expect( $method->getDocComment() )->toContain( '## DESCRIPTION' );
 		} );
 
 		it( 'has OPTIONS section in docblock', function () {
 			$method = new ReflectionMethod( Status::class, '__invoke' );
-			$docblock = $method->getDocComment();
-			expect( $docblock )->toContain( '## OPTIONS' );
+			expect( $method->getDocComment() )->toContain( '## OPTIONS' );
 		} );
 
-		it( 'documents --format option', function () {
-			$method = new ReflectionMethod( Status::class, '__invoke' );
-			$docblock = $method->getDocComment();
+		it( 'documents --format with default table', function () {
+			$docblock = ( new ReflectionMethod( Status::class, '__invoke' ) )->getDocComment();
 			expect( $docblock )->toContain( '[--format=<format>]' );
+			expect( $docblock )->toContain( 'default: table' );
+		} );
+
+		it( 'lists markdown and json formats', function () {
+			$docblock = ( new ReflectionMethod( Status::class, '__invoke' ) )->getDocComment();
+			expect( $docblock )->toContain( '- markdown' );
+			expect( $docblock )->toContain( '- json' );
+		} );
+
+		it( 'documents the --network flag', function () {
+			$docblock = ( new ReflectionMethod( Status::class, '__invoke' ) )->getDocComment();
+			expect( $docblock )->toContain( '[--network]' );
 		} );
 
 		it( 'has EXAMPLES section in docblock', function () {
 			$method = new ReflectionMethod( Status::class, '__invoke' );
-			$docblock = $method->getDocComment();
-			expect( $docblock )->toContain( '## EXAMPLES' );
+			expect( $method->getDocComment() )->toContain( '## EXAMPLES' );
 		} );
 
 		it( 'has @when after_wp_load annotation', function () {
 			$method = new ReflectionMethod( Status::class, '__invoke' );
-			$docblock = $method->getDocComment();
-			expect( $docblock )->toContain( '@when after_wp_load' );
+			expect( $method->getDocComment() )->toContain( '@when after_wp_load' );
 		} );
 	} );
 } );

@@ -87,12 +87,6 @@ describe( 'Activator', function () {
 			expect( $reflection->hasMethod( 'create_advanced_cache_file' ) )->toBeTrue();
 		} );
 
-		it( 'schedule_events is private and static', function () {
-			$method = new ReflectionMethod( Activator::class, 'schedule_events' );
-			expect( $method->isPrivate() )->toBeTrue();
-			expect( $method->isStatic() )->toBeTrue();
-		} );
-
 		it( 'create_advanced_cache_file is private and static', function () {
 			$method = new ReflectionMethod( Activator::class, 'create_advanced_cache_file' );
 			expect( $method->isPrivate() )->toBeTrue();
@@ -112,9 +106,10 @@ describe( 'Activator', function () {
 			}
 		} );
 
-		it( 'activate method takes no parameters', function () {
+		it( 'activate method takes one optional source dir', function () {
 			$method = new ReflectionMethod( Activator::class, 'activate' );
-			expect( $method->getNumberOfParameters() )->toBe( 0 );
+			expect( $method->getNumberOfParameters() )->toBe( 1 );
+			expect( $method->getNumberOfRequiredParameters() )->toBe( 0 );
 		} );
 
 		it( 'schedule_events returns void', function () {
@@ -125,6 +120,12 @@ describe( 'Activator', function () {
 			} else {
 				expect( $return_type )->toBeNull();
 			}
+		} );
+
+		it( 'schedule_events is public and static so loads can self-heal the schedule', function () {
+			$method = new ReflectionMethod( Activator::class, 'schedule_events' );
+			expect( $method->isPublic() )->toBeTrue();
+			expect( $method->isStatic() )->toBeTrue();
 		} );
 
 		it( 'create_advanced_cache_file returns void', function () {

@@ -11,19 +11,19 @@
     ],
     "require": {
         "php": ">=7.4",
-        "millipress/millibase": "^2.4.1",
-        "millipress/millirules": "^1.1.5",
+        "millipress/millibase": "^2.6.9",
+        "millipress/millirules": "^1.2.0",
         "predis/predis": "^3.0"
     },
     "require-dev": {
         "wp-coding-standards/wpcs": "^3.0",
         "phpcompatibility/phpcompatibility-wp": "*",
         "php-stubs/wp-cli-stubs": "^2.10",
-        "phpstan/phpstan": "@stable",
+        "phpstan/phpstan": "^2.0",
         "phpstan/extension-installer": "^1.3",
-        "phpstan/phpstan-deprecation-rules": "^1.1",
-        "szepeviktor/phpstan-wordpress": "^1.3",
-        "swissspidy/phpstan-no-private": "^0.2.0",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "szepeviktor/phpstan-wordpress": "^2.0",
+        "swissspidy/phpstan-no-private": "^1.0",
         "roave/security-advisories": "dev-latest",
         "pestphp/pest": "^4.0",
         "mockery/mockery": "^1.6",
@@ -66,6 +66,9 @@
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "phpstan/extension-installer": true,
             "pestphp/pest-plugin": true
+        },
+        "platform": {
+            "php": "8.3"
         }
     },
     "extra": {

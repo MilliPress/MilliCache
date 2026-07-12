@@ -211,9 +211,12 @@ describe( 'Utils', function () {
 	describe( 'get_cache_size with transient', function () {
 		it( 'returns cached size from transient', function () {
 			global $test_site_transients;
-			$test_site_transients['millicache_size_test'] = array(
-				'index' => 10,
-				'size'  => 1024,
+			$test_site_transients['millicache_sizes_test'] = array(
+				'index'   => 10,
+				'size'    => 1024,
+				'gross'   => 2048,
+				'unique'  => 4,
+				'largest' => 800,
 			);
 
 			$result = Utils::get_cache_size( 'test' );
@@ -221,25 +224,48 @@ describe( 'Utils', function () {
 			expect( $result['index'] )->toBe( 10 );
 			expect( $result['size'] )->toBe( 1024 );
 			expect( $result['size_human'] )->toBe( '1 KB' );
+			expect( $result['gross'] )->toBe( 2048 );
+			expect( $result['gross_human'] )->toBe( '2 KB' );
+			expect( $result['saved'] )->toBe( 1024 );
+			expect( $result['saved_human'] )->toBe( '1 KB' );
+			expect( $result['unique'] )->toBe( 4 );
+			expect( $result['largest'] )->toBe( 800 );
+			expect( $result['largest_human'] )->toBe( '800 B' );
+		} );
+
+		it( 'falls back to physical size when gross missing in transient', function () {
+			global $test_site_transients;
+			$test_site_transients['millicache_sizes_legacy'] = array(
+				'index' => 1,
+				'size'  => 1024,
+			);
+
+			$result = Utils::get_cache_size( 'legacy' );
+
+			expect( $result['size'] )->toBe( 1024 );
+			expect( $result['gross'] )->toBe( 1024 );
+			expect( $result['saved'] )->toBe( 0 );
+			expect( $result['unique'] )->toBe( 0 );
+			expect( $result['largest'] )->toBe( 0 );
 		} );
 
 		it( 'formats size correctly for bytes', function () {
 			global $test_site_transients;
-			$test_site_transients['millicache_size_test1'] = array( 'index' => 1, 'size' => 500 );
+			$test_site_transients['millicache_sizes_test1'] = array( 'index' => 1, 'size' => 500, 'gross' => 500 );
 			$result1 = Utils::get_cache_size( 'test1' );
 			expect( $result1['size_human'] )->toBe( '500 B' );
 		} );
 
 		it( 'formats size correctly for KB', function () {
 			global $test_site_transients;
-			$test_site_transients['millicache_size_test2'] = array( 'index' => 1, 'size' => 5120 );
+			$test_site_transients['millicache_sizes_test2'] = array( 'index' => 1, 'size' => 5120, 'gross' => 5120 );
 			$result2 = Utils::get_cache_size( 'test2' );
 			expect( $result2['size_human'] )->toBe( '5 KB' );
 		} );
 
 		it( 'formats size correctly for MB', function () {
 			global $test_site_transients;
-			$test_site_transients['millicache_size_test3'] = array( 'index' => 1, 'size' => 5242880 );
+			$test_site_transients['millicache_sizes_test3'] = array( 'index' => 1, 'size' => 5242880, 'gross' => 5242880 );
 			$result3 = Utils::get_cache_size( 'test3' );
 			expect( $result3['size_human'] )->toBe( '5 MB' );
 		} );

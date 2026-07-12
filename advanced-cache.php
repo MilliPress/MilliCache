@@ -12,6 +12,7 @@
  * Plugin URI:  https://www.millipress.com/millicache
  * Version:     1.1.1
  * Author:      Philipp Wellmer <hello@millipress.com>
+ * Author URI:  https://www.millipress.com
  *
  * @package MilliCache
  * @since 1.0.0

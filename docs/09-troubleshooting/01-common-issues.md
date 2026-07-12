@@ -193,6 +193,7 @@ Error: Permission denied [unix:///var/run/redis/redis.sock]
    - **Excluded cookie?** Check `MC_CACHE_NOCACHE_COOKIES`
    - **Excluded path?** Check `MC_CACHE_NOCACHE_PATHS`
    - **TTL = 0?** Check `MC_CACHE_TTL`
+   - **Oversized response?** Responses larger than 5MB (before compression) are never stored
 
 4. **Verify WP_CACHE:**
    ```bash
@@ -380,10 +381,13 @@ wp millicache stats
 
 **Solutions:**
 
-1. **Increase Redis memory:**
-   ```conf
-   maxmemory 512mb
+1. **Increase Redis memory** (live, no restart):
+   ```bash
+   redis-cli CONFIG SET maxmemory 512mb
    ```
+   Or run the same command against the configured server via `wp millicache cli`.
+   `CONFIG SET` is lost on restart, so add `maxmemory 512mb` to your Redis config
+   file (or run `redis-cli CONFIG REWRITE`) to keep it.
 
 2. **Reduce TTL:**
    ```php

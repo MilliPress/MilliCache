@@ -151,30 +151,39 @@ final class Utils {
 	 *
 	 * @param string $flag The flag to search for. Wildcards are allowed.
 	 * @param bool   $reload Whether to reload the cache size from the storage server.
-	 * @return array{index: int, size: int, size_human: string} The index and memory size of the cache.
+	 * @return array{index: int, size: int, size_human: string, gross: int, gross_human: string, raw: int, raw_human: string, saved: int, saved_human: string, unique: int, largest: int, largest_human: string} The cache index, net size, gross (pre-dedup) size, pre-dedup uncompressed size, dedup-only savings, unique-body count, and largest body.
 	 */
 	public static function get_cache_size( string $flag = '', bool $reload = false ): array {
-		$size = get_site_transient( "millicache_size_$flag" );
+		$size = get_site_transient( "millicache_sizes_$flag" );
 
 		if ( ! is_array( $size ) || $reload ) {
 			$storage = Engine::instance()->storage();
 			$size    = $storage->get_cache_size( $flag );
 
 			if ( $size ) {
-				set_site_transient( "millicache_size_$flag", $size, 12 * HOUR_IN_SECONDS );
+				set_site_transient( "millicache_sizes_$flag", $size, 12 * HOUR_IN_SECONDS );
 			}
 		}
 
-		// Get size in bytes.
-		$bytes = $size['size'] ?? 0;
+		$bytes     = isset( $size['size'] ) && is_numeric( $size['size'] ) ? (int) $size['size'] : 0;
+		$gross     = isset( $size['gross'] ) && is_numeric( $size['gross'] ) ? (int) $size['gross'] : $bytes;
+		$raw       = isset( $size['raw'] ) && is_numeric( $size['raw'] ) ? (int) $size['raw'] : $gross;
+		$largest   = isset( $size['largest'] ) && is_numeric( $size['largest'] ) ? (int) $size['largest'] : 0;
+		$saved     = max( 0, $gross - $bytes );
 
 		return array(
-			'index'      => $size['index'] ?? 0,
-			'size'       => $bytes,
-			'size_human' => (string) size_format(
-				$bytes,
-				$bytes > 1048576 ? 2 : 0
-			),
+			'index'         => isset( $size['index'] ) && is_numeric( $size['index'] ) ? (int) $size['index'] : 0,
+			'size'          => $bytes,
+			'size_human'    => (string) size_format( $bytes, $bytes > 1048576 ? 2 : 0 ),
+			'gross'         => $gross,
+			'gross_human'   => (string) size_format( $gross, $gross > 1048576 ? 2 : 0 ),
+			'raw'           => $raw,
+			'raw_human'     => (string) size_format( $raw, $raw > 1048576 ? 2 : 0 ),
+			'saved'         => $saved,
+			'saved_human'   => (string) size_format( $saved, $saved > 1048576 ? 2 : 0 ),
+			'unique'        => isset( $size['unique'] ) && is_numeric( $size['unique'] ) ? (int) $size['unique'] : 0,
+			'largest'       => $largest,
+			'largest_human' => (string) size_format( $largest, $largest > 1048576 ? 2 : 0 ),
 		);
 	}
 
@@ -184,7 +193,7 @@ final class Utils {
 	 * @since   1.0.0
 	 * @access  public static
 	 *
-	 * @param ?array{index: int, size: int, size_human: string} $size The size of the cache.
+	 * @param ?array{index: int, size: int, size_human: string, gross?: int, gross_human?: string, saved?: int, saved_human?: string, unique?: int, largest?: int, largest_human?: string} $size The size of the cache.
 	 * @return string The summary string.
 	 */
 	public static function get_cache_size_summary_string( ?array $size = null ): string {

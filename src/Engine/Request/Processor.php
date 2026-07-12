@@ -13,6 +13,7 @@
 namespace MilliCache\Engine\Request;
 
 use MilliCache\Engine\Cache\Config;
+use MilliCache\Engine\Request\Bucket\Resolver as BucketResolver;
 use MilliCache\Engine\Utilities\ServerVars;
 
 ! defined( 'ABSPATH' ) && exit;
@@ -57,6 +58,13 @@ final class Processor {
 	 * @var Hasher|null
 	 */
 	private ?Hasher $hasher = null;
+
+	/**
+	 * Bucket resolver.
+	 *
+	 * @var BucketResolver|null
+	 */
+	private ?BucketResolver $buckets = null;
 
 	/**
 	 * Constructor.
@@ -106,9 +114,26 @@ final class Processor {
 	 */
 	public function get_hasher(): Hasher {
 		if ( ! $this->hasher ) {
-			$this->hasher = new Hasher( $this->config, $this->get_parser() );
+			$this->hasher = new Hasher( $this->config, $this->get_parser(), $this->buckets() );
 		}
 		return $this->hasher;
+	}
+
+	/**
+	 * Get the bucket resolver.
+	 *
+	 * Used by rule actions and other early-phase code to register additional
+	 * buckets via {@see BucketResolver::add_bucket()} before the hash is generated.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return BucketResolver The resolver instance.
+	 */
+	public function buckets(): BucketResolver {
+		if ( ! $this->buckets ) {
+			$this->buckets = new BucketResolver( $this->config );
+		}
+		return $this->buckets;
 	}
 
 	/**

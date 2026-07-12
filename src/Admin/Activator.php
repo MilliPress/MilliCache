@@ -30,11 +30,16 @@ final class Activator {
 	 *
 	 * @since    1.0.0
 	 *
+	 * @param string|null $source_dir Folder of the activating MilliCache copy.
+	 *                                Callers should pass their own __DIR__: with
+	 *                                two co-resident copies, class-location
+	 *                                defaults resolve to whichever copy loaded
+	 *                                first, not the one being activated.
 	 * @return   void
 	 */
-	public static function activate() {
+	public static function activate( ?string $source_dir = null ) {
 		// Create advanced-cache.php.
-		self::create_advanced_cache_file();
+		self::create_advanced_cache_file( $source_dir );
 
 		// Schedule the cron events.
 		self::schedule_events();
@@ -47,11 +52,11 @@ final class Activator {
 	 * Schedule the cron events.
 	 *
 	 * @since    1.0.0
-	 * @access   private
+	 * @access   public
 	 *
 	 * @return   void
 	 */
-	private static function schedule_events() {
+	public static function schedule_events() {
 		if ( ! wp_next_scheduled( 'millicache_nightly' ) ) {
 			wp_schedule_event( strtotime( 'tomorrow 3AM' ), 'daily', 'millicache_nightly' );
 		}
@@ -60,16 +65,18 @@ final class Activator {
 	/**
 	 * Install the advanced-cache.php drop-in for the activating plugin.
 	 *
-	 * Routes the install through DropIn::install(), which owns the
+	 * Routes the installation through DropIn::install(), which owns the
 	 * higher-version safeguard and the already-correct-symlink shortcut.
 	 *
 	 * @since    1.0.0
 	 * @access   private
 	 *
+	 * @param string|null $source_dir Folder of the activating MilliCache copy,
+	 *                                or null for DropIn's class-location default.
 	 * @return   void
 	 */
-	private static function create_advanced_cache_file(): void {
-		switch ( DropIn::install() ) {
+	private static function create_advanced_cache_file( ?string $source_dir = null ): void {
+		switch ( DropIn::install( 'advanced-cache.php', $source_dir ) ) {
 			case 'symlinked':
 				Admin::add_notice(
 					__( 'Symlink created for advanced-cache.php. Please make sure to configure MilliCache to start caching.', 'millicache' ),

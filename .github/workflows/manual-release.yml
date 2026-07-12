@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout code at tag
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag }}
 
@@ -37,39 +37,8 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      - name: Create dist build
-        run: |
-          rm -rf dist && mkdir dist
-
-          # Export tracked files (respects .gitattributes export-ignore)
-          # build/ is committed by CI, so git archive includes it
-          git archive --format=tar HEAD | tar -x -C dist
-
-          # Download Strauss for namespace scoping
-          mkdir -p dist/bin
-          curl -sL https://github.com/BrianHenryIE/strauss/releases/download/0.26.5/strauss.phar -o dist/bin/strauss.phar
-
-          # Install production dependencies in the isolated dist directory
-          composer install --no-dev --no-interaction --prefer-dist --working-dir=dist
-
-          # Run Strauss to scope dependencies (rewrites source files in dist/)
-          (cd dist && php bin/strauss.phar -q)
-
-          # Scope stub namespaces to match scoped dependencies
-          sed -i 's/namespace MilliRules\\Builders;/namespace MilliCache\\Deps\\MilliRules\\Builders;/' dist/stubs/*.php
-
-          # Add deps/ classmap to the dist composer.json for the scoped packages
-          jq '.autoload.classmap = ["deps/"]' dist/composer.json > dist/composer.json.tmp \
-            && mv dist/composer.json.tmp dist/composer.json
-
-          # Regenerate autoloader with scoped deps/ classmap
-          composer dump-autoload --no-dev --optimize --classmap-authoritative --working-dir=dist
-
-          # Remove build tools from dist (not needed in the release)
-          rm -rf dist/bin
-
-          echo "Dist contents:"
-          ls -la dist/
+      - name: Build dist
+        run: ./.github/scripts/build-dist.sh
 
       - name: Create release archive
         env:

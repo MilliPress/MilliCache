@@ -38,27 +38,15 @@ final class Adminbar {
 	protected Loader $loader;
 
 	/**
-	 * The Engine instance.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 *
-	 * @var      Engine    $engine    The Engine instance.
-	 */
-	private Engine $engine;
-
-	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since   1.0.0
 	 * @access public
 	 *
 	 * @param Loader $loader The loader class.
-	 * @param Engine $engine The Engine instance.
 	 */
-	public function __construct( Loader $loader, Engine $engine ) {
+	public function __construct( Loader $loader ) {
 		$this->loader = $loader;
-		$this->engine = $engine;
 
 		$this->register_hooks();
 	}
@@ -93,7 +81,7 @@ final class Adminbar {
 			return;
 		}
 
-		if ( Utils::enqueue_assets( 'adminbar', array( 'wp-api-fetch' ) ) ) {
+		if ( Utils::enqueue_assets( 'adminbar', array( 'wp-api-fetch', 'wp-i18n' ) ) ) {
 			$context = array(
 				'rest_url' => esc_url_raw( rest_url( 'millicache/v1/cache' ) ),
 				'is_network_admin' => is_network_admin(),
@@ -142,8 +130,13 @@ final class Adminbar {
 					$post_type_object = get_post_type_object( $post->post_type );
 
 					if ( $post_type_object && $post_type_object->public ) {
-						$targets = MilliCache::get_post_related_flags( $post );
-						$title   = sprintf(
+						// Edit screen has no view; clear the post permalink's
+						// url: flag (all variants of that page).
+						$permalink = get_permalink( $post );
+						$targets   = $permalink
+							? array( 'url:' . Engine::instance()->request()->get_url_hash( $permalink ) )
+							: array();
+						$title     = sprintf(
 							/* translators: %s: Post type name */
 							__( 'Clear %s Cache', 'millicache' ),
 							$post_type_object->labels->singular_name
@@ -152,7 +145,10 @@ final class Adminbar {
 				}
 			}
 		} else {
-			$targets = $this->engine->flags()->get_all();
+			// url: flag is per-URL and variant-agnostic, so this clears all
+			// variants of only this view — no global/query-block flags.
+			// Related listings: handled by auto edit-time invalidation.
+			$targets = array( 'url:' . Engine::instance()->request()->get_url_hash() );
 			$title   = __( 'Clear Current View Cache', 'millicache' );
 		}
 
@@ -164,7 +160,7 @@ final class Adminbar {
 					'id'     => 'millicache_clear_current',
 					'href'   => add_query_arg(
 						array(
-							'_millicache' => 'clear_targets',
+							'_millicache' => 'clear_current',
 							'_targets'    => implode( ',', $targets ),
 						)
 					),
@@ -204,8 +200,10 @@ final class Adminbar {
 				array(
 					'parent' => 'millicache-secondary',
 					'id' => 'millicache-settings',
-					'href' => admin_url( 'options-general.php?page=millicache' ),
-					'title' => Utils::get_cache_size_summary_string(),
+					'href' => is_network_admin()
+						? network_admin_url( 'settings.php?page=millicache' )
+						: admin_url( 'options-general.php?page=millicache' ),
+					'title' => '<span class="millicache-cache-size">' . esc_html( Utils::get_cache_size_summary_string() ) . '</span>',
 				)
 			);
 		}

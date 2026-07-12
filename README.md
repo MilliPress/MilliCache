@@ -3,7 +3,7 @@
 [![CI](https://github.com/MilliPress/MilliCache/actions/workflows/ci.yml/badge.svg)](https://github.com/MilliPress/MilliCache/actions/workflows/ci.yml)
 [![e2e-Tests](https://github.com/MilliPress/MilliCache/actions/workflows/e2e.yml/badge.svg)](https://github.com/MilliPress/MilliCache/actions/workflows/e2e.yml)
 
-**High-performance full-page caching for WordPress** using Redis, ValKey, KeyDB, or Dragonfly.
+**High-performance full-page caching for WordPress** using Redis, Valkey, or any compatible backend.
 
 MilliCache stores complete HTML pages in memory and serves them in milliseconds — without loading WordPress. 
 Combined with intelligent cache flags and flexible rules, it's designed for scaling sites that need both speed and control.
@@ -16,7 +16,7 @@ Combined with intelligent cache flags and flexible rules, it's designed for scal
 - **Multisite Native** — Per-site isolation, network-wide management
 - **Built to Scale** — Multiple web servers can share a single Redis instance
 - **WP-CLI Integration** — Full command-line cache management
-- **[Multiple Backends](docs/08-storage-backends/01-overview.md)** — Redis, ValKey, KeyDB, or Dragonfly
+- **[Multiple Backends](docs/08-storage-backends/01-overview.md)** — Redis, Valkey, Dragonfly, or any Redis-compatible server
 
 Learn more on [millipress.com](https://millipress.com/millicache), where you also find the [full documentation](https://millipress.com/docs/millicache).
 
@@ -57,14 +57,14 @@ Full documentation is available on [millipress.com/docs/millicache](https://mill
 | [Usage](https://millipress.com/docs/millicache/05-usage/10-how-caching-works/)                 | How caching works, clearing, multisite |
 | [WP-CLI](https://millipress.com/docs/millicache/06-wp-cli/01-commands/)                        | Command-line reference                 |
 | [Developers](https://millipress.com/docs/millicache/07-developers/10-architecture/)            | Architecture, hooks, API               |
-| [Storage Backends](https://millipress.com/docs/millicache/08-storage-backends/01-overview/)    | Redis, ValKey, KeyDB, Dragonfly        |
+| [Storage Backends](https://millipress.com/docs/millicache/08-storage-backends/01-overview/)    | Redis, Valkey, or any compatible server |
 | [Troubleshooting](https://millipress.com/docs/millicache/09-troubleshooting/01-common-issues/) | Common issues and FAQ                  |
 
 ## Requirements
 
 - PHP 7.4+ (8.x recommended)
 - WordPress 6.6+
-- Redis-compatible server ([ValKey](https://valkey.io/), [Redis](https://redis.io/), [KeyDB](https://keydb.dev/), or [Dragonfly](https://dragonflydb.io/))
+- A Redis-compatible server: [Redis](https://redis.io/), [Valkey](https://valkey.io/), [Dragonfly](https://dragonflydb.io/), or any other RESP-compatible backend
 
 ## Testing
 

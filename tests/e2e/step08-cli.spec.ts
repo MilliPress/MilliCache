@@ -75,10 +75,21 @@ test.describe('Step 8: WP-CLI Commands', () => {
         expect(stats).toHaveProperty('entries');
         expect(stats).toHaveProperty('size');
         expect(stats).toHaveProperty('size_human');
-        expect(stats).toHaveProperty('avg_size');
-        expect(stats).toHaveProperty('avg_size_human');
+        expect(stats).toHaveProperty('gross');
+        expect(stats).toHaveProperty('gross_human');
+        expect(stats).toHaveProperty('unique');
+        expect(stats).toHaveProperty('largest');
+        expect(stats).toHaveProperty('largest_human');
+        expect(stats).toHaveProperty('dedup');
+        expect(stats).toHaveProperty('avg');
+        expect(stats).toHaveProperty('avg_human');
         expect(typeof stats.entries).toBe('number');
         expect(typeof stats.size).toBe('number');
+        expect(typeof stats.gross).toBe('number');
+        expect(typeof stats.unique).toBe('number');
+        expect(typeof stats.largest).toBe('number');
+        expect(typeof stats.dedup).toBe('number');
+        expect(typeof stats.avg).toBe('number');
     });
 
     test('WP-CLI: MilliCache Status', async () => {
@@ -89,8 +100,8 @@ test.describe('Step 8: WP-CLI Commands', () => {
         expect(stdout).toContain('plugin_version');
         expect(stdout).toContain('wp_cache');
         expect(stdout).toContain('advanced_cache');
-        expect(stdout).toContain('storage_connected');
-        expect(stdout).toContain('yes'); // storage should be connected
+        expect(stdout).toContain('storage');
+        expect(stdout).toContain('connected'); // storage should be connected
         expect(stdout).toContain('cache_entries');
         expect(stdout).toContain('cache_size');
     });
@@ -106,13 +117,15 @@ test.describe('Step 8: WP-CLI Commands', () => {
         // Parse JSON output
         const status = JSON.parse(jsonMatch![0]);
 
-        // Validate JSON structure
-        expect(status).toHaveProperty('plugin_version');
-        expect(status).toHaveProperty('wp_cache');
-        expect(status).toHaveProperty('advanced_cache');
-        expect(status).toHaveProperty('storage_connected', 'yes');
-        expect(status).toHaveProperty('cache_entries');
-        expect(status).toHaveProperty('cache_size');
+        // JSON returns the full unified StatusBuilder payload (same source as the
+        // admin-footer Status modal), not the flat table fields.
+        expect(status).toHaveProperty('plugin_name');
+        expect(status).toHaveProperty('version');
+        expect(status).toHaveProperty('cache');
+        expect(status).toHaveProperty('storage');
+        expect(status.storage).toHaveProperty('connected');
+        expect(status).toHaveProperty('debug');
+        expect(status.debug).toHaveProperty('versions');
     });
 
     test('WP-CLI: MilliCache Test', async () => {
@@ -147,15 +160,29 @@ test.describe('Step 8: WP-CLI Commands', () => {
         expect(stdout).toMatch(/symlink|Copied/i);
     });
 
-    test('WP-CLI: MilliCache Config Get', async () => {
-        // Get all settings
+    test('WP-CLI: MilliCache Config Get (per-site)', async () => {
+        // Get per-site settings (default scope on multisite)
         const stdout = await runWpCliCommand('millicache config get');
 
-        // Validate output contains expected settings
-        expect(stdout).toContain('storage.host');
-        expect(stdout).toContain('storage.port');
+        // Per-site scope owns cache + rules
         expect(stdout).toContain('cache.ttl');
         expect(stdout).toContain('cache.gzip');
+
+        // Storage is network-scoped on multisite — must NOT leak into per-site view
+        expect(stdout).not.toContain('storage.host');
+        expect(stdout).not.toContain('storage.port');
+    });
+
+    test('WP-CLI: MilliCache Config Get (network)', async () => {
+        // Get network settings via --network flag
+        const stdout = await runWpCliCommand('millicache config get -- --network');
+
+        // Network scope owns storage (rules are scope-aware and exist in both scopes)
+        expect(stdout).toContain('storage.host');
+        expect(stdout).toContain('storage.port');
+
+        // Cache is per-site — must NOT leak into network view
+        expect(stdout).not.toContain('cache.ttl');
     });
 
     test('WP-CLI: MilliCache Config Get Single Value', async () => {
@@ -167,22 +194,39 @@ test.describe('Step 8: WP-CLI Commands', () => {
         expect(stdout).toMatch(/\d+/); // should contain a number
     });
 
-    test('WP-CLI: MilliCache Config Get JSON format', async () => {
-        // Get settings in JSON format
+    test('WP-CLI: MilliCache Config Get JSON format (per-site)', async () => {
+        // Get per-site settings in JSON format
         const stdout = await runWpCliCommand('millicache config get -- --format=json');
 
-        // Extract JSON from output (may contain npm script prefix)
         const jsonMatch = stdout.match(/\{[\s\S]*\}/);
         expect(jsonMatch).not.toBeNull();
 
-        // Parse JSON output
         const settings = JSON.parse(jsonMatch![0]);
 
-        // Validate JSON structure
-        expect(settings).toHaveProperty('storage');
+        // Per-site scope owns cache + rules
         expect(settings).toHaveProperty('cache');
-        expect(settings.storage).toHaveProperty('host');
         expect(settings.cache).toHaveProperty('ttl');
+
+        // Storage must NOT appear in per-site JSON on multisite
+        expect(settings).not.toHaveProperty('storage');
+    });
+
+    test('WP-CLI: MilliCache Config Get JSON format (network)', async () => {
+        // Get network settings in JSON format
+        const stdout = await runWpCliCommand('millicache config get -- --network --format=json');
+
+        const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+        expect(jsonMatch).not.toBeNull();
+
+        const settings = JSON.parse(jsonMatch![0]);
+
+        // Network scope owns storage + network-level rules (scope-aware custom rules)
+        expect(settings).toHaveProperty('storage');
+        expect(settings.storage).toHaveProperty('host');
+        expect(settings).toHaveProperty('rules');
+
+        // Cache is per-site — must NOT appear in network JSON
+        expect(settings).not.toHaveProperty('cache');
     });
 
     test('WP-CLI: MilliCache Config Get with --show-source', async () => {
@@ -243,22 +287,35 @@ test.describe('Step 8: WP-CLI Commands', () => {
         await runWpCliCommand('millicache config reset -- --yes');
     });
 
-    test('WP-CLI: MilliCache Config Export JSON', async () => {
-        // Export settings in JSON format
+    test('WP-CLI: MilliCache Config Export JSON (per-site)', async () => {
+        // Export per-site settings in JSON format
         const stdout = await runWpCliCommand('millicache config export');
 
-        // Extract JSON from output
         const jsonMatch = stdout.match(/\{[\s\S]*\}/);
         expect(jsonMatch).not.toBeNull();
 
-        // Parse JSON output
         const settings = JSON.parse(jsonMatch![0]);
 
-        // Validate structure
-        expect(settings).toHaveProperty('storage');
+        // Per-site scope owns cache
         expect(settings).toHaveProperty('cache');
 
-        // Encrypted fields should be excluded
+        // Storage must NOT appear in per-site export on multisite
+        expect(settings).not.toHaveProperty('storage');
+    });
+
+    test('WP-CLI: MilliCache Config Export JSON (network)', async () => {
+        // Export network settings in JSON format
+        const stdout = await runWpCliCommand('millicache config export -- --network');
+
+        const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+        expect(jsonMatch).not.toBeNull();
+
+        const settings = JSON.parse(jsonMatch![0]);
+
+        // Network scope owns storage
+        expect(settings).toHaveProperty('storage');
+
+        // Encrypted fields must be excluded from export
         expect(settings.storage).not.toHaveProperty('enc_password');
     });
 });

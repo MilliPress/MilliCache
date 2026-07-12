@@ -28,14 +28,19 @@ namespace MilliCache\Engine\Utilities;
 final class Multisite {
 
 	/**
-	 * Check if WordPress is running in multisite mode.
+	 * Whether WordPress is running in Multisite mode.
 	 *
 	 * @since 1.0.0
+	 * @since 1.7.0 Made static and pre-WP-safe.
 	 *
-	 * @return bool True if multisite is enabled.
+	 * @return bool True if Multisite is enabled.
 	 */
-	public function is_enabled(): bool {
-		return function_exists( 'is_multisite' ) && is_multisite();
+	public static function is_enabled(): bool {
+		if ( function_exists( 'is_multisite' ) ) {
+			return is_multisite();
+		}
+
+		return defined( 'MULTISITE' ) && MULTISITE;
 	}
 
 	/**

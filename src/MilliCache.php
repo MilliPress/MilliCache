@@ -14,6 +14,7 @@
 
 namespace MilliCache;
 
+use MilliCache\Admin\Activator;
 use MilliCache\Admin\Admin;
 use MilliCache\Admin\CLI;
 use MilliCache\Core\Loader;
@@ -22,13 +23,7 @@ use MilliCache\Core\Updater;
 ! defined( 'ABSPATH' ) && exit;
 
 /**
- * The core plugin class.
- *
- * This is used to define internationalization, admin-specific hooks, and
- * public-facing site hooks.
- *
- * Also maintains the unique identifier of this plugin as well as the current
- * version of the plugin.
+ * The core plugin class — wires up hooks and holds the plugin's identity.
  *
  * @since      1.0.0
  * @package    MilliCache
@@ -132,16 +127,7 @@ final class MilliCache {
 	}
 
 	/**
-	 * Load the required dependencies for this plugin.
-	 *
-	 * Include the following files that make up the plugin:
-	 *
-	 * - Loader. Orchestrates the hooks of the plugin.
-	 * - Engine. The MilliCache engine.
-	 * - Admin. Defines all hooks & methods for the admin area.
-	 *
-	 * Create an instance of the loader which will be used to register the hooks
-	 * with WordPress.
+	 * Instantiate the plugin's dependencies (Loader, Engine, Admin, CLI).
 	 *
 	 * @since    1.0.0
 	 * @access   private
@@ -180,8 +166,10 @@ final class MilliCache {
 			$this->loader->add_action( $hook, $this->engine->clear(), 'sites', $priority, 0 );
 		}
 
-		// Cron events.
+		// Cron events. Self-healing.
+		$this->loader->add_action( 'shutdown', $this, 'ensure_scheduled_events' );
 		$this->loader->add_action( 'millicache_nightly', $this, 'cleanup_expired_flags' );
+		$this->loader->add_action( 'millicache_nightly', $this, 'rollup_metrics' );
 	}
 
 	/**
@@ -479,6 +467,18 @@ final class MilliCache {
 	}
 
 	/**
+	 * (Re)schedule the nightly cron event if missing (self-heal on load).
+	 *
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @return void
+	 */
+	public function ensure_scheduled_events() {
+		Activator::schedule_events();
+	}
+
+	/**
 	 * Cleanup expired flags.
 	 *
 	 * @since 1.0.0
@@ -488,6 +488,18 @@ final class MilliCache {
 	 */
 	public function cleanup_expired_flags() {
 		Engine::instance()->storage()->cleanup_expired_flags();
+	}
+
+	/**
+	 * Roll up and prune metrics buckets (nightly).
+	 *
+	 * @since 1.7.0
+	 * @access public
+	 *
+	 * @return void
+	 */
+	public function rollup_metrics() {
+		Engine::instance()->metrics()->rollup();
 	}
 
 	/**

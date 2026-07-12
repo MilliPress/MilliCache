@@ -18,8 +18,8 @@ namespace MilliRules\Builders;
  * @method ActionBuilder do_cache(bool $do_cache, string $reason = '') Allow page to be cached
  * @method ActionBuilder set_ttl(int $ttl) Set cache TTL in seconds
  * @method ActionBuilder set_grace(int $grace) Set the cache grace period in seconds
- * @method ActionBuilder clear_cache(string|array $flags, bool $expire) Clear cache by flag(s), post-ID(s) or URL(s)
- * @method ActionBuilder clear_site_cache(int|array|null $site_ids, int|array|null $network_ids, bool $expire) Clear cache by site ID(s)
+ * @method ActionBuilder clear_cache(string|array<int|string> $flags, bool $expire) Clear cache by flag(s), post-ID(s) or URL(s)
+ * @method ActionBuilder clear_site_cache(int|array<int>|null $site_ids, int|array<int>|null $network_ids, bool $expire) Clear cache by site ID(s)
  * @method ActionBuilder custom(string $id, callable $callback) Execute custom action callback
  *
  * Finalization:

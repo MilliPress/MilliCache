@@ -4,16 +4,16 @@
   "author": "Philipp Wellmer <hello@millipress.com>",
   "license": "GPL-2.0-or-later",
   "devDependencies": {
-    "@playwright/test": "^1.60.0",
+    "@playwright/test": "^1.61.1",
     "@types/node": "^20.17.10",
-    "@wordpress/e2e-test-utils-playwright": "1.48.0",
-    "@wordpress/env": "^11.8.0",
-    "@wordpress/scripts": "^32.4.0",
+    "@wordpress/e2e-test-utils-playwright": "1.50.0",
+    "@wordpress/env": "^11.10.0",
+    "@wordpress/scripts": "^32.4.1",
     "dotenv": "^17.4.2"
   },
   "dependencies": {
-    "@wordpress/components": "^35.0.0",
-    "@wordpress/element": "^8.0.0",
+    "@wordpress/components": "^36.1.0",
+    "@wordpress/element": "^8.0.1",
     "@wordpress/i18n": "^6.11.0"
   },
   "scripts": {
@@ -31,8 +31,8 @@
     "env:destroy": "wp-env destroy",
     "env:cli": "wp-env run cli",
     "env:redis-cli": "wp-env run cli bash -c 'redis-cli -h ${1:-redis}'",
-    "env:e2e": "npx playwright test step --workers=1",
-    "env:e2e:performance": "npx playwright test performance --workers=1",
+    "env:e2e": "playwright install chromium && npx playwright test step --workers=1",
+    "env:e2e:performance": "playwright install chromium && npx playwright test performance --workers=1",
     "env:e2e:performance:results": "node tests/e2e/performance/results.js"
   }
 }

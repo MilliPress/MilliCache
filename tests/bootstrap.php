@@ -86,6 +86,26 @@ if ( ! function_exists( 'did_action' ) ) {
 	}
 }
 
+if ( ! function_exists( 'do_action' ) ) {
+	function do_action( $hook, ...$args ) {
+		global $test_did_actions;
+		if ( ! isset( $test_did_actions ) ) {
+			$test_did_actions = array();
+		}
+		$test_did_actions[] = array(
+			'hook' => $hook,
+			'args' => $args,
+		);
+		return null;
+	}
+}
+
+if ( ! function_exists( 'wp_json_encode' ) ) {
+	function wp_json_encode( $data, $options = 0, $depth = 512 ) {
+		return json_encode( $data, $options, $depth );
+	}
+}
+
 if ( ! function_exists( 'trailingslashit' ) ) {
 	function trailingslashit( $value ) {
 		return rtrim( $value, '/' ) . '/';
@@ -124,6 +144,59 @@ if ( ! function_exists( 'size_format' ) ) {
 		$pow = min( $pow, count( $units ) - 1 );
 		$bytes /= pow( 1024, $pow );
 		return round( $bytes, $decimals ) . ' ' . $units[ $pow ];
+	}
+}
+
+if ( ! function_exists( 'get_site_option' ) ) {
+	function get_site_option( $option, $default_value = false ) {
+		global $test_site_options;
+		if ( ! isset( $test_site_options ) ) {
+			$test_site_options = array();
+		}
+		return array_key_exists( $option, $test_site_options ) ? $test_site_options[ $option ] : $default_value;
+	}
+}
+
+if ( ! function_exists( 'add_site_option' ) ) {
+	function add_site_option( $option, $value ) {
+		global $test_site_options;
+		if ( ! isset( $test_site_options ) ) {
+			$test_site_options = array();
+		}
+		if ( array_key_exists( $option, $test_site_options ) ) {
+			return false;
+		}
+		$test_site_options[ $option ] = $value;
+		return true;
+	}
+}
+
+if ( ! function_exists( 'update_site_option' ) ) {
+	function update_site_option( $option, $value ) {
+		global $test_site_options;
+		if ( ! isset( $test_site_options ) ) {
+			$test_site_options = array();
+		}
+		$test_site_options[ $option ] = $value;
+		return true;
+	}
+}
+
+if ( ! function_exists( 'delete_site_option' ) ) {
+	function delete_site_option( $option ) {
+		global $test_site_options;
+		if ( isset( $test_site_options[ $option ] ) ) {
+			unset( $test_site_options[ $option ] );
+			return true;
+		}
+		return false;
+	}
+}
+
+if ( ! function_exists( 'get_current_network_id' ) ) {
+	function get_current_network_id() {
+		global $test_current_network_id;
+		return $test_current_network_id ?? 1;
 	}
 }
 

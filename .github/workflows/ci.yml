@@ -19,7 +19,7 @@ on:
       - 'package-lock.json'
       - 'webpack.config.js'
   pull_request:
-    branches: [main, dev]
+    branches: [main, next, dev]
     # No paths filter - always run CI on PRs to catch issues before merge
 
 permissions:
@@ -45,7 +45,7 @@ jobs:
           client-id: ${{ secrets.MILLIPRESS_BOT_CLIENT_ID }}
           private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # App token (when present) lets the rebuild push trigger PR
           # `synchronize` events so required checks re-run on the rebuild
@@ -120,7 +120,7 @@ jobs:
         # Pest 4.x requires PHP 8.3+, so we only test on supported versions
         php: ['8.3', '8.4', '8.5']
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
@@ -133,7 +133,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
@@ -149,7 +149,7 @@ jobs:
     name: PHPStan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -162,7 +162,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-8.3-${{ hashFiles('**/composer.lock') }}
@@ -178,7 +178,7 @@ jobs:
     name: WordPress Code Style
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -191,7 +191,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-8.3-${{ hashFiles('**/composer.lock') }}
