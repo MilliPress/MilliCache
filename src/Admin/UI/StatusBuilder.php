@@ -209,8 +209,8 @@ final class StatusBuilder {
 			return null;
 		}
 
-		$version = \Composer\InstalledVersions::getVersion( $package );
-		return is_string( $version ) && '' !== $version ? $version : null;
+		$version = \Composer\InstalledVersions::getPrettyVersion( $package );
+		return is_string( $version ) && '' !== $version ? ltrim( $version, 'v' ) : null;
 	}
 
 	/**
