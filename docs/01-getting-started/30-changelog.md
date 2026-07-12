@@ -6,6 +6,92 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.0](https://github.com/MilliPress/MilliCache/compare/v1.6.2...v1.7.0) (2026-07-12)
+
+MilliCache 1.7.0 is a big step forward. The full feature list is long, so here are the highlights:
+
+**Redis Replication & Sentinel**
+MilliCache now supports high-availability setups. For most sites we still recommend simply running Redis or Valkey on the host server, but larger projects that need a more resilient topology are now covered.
+
+**Status Graphs**
+You can finally see how your cache is actually performing. A rebuilt Status dashboard charts your hit and miss ratio over time, so you can tell at a glance whether the cache is doing its job. On Multisite you also get network-wide stats.
+
+**Cache Buckets**
+Store different versions of the same request, for example based on a request header. This is really handy with plugins like roots/post-content-to-markdown, where you want to cache and serve different responses for the same URL: HTML for humans, Markdown for AI. In MilliCache that's a single rule.
+
+**Deduplication**
+Byte-identical responses are stored only once. MilliCache content-addresses each response body, so any requests that produce the exact same HTML (whether it's /?foo and /?foo=bar, or two entirely different URLs) share a single stored copy in Redis. Less memory, same speed.
+
+**Cache Health**
+Beyond the graphs, MilliCache now integrates with WordPress Site Health, so issues surface where you'd expect them: you won't miss it if, for example, your drop-in file is not in place.
+
+
+### Features
+
+* **admin:** add millicache_admin_notice action and HTML allowlist ([c693a0a](https://github.com/MilliPress/MilliCache/commit/c693a0ac19f88dc066e08a093d381fa210f2333d))
+* **adminbar:** animate + 500ms delay before post-clear recount ([00c7dc1](https://github.com/MilliPress/MilliCache/commit/00c7dc1199e1768c21f6432be3c436f44190d3db))
+* **adminbar:** live cache size + bounded current-view clear ([3877451](https://github.com/MilliPress/MilliCache/commit/38774516beb6e970597a37512d0c9d0b81fdd0fb))
+* **admin:** centered loading indicator on the Status tab ([534d7b0](https://github.com/MilliPress/MilliCache/commit/534d7b0923dc9832732f6cb2db2f6e4bd1385d49))
+* **admin:** count user-defined custom rules in the snapshot ([ab0d686](https://github.com/MilliPress/MilliCache/commit/ab0d686e954866dfb2fdf4016b79ce99d7cbfe0f))
+* **admin:** docs links per check, "warnings" pill label, rules in snapshot ([38307a4](https://github.com/MilliPress/MilliCache/commit/38307a4e60a2fea6e389ac8db6a30244327210bf))
+* **admin:** expose three extension filters on the status snapshot ([28c8cf1](https://github.com/MilliPress/MilliCache/commit/28c8cf1b59de5c0b90efea6bd902ff72bbb31cc8))
+* **admin:** footer Status indicator with unified status payload ([dd72515](https://github.com/MilliPress/MilliCache/commit/dd72515259044f3654f75e91614697e05e96028a))
+* **admin:** integrate with the WordPress Site Health screens ([2470fb8](https://github.com/MilliPress/MilliCache/commit/2470fb87100c16adabc171b163f158376294d361))
+* **admin:** make the status extension filters scope-aware ([9498b55](https://github.com/MilliPress/MilliCache/commit/9498b55031c3f881c79fe2867f98d3ed35942089))
+* **admin:** per-check breakdown in the footer Status modal ([52e58c9](https://github.com/MilliPress/MilliCache/commit/52e58c970d82df3e0de35323ff0b16dc99841b0b))
+* **admin:** polish free Status chart to match Pro ([4841e79](https://github.com/MilliPress/MilliCache/commit/4841e794e5e0c78edbea182b31c933f5ce652ecb))
+* **admin:** rebuild the Status tab — fixed panels, KPI/chart cards, lean Pro teaser ([1ef92ca](https://github.com/MilliPress/MilliCache/commit/1ef92ca5a3bbe78e0819a099d23a19520a6aad1d))
+* **admin:** surface storage topology across CLI, status, and settings ([3f34067](https://github.com/MilliPress/MilliCache/commit/3f34067fc312b831ee26825f7727e53f3b9d56e2))
+* **cache:** Add bucket framework with content-addressable body dedup ([#126](https://github.com/MilliPress/MilliCache/issues/126)) ([a279fd7](https://github.com/MilliPress/MilliCache/commit/a279fd704a05ce58165aed45038798f175f214cb))
+* **cache:** cap entries at 5MB raw to protect Redis from oversized responses ([2e2511f](https://github.com/MilliPress/MilliCache/commit/2e2511fa8df6cf45a9d31379d82961a5afa9aad1))
+* **engine:** expose install_mode() to report how MilliCache is loaded ([788e079](https://github.com/MilliPress/MilliCache/commit/788e0793fe65d35bd2d55131f50e7d485ab9ac31))
+* hand the advanced-cache.php drop-in between co-resident MilliCache copies ([80d5ab9](https://github.com/MilliPress/MilliCache/commit/80d5ab9b56f496b1549afd6c621ed5c00ff42673))
+* **hooks:** standardize cache-cleared action names ([1dedb37](https://github.com/MilliPress/MilliCache/commit/1dedb3796bb47aaa2605adb56242171f8d6e8827))
+* **metrics:** make hit/miss retention windows configurable ([45257b5](https://github.com/MilliPress/MilliCache/commit/45257b5094ef9a187915bb2decbe718af6ef0f38))
+* **metrics:** record hit/miss in the response path, excluding the preloader ([f42780f](https://github.com/MilliPress/MilliCache/commit/f42780ff1dbe442732f06f8e25bfd09ae591a656))
+* **metrics:** time-bucketed per-blog hit/miss metrics engine ([e031f9c](https://github.com/MilliPress/MilliCache/commit/e031f9cde4164537eb5ca476aef2e0d4496a1f2e))
+* **migrations:** add Core/Migrations with storage→network move ([63875c4](https://github.com/MilliPress/MilliCache/commit/63875c4d4ac75c199413deb195f631687c10223c))
+* **plugin:** Add author information and plugin URI to advanced cache file ([ef97d53](https://github.com/MilliPress/MilliCache/commit/ef97d532432a62e883dffa575e467769db38801f))
+* **response:** emit Age header on cache hits (RFC 9111) ([035bd24](https://github.com/MilliPress/MilliCache/commit/035bd24a13e7e86295b72c11e58ec97bc4445f2d))
+* **rules:** skip caching search result pages by default ([4bf4be3](https://github.com/MilliPress/MilliCache/commit/4bf4be35f1f02ef6a1a1a13a255bbb0bc358f795))
+* **settings:** Include metrics in network-scoped Settings instance for multisite ([59d2fa5](https://github.com/MilliPress/MilliCache/commit/59d2fa5ad339c9de43c9aef6699aa97e4cdf8b4b))
+* **settings:** order the settings tabs by declared position ([d8f208a](https://github.com/MilliPress/MilliCache/commit/d8f208a97f3169a9f7df1a2b6c7f93d17f8000ec))
+* **settings:** preserve storage connection settings across a full reset ([77772b1](https://github.com/MilliPress/MilliCache/commit/77772b1fd5c7c54acaeca85eebe04a8a1a374eda))
+* **settings:** skeleton loading state for the Status dashboard ([d5b48a7](https://github.com/MilliPress/MilliCache/commit/d5b48a7a629e79770d5fe3d96325bcd14648bb4f))
+* **site-health:** surface every status issue, not just the drop-in ([7a2d793](https://github.com/MilliPress/MilliCache/commit/7a2d7934d68019ed8d45329a3dab956cf07ef748))
+* **status:** informational check tier, severity ordering, sticky modal tabs ([ec6a249](https://github.com/MilliPress/MilliCache/commit/ec6a2497d4c9b072441adf4b5582f25ff785d3a8))
+* **status:** rework cache size metrics and Status tab UI ([88991c4](https://github.com/MilliPress/MilliCache/commit/88991c46555d890f6cc1e8bb10704cb1d5df1d8b))
+* **status:** show each check as a subject and a verdict ([f863b98](https://github.com/MilliPress/MilliCache/commit/f863b98d0570c6d33dee25ddf7667fdaf55db787))
+* **storage:** add generic key/value surface for reuse by drop-ins ([a1d195c](https://github.com/MilliPress/MilliCache/commit/a1d195c171a79f5f622dd50b562dbe6c8f00844e))
+* **storage:** add ping() active reachability probe ([85068a2](https://github.com/MilliPress/MilliCache/commit/85068a2f099ee123e81de2d2e6ce23ab96a2fc82))
+* **storage:** emit URL + canonical flags from entry deletion/expiry hooks ([d2445b1](https://github.com/MilliPress/MilliCache/commit/d2445b14a74d9eaf90cff3ee28dfd5cc010202be))
+* **storage:** extract Connection class with shape-inferred topology ([afdfdce](https://github.com/MilliPress/MilliCache/commit/afdfdce1784b9505190e05b2d5ee2d150885e258))
+* **ui:** Add footer with MilliCache version to Network and Site settings pages ([bfe5a1f](https://github.com/MilliPress/MilliCache/commit/bfe5a1f20db0a542c041f1e74a66bf3a17efbedf))
+* **ui:** Add footer with MilliCache version to Network and Site settings pages ([130dcc7](https://github.com/MilliPress/MilliCache/commit/130dcc79f88e509535f98950ef33abe680bfdd0d))
+* **updater:** honor millicache_updates at check time + add prerelease opt-in ([0153b35](https://github.com/MilliPress/MilliCache/commit/0153b357dd79796c7d5f50d8f3777f000498a311))
+
+
+### Bug Fixes
+
+* **admin:** color the Status modal check icons ([4ab80b3](https://github.com/MilliPress/MilliCache/commit/4ab80b3d487b6b8855bf30d02621cc1c1fdfa79a))
+* **cache status:** Correct key prefix for site flags in status retrieval ([0f419a2](https://github.com/MilliPress/MilliCache/commit/0f419a2bf51f73a7f8a84c0b8ed3fb39945f223d))
+* **cache:** stop SWR regeneration from storing serve-time headers ([2447389](https://github.com/MilliPress/MilliCache/commit/2447389c4184d79bb169cc8444a2334c6ac2cf75))
+* **cron:** self-heal the nightly maintenance schedule on load ([32f8579](https://github.com/MilliPress/MilliCache/commit/32f857987539ded6daa798d15f6e9286fe0adc4c))
+* **drop-in:** remove Plugin Name header so the drop-in is not listed as a plugin ([c532c15](https://github.com/MilliPress/MilliCache/commit/c532c15925856f0017206c1b10b64feaf84b1c3c))
+* **network:** Update network settings URL for MilliCache management ([4861431](https://github.com/MilliPress/MilliCache/commit/486143110f438e4df99edb84d6a0bf6d72437227))
+* **release:** isolate Strauss from setup-php's github-oauth token ([85b642e](https://github.com/MilliPress/MilliCache/commit/85b642eead3f8c4eec2e1eefbfef0ea3efb3a951))
+* **settings:** register the metrics.active default so it survives resolution ([f079f91](https://github.com/MilliPress/MilliCache/commit/f079f9146e59598aaa6b99f890c9c17d11e72a6d))
+* **status:** call the deduplication count unique responses, not pages ([52447f9](https://github.com/MilliPress/MilliCache/commit/52447f9dbdc27c0c60cc54e639c177c2a3d78485))
+* **status:** show clean package versions in the debug info ([4deacaf](https://github.com/MilliPress/MilliCache/commit/4deacaf0de21a07fb3524a6b909fa18651f776e7))
+* **storage:** preserve flag membership when expiring a cache entry ([7c83b33](https://github.com/MilliPress/MilliCache/commit/7c83b3388ae5efffa876487a4a674140e1046fda))
+* **ui:** Correct month value from 'M' to 'mo' ([a0dbbf5](https://github.com/MilliPress/MilliCache/commit/a0dbbf5c3496fc117fe4521fc950935418590601))
+* **workflow:** make polish-release-pr idempotent across reruns ([077c0c8](https://github.com/MilliPress/MilliCache/commit/077c0c8b4e3f9258522a3d950134db64be4a2fa3))
+
+
+### Performance
+
+* **storage:** batch flag-to-key resolution when clearing by sets ([1ee0b65](https://github.com/MilliPress/MilliCache/commit/1ee0b65e51e96db7efb41eb8a6db2825eee9f318))
+
 ## [1.7.0-beta.7](https://github.com/MilliPress/MilliCache/compare/v1.7.0-beta.6...v1.7.0-beta.7) (2026-07-10)
 
 <!-- mc:auto sha=19d754483250 -->
