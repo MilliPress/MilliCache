@@ -51,7 +51,7 @@ If caching proceeds, MilliCache generates a **cache key** from:
 - Request URL (path and query string)
 - Cookies (excluding ignored ones)
 - Custom unique variables (`MC_CACHE_UNIQUE`)
-- Resolved request **buckets** — short tokens for per-request signals (Authorization is built-in; others can be added via rules)
+- Resolved request **buckets**: Short tokens for per-request signals (Authorization is built-in; others can be added via rules)
 
 The key is hashed and used to look up cached content in Redis:
 
