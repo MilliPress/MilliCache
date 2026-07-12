@@ -39,6 +39,16 @@ final class SiteHealth {
 	private StatusBuilder $status_builder;
 
 	/**
+	 * Per-request memo of the built status payload, so the debug-info and
+	 * status-test filters (both firing on the same Site Health page load)
+	 * don't probe storage twice.
+	 *
+	 * @since 1.8.0
+	 * @var ?array<string, mixed>
+	 */
+	private ?array $payload_cache = null;
+
+	/**
 	 * Construct the controller and register both Site Health filters via the loader.
 	 *
 	 * @since 1.7.0
@@ -51,6 +61,22 @@ final class SiteHealth {
 
 		$loader->add_filter( 'debug_information', $this, 'register_debug_info' );
 		$loader->add_filter( 'site_status_tests', $this, 'register_status_tests' );
+	}
+
+	/**
+	 * The built status payload for this request, memoized so the two Site
+	 * Health filters share a single build (and a single storage probe).
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function payload(): array {
+		if ( null === $this->payload_cache ) {
+			$this->payload_cache = $this->status_builder->build( is_network_admin() );
+		}
+
+		return $this->payload_cache;
 	}
 
 	/**
@@ -69,7 +95,7 @@ final class SiteHealth {
 			return $info;
 		}
 
-		$payload = $this->status_builder->build( is_network_admin() );
+		$payload = $this->payload();
 
 		$info['millicache'] = array(
 			'label'       => __( 'MilliCache', 'millicache' ),
@@ -195,12 +221,9 @@ final class SiteHealth {
 	}
 
 	/**
-	 * Add MilliCache test cards to Site Health → Status.
-	 *
-	 * Each card is a synchronous `direct` test — the underlying checks
-	 * (file existence, Redis ping, constant lookup) all complete in
-	 * single-digit milliseconds, so async REST trips aren't worth the
-	 * complexity.
+	 * Register Site Health tests from the unified checks array, so any Pro
+	 * check surfaces automatically. All good → one "MilliCache is healthy"
+	 * entry; otherwise one `direct` test per outstanding issue.
 	 *
 	 * @since 1.7.0
 	 *
@@ -216,129 +239,131 @@ final class SiteHealth {
 			$tests['direct'] = array();
 		}
 
-		$tests['direct']['millicache_dropin'] = array(
-			'label' => __( 'MilliCache drop-in', 'millicache' ),
-			'test'  => array( $this, 'test_dropin' ),
-		);
-		$tests['direct']['millicache_storage'] = array(
-			'label' => __( 'MilliCache storage backend', 'millicache' ),
-			'test'  => array( $this, 'test_storage' ),
-		);
-		$tests['direct']['millicache_wp_cache'] = array(
-			'label' => __( 'MilliCache WP_CACHE constant', 'millicache' ),
-			'test'  => array( $this, 'test_wp_cache' ),
-		);
+		$issues = $this->outstanding_checks();
+
+		if ( array() === $issues ) {
+			$tests['direct']['millicache_health'] = array(
+				'label' => __( 'MilliCache is healthy', 'millicache' ),
+				'test'  => array( $this, 'test_health' ),
+			);
+
+			return $tests;
+		}
+
+		foreach ( $issues as $check ) {
+			$id = is_string( $check['id'] ?? null ) ? $check['id'] : '';
+			if ( '' === $id ) {
+				continue;
+			}
+
+			$slug = 'millicache_' . $id;
+
+			$tests['direct'][ $slug ] = array(
+				'label' => $this->headline( $check ),
+				'test'  => function () use ( $check, $slug ) {
+					return $this->result_from_check( $check, $slug );
+				},
+			);
+		}
 
 		return $tests;
 	}
 
 	/**
-	 * Site Health test: is the advanced-cache.php drop-in present and current?
+	 * The checks that need attention — `recommended` or `critical`. Neutral
+	 * `info` checks and passing `good` checks are filtered out.
 	 *
-	 * @since 1.7.0
+	 * @since 1.8.0
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function outstanding_checks(): array {
+		$debug  = is_array( $this->payload()['debug'] ?? null ) ? $this->payload()['debug'] : array();
+		$checks = is_array( $debug['checks'] ?? null ) ? $debug['checks'] : array();
+
+		$issues = array();
+		foreach ( $checks as $check ) {
+			if ( ! is_array( $check ) ) {
+				continue;
+			}
+			$status = is_string( $check['status'] ?? null ) ? $check['status'] : '';
+			if ( 'recommended' === $status || 'critical' === $status ) {
+				$issues[] = $check;
+			}
+		}
+
+		return $issues;
+	}
+
+	/**
+	 * Site Health test: the all-clear card shown when no check needs attention.
+	 *
+	 * @since 1.8.0
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function test_dropin(): array {
-		$info    = Utils::validate_advanced_cache_file();
-		$present = ! empty( $info );
-
-		if ( ! $present ) {
-			return $this->result(
-				'millicache_dropin',
-				'critical',
-				__( 'MilliCache drop-in is not installed', 'millicache' ),
-				__( 'The advanced-cache.php drop-in is required for MilliCache to intercept and serve cached pages. Without it, no pages are cached.', 'millicache' ),
-				$this->settings_action_link( __( 'Open MilliCache settings', 'millicache' ) )
-			);
-		}
-
-		if ( ! empty( $info['outdated'] ) ) {
-			return $this->result(
-				'millicache_dropin',
-				'recommended',
-				__( 'MilliCache drop-in is outdated', 'millicache' ),
-				__( 'A newer version of advanced-cache.php is bundled with the plugin. Re-install it from the MilliCache settings to pick up improvements and bug fixes.', 'millicache' ),
-				$this->settings_action_link( __( 'Re-install drop-in', 'millicache' ) )
-			);
-		}
-
-		if ( ! empty( $info['custom'] ) ) {
-			return $this->result(
-				'millicache_dropin',
-				'recommended',
-				__( 'MilliCache drop-in has been customized', 'millicache' ),
-				__( "The advanced-cache.php drop-in differs from the bundled version. MilliCache won't overwrite your changes, but plugin updates require manual merging.", 'millicache' ),
-				''
-			);
-		}
-
+	public function test_health(): array {
 		return $this->result(
-			'millicache_dropin',
+			'millicache_health',
 			'good',
-			__( 'MilliCache drop-in is installed and current', 'millicache' ),
-			__( 'The advanced-cache.php drop-in is in place and matches the bundled version.', 'millicache' ),
-			''
+			__( 'MilliCache is healthy', 'millicache' ),
+			__( 'Every MilliCache status check passes: the drop-in, the WP_CACHE constant, the storage backend, and any active Pro modules are configured correctly.', 'millicache' ),
+			$this->settings_action_link( __( 'Open MilliCache status', 'millicache' ) )
 		);
 	}
 
 	/**
-	 * Site Health test: can MilliCache reach its storage backend?
+	 * Turn a single unified status check into a Site Health test result.
 	 *
-	 * @since 1.7.0
+	 * @since 1.8.0
 	 *
+	 * @param array<string, mixed> $check A check from the unified `debug.checks` array.
+	 * @param string               $slug  The `direct` test key this result answers to.
 	 * @return array<string, mixed>
 	 */
-	public function test_storage(): array {
-		$connected = \MilliCache\Engine::instance()->storage()->ping();
+	private function result_from_check( array $check, string $slug ): array {
+		$status = is_string( $check['status'] ?? null ) ? $check['status'] : 'recommended';
+		if ( ! in_array( $status, array( 'good', 'recommended', 'critical' ), true ) ) {
+			$status = 'recommended';
+		}
 
-		if ( $connected ) {
-			return $this->result(
-				'millicache_storage',
-				'good',
-				__( 'MilliCache storage backend is reachable', 'millicache' ),
-				__( 'MilliCache successfully connected to its configured storage server.', 'millicache' ),
-				''
+		$description = $this->as_string( $check['description'] ?? null );
+		$url         = $this->as_string( $check['url'] ?? null );
+
+		$actions = $this->settings_action_link( __( 'Open MilliCache status', 'millicache' ) );
+		if ( '' !== $url ) {
+			$actions .= sprintf(
+				'<p><a href="%s" target="_blank" rel="noopener noreferrer">%s</a></p>',
+				esc_url( $url ),
+				esc_html__( 'Learn more', 'millicache' )
 			);
 		}
 
-		return $this->result(
-			'millicache_storage',
-			'critical',
-			__( 'MilliCache cannot reach its storage backend', 'millicache' ),
-			__( 'MilliCache could not connect to the configured storage server (Redis, Valkey, KeyDB, or Dragonfly). Cached pages cannot be read or written until the connection is restored.', 'millicache' ),
-			$this->settings_action_link( __( 'Open MilliCache settings', 'millicache' ) )
-		);
+		return $this->result( $slug, $status, $this->headline( $check ), $description, $actions );
 	}
 
 	/**
-	 * Site Health test: is the WP_CACHE constant defined and truthy?
+	 * Fold a check's subject label and verdict value into one Site Health
+	 * headline, e.g. "Storage backend: Disconnected".
 	 *
-	 * @since 1.7.0
+	 * @since 1.8.0
 	 *
-	 * @return array<string, mixed>
+	 * @param array<string, mixed> $check A check from the unified `debug.checks` array.
+	 * @return string
 	 */
-	public function test_wp_cache(): array {
-		if ( defined( 'WP_CACHE' ) && WP_CACHE ) {
-			return $this->result(
-				'millicache_wp_cache',
-				'good',
-				__( 'WP_CACHE constant is enabled', 'millicache' ),
-				__( 'The WP_CACHE constant is defined and truthy, allowing WordPress to load the advanced-cache.php drop-in early in the request lifecycle.', 'millicache' ),
-				''
-			);
+	private function headline( array $check ): string {
+		$label = $this->as_string( $check['label'] ?? null, __( 'MilliCache check', 'millicache' ) );
+		$value = $this->as_string( $check['value'] ?? null );
+
+		if ( '' === $value ) {
+			return $label;
 		}
 
-		return $this->result(
-			'millicache_wp_cache',
-			'recommended',
-			__( 'WP_CACHE constant is not enabled', 'millicache' ),
-			__( "WordPress only loads the advanced-cache.php drop-in when WP_CACHE is defined and truthy in wp-config.php. Without it, MilliCache can't intercept page requests.", 'millicache' ),
-			sprintf(
-				/* translators: %s: literal PHP snippet to add to wp-config.php */
-				__( 'Add %s to your wp-config.php, above the "happy blogging" line.', 'millicache' ),
-				'<code>define( \'WP_CACHE\', true );</code>'
-			)
+		return sprintf(
+			/* translators: 1: check subject (e.g. "Storage backend"), 2: its verdict (e.g. "Disconnected"). */
+			__( '%1$s: %2$s', 'millicache' ),
+			$label,
+			$value
 		);
 	}
 
@@ -350,7 +375,7 @@ final class SiteHealth {
 	 * @param string $slug        Test identifier (matches the `direct` key).
 	 * @param string $status      One of `good`, `recommended`, `critical`.
 	 * @param string $label       Short headline shown on the card.
-	 * @param string $description Longer explanation rendered below the headline.
+	 * @param string $description Longer explanation rendered below the headline (may contain <code>).
 	 * @param string $actions     Optional HTML for the actions row.
 	 * @return array<string, mixed>
 	 */
@@ -365,10 +390,10 @@ final class SiteHealth {
 			'label'       => $label,
 			'status'      => $status,
 			'badge'       => array(
-				'label' => __( 'Performance', 'millicache' ),
+				'label' => __( 'MilliCache', 'millicache' ),
 				'color' => $colors[ $status ] ?? 'gray',
 			),
-			'description' => sprintf( '<p>%s</p>', esc_html( $description ) ),
+			'description' => sprintf( '<p>%s</p>', wp_kses( $description, array( 'code' => array() ) ) ),
 			'actions'     => $actions,
 			'test'        => $slug,
 		);
