@@ -27,6 +27,7 @@ use MilliRules\Rules;
  * - Order 1: unlocked rules that sites may override via custom rules at order 10+.
  *
  * Registered rules:
+ * - millicache:wp:search (order 1, unlocked)
  * - millicache:wp:logged-in (order 1, unlocked)
  * - millicache:wp:response:code (order 1, unlocked)
  * - millicache:wp:const:donotcachepage (order 1, unlocked)
@@ -76,8 +77,31 @@ final class WordPress {
 		self::register_response_code_rule();
 		self::register_donotcachepage_rule();
 		self::register_logged_in_rule();
+		self::register_search_rule();
 		self::register_cron_rule();
 		self::register_ajax_rule();
+	}
+
+	/**
+	 * Register rule to skip cache for search result pages.
+	 *
+	 * Bots could flood the cache by search requests.
+	 * Unlocked at order 1 so sites can overwrite as required.
+	 *
+	 * @since 1.7.0
+	 * @access private
+	 *
+	 * @return void
+	 */
+	private static function register_search_rule(): void {
+		Rules::create( 'millicache:wp:search' )
+			->on( self::HOOK, self::PRIORITY )
+			->order( 1 )
+			->when()
+				->is_search()
+			->then()
+				->do_cache( false, 'MilliCache: Search results' )
+			->register();
 	}
 
 	/**

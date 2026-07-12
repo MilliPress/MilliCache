@@ -31,6 +31,7 @@ namespace MilliRules\Builders;
  * @method ConditionBuilder is_author(int|string|array<int|string>|null $author = null) Check if on an author archive
  * @method ConditionBuilder is_date() Check if on a date archive
  * @method ConditionBuilder is_feed(string|array<string>|null $feeds = null) Check if viewing a feed
+ * @method ConditionBuilder is_search(bool|null $value = null) Check if on a search results page
  * @method ConditionBuilder is_user_logged_in(bool|null $value = null) Check if user is logged in
  *
  * Condition Groups (chained after and()):
