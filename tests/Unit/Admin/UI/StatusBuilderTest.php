@@ -557,7 +557,7 @@ describe( 'StatusBuilder/build', function () {
 			$panels = invoke_builder_method( $this->builder, 'gather_panels', array( $this->payload ) );
 			$by_id  = array_column( $panels, null, 'id' );
 
-			expect( $by_id['kpi_entries']['detail'] )->toBe( '380 unique pages' );
+			expect( $by_id['kpi_entries']['detail'] )->toBe( '380 unique responses' );
 		} );
 
 		it( 'leaves the Entries context line empty when no unique bodies are counted', function () {

@@ -670,7 +670,7 @@ final class StatusBuilder {
 			'detail' => $unique > 0
 				? sprintf(
 					/* translators: %s: number of distinct cached bodies, formatted. */
-					_n( '%s unique page', '%s unique pages', $unique, 'millicache' ),
+					_n( '%s unique response', '%s unique responses', $unique, 'millicache' ),
 					number_format_i18n( $unique )
 				)
 				: '',
