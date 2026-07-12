@@ -152,7 +152,9 @@ const ChecksList = ( { checks } ) => {
 							<div className="millicache-footer-status__check-head">
 								<strong>{ c.label }</strong>
 								{ c.value && (
-									<span className="millicache-footer-status__check-value">
+									<span
+										className={ `millicache-footer-status__check-value millicache-footer-status__check-value--${ c.status }` }
+									>
 										{ c.value }
 									</span>
 								) }

@@ -735,15 +735,36 @@
 		margin-bottom: 4px;
 	}
 
-	// Status value: a neutral pill/badge (not code).
+	// Status value: the check's verdict, tinted by severity.
 	.millicache-footer-status__check-value {
 		flex-shrink: 0;
 		font-size: 11px;
-		font-weight: 500;
-		background: rgba(0, 0, 0, 0.04);
+		font-weight: 600;
+		background: rgba(0, 0, 0, 0.05);
+		color: #50575e;
 		padding: 2px 10px;
 		border-radius: 10px;
 		white-space: nowrap;
+
+		&--good {
+			color: #216e39;
+			background: rgba(74, 184, 102, 0.14);
+		}
+
+		&--info {
+			color: #50575e;
+			background: rgba(0, 0, 0, 0.05);
+		}
+
+		&--recommended {
+			color: #8a6100;
+			background: rgba(219, 166, 23, 0.16);
+		}
+
+		&--critical {
+			color: #a10f0f;
+			background: rgba(204, 24, 24, 0.1);
+		}
 	}
 
 	.millicache-footer-status__check-desc {

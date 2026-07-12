@@ -430,14 +430,14 @@ final class StatusBuilder {
 		if ( ! $is_per_site_ms ) {
 			$checks[] = array(
 				'id'          => 'dropin_present',
-				'label'       => __( 'advanced-cache.php drop-in is installed', 'millicache' ),
+				'label'       => __( 'advanced-cache.php drop-in', 'millicache' ),
 				'status'      => $dropin_is_present ? 'good' : 'critical',
 				'description' => $dropin_is_present
 					? __( 'The drop-in is in place. MilliCache can intercept page requests early.', 'millicache' )
 					: __( 'The drop-in is missing. Re-install it from MilliCache settings; without it, no pages are cached.', 'millicache' ),
 				'value'       => $dropin_is_present
-					? ( is_string( $dropin['type'] ?? null ) ? $dropin['type'] : 'file' )
-					: __( 'missing', 'millicache' ),
+					? __( 'Installed', 'millicache' )
+					: __( 'Missing', 'millicache' ),
 				'url'         => $dropin_docs,
 			);
 
@@ -448,18 +448,18 @@ final class StatusBuilder {
 
 				if ( $outdated ) {
 					$dropin_text  = __( 'The installed drop-in is older than the version bundled with the plugin. Re-install it to pick up improvements and bug fixes.', 'millicache' );
-					$dropin_value = __( 'outdated', 'millicache' );
+					$dropin_value = __( 'Outdated', 'millicache' );
 				} elseif ( $customized ) {
 					$dropin_text  = __( "The drop-in differs from the bundled version. MilliCache won't overwrite your changes, but plugin updates require manual merging.", 'millicache' );
-					$dropin_value = __( 'customized', 'millicache' );
+					$dropin_value = __( 'Customized', 'millicache' );
 				} else {
 					$dropin_text  = __( 'The drop-in matches the bundled version.', 'millicache' );
-					$dropin_value = __( 'current', 'millicache' );
+					$dropin_value = __( 'Current', 'millicache' );
 				}
 
 				$checks[] = array(
 					'id'          => 'dropin_current',
-					'label'       => __( 'advanced-cache.php drop-in is current', 'millicache' ),
+					'label'       => __( 'Drop-in version', 'millicache' ),
 					'status'      => $dropin_status,
 					'description' => $dropin_text,
 					'value'       => $dropin_value,
@@ -471,26 +471,28 @@ final class StatusBuilder {
 		// WP_CACHE constant — always checked.
 		$checks[] = array(
 			'id'          => 'wp_cache_constant',
-			'label'       => __( 'WP_CACHE constant is enabled', 'millicache' ),
+			'label'       => __( 'WP_CACHE constant', 'millicache' ),
 			'status'      => $wp_cache_on ? 'good' : 'critical',
 			'description' => $wp_cache_on
 				? __( '<code>WP_CACHE</code> is defined and truthy. WordPress will load the advanced-cache.php drop-in.', 'millicache' )
 				: __( "<code>WP_CACHE</code> is not defined or false in wp-config.php. WordPress won't load the drop-in, so MilliCache can't intercept page requests.", 'millicache' ),
-			'value'       => $wp_cache_on ? 'true' : 'false',
+			'value'       => $wp_cache_on
+				? __( 'Enabled', 'millicache' )
+				: __( 'Disabled', 'millicache' ),
 			'url'         => $wp_cache_docs,
 		);
 
 		// Storage connectivity — always checked.
 		$checks[] = array(
 			'id'          => 'storage_connected',
-			'label'       => __( 'Storage backend is reachable', 'millicache' ),
+			'label'       => __( 'Storage backend', 'millicache' ),
 			'status'      => $connected ? 'good' : 'critical',
 			'description' => $connected
 				? __( 'MilliCache successfully connected to its configured storage server.', 'millicache' )
 				: __( 'MilliCache cannot reach the configured storage server. Cache reads and writes are failing. Check the host, port, and credentials.', 'millicache' ),
 			'value'       => $connected
-				? __( 'connected', 'millicache' )
-				: __( 'disconnected', 'millicache' ),
+				? __( 'Connected', 'millicache' )
+				: __( 'Disconnected', 'millicache' ),
 			'url'         => $conn_docs,
 		);
 
@@ -530,7 +532,9 @@ final class StatusBuilder {
 				'label'       => __( 'Storage connection mode', 'millicache' ),
 				'status'      => 'info',
 				'description' => $mode_detail,
-				'value'       => $mode,
+				'value'       => 'sentinel' === $mode
+					? __( 'Sentinel', 'millicache' )
+					: __( 'Replication', 'millicache' ),
 				'url'         => self::DOCS_BASE . '/08-storage-backends/01-overview#high-availability-replication--sentinel',
 			);
 		}
@@ -543,12 +547,14 @@ final class StatusBuilder {
 
 			$checks[] = array(
 				'id'          => 'storage_max_memory',
-				'label'       => __( 'Storage backend has a memory limit', 'millicache' ),
+				'label'       => __( 'Storage memory limit', 'millicache' ),
 				'status'      => $max_mem_ok ? 'good' : 'recommended',
 				'description' => $max_mem_ok
 					? __( 'A maxmemory limit is configured. The storage server can evict entries when full.', 'millicache' )
 					: __( 'No maxmemory limit is set on the storage server. Without one, the cache can grow until it crowds out other workloads on the host. Set one live with <code>redis-cli CONFIG SET maxmemory 512mb</code>, or run the same command inside <code>wp millicache cli</code>.', 'millicache' ),
-				'value'       => is_string( $memory['maxmemory_human'] ?? null ) ? $memory['maxmemory_human'] : 'n/a',
+				'value'       => $max_mem_ok && is_string( $memory['maxmemory_human'] ?? null )
+					? $memory['maxmemory_human']
+					: __( 'Not set', 'millicache' ),
 				'url'         => $mem_docs,
 			);
 
@@ -557,12 +563,14 @@ final class StatusBuilder {
 
 			$checks[] = array(
 				'id'          => 'storage_eviction_policy',
-				'label'       => __( 'Storage eviction policy is allkeys-lru', 'millicache' ),
+				'label'       => __( 'Storage eviction policy', 'millicache' ),
 				'status'      => $policy_ok ? 'good' : 'recommended',
 				'description' => $policy_ok
 					? __( 'The storage server is configured with allkeys-lru, the recommended policy for a cache workload.', 'millicache' )
 					: __( 'For a cache workload, allkeys-lru is recommended so the server can automatically evict least-recently-used entries when full. Set it live with <code>redis-cli CONFIG SET maxmemory-policy allkeys-lru</code>, or run the same command inside <code>wp millicache cli</code>.', 'millicache' ),
-				'value'       => is_string( $policy ) ? $policy : 'n/a',
+				'value'       => is_string( $policy ) && '' !== $policy
+					? $policy
+					: __( 'Default', 'millicache' ),
 				'url'         => $policy_docs,
 			);
 		}
