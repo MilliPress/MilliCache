@@ -210,6 +210,9 @@ final class Engine {
 		?Cache\Manager $cache_manager = null,
 		?Cache\Invalidation\Manager $clearing_manager = null
 	) {
+		// Store singleton instance.
+		self::$instance = $this;
+
 		// Initialize autoloader first.
 		$this->autoload();
 
@@ -228,9 +231,6 @@ final class Engine {
 		$this->request_processor = $request_manager;
 		$this->cache_manager = $cache_manager;
 		$this->invalidation_manager = $clearing_manager;
-
-		// Store singleton instance.
-		self::$instance = $this;
 	}
 
 	/**
