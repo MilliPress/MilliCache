@@ -103,8 +103,8 @@ jobs:
 
       - name: Create release archive
         run: |
-          cd dist
-          zip -rq "../millicache.zip" .
+          mv dist millicache
+          zip -rq "millicache.zip" millicache
 
       - name: Upload release asset
         env:

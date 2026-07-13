@@ -44,9 +44,8 @@ jobs:
         env:
           TAG: ${{ inputs.tag }}
         run: |
-          cd dist
-          zip -rq "../millicache-${TAG}.zip" .
-          cd ..
+          mv dist millicache
+          zip -rq "millicache-${TAG}.zip" millicache
 
       - name: Create or update GitHub Release
         uses: softprops/action-gh-release@v3
