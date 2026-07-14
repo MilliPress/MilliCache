@@ -6,6 +6,14 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.1](https://github.com/MilliPress/MilliCache/compare/v1.7.0...v1.7.1) (2026-07-14)
+
+
+### Bug Fixes
+
+* **engine:** publish singleton before re-entrant bootstrap work ([cd6aa21](https://github.com/MilliPress/MilliCache/commit/cd6aa21c480de4cb4b2de5ff9b1bdad956bff783))
+* **status:** stop KPI tiles stretching in Safari ([c8d2945](https://github.com/MilliPress/MilliCache/commit/c8d2945b00ca287e8583f43ac20e3738a7bc1f5c))
+
 ## [1.7.0](https://github.com/MilliPress/MilliCache/compare/v1.6.2...v1.7.0) (2026-07-12)
 
 MilliCache 1.7.0 is a big step forward. The full feature list is long, so here are the highlights:
