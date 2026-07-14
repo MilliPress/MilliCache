@@ -273,10 +273,9 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		// Fill the cell to match the tallest card, without the trailing gap
-		// `height: 100%` leaves below (notably in Firefox).
-		height: -moz-available;
-		height: -webkit-fill-available;
+		// Grid stretch already sizes each card to the tallest in its row, so no
+		// explicit height is needed. `-webkit-fill-available` here made Safari
+		// resolve against the wrong container and grow the tile very long.
 		overflow: hidden; // Clip the full-bleed sparkline to the rounded corners.
 
 		&__label {
@@ -308,7 +307,10 @@
 			display: block;
 			width: auto;
 			height: 46px;
-			margin: -9px -20px -18px;
+			// `margin-top: auto` pins the sparkline to the card's bottom edge so
+			// shorter cards don't leave it floating mid-tile; negative side/bottom
+			// margins let it bleed to the rounded corners.
+			margin: auto -20px -18px;
 		}
 
 		&__spark-area {
