@@ -205,7 +205,8 @@ final class StatusBuilder {
 	 * @return string|null
 	 */
 	private function composer_version( string $package ): ?string {
-		if ( ! class_exists( '\Composer\InstalledVersions' ) ) {
+		if ( ! class_exists( '\Composer\InstalledVersions' )
+			|| ! \Composer\InstalledVersions::isInstalled( $package ) ) {
 			return null;
 		}
 
