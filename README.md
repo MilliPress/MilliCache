@@ -68,6 +68,12 @@ Full documentation is available on [millipress.com/docs/millicache](https://mill
 - WordPress 6.6+
 - A Redis-compatible server: [Redis](https://redis.io/), [Valkey](https://valkey.io/), [Dragonfly](https://dragonflydb.io/), or any other RESP-compatible backend
 
+## Community
+
+The [Discord](https://discord.gg/mx8HAXaKGY) server and [GitHub Discussions](https://github.com/MilliPress/MilliCache/discussions) are places to swap setups, trade tips, and share your ideas for where MilliCache should head next. We're listening.
+
+For bug reports, open a [GitHub issue](https://github.com/MilliPress/MilliCache/issues). [MilliCache Pro](https://millipress.com/millicache-pro) customers also get direct support by email and a private Discord channel.
+
 ## Testing
 
 MilliCache uses PHPUnit, PHPStan, and Playwright for testing. To run tests locally:
@@ -93,12 +99,6 @@ npm run env:cli wp millicache stats    # Run WP-CLI commands
 npm run env:redis-cli                  # Open Redis CLI
 npm run env:reset                      # Reset environment
 ```
-
-## Community
-
-The [Discord](https://discord.gg/mx8HAXaKGY) server and [GitHub Discussions](https://github.com/MilliPress/MilliCache/discussions) are places to swap setups, trade tips, and share your ideas for where MilliCache should head next. We're listening.
-
-For bug reports, open a [GitHub issue](https://github.com/MilliPress/MilliCache/issues). [MilliCache Pro](https://millipress.com/millicache-pro) customers also get direct support by email and a private Discord channel.
 
 ## Credits
 
