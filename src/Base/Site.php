@@ -94,6 +94,7 @@ final class Site extends Manager {
 				'nocache_cookies'     => array( 'wp-*pass*', 'comment_author_*' ),
 				'ignore_cookies'      => array( '_*' ),
 				'ignore_request_keys' => array( '_*', 'utm_*' ),
+				'buckets'             => array(),
 				'debug'               => false,
 				'gzip'                => true,
 			),
