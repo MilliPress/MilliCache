@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/MilliPress/MilliCache/actions/workflows/ci.yml/badge.svg)](https://github.com/MilliPress/MilliCache/actions/workflows/ci.yml)
 [![e2e-Tests](https://github.com/MilliPress/MilliCache/actions/workflows/e2e.yml/badge.svg)](https://github.com/MilliPress/MilliCache/actions/workflows/e2e.yml)
+[![Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/mx8HAXaKGY)
+[![GitHub Discussions](https://img.shields.io/github/discussions/MilliPress/MilliCache?logo=github&label=Discussions)](https://github.com/MilliPress/MilliCache/discussions)
 
 **High-performance full-page caching for WordPress** using Redis, Valkey, or any compatible backend.
 
@@ -91,6 +93,12 @@ npm run env:cli wp millicache stats    # Run WP-CLI commands
 npm run env:redis-cli                  # Open Redis CLI
 npm run env:reset                      # Reset environment
 ```
+
+## Community
+
+The [Discord](https://discord.gg/mx8HAXaKGY) server and [GitHub Discussions](https://github.com/MilliPress/MilliCache/discussions) are places to swap setups, trade tips, and share your ideas for where MilliCache should head next. We're listening.
+
+For bug reports, open a [GitHub issue](https://github.com/MilliPress/MilliCache/issues). [MilliCache Pro](https://millipress.com/millicache-pro) customers also get direct support by email and a private Discord channel.
 
 ## Credits
 
