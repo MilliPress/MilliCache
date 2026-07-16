@@ -84,7 +84,12 @@
                 "psr/http-message",
                 "millipress/millirules",
                 "millipress/millibase"
-            ]
+            ],
+            "exclude_from_prefix": {
+                "packages": [
+                    "millipress/millirules"
+                ]
+            }
         },
         "hooks": {
             "config": {
