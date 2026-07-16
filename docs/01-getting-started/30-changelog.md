@@ -6,6 +6,16 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.2](https://github.com/MilliPress/MilliCache/compare/v1.7.1...v1.7.2) (2026-07-16)
+
+
+### Bug Fixes
+
+* **dropin:** invalidate OPcache when installing or removing drop-ins ([841707d](https://github.com/MilliPress/MilliCache/commit/841707dde73f15ac743d72bacff603bd86bb62d7))
+* **rules:** share the rules engine with other MilliRules integrations ([ba02b55](https://github.com/MilliPress/MilliCache/commit/ba02b55a922b82426e3406a9b37ebc7ff8be8b31))
+* **settings:** recognize the cache buckets key so MC_CACHE_BUCKETS works ([3255794](https://github.com/MilliPress/MilliCache/commit/32557945d9c48aae5f25dc11dbe6e87b466e1116))
+* **updater:** only self-update when this copy owns the plugin basename ([2f6d584](https://github.com/MilliPress/MilliCache/commit/2f6d5849e83d1027b026948ba40221a516326944))
+
 ## [1.7.1](https://github.com/MilliPress/MilliCache/compare/v1.7.0...v1.7.1) (2026-07-14)
 
 
