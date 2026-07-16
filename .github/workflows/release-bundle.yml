@@ -1,6 +1,6 @@
 name: Release Bundle (reusable)
 
-# Builds millicache.zip, uploads it to a draft release, then publishes it.
+# Builds millicache-{version}.zip, uploads it to a draft release, then publishes it.
 # Optionally notifies MilliCache-Pro and updates Packagist (main-only).
 # Called by release-please.yml and release-please-next.yml.
 
@@ -102,15 +102,18 @@ jobs:
         run: ./.github/scripts/build-dist.sh
 
       - name: Create release archive
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
           mv dist millicache
-          zip -rq "millicache.zip" millicache
+          zip -rq "millicache-${VERSION}.zip" millicache
 
       - name: Upload release asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ inputs.tag_name }}
-        run: gh release upload "$TAG_NAME" millicache.zip --clobber
+          VERSION: ${{ inputs.version }}
+        run: gh release upload "$TAG_NAME" "millicache-${VERSION}.zip" --clobber
 
       - name: Update release notes with performance results
         env:
