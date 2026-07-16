@@ -99,10 +99,13 @@ final class DropIn {
 			}
 		}
 
+		// Capture before rename() clobbers the link.
+		$old_target = is_link( $destination ) ? (string) readlink( $destination ) : '';
 		$temp = $destination . '.millicache.' . uniqid( '', true ) . '.tmp';
 
 		if ( function_exists( 'symlink' ) && @symlink( $source_file, $temp ) ) {
 			if ( @rename( $temp, $destination ) ) {
+				self::invalidate_opcache( $destination, $old_target );
 				return 'symlinked';
 			}
 			@unlink( $temp );
@@ -124,6 +127,7 @@ final class DropIn {
 		}
 
 		if ( @rename( $temp, $destination ) ) {
+			self::invalidate_opcache( $destination, $old_target );
 			return 'copied';
 		}
 
@@ -165,7 +169,12 @@ final class DropIn {
 			}
 		}
 
-		return wp_delete_file( $destination ) ? 'removed' : null;
+		if ( ! wp_delete_file( $destination ) ) {
+			return null;
+		}
+
+		self::invalidate_opcache( $destination );
+		return 'removed';
 	}
 
 	/**
@@ -252,6 +261,26 @@ final class DropIn {
 		}
 
 		return $matches[1];
+	}
+
+	/**
+	 * Drop stale OPcache entries for replaced or deleted drop-in files.
+	 *
+	 * @since 1.7.2
+	 * @access private
+	 *
+	 * @param string ...$paths Absolute paths; empty strings are skipped.
+	 */
+	private static function invalidate_opcache( string ...$paths ): void {
+		foreach ( array_filter( $paths ) as $path ) {
+			clearstatcache( true, $path );
+
+			if ( function_exists( 'wp_opcache_invalidate' ) ) {
+				wp_opcache_invalidate( $path, true );
+			} elseif ( function_exists( 'opcache_invalidate' ) ) {
+				@opcache_invalidate( $path, true );
+			}
+		}
 	}
 
 	/**
