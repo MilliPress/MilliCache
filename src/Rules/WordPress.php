@@ -14,6 +14,10 @@
 
 namespace MilliCache\Rules;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use MilliRules\Rules;
 
 /**

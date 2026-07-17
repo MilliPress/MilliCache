@@ -13,7 +13,9 @@ namespace MilliCache\Admin\CLI;
 
 use MilliCache\Admin\DropIn;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Drop command.

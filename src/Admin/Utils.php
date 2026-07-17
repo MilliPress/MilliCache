@@ -17,7 +17,9 @@ namespace MilliCache\Admin;
 
 use MilliCache\Engine;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Static admin utility methods for MilliCache.

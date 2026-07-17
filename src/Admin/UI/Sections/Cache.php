@@ -14,7 +14,9 @@ namespace MilliCache\Admin\UI\Sections;
 
 use MilliCache\Engine\Utilities\Multisite;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Provides the `cache` section configuration consumed by MilliBase.

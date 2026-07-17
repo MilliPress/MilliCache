@@ -16,7 +16,9 @@ use MilliBase\Settings as BaseSettings;
 use MilliCache\Admin\UI\Sections;
 use MilliCache\Engine\Utilities\Multisite;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Wires the network MilliBase Manager (slug `millicache`, option

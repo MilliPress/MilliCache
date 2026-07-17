@@ -20,7 +20,9 @@
 
 namespace MilliCache\Admin;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Lifecycle of WordPress drop-ins (advanced-cache.php).
@@ -75,6 +77,7 @@ final class DropIn {
 	 * @return null|string 'symlinked', 'copied', 'unchanged', 'preserved', 'unwritable', or null on failure.
 	 */
 	public static function install( string $filename = 'advanced-cache.php', ?string $source_dir = null, bool $force = false ): ?string {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Drop-in management needs direct wp-content access; WP_Filesystem is not initialized in activation/CLI contexts.
 		if ( ! is_writable( WP_CONTENT_DIR ) ) {
 			return 'unwritable';
 		}
@@ -104,11 +107,12 @@ final class DropIn {
 		$temp = $destination . '.millicache.' . uniqid( '', true ) . '.tmp';
 
 		if ( function_exists( 'symlink' ) && @symlink( $source_file, $temp ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- Atomic swap: the drop-in loads on every request and must never be half-written; WP_Filesystem::move() is not atomic.
 			if ( @rename( $temp, $destination ) ) {
 				self::invalidate_opcache( $destination, $old_target );
 				return 'symlinked';
 			}
-			@unlink( $temp );
+			wp_delete_file( $temp );
 		}
 
 		$source_content = file_get_contents( $source_file );
@@ -126,12 +130,13 @@ final class DropIn {
 			return null;
 		}
 
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- Atomic swap: the drop-in loads on every request and must never be half-written; WP_Filesystem::move() is not atomic.
 		if ( @rename( $temp, $destination ) ) {
 			self::invalidate_opcache( $destination, $old_target );
 			return 'copied';
 		}
 
-		@unlink( $temp );
+		wp_delete_file( $temp );
 		return null;
 	}
 
@@ -155,6 +160,7 @@ final class DropIn {
 			return 'absent';
 		}
 
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Drop-in management needs direct wp-content access; WP_Filesystem is not initialized in activation/CLI contexts.
 		if ( ! is_writable( WP_CONTENT_DIR ) ) {
 			return 'unwritable';
 		}

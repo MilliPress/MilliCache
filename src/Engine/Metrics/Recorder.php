@@ -12,7 +12,9 @@
 
 namespace MilliCache\Engine\Metrics;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Records the plugin's own page-cache hit/miss counters into time buckets —

@@ -15,7 +15,9 @@ namespace MilliCache\Engine\Cache;
 use MilliCache\Core\Storage;
 use MilliCache\Engine\Utilities\PatternMatcher;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Writes and stores cache entries.

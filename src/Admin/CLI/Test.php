@@ -13,7 +13,9 @@ namespace MilliCache\Admin\CLI;
 
 use MilliCache\Core\Connection;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Test command.

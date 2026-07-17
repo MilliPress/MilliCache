@@ -16,7 +16,9 @@ use MilliCache\Admin\Utils;
 use MilliCache\Core\Connection;
 use MilliCache\Engine;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Assembles the unified `/status` REST payload — the single source of truth for

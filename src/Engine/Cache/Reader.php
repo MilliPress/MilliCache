@@ -14,7 +14,9 @@ namespace MilliCache\Engine\Cache;
 
 use MilliCache\Core\Storage;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Reads and serves cached content.

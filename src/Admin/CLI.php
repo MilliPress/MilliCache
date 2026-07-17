@@ -18,7 +18,9 @@ use MilliCache\Admin\CLI\Status;
 use MilliCache\Admin\CLI\StorageCLI;
 use MilliCache\Admin\CLI\Test;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * The WordPress CLI functionality of the plugin.

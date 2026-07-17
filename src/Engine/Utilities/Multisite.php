@@ -12,7 +12,9 @@
 
 namespace MilliCache\Engine\Utilities;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Handles multisite-specific cache operations.

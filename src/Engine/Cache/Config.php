@@ -14,7 +14,9 @@ namespace MilliCache\Engine\Cache;
 
 use MilliCache\Engine\Utilities\Helpers;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Immutable value object representing cache configuration.

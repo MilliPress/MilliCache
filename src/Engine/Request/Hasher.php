@@ -16,7 +16,9 @@ use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Request\Bucket\Resolver as Buckets;
 use MilliCache\Engine\Utilities\ServerVars;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Generates a unique hash for each request.

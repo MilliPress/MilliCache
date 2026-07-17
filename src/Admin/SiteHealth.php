@@ -19,7 +19,9 @@ namespace MilliCache\Admin;
 use MilliCache\Admin\UI\StatusBuilder;
 use MilliCache\Core\Loader;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Registers MilliCache's contributions to the WordPress Site Health screens.

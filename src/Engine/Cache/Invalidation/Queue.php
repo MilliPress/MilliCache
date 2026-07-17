@@ -15,7 +15,9 @@ namespace MilliCache\Engine\Cache\Invalidation;
 use MilliCache\Core\Storage;
 use MilliCache\Engine\Utilities\Multisite;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Manages cache clearing operations by flags.

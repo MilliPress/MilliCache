@@ -14,7 +14,9 @@ namespace MilliCache\Engine\Metrics;
 
 use MilliCache\Core\Storage;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * The metrics subsystem: request-scoped writes ({@see self::record()}), reads

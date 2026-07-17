@@ -15,7 +15,9 @@
 
 namespace MilliCache\Core;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Self-hosted plugin update checker.

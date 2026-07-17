@@ -15,7 +15,9 @@ use MilliCache\Core\Loader;
 use MilliCache\Engine;
 use MilliCache\MilliCache;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * The WordPress Adminbar functionality of the plugin.

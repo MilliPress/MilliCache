@@ -12,7 +12,9 @@
 
 namespace MilliCache\Engine\Utilities;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Utility class for pattern matching with wildcard and regex support.

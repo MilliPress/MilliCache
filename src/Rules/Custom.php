@@ -17,7 +17,9 @@ use MilliCache\Base\Site;
 use MilliCache\Engine\Utilities\Multisite;
 use MilliRules\Rules;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Class Custom

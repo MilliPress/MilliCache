@@ -12,7 +12,9 @@
 
 namespace MilliCache\Engine\Metrics;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Read-side counterpart to {@see Recorder}: turns the hourly bucket hash into

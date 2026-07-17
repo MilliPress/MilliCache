@@ -13,7 +13,9 @@ namespace MilliCache\Admin\CLI;
 
 use MilliCache\Admin\Utils;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Stats command.

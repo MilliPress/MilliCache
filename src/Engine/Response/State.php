@@ -12,7 +12,9 @@
 
 namespace MilliCache\Engine\Response;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Immutable value object representing request-specific state.
