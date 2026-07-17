@@ -15,9 +15,12 @@ namespace MilliCache\Base\Migrations;
 
 use MilliBase\Manager;
 use MilliCache\Base\Site;
+use MilliCache\Engine;
 use RuntimeException;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Migration: copy `storage` from the main site's per-site option to the
@@ -78,6 +81,6 @@ final class MoveStorageToNetwork {
 			'success'
 		);
 
-		error_log( sprintf( 'MilliCache migration "move_storage_to_network" succeeded for main site %d.', $main_id ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		Engine::instance()->logger()->debug( sprintf( 'Migration "move_storage_to_network" succeeded for main site %d.', $main_id ) );
 	}
 }

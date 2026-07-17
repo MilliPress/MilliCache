@@ -12,6 +12,7 @@
 
 namespace MilliCache\Core;
 
+use MilliBase\Logger;
 use MilliCache\Engine;
 use Predis;
 use Predis\Client;
@@ -19,7 +20,9 @@ use Predis\Connection\ConnectionException;
 use Predis\Connection\Resource\Exception\StreamInitException;
 use Predis\PredisException;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * The Storage class for interacting with in-memory cache servers.
@@ -72,21 +75,35 @@ class Storage {
 	private array $connection_info = array();
 
 	/**
+	 * Channel-prefixed logger for storage failures.
+	 *
+	 * @since 1.7.3
+	 * @access private
+	 *
+	 * @var Logger $logger
+	 */
+	private Logger $logger;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since 1.0.0
+	 * @since 1.7.3 Accepts an injected logger.
 	 * @access public
 	 *
 	 * @param array<mixed> $settings The settings for the storage server connection.
+	 * @param Logger|null  $logger   Shared logger instance; defaults to an own "MilliCache" channel.
 	 *
 	 * @return void
 	 */
-	public function __construct( array $settings ) {
+	public function __construct( array $settings, ?Logger $logger = null ) {
+		$this->logger = $logger ?? new Logger( 'MilliCache' );
+
 		if ( isset( $settings['prefix'] ) && is_string( $settings['prefix'] ) && '' !== $settings['prefix'] ) {
 			$this->prefix = $settings['prefix'];
 		}
 
-		$connection            = new Connection( $settings );
+		$connection            = new Connection( $settings, $this->logger );
 		$this->connection_info = $connection->describe();
 
 		$client = $connection->client();
@@ -96,7 +113,7 @@ class Storage {
 			// precise reason during normalization); only a real connect failure
 			// warrants this generic message here.
 			if ( 'disabled' !== ( $this->connection_info['mode'] ?? '' ) ) {
-				error_log( 'Unable to connect to the storage server.' );
+				$this->logger->error( 'Unable to connect to the storage server.' );
 			}
 			return;
 		}
@@ -189,11 +206,11 @@ class Storage {
 			return $operation();
 		} catch ( ConnectionException | StreamInitException $e ) {
 			$this->connection_failed = true;
-			error_log( 'Unable to connect to the storage server: ' . $e->getMessage() );
+			$this->logger->error( 'Unable to connect to the storage server: ' . $e->getMessage() );
 			return $fallback;
 		} catch ( PredisException $e ) {
 			if ( '' !== $message ) {
-				error_log( $message . ': ' . $e->getMessage() );
+				$this->logger->error( $message . ': ' . $e->getMessage() );
 			}
 			return $fallback;
 		}
