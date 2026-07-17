@@ -45,7 +45,7 @@ final class SiteHealth {
 	 * status-test filters (both firing on the same Site Health page load)
 	 * don't probe storage twice.
 	 *
-	 * @since 1.8.0
+	 * @since 1.7.2
 	 * @var ?array<string, mixed>
 	 */
 	private ?array $payload_cache = null;
@@ -69,7 +69,7 @@ final class SiteHealth {
 	 * The built status payload for this request, memoized so the two Site
 	 * Health filters share a single build (and a single storage probe).
 	 *
-	 * @since 1.8.0
+	 * @since 1.7.2
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -275,7 +275,7 @@ final class SiteHealth {
 	 * The checks that need attention — `recommended` or `critical`. Neutral
 	 * `info` checks and passing `good` checks are filtered out.
 	 *
-	 * @since 1.8.0
+	 * @since 1.7.2
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
@@ -300,7 +300,7 @@ final class SiteHealth {
 	/**
 	 * Site Health test: the all-clear card shown when no check needs attention.
 	 *
-	 * @since 1.8.0
+	 * @since 1.7.2
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -317,7 +317,7 @@ final class SiteHealth {
 	/**
 	 * Turn a single unified status check into a Site Health test result.
 	 *
-	 * @since 1.8.0
+	 * @since 1.7.2
 	 *
 	 * @param array<string, mixed> $check A check from the unified `debug.checks` array.
 	 * @param string               $slug  The `direct` test key this result answers to.
@@ -348,7 +348,7 @@ final class SiteHealth {
 	 * Fold a check's subject label and verdict value into one Site Health
 	 * headline, e.g. "Storage backend: Disconnected".
 	 *
-	 * @since 1.8.0
+	 * @since 1.7.2
 	 *
 	 * @param array<string, mixed> $check A check from the unified `debug.checks` array.
 	 * @return string

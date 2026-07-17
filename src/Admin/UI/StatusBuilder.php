@@ -588,7 +588,7 @@ final class StatusBuilder {
 	 * original index so same-severity checks keep their contribution order on
 	 * PHP 7.4, where `usort()` isn't stable.
 	 *
-	 * @since 1.8.0
+	 * @since 1.7.2
 	 *
 	 * @param array<int, array<string, mixed>> $checks The (possibly filtered) checks list.
 	 * @return array<int, array<string, mixed>>
