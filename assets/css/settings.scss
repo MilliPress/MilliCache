@@ -249,6 +249,10 @@
 			@media (max-width: 480px) {
 				grid-template-columns: 1fr;
 			}
+
+			> [role="listitem"] {
+				display: flex;
+			}
 		}
 
 		&--breakdowns {
@@ -271,6 +275,7 @@
 
 	.millicache-status-kpi {
 		display: flex;
+		flex-grow: 1;
 		flex-direction: column;
 		gap: 4px;
 		// Grid stretch already sizes each card to the tallest in its row, so no
