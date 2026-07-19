@@ -41,10 +41,12 @@ final class Utils {
 	 * @param array<string> $css_deps    An array of CSS dependencies to include.
 	 * @param string        $basename    Plugin basename for asset resolution.
 	 *                                   Defaults to MILLICACHE_BASENAME.
+	 * @param string        $text_domain Text domain used to load the script's
+	 *                                   translations. Defaults to 'millicache'.
 	 *
 	 * @return bool True if assets were successfully enqueued, false otherwise.
 	 */
-	public static function enqueue_assets( string $asset_name, array $js_deps = array(), array $css_deps = array(), string $basename = '' ): bool {
+	public static function enqueue_assets( string $asset_name, array $js_deps = array(), array $css_deps = array(), string $basename = '', string $text_domain = 'millicache' ): bool {
 		if ( ! $basename && ! defined( 'MILLICACHE_BASENAME' ) ) {
 			return false;
 		}
@@ -68,13 +70,20 @@ final class Utils {
 			$asset['version']
 		);
 
+		$js_dependencies = array_merge( $asset['dependencies'], $js_deps );
+
 		wp_enqueue_script(
 			"millicache-{$asset_name}",
 			plugins_url( 'build/' . $asset_name . '.js', $basename ),
-			array_merge( $asset['dependencies'], $js_deps ),
+			$js_dependencies,
 			$asset['version'],
 			array( 'in_footer' => true )
 		);
+
+		// Load the JSON translations for scripts that use @wordpress/i18n.
+		if ( in_array( 'wp-i18n', $js_dependencies, true ) ) {
+			wp_set_script_translations( "millicache-{$asset_name}", $text_domain );
+		}
 
 		return true;
 	}
