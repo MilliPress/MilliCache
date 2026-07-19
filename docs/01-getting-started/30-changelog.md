@@ -6,6 +6,21 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.3](https://github.com/MilliPress/MilliCache/compare/v1.7.2...v1.7.3) (2026-07-19)
+
+
+### Features
+
+* **cli:** let `wp millicache drop` target and reinstall any drop-in ([8937287](https://github.com/MilliPress/MilliCache/commit/8937287d2d7ff505f4d91a53eb76a1d26c1e925e))
+* **i18n:** make translation-ready for language-pack delivery ([4757aa8](https://github.com/MilliPress/MilliCache/commit/4757aa81ab833b2927f6d0d453253128d23e3cd5))
+* **logging:** adopt the shared MilliBase Logger ([7eccbaa](https://github.com/MilliPress/MilliCache/commit/7eccbaae4a7010719e4a9330fda3fca5d5b415c8))
+
+
+### Bug Fixes
+
+* **pcp:** satisfy Plugin Check across shipped sources ([41f918d](https://github.com/MilliPress/MilliCache/commit/41f918de3912bde84f05708fc3ebea51f73cc6bb))
+* **ui:** share Status card styles between MilliCache and MilliCache Pro ([6aac122](https://github.com/MilliPress/MilliCache/commit/6aac12210d438dec29cadfd54285e69e7bb9dd28))
+
 ## [1.7.2](https://github.com/MilliPress/MilliCache/compare/v1.7.1...v1.7.2) (2026-07-16)
 
 
