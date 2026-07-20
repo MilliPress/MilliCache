@@ -51,7 +51,7 @@ jobs:
       # Keeping other caches (Composer, Playwright) which don't have this problem
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           cache: 'npm'
           cache-dependency-path: millicache/package-lock.json
