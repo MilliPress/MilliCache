@@ -39,7 +39,7 @@ final class Updater {
 	 * @since 1.0.0
 	 * @var   string
 	 */
-	private const ENDPOINT_URL = 'https://millipress.com/api/plugins/millicache/info';
+	private const ENDPOINT_URL = 'https://www.millipress.com/api/plugins/millicache/info';
 
 	/**
 	 * Transient key for caching remote update info.
