@@ -59,4 +59,5 @@ jobs:
       sha: ${{ needs.release-please.outputs.sha }}
       notify_pro: true
       update_packagist: true
+      notify_discord: true
     secrets: inherit

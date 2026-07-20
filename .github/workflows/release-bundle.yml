@@ -28,6 +28,10 @@ on:
         required: false
         type: boolean
         default: false
+      notify_discord:
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -139,6 +143,67 @@ jobs:
           TAG_NAME: ${{ inputs.tag_name }}
           REPO: ${{ github.repository }}
         run: gh release edit "$TAG_NAME" --repo "$REPO" --draft=false
+
+      - name: Notify Discord of the release
+        if: ${{ inputs.notify_discord }}
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          TAG_NAME: ${{ inputs.tag_name }}
+          VERSION: ${{ inputs.version }}
+          PRERELEASE: ${{ inputs.prerelease }}
+          REPO: ${{ github.repository }}
+        run: |
+          REPO_NAME="${REPO#*/}"
+          RELEASE_URL="https://github.com/${REPO}/releases/tag/${TAG_NAME}"
+
+          # Pull the published notes so the embed carries the real changelog.
+          # Read via env/jq only, never interpolated into the shell, so a
+          # crafted release body can't inject commands.
+          NOTES="$(gh release view "$TAG_NAME" --repo "$REPO" --json body -q .body)"
+
+          # Discord embed descriptions cap at 4096 chars; trim well under and
+          # mark the cut so readers know to click through for the rest.
+          if [ "${#NOTES}" -gt 1500 ]; then
+            NOTES="$(printf '%s' "$NOTES" | head -c 1500)…"
+          fi
+
+          if [ "$PRERELEASE" = "true" ]; then
+            TITLE="🧪 ${REPO_NAME} ${TAG_NAME} (prerelease)"
+            CHANNEL="next (prerelease)"
+            COLOR=15844367   # amber
+          else
+            TITLE="🚀 ${REPO_NAME} ${TAG_NAME} released"
+            CHANNEL="stable"
+            COLOR=5763719    # green
+          fi
+
+          PAYLOAD="$(jq -n \
+            --arg title "$TITLE" \
+            --arg url "$RELEASE_URL" \
+            --arg notes "${NOTES:-A new release is available.}" \
+            --arg version "$VERSION" \
+            --arg channel "$CHANNEL" \
+            --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --argjson color "$COLOR" \
+            '{
+              embeds: [{
+                title: $title,
+                url: $url,
+                description: $notes,
+                color: $color,
+                timestamp: $ts,
+                fields: [
+                  { name: "Version", value: $version, inline: true },
+                  { name: "Channel", value: $channel, inline: true }
+                ],
+                footer: { text: "MilliCache release automation" }
+              }]
+            }')"
+
+          curl -fsS -H "Content-Type: application/json" \
+            -d "$PAYLOAD" "$DISCORD_WEBHOOK"
 
       - name: Mint App installation token for Pro dispatch
         if: ${{ inputs.notify_pro }}
