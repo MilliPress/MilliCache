@@ -45,6 +45,7 @@ jobs:
           wp i18n make-json assets/lang assets/lang --pretty-print
 
       - name: Package per-locale ZIPs
+        id: pack
         run: |
           mkdir -p dist
           shopt -s nullglob
@@ -62,10 +63,17 @@ jobs:
             echo "packed ${locale} (${translated} strings)"
           done
           echo "--- dist ---"; ls -la dist
-          # Fail loudly rather than publish an empty release.
-          [ -n "$(ls -A dist 2>/dev/null)" ] || { echo "No packs built"; exit 1; }
+          # No translated locales yet is a valid state (plugin not translated),
+          # not a failure — skip publishing rather than erroring.
+          if [ -n "$(ls -A dist 2>/dev/null)" ]; then
+            echo "has_packs=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_packs=false" >> "$GITHUB_OUTPUT"
+            echo "No translated locales yet — nothing to publish."
+          fi
 
       - name: Publish rolling release
+        if: steps.pack.outputs.has_packs == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
