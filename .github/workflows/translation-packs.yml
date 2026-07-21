@@ -1,0 +1,79 @@
+name: Translation packs
+
+# Compiles the committed .po files into WordPress language packs and publishes
+# them as assets on a rolling "translations-latest" release. millipress.com's
+# /api/plugins/{slug}/languages endpoint reads this release; the plugin injects
+# the packs into site_transient_update_plugins so WordPress installs them into
+# wp-content/languages/plugins/. Runs whenever Weblate (or anyone) pushes .po
+# changes to main, decoupled from plugin releases.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/lang/*.po'
+      - '.github/workflows/translation-packs.yml'
+  workflow_dispatch: {}
+
+concurrency:
+  group: translation-packs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write # publish the rolling release and its assets
+
+env:
+  DOMAIN: millicache # text domain == .po filename prefix (millicache-{locale}.po)
+  RELEASE_TAG: translations-latest
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.3'
+          tools: wp-cli
+
+      - name: Compile catalogs (.mo, .l10n.php, .json)
+        run: |
+          wp i18n make-mo assets/lang assets/lang
+          wp i18n make-php assets/lang
+          wp i18n make-json assets/lang assets/lang --pretty-print
+
+      - name: Package per-locale ZIPs
+        run: |
+          mkdir -p dist
+          shopt -s nullglob
+          for po in assets/lang/"${DOMAIN}"-*.po; do
+            base=$(basename "$po" .po)     # millicache-de_DE
+            locale=${base#"${DOMAIN}"-}    # de_DE
+            # Skip locales with no real translations (empty .po → useless pack).
+            translated=$(grep -cE '^msgstr "[^"]' "$po" || true)
+            if [ "${translated:-0}" -lt 1 ]; then
+              echo "skip ${locale}: no translated strings"
+              continue
+            fi
+            ( cd assets/lang && zip -jq "${GITHUB_WORKSPACE}/dist/${base}.zip" \
+                "${base}.mo" "${base}.l10n.php" ${base}-*.json )
+            echo "packed ${locale} (${translated} strings)"
+          done
+          echo "--- dist ---"; ls -la dist
+          # Fail loudly rather than publish an empty release.
+          [ -n "$(ls -A dist 2>/dev/null)" ] || { echo "No packs built"; exit 1; }
+
+      - name: Publish rolling release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            # --latest=false so this never shadows the plugin's real latest release.
+            gh release create "$RELEASE_TAG" \
+              --title "Translation packs" \
+              --notes "Rolling WordPress language packs, rebuilt from assets/lang on every .po change. Not a plugin release." \
+              --latest=false
+          fi
+          gh release upload "$RELEASE_TAG" dist/*.zip --clobber
