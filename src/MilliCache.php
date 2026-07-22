@@ -18,6 +18,7 @@ use MilliCache\Admin\Activator;
 use MilliCache\Admin\Admin;
 use MilliCache\Admin\CLI;
 use MilliCache\Core\Loader;
+use MilliCache\Core\Translator;
 use MilliCache\Core\Updater;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -143,6 +144,7 @@ final class MilliCache {
 		new CLI( $this->plugin_name );
 		new Admin( $this->loader, $this->engine, $this->plugin_name, $this->version );
 		new Updater( $this->loader );
+		new Translator( $this->loader );
 	}
 
 	/**
