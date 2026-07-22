@@ -24,6 +24,7 @@ permissions:
 
 env:
   DOMAIN: millicache # text domain == .po filename prefix (millicache-{locale}.po)
+  JS_HANDLES: millicache-settings millicache-adminbar # script handles that receive the full JS catalog (space-separated)
   RELEASE_TAG: translations-latest
 
 jobs:
@@ -38,11 +39,55 @@ jobs:
           php-version: '8.3'
           tools: wp-cli
 
-      - name: Compile catalogs (.mo, .l10n.php, .json)
+      - name: Compile catalogs (.mo, .l10n.php)
         run: |
           wp i18n make-mo assets/lang assets/lang
           wp i18n make-php assets/lang
-          wp i18n make-json assets/lang assets/lang --pretty-print
+
+      # make-json only maps entries whose references end in .js, so strings
+      # extracted from JSX/TS sources are silently dropped, and some wp-cli
+      # builds purge JS strings from the .po they read. Both would corrupt the
+      # shipped pack (the pristine .po is the freshness clock), so make-json
+      # runs on a scratch copy with references rewritten to .js.
+      #
+      # Its per-source md5-named JSONs never match at runtime either: WordPress
+      # hashes the *enqueued* file's path (a built bundle, or no src at all for
+      # inline scripts), not source paths. Instead we merge everything into one
+      # full-catalog {domain}-{locale}-{handle}.json per script handle:
+      # load_script_textdomain() checks that filename first whenever
+      # wp_set_script_translations() is given a path, and since
+      # @wordpress/i18n keeps one registry per text domain, the single catalog
+      # also covers strings living in lazy-loaded (code-split) chunks.
+      - name: Build handle-named JS catalogs
+        run: |
+          shopt -s nullglob
+          scratch=.l10n-scratch
+          mkdir -p "$scratch"
+          cp assets/lang/"${DOMAIN}"-*.po "$scratch"/ 2>/dev/null || true
+          pos=("$scratch"/*.po)
+          if [ "${#pos[@]}" -eq 0 ]; then
+            echo "no .po files — nothing to do"
+            exit 0
+          fi
+          sed -i -E '/^#:/ s/\.(jsx|tsx|ts)(:[0-9]+)/.js\2/g' "${pos[@]}"
+          wp i18n make-json "$scratch" "$scratch" --pretty-print
+          for po in "${pos[@]}"; do
+            base=$(basename "$po" .po)
+            jsons=("$scratch/${base}"-*.json)
+            if [ "${#jsons[@]}" -eq 0 ]; then
+              echo "skip ${base}: no JS catalogs"
+              continue
+            fi
+            for handle in $JS_HANDLES; do
+              jq -s '{
+                  "translation-revision-date": .[0]["translation-revision-date"],
+                  generator: .[0].generator,
+                  domain: .[0].domain,
+                  locale_data: { messages: (reduce .[].locale_data.messages as $m ({}; . + $m)) }
+                }' "${jsons[@]}" > "assets/lang/${base}-${handle}.json"
+              echo "merged ${#jsons[@]} catalogs -> ${base}-${handle}.json"
+            done
+          done
 
       - name: Package per-locale ZIPs
         id: pack
