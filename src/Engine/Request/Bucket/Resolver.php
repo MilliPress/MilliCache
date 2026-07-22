@@ -15,7 +15,9 @@ namespace MilliCache\Engine\Request\Bucket;
 use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Utilities\ServerVars;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Resolves request signals into a normalized bucket map.

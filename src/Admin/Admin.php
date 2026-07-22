@@ -129,11 +129,8 @@ final class Admin {
 		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_admin_assets' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue_settings_assets' );
 
-		// Text Domain.
-		$this->loader->add_action( 'plugins_loaded', $this, 'load_plugin_textdomain' );
-		$this->loader->add_action( 'admin_init', $this, 'undefined_cache_notice' );
-
 		// Notices.
+		$this->loader->add_action( 'admin_init', $this, 'undefined_cache_notice' );
 		$this->loader->add_action( 'millicache_admin_notice', $this, 'add_notice', 10, 2 );
 		$this->loader->add_action( is_network_admin() ? 'network_admin_notices' : 'admin_notices', $this, 'display_notices' );
 
@@ -248,22 +245,6 @@ final class Admin {
 				)
 			);
 		}
-	}
-
-	/**
-	 * Load the plugin text domain for translation.
-	 *
-	 * @since    1.0.0
-	 * @access   public
-	 *
-	 * @return   void
-	 */
-	public function load_plugin_textdomain(): void {
-		load_plugin_textdomain(
-			'millicache',
-			false,
-			MILLICACHE_DIR . '/languages/'
-		);
 	}
 
 	/**

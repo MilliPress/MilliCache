@@ -14,6 +14,10 @@
 
 namespace MilliCache\Rules;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use MilliRules\Actions\ActionMeta;
 use MilliRules\Conditions\ConditionMeta;
 use MilliRules\Packages\PackageManager;

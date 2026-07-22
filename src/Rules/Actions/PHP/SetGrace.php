@@ -14,6 +14,10 @@
 
 namespace MilliCache\Rules\Actions\PHP;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use MilliRules\Actions\ActionMeta;
 use MilliRules\Actions\BaseAction;
 use MilliRules\Context;

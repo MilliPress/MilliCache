@@ -19,7 +19,9 @@ use MilliCache\Admin\SiteHealth;
 use MilliCache\Admin\UI\CacheActions;
 use MilliCache\Admin\UI\StatusBuilder;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Constructs the shared dependencies (StatusBuilder, CacheActions) and

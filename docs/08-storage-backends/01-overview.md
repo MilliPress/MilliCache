@@ -166,6 +166,11 @@ A misconfigured array (both `master` and `service`, Sentinel without
 `sentinels`, or no recognized key) disables the cache and logs the reason rather
 than connecting to the wrong server.
 
+[MilliCache Pro](https://www.millipress.com/millicache-pro/) adds a
+[visual connection editor](https://www.millipress.com/docs/millicache-pro/02-modules/10-storage-connections/)
+for all three topologies, so replication and Sentinel can be set up from the
+settings screen instead of a `MC_STORAGE_HOST` array in `wp-config.php`.
+
 ## Recommended Server Configuration
 
 These settings are recommended for WordPress caching workloads:
@@ -321,6 +326,8 @@ For managed services, use the provided connection details in your MilliCache con
 3. **Enable compression**: `MC_CACHE_GZIP` reduces network transfer
 4. **Size memory appropriately**: Avoid frequent evictions
 5. **Monitor with `wp millicache stats`**: Track cache efficiency
+
+Your storage server can do more than page caching: the [Object Cache module](https://www.millipress.com/docs/millicache-pro/02-modules/09-object-cache/) in [MilliCache Pro](https://www.millipress.com/millicache-pro/) ships a persistent object cache drop-in that reuses the same connection, speeding up wp-admin and uncached pages with zero extra setup.
 
 ## Next Steps
 

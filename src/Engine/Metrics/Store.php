@@ -12,7 +12,9 @@
 
 namespace MilliCache\Engine\Metrics;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Narrow per-blog storage contract the metrics layer writes through, keeping

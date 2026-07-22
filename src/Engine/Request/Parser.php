@@ -15,7 +15,9 @@ namespace MilliCache\Engine\Request;
 use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Utilities\PatternMatcher;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Parses and normalizes request URIs and cookies.
@@ -60,6 +62,7 @@ final class Parser {
 	 */
 	public function parse_request_uri( string $request_uri ): string {
 		// Fix for requests with no host.
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- Runs pre-WordPress from advanced-cache.php where wp_parse_url() is not loaded; the synthetic fixed-scheme URL avoids the cross-version edge cases.
 		$parsed = parse_url( 'http://null' . $request_uri );
 
 		// Set the path and lowercase it for normalization.

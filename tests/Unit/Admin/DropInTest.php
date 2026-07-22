@@ -71,6 +71,7 @@ uses()->beforeEach( function () {
 		mkdir( MILLICACHE_DIR, 0755, true );
 	}
 	@chmod( WP_CONTENT_DIR, 0755 );
+	$GLOBALS['test_opcache_invalidated'] = array();
 	dropin_cleanup();
 } )->afterEach( function () {
 	dropin_cleanup();
@@ -199,5 +200,70 @@ describe( 'DropIn::remove', function () {
 
 		expect( DropIn::remove( 'advanced-cache.php', MILLICACHE_DIR, true ) )->toBe( 'removed' );
 		expect( file_exists( WP_CONTENT_DIR . '/advanced-cache.php' ) )->toBeFalse();
+	} );
+} );
+
+describe( 'DropIn OPcache invalidation', function () {
+
+	it( 'invalidates the destination on a fresh symlink install', function () {
+		dropin_write_source( 'advanced-cache.php' );
+
+		expect( DropIn::install( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'symlinked' );
+		expect( $GLOBALS['test_opcache_invalidated'] )
+			->toBe( array( WP_CONTENT_DIR . '/advanced-cache.php' ) );
+	} );
+
+	it( 'invalidates both the destination and the old symlink target on re-point', function () {
+		dropin_write_source( 'advanced-cache.php' );
+		$other = MILLICACHE_DIR . '/other.php';
+		file_put_contents( $other, '<?php // unrelated' );
+		symlink( $other, WP_CONTENT_DIR . '/advanced-cache.php' );
+
+		expect( DropIn::install( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'symlinked' );
+		expect( $GLOBALS['test_opcache_invalidated'] )
+			->toBe( array( WP_CONTENT_DIR . '/advanced-cache.php', $other ) );
+	} );
+
+	it( 'invalidates only the destination when replacing a plain copy', function () {
+		dropin_write_source( 'advanced-cache.php', '1.0.0' );
+		dropin_write_destination( 'advanced-cache.php', '2.0.0' );
+
+		expect( DropIn::install( 'advanced-cache.php', MILLICACHE_DIR, true ) )
+			->toBeIn( array( 'symlinked', 'copied' ) );
+		expect( $GLOBALS['test_opcache_invalidated'] )
+			->toBe( array( WP_CONTENT_DIR . '/advanced-cache.php' ) );
+	} );
+
+	it( 'does not invalidate on the "unchanged" path', function () {
+		$source = dropin_write_source( 'advanced-cache.php' );
+		symlink( $source, WP_CONTENT_DIR . '/advanced-cache.php' );
+
+		expect( DropIn::install( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'unchanged' );
+		expect( $GLOBALS['test_opcache_invalidated'] )->toBe( array() );
+	} );
+
+	it( 'does not invalidate on the "preserved" path', function () {
+		dropin_write_source( 'advanced-cache.php', '1.0.0' );
+		dropin_write_destination( 'advanced-cache.php', '2.0.0' );
+
+		expect( DropIn::install( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'preserved' );
+		expect( $GLOBALS['test_opcache_invalidated'] )->toBe( array() );
+	} );
+
+	it( 'invalidates the destination after removal', function () {
+		dropin_write_source( 'advanced-cache.php' );
+		dropin_write_destination( 'advanced-cache.php', '1.0.0' );
+
+		expect( DropIn::remove( 'advanced-cache.php', MILLICACHE_DIR, true ) )->toBe( 'removed' );
+		expect( $GLOBALS['test_opcache_invalidated'] )
+			->toBe( array( WP_CONTENT_DIR . '/advanced-cache.php' ) );
+	} );
+
+	it( 'does not invalidate when removal is preserved', function () {
+		dropin_write_source( 'advanced-cache.php', '1.0.0' );
+		dropin_write_destination( 'advanced-cache.php', '2.0.0' );
+
+		expect( DropIn::remove( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'preserved' );
+		expect( $GLOBALS['test_opcache_invalidated'] )->toBe( array() );
 	} );
 } );

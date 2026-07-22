@@ -15,7 +15,9 @@
 
 namespace MilliCache\Core;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Self-hosted plugin update checker.
@@ -37,7 +39,7 @@ final class Updater {
 	 * @since 1.0.0
 	 * @var   string
 	 */
-	private const ENDPOINT_URL = 'https://millipress.com/api/plugins/millicache/info';
+	private const ENDPOINT_URL = 'https://www.millipress.com/api/plugins/millicache/info';
 
 	/**
 	 * Transient key for caching remote update info.
@@ -56,17 +58,76 @@ final class Updater {
 	private const CACHE_DURATION = 43200;
 
 	/**
-	 * Initialize the updater and register hooks.
+	 * This copy's own plugin basename, used to judge ownership of MILLICACHE_BASENAME.
+	 *
+	 * @since 1.7.2
+	 * @var   string
+	 */
+	private string $own_basename;
+
+	/**
+	 * Initialize the updater and register hooks when this copy owns the plugin.
 	 *
 	 * @since  1.0.0
 	 * @access public
 	 *
-	 * @param Loader $loader The plugin hook loader.
+	 * @param Loader      $loader       The plugin hook loader.
+	 * @param string|null $own_basename This copy's own basename. Defaults to a
+	 *                                  value derived from this file's location.
 	 */
-	public function __construct( Loader $loader ) {
+	public function __construct( Loader $loader, ?string $own_basename = null ) {
+		$this->own_basename = $own_basename ?? self::resolve_own_basename();
+
+		if ( ! $this->self_update_enabled() ) {
+			return;
+		}
+
 		$loader->add_filter( 'site_transient_update_plugins', $this, 'check_for_update' );
 		$loader->add_filter( 'plugins_api', $this, 'plugin_information', 10, 3 );
 		$loader->add_action( 'delete_site_transient_update_plugins', $this, 'clear_update_cache' );
+	}
+
+	/**
+	 * Resolve this copy's own basename from __DIR__, pinning it to the copy that
+	 * physically loaded this class (Updater.php lives at <plugin-root>/src/Core).
+	 *
+	 * @since  1.7.2
+	 * @access private
+	 *
+	 * @return string The basename, or an empty string when it cannot be resolved.
+	 */
+	private static function resolve_own_basename(): string {
+		if ( ! function_exists( 'plugin_basename' ) ) {
+			return '';
+		}
+
+		return plugin_basename( dirname( __DIR__, 2 ) . '/millicache.php' );
+	}
+
+	/**
+	 * Whether this copy should run the self-updater at all.
+	 *
+	 * @since  1.7.2
+	 * @access private
+	 *
+	 * @return bool True to register the self-updater, false to stay dormant.
+	 */
+	private function self_update_enabled(): bool {
+		if ( ! defined( 'MILLICACHE_BASENAME' ) || MILLICACHE_BASENAME !== $this->own_basename ) {
+			return false;
+		}
+
+		/**
+		 * Filters whether this copy registers its self-updater.
+		 *
+		 * Evaluated at construction, before any hook or remote request, so a
+		 * bundling host or site owner can force self-updates off declaratively.
+		 *
+		 * @since 1.7.2
+		 *
+		 * @param bool $enabled Whether to register the self-updater. Default true.
+		 */
+		return (bool) apply_filters( 'millicache_self_update_enabled', true );
 	}
 
 	/**

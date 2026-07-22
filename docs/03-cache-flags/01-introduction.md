@@ -123,6 +123,10 @@ sequenceDiagram
     M->>R: Delete entries
 ```
 
+## Flags in MilliCache Pro
+
+With [MilliCache Pro](https://www.millipress.com/millicache-pro/), flags become visible and reach further: the [Cache Entries Browser](https://www.millipress.com/docs/millicache-pro/02-modules/02-cache-entries/) shows the flags of every cached page right in the settings screen, and the [Edge Cache module](https://www.millipress.com/docs/millicache-pro/02-modules/07-edge-cache/) mirrors flag-based invalidation onto your CDN, so edge purges are as surgical as local ones.
+
 ## Next Steps
 
 - [Built-in Flags](02-built-in-flags.md) — Flags automatically assigned by MilliCache

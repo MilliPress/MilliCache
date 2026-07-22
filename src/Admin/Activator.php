@@ -11,7 +11,9 @@
 
 namespace MilliCache\Admin;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Fired during plugin activation.

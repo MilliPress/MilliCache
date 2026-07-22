@@ -16,7 +16,9 @@ use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Utilities\PatternMatcher;
 use MilliCache\Engine\Utilities\ServerVars;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Cleans and normalizes request data.
@@ -89,6 +91,7 @@ final class Cleaner {
 		}
 
 		// Remove ignored request keys from the superglobals.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Cache-key normalization only unsets ignored query parameters; nothing is read into state, and it runs pre-WordPress where nonce APIs are unavailable.
 		foreach ( $_GET as $key => $value ) {
 			foreach ( $this->config->ignore_request_keys as $pattern ) {
 				if ( PatternMatcher::match( $key, $pattern ) ) {

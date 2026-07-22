@@ -16,7 +16,9 @@ use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Entry;
 use MilliCache\Engine\Cache\Validator;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Worker class for managing HTTP cache headers.

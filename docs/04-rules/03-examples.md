@@ -6,7 +6,7 @@ menu_order: 30
 
 # Rule Examples
 
-Practical MilliCache rule examples for common scenarios. All examples use the [MilliRules fluent API](https://millipress.com/docs/millirules/).
+Practical MilliCache rule examples for common scenarios. All examples use the [MilliRules fluent API](https://www.millipress.com/docs/millirules/).
 
 ## Setup
 
@@ -345,7 +345,8 @@ Bootstrap rules run before WordPress, so keep them fast:
 
 ## Learn More
 
-- [MilliRules Documentation](https://millipress.com/docs/millirules/) — Complete rules engine reference
-- [Conditions Reference](https://millipress.com/docs/millirules/05-reference/01-conditions/)
-- [Actions Reference](https://millipress.com/docs/millirules/05-reference/02-actions/)
+- [MilliRules Documentation](https://www.millipress.com/docs/millirules/) — Complete rules engine reference
+- [Conditions Reference](https://www.millipress.com/docs/millirules/05-reference/01-conditions/)
+- [Actions Reference](https://www.millipress.com/docs/millirules/05-reference/02-actions/)
 - [Cache Flags](../03-cache-flags/01-introduction.md) — Partner feature to rules
+- [Visual Rules Builder](https://www.millipress.com/docs/millicache-pro/02-modules/03-rules-builder/) — Build rules like these without code, in [MilliCache Pro](https://www.millipress.com/millicache-pro/)

@@ -1,6 +1,6 @@
 <?php
 /**
- * CLI command for creating and fixing advanced-cache.php drop-in.
+ * CLI command for creating and fixing WordPress drop-ins.
  *
  * @link       https://www.millipress.com
  * @since      1.0.0
@@ -13,7 +13,9 @@ namespace MilliCache\Admin\CLI;
 
 use MilliCache\Admin\DropIn;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Drop command.
@@ -25,14 +27,18 @@ use MilliCache\Admin\DropIn;
 final class Drop {
 
 	/**
-	 * Fix or reinstall the advanced-cache.php drop-in.
+	 * Fix or reinstall the MilliCache drop-ins.
 	 *
 	 * ## DESCRIPTION
 	 *
-	 * Removes and recreates the advanced-cache.php file in wp-content.
-	 * Useful for CD workflows where symlinks may break.
+	 * Removes and recreates the drop-in files in wp-content. Useful for CD
+	 * workflows where symlinks may break between deploys. Handles
+	 * advanced-cache.php, and object-cache.php when MilliCache Pro is active.
 	 *
 	 * ## OPTIONS
+	 *
+	 * [<dropin>]
+	 * : Which drop-in to reinstall: advanced-cache or object-cache. Defaults to all.
 	 *
 	 * [--force]
 	 * : Force reinstall even if the current version matches.
@@ -41,6 +47,7 @@ final class Drop {
 	 *
 	 *     wp millicache drop
 	 *     wp millicache drop --force
+	 *     wp millicache drop object-cache --force
 	 *
 	 * @when after_wp_load
 	 *
@@ -51,8 +58,46 @@ final class Drop {
 	 * @return void
 	 */
 	public function __invoke( array $args, array $assoc_args ): void {
-		$force = isset( $assoc_args['force'] );
+		$force  = isset( $assoc_args['force'] );
+		$target = isset( $args[0] ) ? str_replace( '.php', '', $args[0] ) : 'all';
 
+		if ( ! in_array( $target, array( 'all', 'advanced-cache', 'object-cache' ), true ) ) {
+			\WP_CLI::error(
+				sprintf(
+					/* translators: %s: the invalid drop-in name given on the command line. */
+					__( 'Unknown drop-in "%s". Use advanced-cache or object-cache.', 'millicache' ),
+					$target
+				)
+			);
+		}
+
+		if ( 'all' === $target || 'advanced-cache' === $target ) {
+			$this->reinstall_advanced_cache( $force );
+		}
+
+		/**
+		 * Reinstall drop-ins owned by extensions, e.g. Pro's object-cache.php.
+		 *
+		 * Handlers should act only when $target is 'all' or their own drop-in
+		 * name, and report their result via WP_CLI themselves.
+		 *
+		 * @since 1.8.0
+		 *
+		 * @param string $target Requested drop-in: 'all', 'advanced-cache', or 'object-cache'.
+		 * @param bool   $force  Whether --force was passed.
+		 */
+		do_action( 'millicache_drop_dropin', $target, $force );
+	}
+
+	/**
+	 * Reinstall the advanced-cache.php drop-in and report the outcome.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param bool $force Whether to override the higher-version safeguard.
+	 * @return void
+	 */
+	private function reinstall_advanced_cache( bool $force ): void {
 		switch ( DropIn::install( 'advanced-cache.php', null, $force ) ) {
 			case 'symlinked':
 				\WP_CLI::success( __( 'Created symlink for advanced-cache.php.', 'millicache' ) );

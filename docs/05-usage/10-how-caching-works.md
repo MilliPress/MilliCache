@@ -84,6 +84,8 @@ If no cache exists or content is expired:
 6. Store in Redis with flags
 7. Send response to browser
 
+The first visitor to an uncached page pays this full render cost. [MilliCache Pro](https://www.millipress.com/millicache-pro/)'s [Cache Preloading](https://www.millipress.com/docs/millicache-pro/02-modules/05-cache-preloading/) avoids that by requesting pages in the background after publishing and after cache clears, so visitors always hit a warm cache.
+
 ### 6. Grace Period Serving
 
 If cached content is expired but within the grace period:
@@ -118,6 +120,8 @@ The reference SET tracks who's pointing at each body so it can be garbage-collec
 | `variant`    | Differentiating dimensions (cookies, buckets, method)  |
 | `updated`    | Timestamp when cached                                  |
 | `gzip`       | Whether the body bytes are compressed                  |
+
+You can inspect all of this without touching `redis-cli`: the [Cache Entries Browser](https://www.millipress.com/docs/millicache-pro/02-modules/02-cache-entries/) in MilliCache Pro lists every cached page with its flags, variant, size, status, and expiry.
 
 ### Flags (Tags)
 

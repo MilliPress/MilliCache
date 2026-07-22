@@ -9,7 +9,9 @@
  * @author     Philipp Wellmer <hello@millipress.com>
  */
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 if ( ! function_exists( 'millicache' ) ) {
 	/**

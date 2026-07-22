@@ -25,6 +25,7 @@
     "fix:js": "wp-scripts lint-js assets/js --fix",
     "lint:style": "wp-scripts lint-style assets/css/**/*.scss",
     "fix:style": "wp-scripts lint-style assets/css/**/*.scss --fix",
+    "translate": "wp i18n make-pot . assets/lang/millicache.pot --domain=millicache",
     "env:start": "wp-env start",
     "env:stop": "docker compose -f tests/wp-env/docker-compose.custom.yml down; wp-env stop",
     "env:reset": "wp-env reset all",

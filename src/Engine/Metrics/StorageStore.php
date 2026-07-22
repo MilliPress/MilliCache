@@ -14,7 +14,9 @@ namespace MilliCache\Engine\Metrics;
 
 use MilliCache\Core\Storage;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Binds a site/network prefix to {@see Storage}'s metrics hash operations, so

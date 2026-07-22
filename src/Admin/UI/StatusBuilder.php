@@ -16,7 +16,9 @@ use MilliCache\Admin\Utils;
 use MilliCache\Core\Connection;
 use MilliCache\Engine;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Assembles the unified `/status` REST payload — the single source of truth for
@@ -205,7 +207,8 @@ final class StatusBuilder {
 	 * @return string|null
 	 */
 	private function composer_version( string $package ): ?string {
-		if ( ! class_exists( '\Composer\InstalledVersions' ) ) {
+		if ( ! class_exists( '\Composer\InstalledVersions' )
+			|| ! \Composer\InstalledVersions::isInstalled( $package ) ) {
 			return null;
 		}
 
@@ -585,7 +588,7 @@ final class StatusBuilder {
 	 * original index so same-severity checks keep their contribution order on
 	 * PHP 7.4, where `usort()` isn't stable.
 	 *
-	 * @since 1.8.0
+	 * @since 1.7.2
 	 *
 	 * @param array<int, array<string, mixed>> $checks The (possibly filtered) checks list.
 	 * @return array<int, array<string, mixed>>

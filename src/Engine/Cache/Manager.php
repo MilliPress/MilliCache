@@ -16,7 +16,9 @@ use MilliCache\Admin\Utils;
 use MilliCache\Core\Storage;
 use MilliCache\Engine;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Orchestrates cache reading, writing, and validation.

@@ -38,6 +38,10 @@ Yes, MilliCache requires a Redis-compatible server. Supported options:
 
 Yes, MilliCache is free and open-source under GPL-2.0+ license.
 
+### Is there a Pro version?
+
+Yes. [MilliCache Pro](https://www.millipress.com/millicache-pro/) adds premium [modules](https://www.millipress.com/docs/millicache-pro/02-modules/01-overview/) on top of the free plugin: a cache entries browser, a visual rules builder, block editor cache intelligence, preloading, detailed metrics, edge caching, an asset CDN, and a persistent object cache. It bundles MilliCache, so it replaces the free plugin rather than running alongside it.
+
 ---
 
 ## Installation & Setup
@@ -186,6 +190,8 @@ Yes! MilliCache caches at the origin server. CDN caches on edge servers. They wo
 For cache clearing, you may need to:
 - Clear MilliCache (origin)
 - Clear CDN (edge)
+
+[MilliCache Pro](https://www.millipress.com/millicache-pro/)'s [Edge Cache module](https://www.millipress.com/docs/millicache-pro/02-modules/07-edge-cache/) automates exactly this: pages are tagged at the CDN with the same flags they carry locally, and every local purge triggers the matching edge purge.
 
 ### Does MilliCache work with Cloudflare/other proxies?
 

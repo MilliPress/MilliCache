@@ -14,7 +14,9 @@ namespace MilliCache\Admin\CLI;
 use MilliCache\Engine\Cache\Invalidation\Manager as InvalidationManager;
 use MilliCache\MilliCache;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Clear cache command.

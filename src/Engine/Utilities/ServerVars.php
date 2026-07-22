@@ -12,7 +12,9 @@
 
 namespace MilliCache\Engine\Utilities;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Utility class for safe access to $_SERVER variables.

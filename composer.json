@@ -11,8 +11,8 @@
     ],
     "require": {
         "php": ">=7.4",
-        "millipress/millibase": "^2.6.9",
-        "millipress/millirules": "^1.2.0",
+        "millipress/millibase": "^2.7.1",
+        "millipress/millirules": "^1.2.1",
         "predis/predis": "^3.0"
     },
     "require-dev": {
@@ -84,7 +84,12 @@
                 "psr/http-message",
                 "millipress/millirules",
                 "millipress/millibase"
-            ]
+            ],
+            "exclude_from_prefix": {
+                "packages": [
+                    "millipress/millirules"
+                ]
+            }
         },
         "hooks": {
             "config": {

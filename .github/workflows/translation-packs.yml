@@ -1,0 +1,143 @@
+name: Pack Translations
+
+# Compiles the committed .po files into WordPress language packs and publishes
+# them as assets on a rolling "translations-latest" release. millipress.com's
+# /api/plugins/{slug}/languages endpoint reads this release; the plugin injects
+# the packs into site_transient_update_plugins so WordPress installs them into
+# wp-content/languages/plugins/. Runs whenever Weblate (or anyone) pushes .po
+# changes to main, decoupled from plugin releases.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/lang/*.po'
+      - '.github/workflows/translation-packs.yml'
+  workflow_dispatch: {}
+
+concurrency:
+  group: translation-packs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOMAIN: millicache # text domain == .po filename prefix (millicache-{locale}.po)
+  JS_HANDLES: millicache-settings millicache-adminbar # script handles that receive the full JS catalog (space-separated)
+  RELEASE_TAG: translations-latest
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.3'
+          tools: wp-cli
+
+      - name: Compile catalogs (.mo, .l10n.php)
+        run: |
+          wp i18n make-mo assets/lang assets/lang
+          wp i18n make-php assets/lang
+
+      # make-json's per-source md5 JSONs never match the enqueued bundle at
+      # runtime, so merge them into one {domain}-{locale}-{handle}.json (the
+      # file WordPress checks first when wp_set_script_translations() gets a
+      # path). Scratch copy keeps the shipped .po pristine — it is the pack's
+      # freshness clock.
+      - name: Build handle-named JS catalogs
+        run: |
+          shopt -s nullglob
+          scratch=.l10n-scratch
+          mkdir -p "$scratch"
+          cp assets/lang/"${DOMAIN}"-*.po "$scratch"/ 2>/dev/null || true
+          pos=("$scratch"/*.po)
+          if [ "${#pos[@]}" -eq 0 ]; then
+            echo "no .po files — nothing to do"
+            exit 0
+          fi
+          wp i18n make-json "$scratch" "$scratch" --extensions=jsx,ts,tsx --pretty-print
+          for po in "${pos[@]}"; do
+            base=$(basename "$po" .po)
+            jsons=("$scratch/${base}"-*.json)
+            if [ "${#jsons[@]}" -eq 0 ]; then
+              echo "skip ${base}: no JS catalogs"
+              continue
+            fi
+            for handle in $JS_HANDLES; do
+              jq -s '{
+                  "translation-revision-date": .[0]["translation-revision-date"],
+                  generator: .[0].generator,
+                  domain: .[0].domain,
+                  locale_data: { messages: (reduce .[].locale_data.messages as $m ({}; . + $m)) }
+                }' "${jsons[@]}" > "assets/lang/${base}-${handle}.json"
+              echo "merged ${#jsons[@]} catalogs -> ${base}-${handle}.json"
+            done
+          done
+
+      - name: Package per-locale ZIPs
+        id: pack
+        run: |
+          mkdir -p dist
+          shopt -s nullglob
+          manifest='[]'
+          for po in assets/lang/"${DOMAIN}"-*.po; do
+            base=$(basename "$po" .po)     # millicache-de_DE
+            locale=${base#"${DOMAIN}"-}    # de_DE
+            # Skip locales with no real translations (empty .po → useless pack).
+            translated=$(grep -cE '^msgstr "[^"]' "$po" || true)
+            if [ "${translated:-0}" -lt 1 ]; then
+              echo "skip ${locale}: no translated strings"
+              continue
+            fi
+            # The .po ships in the pack (as wordpress.org packs do): WP reads
+            # its PO-Revision-Date as the installed-translation timestamp, which
+            # the plugin's injector compares against the manifest's `updated`.
+            ( cd assets/lang && zip -jq "${GITHUB_WORKSPACE}/dist/${base}.zip" \
+                "${base}.po" "${base}.mo" "${base}.l10n.php" ${base}-*.json )
+            # PO-Revision-Date is the content clock — asset upload time would
+            # always exceed the installed copy and cause an update loop.
+            revision=$(grep -m1 -oE '"PO-Revision-Date: [^"\\]+' "$po" | sed 's/"PO-Revision-Date: //' || true)
+            manifest=$(jq -c --arg l "$locale" --arg u "$revision" --argjson n "$translated" \
+              '. + [{locale: $l, updated: $u, translated: $n}]' <<< "$manifest")
+            echo "packed ${locale} (${translated} strings, revision ${revision:-unknown})"
+          done
+          jq -n --arg domain "$DOMAIN" --argjson packs "$manifest" \
+            '{domain: $domain, packs: $packs}' > dist/manifest.json
+          echo "--- dist ---"; ls -la dist; cat dist/manifest.json
+          # No translated locales yet is a valid state (plugin not translated),
+          # not a failure — skip publishing rather than erroring. dist/ always
+          # holds manifest.json, so gate on the ZIP count.
+          zips=(dist/*.zip)
+          if [ "${#zips[@]}" -gt 0 ]; then
+            echo "has_packs=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_packs=false" >> "$GITHUB_OUTPUT"
+            echo "No translated locales yet — nothing to publish."
+          fi
+
+      - name: Mint App installation token
+        if: steps.pack.outputs.has_packs == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.MILLIPRESS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
+
+      - name: Publish rolling release
+        if: steps.pack.outputs.has_packs == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            # --latest=false so this never shadows the plugin's real latest release.
+            gh release create "$RELEASE_TAG" \
+              --title "Translations" \
+              --notes "Rolling translations, rebuilt from assets/lang on every .po change. Not a plugin release." \
+              --latest=false
+          fi
+          gh release upload "$RELEASE_TAG" dist/*.zip dist/manifest.json --clobber

@@ -1,0 +1,3 @@
+# Compiled catalogs are built in CI for language packs, never committed.
+*.mo
+*.l10n.php

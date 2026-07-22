@@ -20,7 +20,9 @@ use MilliCache\Engine\Flags;
 use MilliCache\Engine\Request\Processor as RequestManager;
 use MilliCache\Engine\Utilities\ServerVars;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Processor class for HTTP response and caching orchestration.

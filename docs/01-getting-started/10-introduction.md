@@ -155,11 +155,25 @@ Works with any Redis-compatible server:
 
 ## Using Acorn / Roots?
 
-If you're running MilliCache on a [Roots](https://roots.io/) stack with Acorn, check out the [Acorn MilliCache](https://millipress.com/docs/acorn-millicache/) companion package. It adds a Laravel middleware that automatically stores Acorn route responses in MilliCache's Redis cache — no extra configuration needed.
+If you're running MilliCache on a [Roots](https://roots.io/) stack with Acorn, check out the [Acorn MilliCache](https://www.millipress.com/docs/acorn-millicache/) companion package. It adds a Laravel middleware that automatically stores Acorn route responses in MilliCache's Redis cache — no extra configuration needed.
 
 ```bash
 composer require millipress/acorn-millicache
 ```
+
+## Going Pro
+
+[MilliCache Pro](https://www.millipress.com/millicache-pro/) extends MilliCache with the tooling and infrastructure features production sites grow into, organized as [modules](https://www.millipress.com/docs/millicache-pro/02-modules/01-overview/) you enable individually:
+
+- **[Cache Entries Browser](https://www.millipress.com/docs/millicache-pro/02-modules/02-cache-entries/)**: browse, search, and purge every cached page from the settings screen
+- **[Visual Rules Builder](https://www.millipress.com/docs/millicache-pro/02-modules/03-rules-builder/)**: build caching rules in the UI, no PHP required
+- **[Block Editor Intelligence](https://www.millipress.com/docs/millicache-pro/02-modules/04-block-editor/)**: synced patterns, Query Loops, and templates clear exactly the affected pages
+- **[Cache Preloading](https://www.millipress.com/docs/millicache-pro/02-modules/05-cache-preloading/)**: keeps the cache warm after publishing and after full clears
+- **[Detailed Metrics](https://www.millipress.com/docs/millicache-pro/02-modules/06-detailed-metrics/)**: requests, bandwidth, and response-time charts on the Status dashboard
+- **[Edge Cache](https://www.millipress.com/docs/millicache-pro/02-modules/07-edge-cache/)**: serve pages from bunny.net or Cloudflare, purged in sync with the local cache
+- **[Asset CDN](https://www.millipress.com/docs/millicache-pro/02-modules/08-cdn/)**: serve CSS, JavaScript, images, and fonts from a pull-zone CDN
+- **[Object Cache](https://www.millipress.com/docs/millicache-pro/02-modules/09-object-cache/)**: persistent object cache drop-in on the same Redis connection
+- **[Storage Connections](https://www.millipress.com/docs/millicache-pro/02-modules/10-storage-connections/)**: configure replication and Sentinel visually
 
 ## Requirements
 

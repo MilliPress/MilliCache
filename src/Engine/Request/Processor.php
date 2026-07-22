@@ -16,7 +16,9 @@ use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Request\Bucket\Resolver as BucketResolver;
 use MilliCache\Engine\Utilities\ServerVars;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Orchestrates request parsing, cleaning, and hashing.
@@ -164,6 +166,7 @@ final class Processor {
 			$host = strtolower( ServerVars::get( 'HTTP_HOST' ) );
 			$path = $this->get_parser()->parse_request_uri( ServerVars::get( 'REQUEST_URI' ) );
 		} else {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- Runs pre-WordPress from advanced-cache.php where wp_parse_url() is not loaded.
 			$parsed = parse_url( $url );
 			$host   = strtolower( $parsed['host'] ?? '' );
 			$path   = ( $parsed['path'] ?? '' ) . ( isset( $parsed['query'] ) ? '?' . $parsed['query'] : '' );

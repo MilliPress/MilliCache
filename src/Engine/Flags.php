@@ -14,7 +14,9 @@ namespace MilliCache\Engine;
 
 use MilliCache\Engine\Utilities\Multisite;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Manages cache flags for targeted invalidation.

@@ -12,7 +12,7 @@
  * Description:       The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any alternative.
 
  * x-release-please-start-version
- * Version:           1.7.0
+ * Version:           1.7.4
  * x-release-please-end
  * Requires at least: 6.7
  * Requires PHP:      7.4
@@ -22,7 +22,6 @@
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       millicache
- * Domain Path:       /languages
  */
 
 if ( ! defined( 'WPINC' ) ) {
@@ -35,7 +34,7 @@ if ( ! defined( 'WPINC' ) ) {
  * @since 1.0.0
  */
 if ( ! defined( 'MILLICACHE_VERSION' ) ) {
-	define( 'MILLICACHE_VERSION', '1.7.0' ); // x-release-please-version.
+	define( 'MILLICACHE_VERSION', '1.7.4' ); // x-release-please-version.
 }
 
 if ( ! defined( 'MILLICACHE_BASENAME' ) ) {

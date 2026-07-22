@@ -42,11 +42,10 @@ jobs:
 
       - name: Create release archive
         env:
-          TAG: ${{ inputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          cd dist
-          zip -rq "../millicache-${TAG}.zip" .
-          cd ..
+          mv dist millicache
+          zip -rq "millicache-${VERSION}.zip" millicache
 
       - name: Create or update GitHub Release
         uses: softprops/action-gh-release@v3
@@ -54,7 +53,7 @@ jobs:
           tag_name: ${{ inputs.tag }}
           name: ${{ inputs.tag }}
           body: "Release ${{ steps.version.outputs.version }}"
-          files: millicache-${{ inputs.tag }}.zip
+          files: millicache-${{ steps.version.outputs.version }}.zip
           prerelease: ${{ contains(inputs.tag, 'rc') || contains(inputs.tag, 'beta') || contains(inputs.tag, 'alpha') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

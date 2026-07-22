@@ -16,7 +16,9 @@ use MilliCache\Admin\UI\CacheActions;
 use MilliCache\Admin\UI\StatusBuilder;
 use MilliCache\Engine\Utilities\Multisite;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Common scaffolding for the per-site and network MilliBase Manager wiring.

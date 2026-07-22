@@ -13,7 +13,9 @@ namespace MilliCache\Admin\CLI;
 
 use MilliCache\Core\Connection;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Storage command (interactive Redis CLI).
@@ -140,6 +142,7 @@ final class StorageCLI {
 		\WP_CLI::line( '' );
 
 		// Launch interactive session using passthru for proper TTY handling.
+		// phpcs:ignore Generic.PHP.ForbiddenFunctions.Found -- Interactive redis-cli session in WP-CLI context only; output must stream unbuffered to the TTY and the command is escapeshellarg-escaped.
 		passthru( $command );
 	}
 }

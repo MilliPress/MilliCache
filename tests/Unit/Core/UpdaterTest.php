@@ -184,7 +184,7 @@ describe( 'Updater', function () {
 
 		it( 'registers hooks with the loader', function () {
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$loader->run();
 
@@ -206,7 +206,7 @@ describe( 'Updater', function () {
 			$test_filters['millicache_updates'] = false;
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$loader->run();
 
@@ -216,6 +216,41 @@ describe( 'Updater', function () {
 			expect( $filter_hooks )->toContain( 'site_transient_update_plugins' );
 			expect( $filter_hooks )->toContain( 'plugins_api' );
 			expect( $action_hooks )->toContain( 'delete_site_transient_update_plugins' );
+		} );
+
+		it( 'registers no hooks when this copy does not own the managed basename', function () {
+			global $test_filters, $test_actions;
+
+			// Bundled as a dependency: the managed basename points at a host plugin.
+			$loader  = new Loader();
+			$updater = new Updater( $loader, 'millicache-pro/millicache-pro.php' );
+
+			$loader->run();
+
+			$filter_hooks = array_column( $test_filters, 'hook' );
+			$action_hooks = array_column( $test_actions, 'hook' );
+
+			expect( $filter_hooks )->not->toContain( 'site_transient_update_plugins' );
+			expect( $filter_hooks )->not->toContain( 'plugins_api' );
+			expect( $action_hooks )->not->toContain( 'delete_site_transient_update_plugins' );
+		} );
+
+		it( 'registers no hooks when millicache_self_update_enabled is false', function () {
+			global $test_filters, $test_actions;
+
+			$test_filters['millicache_self_update_enabled'] = false;
+
+			$loader  = new Loader();
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
+
+			$loader->run();
+
+			$filter_hooks = array_column( $test_filters, 'hook' );
+			$action_hooks = array_column( $test_actions, 'hook' );
+
+			expect( $filter_hooks )->not->toContain( 'site_transient_update_plugins' );
+			expect( $filter_hooks )->not->toContain( 'plugins_api' );
+			expect( $action_hooks )->not->toContain( 'delete_site_transient_update_plugins' );
 		} );
 	} );
 
@@ -227,7 +262,7 @@ describe( 'Updater', function () {
 			$test_filters['millicache_updates'] = false;
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$transient            = new stdClass();
 			$transient->response  = array();
@@ -247,7 +282,7 @@ describe( 'Updater', function () {
 			$test_wp_remote_get_response = mock_http_response( mock_remote_info( '2.0.0' ) );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$transient           = new stdClass();
 			$transient->response = array();
@@ -265,7 +300,7 @@ describe( 'Updater', function () {
 			$test_wp_remote_get_response = mock_http_response( mock_remote_info( MILLICACHE_VERSION ) );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$transient           = new stdClass();
 			$transient->response = array();
@@ -283,7 +318,7 @@ describe( 'Updater', function () {
 			$test_wp_remote_get_response = mock_http_response( mock_remote_info( '0.9.0' ) );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$transient           = new stdClass();
 			$transient->response = array();
@@ -300,7 +335,7 @@ describe( 'Updater', function () {
 			$test_wp_remote_get_response = new WP_Error( 'http_request_failed', 'Connection timeout' );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$transient           = new stdClass();
 			$transient->response = array();
@@ -320,7 +355,7 @@ describe( 'Updater', function () {
 			);
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$transient           = new stdClass();
 			$transient->response = array();
@@ -337,7 +372,7 @@ describe( 'Updater', function () {
 			$test_wp_remote_get_response = mock_http_response( (object) array( 'name' => 'MilliCache' ) );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$transient           = new stdClass();
 			$transient->response = array();
@@ -358,7 +393,7 @@ describe( 'Updater', function () {
 			$test_wp_remote_get_response = mock_http_response( mock_remote_info( '4.0.0' ) );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$transient           = new stdClass();
 			$transient->response = array();
@@ -372,7 +407,7 @@ describe( 'Updater', function () {
 
 		it( 'returns non-object transient unmodified', function () {
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$result = $updater->check_for_update( false );
 			expect( $result )->toBeFalse();
@@ -383,7 +418,7 @@ describe( 'Updater', function () {
 			$test_wp_remote_get_response = mock_http_response( mock_remote_info( '2.0.0' ) );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$transient           = new stdClass();
 			$transient->response = array();
@@ -405,7 +440,7 @@ describe( 'Updater', function () {
 			$test_wp_remote_get_response = mock_http_response( mock_remote_info( '2.0.0' ) );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$args       = new stdClass();
 			$args->slug = 'millicache';
@@ -423,7 +458,7 @@ describe( 'Updater', function () {
 
 		it( 'returns false for wrong slug', function () {
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$args       = new stdClass();
 			$args->slug = 'some-other-plugin';
@@ -434,7 +469,7 @@ describe( 'Updater', function () {
 
 		it( 'returns false for wrong action', function () {
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$args       = new stdClass();
 			$args->slug = 'millicache';
@@ -448,7 +483,7 @@ describe( 'Updater', function () {
 			$test_wp_remote_get_response = new WP_Error( 'http_request_failed', 'Timeout' );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$args       = new stdClass();
 			$args->slug = 'millicache';
@@ -462,7 +497,7 @@ describe( 'Updater', function () {
 			$test_wp_remote_get_response = mock_http_response( mock_remote_info( '2.0.0' ) );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$args       = new stdClass();
 			$args->slug = 'millicache';
@@ -485,7 +520,7 @@ describe( 'Updater', function () {
 			$test_site_transients['millicache_update_info'] = mock_remote_info( '2.0.0' );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$updater->clear_update_cache();
 
@@ -500,7 +535,7 @@ describe( 'Updater', function () {
 			$test_wp_remote_get_response = mock_http_response( mock_remote_info( '2.0.0' ) );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$transient           = new stdClass();
 			$transient->response = array();
@@ -517,7 +552,7 @@ describe( 'Updater', function () {
 			$test_wp_remote_get_response = new WP_Error( 'http_request_failed', 'Timeout' );
 
 			$loader  = new Loader();
-			$updater = new Updater( $loader );
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
 			$transient           = new stdClass();
 			$transient->response = array();

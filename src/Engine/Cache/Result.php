@@ -12,7 +12,9 @@
 
 namespace MilliCache\Engine\Cache;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Value object representing the result of a cache retrieval operation.

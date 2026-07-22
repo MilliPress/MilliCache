@@ -26,6 +26,8 @@ Complete reference for MilliCache command-line interface.
 | `wp millicache config export` | Export settings as JSON           |
 | `wp millicache config import` | Import settings from JSON         |
 
+[MilliCache Pro](https://www.millipress.com/millicache-pro/) adds further commands for its modules (`entries`, `rules`, `preload`, `metrics`, `edge`, `module`, `license`). See the [Pro WP-CLI reference](https://www.millipress.com/docs/millicache-pro/03-wp-cli/01-commands/).
+
 ---
 
 ## Cache Commands
@@ -516,3 +518,4 @@ wp help millicache config
 - [Configuration Reference](../02-configuration/02-reference.md) — All constants
 - [Cache Clearing](../05-usage/20-cache-clearing.md) — Clearing strategies
 - [Troubleshooting](../09-troubleshooting/01-common-issues.md) — Common issues
+- [Pro WP-CLI Commands](https://www.millipress.com/docs/millicache-pro/03-wp-cli/01-commands/) — Commands added by MilliCache Pro

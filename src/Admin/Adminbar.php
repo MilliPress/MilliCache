@@ -15,7 +15,9 @@ use MilliCache\Core\Loader;
 use MilliCache\Engine;
 use MilliCache\MilliCache;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * The WordPress Adminbar functionality of the plugin.
@@ -137,7 +139,7 @@ final class Adminbar {
 							? array( 'url:' . Engine::instance()->request()->get_url_hash( $permalink ) )
 							: array();
 						$title     = sprintf(
-							/* translators: %s: Post type name */
+							/* translators: %s: Target name */
 							__( 'Clear %s Cache', 'millicache' ),
 							$post_type_object->labels->singular_name
 						);
@@ -176,7 +178,7 @@ final class Adminbar {
 				'id'     => 'millicache-clear',
 				'href'   => add_query_arg( '_millicache', 'clear' ),
 				'title'  => sprintf(
-				 /* translators: %s: "Network" or "Website" */
+				 /* translators: %s: Target name */
 					__( 'Clear %s Cache', 'millicache' ),
 					is_network_admin() ? __( 'Network', 'millicache' ) : __( 'Website', 'millicache' )
 				),

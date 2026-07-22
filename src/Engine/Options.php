@@ -14,7 +14,9 @@ namespace MilliCache\Engine;
 
 use MilliCache\Engine\Response\State;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Manages request-specific cache behavior options.

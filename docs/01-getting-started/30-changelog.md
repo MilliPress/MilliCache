@@ -6,6 +6,58 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.4](https://github.com/MilliPress/MilliCache/compare/v1.7.3...v1.7.4) (2026-07-22)
+
+
+### Features
+
+* **i18n:** install language packs from the millipress.com languages API ([dd2d73d](https://github.com/MilliPress/MilliCache/commit/dd2d73dc3f8d7a1f1d4f5dd432bab3693e38e891))
+* **release:** post a single Discord notification on stable release ([57b0def](https://github.com/MilliPress/MilliCache/commit/57b0defddc9ffac48c948eae8681179f5e268d84))
+
+
+### Bug Fixes
+
+* **i18n:** serve JS translations as handle-named full catalogs ([747594a](https://github.com/MilliPress/MilliCache/commit/747594a108fcf46408d53dd75f6a99b0dc1ca6cb))
+* **updater:** Correct endpoint URL for plugin update information ([46611ad](https://github.com/MilliPress/MilliCache/commit/46611ad197ff3c59ee0205bb8526139578dbdfbb))
+
+
+### Miscellaneous
+
+* **release:** ship the language-pack injector as 1.7.4 ([5bd8ff6](https://github.com/MilliPress/MilliCache/commit/5bd8ff6f730e63d90c14683e106105ed1b4be14f))
+
+## [1.7.3](https://github.com/MilliPress/MilliCache/compare/v1.7.2...v1.7.3) (2026-07-19)
+
+
+### Features
+
+* **cli:** let `wp millicache drop` target and reinstall any drop-in ([8937287](https://github.com/MilliPress/MilliCache/commit/8937287d2d7ff505f4d91a53eb76a1d26c1e925e))
+* **i18n:** make translation-ready for language-pack delivery ([4757aa8](https://github.com/MilliPress/MilliCache/commit/4757aa81ab833b2927f6d0d453253128d23e3cd5))
+* **logging:** adopt the shared MilliBase Logger ([7eccbaa](https://github.com/MilliPress/MilliCache/commit/7eccbaae4a7010719e4a9330fda3fca5d5b415c8))
+
+
+### Bug Fixes
+
+* **pcp:** satisfy Plugin Check across shipped sources ([41f918d](https://github.com/MilliPress/MilliCache/commit/41f918de3912bde84f05708fc3ebea51f73cc6bb))
+* **ui:** share Status card styles between MilliCache and MilliCache Pro ([6aac122](https://github.com/MilliPress/MilliCache/commit/6aac12210d438dec29cadfd54285e69e7bb9dd28))
+
+## [1.7.2](https://github.com/MilliPress/MilliCache/compare/v1.7.1...v1.7.2) (2026-07-16)
+
+
+### Bug Fixes
+
+* **dropin:** invalidate OPcache when installing or removing drop-ins ([841707d](https://github.com/MilliPress/MilliCache/commit/841707dde73f15ac743d72bacff603bd86bb62d7))
+* **rules:** share the rules engine with other MilliRules integrations ([ba02b55](https://github.com/MilliPress/MilliCache/commit/ba02b55a922b82426e3406a9b37ebc7ff8be8b31))
+* **settings:** recognize the cache buckets key so MC_CACHE_BUCKETS works ([3255794](https://github.com/MilliPress/MilliCache/commit/32557945d9c48aae5f25dc11dbe6e87b466e1116))
+* **updater:** only self-update when this copy owns the plugin basename ([2f6d584](https://github.com/MilliPress/MilliCache/commit/2f6d5849e83d1027b026948ba40221a516326944))
+
+## [1.7.1](https://github.com/MilliPress/MilliCache/compare/v1.7.0...v1.7.1) (2026-07-14)
+
+
+### Bug Fixes
+
+* **engine:** publish singleton before re-entrant bootstrap work ([cd6aa21](https://github.com/MilliPress/MilliCache/commit/cd6aa21c480de4cb4b2de5ff9b1bdad956bff783))
+* **status:** stop KPI tiles stretching in Safari ([c8d2945](https://github.com/MilliPress/MilliCache/commit/c8d2945b00ca287e8583f43ac20e3738a7bc1f5c))
+
 ## [1.7.0](https://github.com/MilliPress/MilliCache/compare/v1.6.2...v1.7.0) (2026-07-12)
 
 MilliCache 1.7.0 is a big step forward. The full feature list is long, so here are the highlights:

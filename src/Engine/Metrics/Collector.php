@@ -14,7 +14,9 @@ namespace MilliCache\Engine\Metrics;
 
 use MilliCache\Core\Storage;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Routes a request's hit-or-miss outcome to a {@see Recorder} bound to the

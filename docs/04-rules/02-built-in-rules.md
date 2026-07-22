@@ -242,5 +242,5 @@ Now subscribers can see cached pages, but editors and admins still bypass.
 ## Next Steps
 
 - [Examples](03-examples.md) — Practical rule examples
-- [MilliRules Conditions](https://millipress.com/docs/millirules/05-reference/01-conditions/) — Full conditions reference
-- [MilliRules Actions](https://millipress.com/docs/millirules/05-reference/02-actions/) — Full actions reference
+- [MilliRules Conditions](https://www.millipress.com/docs/millirules/05-reference/01-conditions/) — Full conditions reference
+- [MilliRules Actions](https://www.millipress.com/docs/millirules/05-reference/02-actions/) — Full actions reference

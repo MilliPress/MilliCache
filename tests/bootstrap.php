@@ -239,6 +239,14 @@ if ( ! function_exists( 'wp_delete_file' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wp_opcache_invalidate' ) ) {
+	function wp_opcache_invalidate( $filepath, $force = false ) {
+		global $test_opcache_invalidated;
+		$test_opcache_invalidated[] = $filepath;
+		return true;
+	}
+}
+
 if ( ! function_exists( 'get_file_data' ) ) {
 	function get_file_data( $file_path, $headers, $context = '' ) {
 		$content = '';

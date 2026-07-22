@@ -14,7 +14,9 @@ namespace MilliCache\Admin\UI;
 
 use MilliCache\Engine;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Handles `clear`, `clear_current`, and `clear_targets` cache actions from

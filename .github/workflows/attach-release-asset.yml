@@ -1,6 +1,6 @@
 name: Attach Release Asset
 
-# Builds millicache.zip at the given tag and uploads it to that tag's
+# Builds millicache-{version}.zip at the given tag and uploads it to that tag's
 # existing GitHub release, leaving the release name, body, and prerelease
 # flag untouched. Use when a release was cut without an asset (e.g. an
 # older tag from before the build pipeline existed) and you want to
@@ -45,15 +45,21 @@ jobs:
         run: ./.github/scripts/build-dist.sh
 
       - name: Create release archive
+        id: archive
+        env:
+          TAG: ${{ inputs.tag }}
         run: |
-          cd dist
-          zip -rq "../millicache.zip" .
+          mv dist millicache
+          ASSET="millicache-${TAG#v}.zip"
+          zip -rq "$ASSET" millicache
+          echo "asset=$ASSET" >> "$GITHUB_OUTPUT"
 
       - name: Upload asset to existing release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.tag }}
-        run: gh release upload "$TAG" millicache.zip --clobber
+          ASSET: ${{ steps.archive.outputs.asset }}
+        run: gh release upload "$TAG" "$ASSET" --clobber
 
       - name: Summary
         env:

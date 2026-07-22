@@ -14,7 +14,9 @@ namespace MilliCache\Admin\CLI;
 use MilliCache\Admin\UI\StatusBuilder;
 use MilliCache\Engine;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Single user-facing command that surfaces MilliCache status in three views,

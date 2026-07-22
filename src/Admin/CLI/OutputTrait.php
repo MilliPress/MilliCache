@@ -11,7 +11,9 @@
 
 namespace MilliCache\Admin\CLI;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Provides common output formatting methods for CLI commands.

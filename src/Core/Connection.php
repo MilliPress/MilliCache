@@ -12,12 +12,15 @@
 
 namespace MilliCache\Core;
 
+use MilliBase\Logger;
 use MilliBase\Settings as BaseSettings;
 use Predis\Autoloader;
 use Predis\Client;
 use Predis\Connection\ConnectionException;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Builds the Predis client from storage settings.
@@ -55,14 +58,27 @@ final class Connection {
 	private array $normalized;
 
 	/**
+	 * Channel-prefixed logger for connection failures.
+	 *
+	 * @since 1.7.3
+	 * @access private
+	 *
+	 * @var Logger $logger
+	 */
+	private Logger $logger;
+
+	/**
 	 * Initialize the connection from storage settings.
 	 *
 	 * @since 1.7.0
+	 * @since 1.7.3 Accepts an injected logger.
 	 * @access public
 	 *
 	 * @param array<mixed> $settings The storage settings.
+	 * @param Logger|null  $logger   Shared logger instance; defaults to an own "MilliCache" channel.
 	 */
-	public function __construct( array $settings ) {
+	public function __construct( array $settings, ?Logger $logger = null ) {
+		$this->logger     = $logger ?? new Logger( 'MilliCache' );
 		$this->settings   = $settings;
 		$this->normalized = $this->normalize();
 	}
@@ -107,7 +123,7 @@ final class Connection {
 
 			return new Client( $this->normalized['nodes'], $options );
 		} catch ( \Throwable $e ) {
-			error_log( 'Unable to build the storage client: ' . $e->getMessage() );
+			$this->logger->error( 'Unable to build the storage client: ' . $e->getMessage() );
 			return null;
 		}
 	}
@@ -461,7 +477,7 @@ final class Connection {
 	 * @return array{mode: string, nodes: array<int, array<string, mixed>>, parameters: array<string, mixed>, service: string, reason: string}
 	 */
 	private function disabled( array $parameters, string $reason ): array {
-		error_log( 'MilliCache: ' . $reason . ' Cache disabled (running uncached).' );
+		$this->logger->error( $reason . ' Cache disabled (running uncached).' );
 
 		return array(
 			'mode'       => 'disabled',

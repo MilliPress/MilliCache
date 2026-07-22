@@ -12,7 +12,9 @@
 
 namespace MilliCache\Engine\Cache;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Validates cache entries for staleness and expiration.

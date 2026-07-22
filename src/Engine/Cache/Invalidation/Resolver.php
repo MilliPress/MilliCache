@@ -15,7 +15,9 @@ namespace MilliCache\Engine\Cache\Invalidation;
 use MilliCache\Engine\Request\Processor as RequestManager;
 use MilliCache\Engine\Utilities\Multisite;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Resolves URLs, post-IDs, and other targets to cache flags.

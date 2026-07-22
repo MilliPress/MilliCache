@@ -11,6 +11,7 @@
 
 namespace MilliCache;
 
+use MilliBase\Logger;
 use MilliCache\Base\Site;
 use MilliCache\Base\Network;
 use MilliCache\Core\Storage;
@@ -24,7 +25,9 @@ use MilliCache\Engine\Request;
 use MilliCache\Engine\Response;
 use MilliCache\Engine\Utilities\Multisite;
 
-! defined( 'ABSPATH' ) && exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Fired by advanced-cache.php
@@ -177,6 +180,16 @@ final class Engine {
 	private array $settings;
 
 	/**
+	 * Lazy-loaded channel-prefixed logger instance.
+	 *
+	 * @since 1.7.3
+	 * @access private
+	 *
+	 * @var Logger|null
+	 */
+	private ?Logger $logger = null;
+
+	/**
 	 * Whether autoloader has been initialized.
 	 *
 	 * @since 1.0.0
@@ -210,6 +223,9 @@ final class Engine {
 		?Cache\Manager $cache_manager = null,
 		?Cache\Invalidation\Manager $clearing_manager = null
 	) {
+		// Store singleton instance.
+		self::$instance = $this;
+
 		// Initialize autoloader first.
 		$this->autoload();
 
@@ -228,9 +244,6 @@ final class Engine {
 		$this->request_processor = $request_manager;
 		$this->cache_manager = $cache_manager;
 		$this->invalidation_manager = $clearing_manager;
-
-		// Store singleton instance.
-		self::$instance = $this;
 	}
 
 	/**
@@ -444,7 +457,7 @@ final class Engine {
 	 */
 	public function storage(): Storage {
 		if ( ! $this->storage ) {
-			$this->storage = new Storage( $this->get_settings( 'storage' ) );
+			$this->storage = new Storage( $this->get_settings( 'storage' ), $this->logger() );
 		}
 		return $this->storage;
 	}
@@ -670,6 +683,25 @@ final class Engine {
 		}
 
 		return 'unknown';
+	}
+
+	/**
+	 * Get the shared MilliCache logger instance.
+	 *
+	 * Canonical entry point for extensions:
+	 * `$engine->logger()->warning( '...' )`. Entries are channel-prefixed
+	 * with "MilliCache" and observable via the `millibase_log` action.
+	 *
+	 * @since 1.7.3
+	 * @access public
+	 *
+	 * @return Logger The shared logger instance.
+	 */
+	public function logger(): Logger {
+		if ( ! $this->logger ) {
+			$this->logger = new Logger( 'MilliCache' );
+		}
+		return $this->logger;
 	}
 
 	/**
