@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-07-19T14:33:36+00:00\n"
-"PO-Revision-Date: 2026-07-22 14:31+0000\n"
+"PO-Revision-Date: 2026-07-22 15:04+0000\n"
 "X-Generator: Weblate 2026.7.1\n"
 "X-Domain: millicache\n"
 "Language: fr_FR\n"
@@ -314,7 +314,7 @@ msgstr "Lecture"
 #: src/Admin/CLI/Test.php:159
 #: src/Admin/CLI/Test.php:168
 msgid "Delete"
-msgstr "Supprimer"
+msgstr "Suppression"
 
 #: src/Admin/CLI/Test.php:181
 msgid "All tests passed."
@@ -944,7 +944,7 @@ msgstr "Taux de succès"
 
 #: src/Admin/UI/StatusBuilder.php:739
 msgid "Cache hit ratio"
-msgstr "Taux de succès du cache"
+msgstr "Taux de succès du cache (hit ratio)"
 
 #: src/Admin/UI/StatusBuilder.php:740
 msgid "Share of cacheable front-end requests this site served straight from the page cache over the last 7 days. Misses are requests that had to be generated; uncacheable requests (excluded URLs, custom rules) are not counted."
@@ -1159,7 +1159,7 @@ msgstr "Vider le cache"
 
 #: src/Base/Manager.php:210
 msgid "Status"
-msgstr "Statut"
+msgstr "État"
 
 #. translators: %s: URL to the network admin MilliCache settings page.
 #: src/Base/Migrations/MoveStorageToNetwork.php:78
@@ -1463,7 +1463,7 @@ msgstr "Requêtes"
 #: assets/js/settings/tabs/Status.jsx:409
 #: build/settings.js:1
 msgid "Uncached"
-msgstr "Non mis en cache"
+msgstr "Non mises en cache"
 
 #: assets/js/settings/tabs/Status.jsx:495
 #: build/settings.js:1
