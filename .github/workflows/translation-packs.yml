@@ -49,6 +49,7 @@ jobs:
         run: |
           mkdir -p dist
           shopt -s nullglob
+          manifest='[]'
           for po in assets/lang/"${DOMAIN}"-*.po; do
             base=$(basename "$po" .po)     # millicache-de_DE
             locale=${base#"${DOMAIN}"-}    # de_DE
@@ -58,14 +59,26 @@ jobs:
               echo "skip ${locale}: no translated strings"
               continue
             fi
+            # The .po ships in the pack (as wordpress.org packs do): WP reads
+            # its PO-Revision-Date as the installed-translation timestamp, which
+            # the plugin's injector compares against the manifest's `updated`.
             ( cd assets/lang && zip -jq "${GITHUB_WORKSPACE}/dist/${base}.zip" \
-                "${base}.mo" "${base}.l10n.php" ${base}-*.json )
-            echo "packed ${locale} (${translated} strings)"
+                "${base}.po" "${base}.mo" "${base}.l10n.php" ${base}-*.json )
+            # PO-Revision-Date is the content clock — asset upload time would
+            # always exceed the installed copy and cause an update loop.
+            revision=$(grep -m1 -oE '"PO-Revision-Date: [^"\\]+' "$po" | sed 's/"PO-Revision-Date: //' || true)
+            manifest=$(jq -c --arg l "$locale" --arg u "$revision" --argjson n "$translated" \
+              '. + [{locale: $l, updated: $u, translated: $n}]' <<< "$manifest")
+            echo "packed ${locale} (${translated} strings, revision ${revision:-unknown})"
           done
-          echo "--- dist ---"; ls -la dist
+          jq -n --arg domain "$DOMAIN" --argjson packs "$manifest" \
+            '{domain: $domain, packs: $packs}' > dist/manifest.json
+          echo "--- dist ---"; ls -la dist; cat dist/manifest.json
           # No translated locales yet is a valid state (plugin not translated),
-          # not a failure — skip publishing rather than erroring.
-          if [ -n "$(ls -A dist 2>/dev/null)" ]; then
+          # not a failure — skip publishing rather than erroring. dist/ always
+          # holds manifest.json, so gate on the ZIP count.
+          zips=(dist/*.zip)
+          if [ "${#zips[@]}" -gt 0 ]; then
             echo "has_packs=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_packs=false" >> "$GITHUB_OUTPUT"
@@ -92,4 +105,4 @@ jobs:
               --notes "Rolling WordPress language packs, rebuilt from assets/lang on every .po change. Not a plugin release." \
               --latest=false
           fi
-          gh release upload "$RELEASE_TAG" dist/*.zip --clobber
+          gh release upload "$RELEASE_TAG" dist/*.zip dist/manifest.json --clobber
