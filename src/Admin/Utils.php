@@ -81,10 +81,8 @@ final class Utils {
 		);
 
 		// Load the JSON translations for scripts that use @wordpress/i18n.
-		// Language packs land in the shared languages directory; passing the
-		// path makes WordPress check {domain}-{locale}-{handle}.json first,
-		// the full-catalog file our packs ship (per-file md5 lookups cannot
-		// cover strings in code-split chunks).
+		// The path enables the {domain}-{locale}-{handle}.json full-catalog
+		// lookup our language packs ship.
 		if ( in_array( 'wp-i18n', $js_dependencies, true ) ) {
 			wp_set_script_translations( "millicache-{$asset_name}", $text_domain, WP_LANG_DIR . '/plugins' );
 		}

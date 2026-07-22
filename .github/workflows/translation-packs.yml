@@ -44,20 +44,11 @@ jobs:
           wp i18n make-mo assets/lang assets/lang
           wp i18n make-php assets/lang
 
-      # make-json only maps entries whose references end in .js, so strings
-      # extracted from JSX/TS sources are silently dropped, and some wp-cli
-      # builds purge JS strings from the .po they read. Both would corrupt the
-      # shipped pack (the pristine .po is the freshness clock), so make-json
-      # runs on a scratch copy with references rewritten to .js.
-      #
-      # Its per-source md5-named JSONs never match at runtime either: WordPress
-      # hashes the *enqueued* file's path (a built bundle, or no src at all for
-      # inline scripts), not source paths. Instead we merge everything into one
-      # full-catalog {domain}-{locale}-{handle}.json per script handle:
-      # load_script_textdomain() checks that filename first whenever
-      # wp_set_script_translations() is given a path, and since
-      # @wordpress/i18n keeps one registry per text domain, the single catalog
-      # also covers strings living in lazy-loaded (code-split) chunks.
+      # make-json's per-source md5 JSONs never match the enqueued bundle at
+      # runtime, so merge them into one {domain}-{locale}-{handle}.json (the
+      # file WordPress checks first when wp_set_script_translations() gets a
+      # path). Scratch copy keeps the shipped .po pristine — it is the pack's
+      # freshness clock.
       - name: Build handle-named JS catalogs
         run: |
           shopt -s nullglob
@@ -69,8 +60,7 @@ jobs:
             echo "no .po files — nothing to do"
             exit 0
           fi
-          sed -i -E '/^#:/ s/\.(jsx|tsx|ts)(:[0-9]+)/.js\2/g' "${pos[@]}"
-          wp i18n make-json "$scratch" "$scratch" --pretty-print
+          wp i18n make-json "$scratch" "$scratch" --extensions=jsx,ts,tsx --pretty-print
           for po in "${pos[@]}"; do
             base=$(basename "$po" .po)
             jsons=("$scratch/${base}"-*.json)
