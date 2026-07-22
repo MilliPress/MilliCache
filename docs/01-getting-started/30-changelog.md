@@ -6,6 +6,25 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.4](https://github.com/MilliPress/MilliCache/compare/v1.7.3...v1.7.4) (2026-07-22)
+
+
+### Features
+
+* **i18n:** install language packs from the millipress.com languages API ([dd2d73d](https://github.com/MilliPress/MilliCache/commit/dd2d73dc3f8d7a1f1d4f5dd432bab3693e38e891))
+* **release:** post a single Discord notification on stable release ([57b0def](https://github.com/MilliPress/MilliCache/commit/57b0defddc9ffac48c948eae8681179f5e268d84))
+
+
+### Bug Fixes
+
+* **i18n:** serve JS translations as handle-named full catalogs ([747594a](https://github.com/MilliPress/MilliCache/commit/747594a108fcf46408d53dd75f6a99b0dc1ca6cb))
+* **updater:** Correct endpoint URL for plugin update information ([46611ad](https://github.com/MilliPress/MilliCache/commit/46611ad197ff3c59ee0205bb8526139578dbdfbb))
+
+
+### Miscellaneous
+
+* **release:** ship the language-pack injector as 1.7.4 ([5bd8ff6](https://github.com/MilliPress/MilliCache/commit/5bd8ff6f730e63d90c14683e106105ed1b4be14f))
+
 ## [1.7.3](https://github.com/MilliPress/MilliCache/compare/v1.7.2...v1.7.3) (2026-07-19)
 
 
