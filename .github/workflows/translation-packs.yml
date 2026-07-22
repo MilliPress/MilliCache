@@ -1,4 +1,4 @@
-name: Translation packs
+name: Pack Translations
 
 # Compiles the committed .po files into WordPress language packs and publishes
 # them as assets on a rolling "translations-latest" release. millipress.com's
@@ -88,7 +88,7 @@ jobs:
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             # --latest=false so this never shadows the plugin's real latest release.
             gh release create "$RELEASE_TAG" \
-              --title "Translation packs" \
+              --title "Language packs" \
               --notes "Rolling WordPress language packs, rebuilt from assets/lang on every .po change. Not a plugin release." \
               --latest=false
           fi
