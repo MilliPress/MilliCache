@@ -181,6 +181,8 @@ From network admin context:
 wp millicache stats
 ```
 
+[MilliCache Pro](https://www.millipress.com/millicache-pro/) adds visual insight on top: [Detailed Metrics](https://www.millipress.com/docs/millicache-pro/02-modules/06-detailed-metrics/) charts requests, bandwidth, and response times per site, and the [Cache Entries Browser](https://www.millipress.com/docs/millicache-pro/02-modules/02-cache-entries/) shows entries from all sites in the Network Admin.
+
 ## Subdirectory vs. Subdomain
 
 MilliCache works with both multisite configurations:

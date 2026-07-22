@@ -38,6 +38,8 @@ These events clear the entire site cache:
 - Permalink structure changes (`update_option_permalink_structure`)
 - Active plugins changes (`update_option_active_plugins`)
 
+[MilliCache Pro](https://www.millipress.com/millicache-pro/)'s [Block Editor module](https://www.millipress.com/docs/millicache-pro/02-modules/04-block-editor/) makes several of these full clears surgical: when a synced pattern, Query Loop source, or Site Editor template changes, exactly the pages using it are cleared instead of the whole site.
+
 ## Manual Clearing
 
 ### Admin Bar
@@ -250,6 +252,8 @@ For non-critical updates, expire instead of delete:
 ```php
 millicache_clear_cache_by_post_ids( [ $post_id ], true ); // expire = true
 ```
+
+After a full clear, the first visitor to each page pays the render cost. With [Cache Preloading](https://www.millipress.com/docs/millicache-pro/02-modules/05-cache-preloading/) in [MilliCache Pro](https://www.millipress.com/millicache-pro/), the cache refills itself from your XML sitemap in the background instead.
 
 ### 3. Batch Related Clears
 

@@ -48,7 +48,7 @@ flowchart LR
 
 ## The Fluent API
 
-Rules use a readable, chainable syntax powered by [MilliRules](https://millipress.com/docs/millirules/):
+Rules use a readable, chainable syntax powered by [MilliRules](https://www.millipress.com/docs/millirules/):
 
 ```php
 use MilliCache\Deps\MilliRules\Rules;
@@ -61,6 +61,8 @@ Rules::create( 'mysite:example-rule', 'php' )  // Create rule with ID and phase
         ->set_ttl( 1800 )                      // Set 30-minute TTL
     ->register();                              // Register the rule
 ```
+
+Prefer building rules without code? [MilliCache Pro](https://www.millipress.com/millicache-pro/) includes a [visual Rules Builder](https://www.millipress.com/docs/millicache-pro/02-modules/03-rules-builder/): create, edit, and reorder caching rules directly in the settings screen, in addition to the PHP API.
 
 ## Two Execution Phases
 
@@ -137,11 +139,13 @@ With rules, for example, you can:
 
 For deep documentation on the rules engine, conditions, actions, and patterns:
 
-**[MilliRules Documentation](https://millipress.com/docs/millirules/)**
+**[MilliRules Documentation](https://www.millipress.com/docs/millirules/)**
 
-- [Core Concepts](https://millipress.com/docs/millirules/02-core-concepts/)
-- [Conditions Reference](https://millipress.com/docs/millirules/05-reference/01-conditions/)
-- [Actions Reference](https://millipress.com/docs/millirules/05-reference/02-actions/)
+- [Core Concepts](https://www.millipress.com/docs/millirules/02-core-concepts/)
+- [Conditions Reference](https://www.millipress.com/docs/millirules/05-reference/01-conditions/)
+- [Actions Reference](https://www.millipress.com/docs/millirules/05-reference/02-actions/)
+
+To manage rules visually instead, see the [Rules Builder](https://www.millipress.com/docs/millicache-pro/02-modules/03-rules-builder/) in MilliCache Pro.
 
 ## Next Steps
 

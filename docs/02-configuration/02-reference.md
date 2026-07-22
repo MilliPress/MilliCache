@@ -36,7 +36,7 @@ define( 'MC_STORAGE_HOST', '127.0.0.1' );
 
 Server hostname, IP address, or Unix socket path. Supports an optional `tls://` or `tcp://` scheme prefix for encrypted connections.
 
-Set it to an **array** to enable replication (a `master` key) or Sentinel (a `service` key). See [High Availability](../08-storage-backends/01-overview.md#high-availability-replication--sentinel) for the syntax.
+Set it to an **array** to enable replication (a `master` key) or Sentinel (a `service` key). See [High Availability](../08-storage-backends/01-overview.md#high-availability-replication--sentinel) for the syntax. [MilliCache Pro](https://www.millipress.com/millicache-pro/) can configure all three topologies visually via its [Storage Connections module](https://www.millipress.com/docs/millicache-pro/02-modules/10-storage-connections/).
 
 **Examples:**
 
