@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Language-pack update injector.
  *
- * Fetches the per-product pack manifests from the millipress.com languages
+ * Fetches the per-domain pack manifests from the millipress.com languages
  * API and maps them into the update_plugins transient's `translations` list,
  * where WordPress's Language_Pack_Upgrader picks them up like wordpress.org
  * packs. Covers every text domain this installation ships — including
@@ -38,7 +38,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Translator {
 
 	/**
-	 * Languages-API URL template, %s = product slug (== text domain).
+	 * Languages-API URL template, %s = text domain.
 	 *
 	 * @since 1.7.4
 	 * @var   string
@@ -46,7 +46,7 @@ final class Translator {
 	private const API_URL_TEMPLATE = 'https://www.millipress.com/api/plugins/%s/languages';
 
 	/**
-	 * Transient key caching the fetched manifests (all products together).
+	 * Transient key caching the fetched manifests (all domains together).
 	 *
 	 * @since 1.7.4
 	 * @var   string
@@ -184,24 +184,23 @@ final class Translator {
 	 * @since  1.7.4
 	 * @access private
 	 *
-	 * @return string[] Product slugs (each equals its text domain).
+	 * @return string[] Text domains (each doubles as the languages-API slug).
 	 */
-	private function products(): array {
+	private function domains(): array {
 		/**
-		 * Filters the products the translation injector requests packs for.
+		 * Filters the text domains the translation injector requests packs for.
 		 *
-		 * Each slug doubles as the text domain and as the path segment of the
-		 * languages API (/api/plugins/{slug}/languages). A bundling host adds
-		 * its own domain here — MilliCache Pro appends `millicache-pro` so the
-		 * bundled core delivers all three domains from one injector.
+		 * Each domain doubles as the path segment of the languages API
+		 * (/api/plugins/{domain}/languages). A bundling host adds its own
+		 * domain here.
 		 *
 		 * @since 1.7.4
 		 *
-		 * @param string[] $products Product slugs. Default millicache, millibase.
+		 * @param string[] $domains Text domains. Default millicache, millibase.
 		 */
-		$products = (array) apply_filters( 'millicache_translation_products', array( 'millicache', 'millibase' ) );
+		$domains = (array) apply_filters( 'millicache_translation_domains', array( 'millicache', 'millibase' ) );
 
-		return array_values( array_unique( array_filter( array_map( 'strval', $products ) ) ) );
+		return array_values( array_unique( array_filter( array_map( 'strval', $domains ) ) ) );
 	}
 
 	/**
@@ -248,7 +247,7 @@ final class Translator {
 	}
 
 	/**
-	 * The cached manifests for every configured product, fetching missing ones.
+	 * The cached manifests for every configured domain, fetching missing ones.
 	 *
 	 * Cached as one bundle so a site with three domains still makes at most
 	 * three requests per 12 hours. A failed fetch caches as an empty list —
@@ -257,10 +256,10 @@ final class Translator {
 	 * @since  1.7.4
 	 * @access private
 	 *
-	 * @return array<string, array<int, array<mixed, mixed>>> Manifest entries keyed by product slug.
+	 * @return array<string, array<int, array<mixed, mixed>>> Manifest entries keyed by text domain.
 	 */
 	private function get_manifests(): array {
-		$products  = $this->products();
+		$domains   = $this->domains();
 		$cached    = get_site_transient( self::TRANSIENT_KEY );
 		$manifests = array();
 
@@ -273,32 +272,32 @@ final class Translator {
 			}
 		}
 
-		$missing = array_diff( $products, array_keys( $manifests ) );
+		$missing = array_diff( $domains, array_keys( $manifests ) );
 
-		foreach ( $missing as $product ) {
-			$manifests[ $product ] = $this->fetch_manifest( $product );
+		foreach ( $missing as $domain ) {
+			$manifests[ $domain ] = $this->fetch_manifest( $domain );
 		}
 
 		if ( array() !== $missing ) {
 			set_site_transient( self::TRANSIENT_KEY, $manifests, self::CACHE_DURATION );
 		}
 
-		// Only the currently configured products — a stale cache may hold more.
-		return array_intersect_key( $manifests, array_flip( $products ) );
+		// Only the currently configured domains — a stale cache may hold more.
+		return array_intersect_key( $manifests, array_flip( $domains ) );
 	}
 
 	/**
-	 * Fetch one product's pack manifest from the languages API.
+	 * Fetch one domain's pack manifest from the languages API.
 	 *
 	 * @since  1.7.4
 	 * @access private
 	 *
-	 * @param  string $product Product slug.
+	 * @param  string $domain Text domain.
 	 * @return array<int, array<mixed, mixed>> Manifest entries, empty on failure.
 	 */
-	private function fetch_manifest( string $product ): array {
+	private function fetch_manifest( string $domain ): array {
 		/**
-		 * Filters the languages-API URL for a product.
+		 * Filters the languages-API URL for a text domain.
 		 *
 		 * Lets a staging or development environment point the injector at a
 		 * different manifest host.
@@ -306,12 +305,12 @@ final class Translator {
 		 * @since 1.7.4
 		 *
 		 * @param string $url     The manifest URL.
-		 * @param string $product The product slug being fetched.
+		 * @param string $domain The text domain being fetched.
 		 */
 		$url = (string) apply_filters(
 			'millicache_translation_api_url',
-			sprintf( self::API_URL_TEMPLATE, $product ),
-			$product
+			sprintf( self::API_URL_TEMPLATE, $domain ),
+			$domain
 		);
 
 		$response = wp_remote_get(

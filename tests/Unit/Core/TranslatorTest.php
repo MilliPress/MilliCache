@@ -314,8 +314,8 @@ it( 'lets a bundling host add its own product via filter', function () {
 	// Both stub conventions: tests/bootstrap.php's apply_filters reads
 	// $test_filters[$hook]; the per-file stubs read $test_apply_filters_returns.
 	$products = array( 'millicache', 'millibase', 'millicache-pro' );
-	$test_apply_filters_returns['millicache_translation_products'] = $products;
-	$test_filters['millicache_translation_products']               = $products;
+	$test_apply_filters_returns['millicache_translation_domains'] = $products;
+	$test_filters['millicache_translation_domains']               = $products;
 	$test_wp_remote_get_response = mock_manifest_response( array( manifest_entry() ) );
 
 	$transient = run_injector( new Translator( new Loader() ) );
