@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write # publish the rolling release and its assets
+  contents: read
 
 env:
   DOMAIN: millicache # text domain == .po filename prefix (millicache-{locale}.po)
@@ -72,10 +72,18 @@ jobs:
             echo "No translated locales yet — nothing to publish."
           fi
 
+      - name: Mint App installation token
+        if: steps.pack.outputs.has_packs == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.MILLIPRESS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
+
       - name: Publish rolling release
         if: steps.pack.outputs.has_packs == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             # --latest=false so this never shadows the plugin's real latest release.
