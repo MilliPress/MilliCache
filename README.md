@@ -20,7 +20,7 @@ Combined with intelligent cache flags and flexible rules, it's designed for scal
 - **WP-CLI Integration** — Full command-line cache management
 - **[Multiple Backends](docs/08-storage-backends/01-overview.md)** — Redis, Valkey, Dragonfly, or any Redis-compatible server
 
-Learn more on [millipress.com](https://millipress.com/millicache), where you also find the [full documentation](https://millipress.com/docs/millicache).
+Learn more on [millipress.com](https://www.millipress.com/millicache), where you also find the [full documentation](https://www.millipress.com/docs/millicache).
 
 ## Quick Start
 
@@ -48,19 +48,23 @@ Learn more on [millipress.com](https://millipress.com/millicache), where you als
 
 ## Documentation
 
-Full documentation is available on [millipress.com/docs/millicache](https://millipress.com/docs/millicache):
+Full documentation is available on [millipress.com/docs/millicache](https://www.millipress.com/docs/millicache):
 
 | Section                                                        | Description                            |
 |----------------------------------------------------------------|----------------------------------------|
-| [Getting Started](https://millipress.com/docs/millicache/01-getting-started/10-introduction/)  | Introduction and installation          |
-| [Configuration](https://millipress.com/docs/millicache/02-configuration/01-overview/)          | Settings and constants reference       |
-| [Cache Flags](https://millipress.com/docs/millicache/03-cache-flags/01-introduction/)          | Targeted cache invalidation            |
-| [Rules](https://millipress.com/docs/millicache/04-rules/01-introduction/)                      | Condition-based caching control        |
-| [Usage](https://millipress.com/docs/millicache/05-usage/10-how-caching-works/)                 | How caching works, clearing, multisite |
-| [WP-CLI](https://millipress.com/docs/millicache/06-wp-cli/01-commands/)                        | Command-line reference                 |
-| [Developers](https://millipress.com/docs/millicache/07-developers/10-architecture/)            | Architecture, hooks, API               |
-| [Storage Backends](https://millipress.com/docs/millicache/08-storage-backends/01-overview/)    | Redis, Valkey, or any compatible server |
-| [Troubleshooting](https://millipress.com/docs/millicache/09-troubleshooting/01-common-issues/) | Common issues and FAQ                  |
+| [Getting Started](https://www.millipress.com/docs/millicache/01-getting-started/10-introduction/)  | Introduction and installation          |
+| [Configuration](https://www.millipress.com/docs/millicache/02-configuration/01-overview/)          | Settings and constants reference       |
+| [Cache Flags](https://www.millipress.com/docs/millicache/03-cache-flags/01-introduction/)          | Targeted cache invalidation            |
+| [Rules](https://www.millipress.com/docs/millicache/04-rules/01-introduction/)                      | Condition-based caching control        |
+| [Usage](https://www.millipress.com/docs/millicache/05-usage/10-how-caching-works/)                 | How caching works, clearing, multisite |
+| [WP-CLI](https://www.millipress.com/docs/millicache/06-wp-cli/01-commands/)                        | Command-line reference                 |
+| [Developers](https://www.millipress.com/docs/millicache/07-developers/01-architecture/)            | Architecture, hooks, API               |
+| [Storage Backends](https://www.millipress.com/docs/millicache/08-storage-backends/01-overview/)    | Redis, Valkey, or any compatible server |
+| [Troubleshooting](https://www.millipress.com/docs/millicache/09-troubleshooting/01-common-issues/) | Common issues and FAQ                  |
+
+## MilliCache Pro
+
+[MilliCache Pro](https://www.millipress.com/millicache-pro/) extends MilliCache with premium modules: a cache entries browser, a visual rules builder, block editor cache intelligence, cache preloading, detailed metrics, edge caching (bunny.net, Cloudflare), an asset CDN, and a persistent object cache. See the [Pro documentation](https://www.millipress.com/docs/millicache-pro/) for details.
 
 ## Requirements
 
@@ -72,7 +76,7 @@ Full documentation is available on [millipress.com/docs/millicache](https://mill
 
 The [Discord](https://discord.gg/mx8HAXaKGY) server and [GitHub Discussions](https://github.com/MilliPress/MilliCache/discussions) are places to swap setups, trade tips, and share your ideas for where MilliCache should head next. We're listening.
 
-For bug reports, open a [GitHub issue](https://github.com/MilliPress/MilliCache/issues). [MilliCache Pro](https://millipress.com/millicache-pro) customers also get direct support by email and a private Discord channel.
+For bug reports, open a [GitHub issue](https://github.com/MilliPress/MilliCache/issues). [MilliCache Pro](https://www.millipress.com/millicache-pro) customers also get direct support by email and a private Discord channel.
 
 ## Testing
 
