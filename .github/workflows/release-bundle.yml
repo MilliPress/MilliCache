@@ -163,6 +163,10 @@ jobs:
           # crafted release body can't inject commands.
           NOTES="$(gh release view "$TAG_NAME" --repo "$REPO" --json body -q .body)"
 
+          # Drop the Performance Results section and everything after it;
+          # its tables and <details> blocks don't render in Discord embeds.
+          NOTES="${NOTES%%'### Performance Results'*}"
+
           # Discord embed descriptions cap at 4096 chars; trim well under and
           # mark the cut so readers know to click through for the rest.
           if [ "${#NOTES}" -gt 1500 ]; then
@@ -188,6 +192,7 @@ jobs:
             --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --argjson color "$COLOR" \
             '{
+              username: "MilliPress Bot",
               embeds: [{
                 title: $title,
                 url: $url,
@@ -198,7 +203,7 @@ jobs:
                   { name: "Version", value: $version, inline: true },
                   { name: "Channel", value: $channel, inline: true }
                 ],
-                footer: { text: "MilliCache release automation" }
+                footer: { text: "MilliPress Bot" }
               }]
             }')"
 
