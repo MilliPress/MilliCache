@@ -6,6 +6,14 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.5](https://github.com/MilliPress/MilliCache/compare/v1.7.4...v1.7.5) (2026-07-24)
+
+
+### Bug Fixes
+
+* **engine:** accept Vary tokens covered by request keying or inert on GET ([53ad7b7](https://github.com/MilliPress/MilliCache/commit/53ad7b74b7f2d3cd9118a64bca28aaee3b994427)), closes [#172](https://github.com/MilliPress/MilliCache/issues/172)
+* **engine:** resolve Authorization bucket from redirect and basic-auth channels ([7e7ed1b](https://github.com/MilliPress/MilliCache/commit/7e7ed1b78d17323ab77afe5fbc71b8c6ceb53591))
+
 ## [1.7.4](https://github.com/MilliPress/MilliCache/compare/v1.7.3...v1.7.4) (2026-07-22)
 
 
