@@ -373,8 +373,7 @@ final class MilliCache {
 			// Clear the cache for the post and related archives, author, taxonomies, etc.
 			$this->clear_post_and_related_cache( $post );
 		} elseif ( 'publish' === $old_status && 'publish' !== $new_status ) {
-			// Unpublishing (trash, draft, private, pending): the cached entry
-			// and the archives listing the post are stale now.
+			// Unpublishing (trash, draft, private, pending).
 			$this->clear_post_and_related_cache( $post );
 		}
 	}

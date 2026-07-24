@@ -60,12 +60,16 @@ final class Connection {
 	/**
 	 * Channel-prefixed logger for connection failures.
 	 *
+	 * Untyped on purpose: the injected instance may originate from a
+	 * co-resident MilliCache's class universe (prefix-scoped Logger),
+	 * which a native type would reject.
+	 *
 	 * @since 1.7.3
 	 * @access private
 	 *
 	 * @var Logger $logger
 	 */
-	private Logger $logger;
+	private $logger;
 
 	/**
 	 * Initialize the connection from storage settings.
@@ -77,7 +81,7 @@ final class Connection {
 	 * @param array<mixed> $settings The storage settings.
 	 * @param Logger|null  $logger   Shared logger instance; defaults to an own "MilliCache" channel.
 	 */
-	public function __construct( array $settings, ?Logger $logger = null ) {
+	public function __construct( array $settings, $logger = null ) {
 		$this->logger     = $logger ?? new Logger( 'MilliCache' );
 		$this->settings   = $settings;
 		$this->normalized = $this->normalize();

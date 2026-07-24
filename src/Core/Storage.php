@@ -82,7 +82,7 @@ class Storage {
 	 *
 	 * @var Logger $logger
 	 */
-	private Logger $logger;
+	private $logger;
 
 	/**
 	 * Initialize the class and set its properties.
@@ -96,7 +96,7 @@ class Storage {
 	 *
 	 * @return void
 	 */
-	public function __construct( array $settings, ?Logger $logger = null ) {
+	public function __construct( array $settings, $logger = null ) {
 		$this->logger = $logger ?? new Logger( 'MilliCache' );
 
 		if ( isset( $settings['prefix'] ) && is_string( $settings['prefix'] ) && '' !== $settings['prefix'] ) {
