@@ -257,6 +257,80 @@ describe( 'ResponseManager', function () {
 		} );
 	} );
 
+	describe( 'vary bypass decision', function () {
+		// should_bypass_for_vary() is self-contained (no manager dependencies),
+		// so an instance without the constructor suffices.
+		$invoke = function ( array $headers ) {
+			$processor = ( new ReflectionClass( Processor::class ) )->newInstanceWithoutConstructor();
+			$method    = new ReflectionMethod( Processor::class, 'should_bypass_for_vary' );
+			$method->setAccessible( true );
+
+			return $method->invoke( $processor, $headers );
+		};
+
+		it( 'allows responses without a Vary header', function () use ( $invoke ) {
+			expect( $invoke( array( 'Content-Type: text/html' ) ) )->toBeNull();
+		} );
+
+		it( 'allows Vary on Accept and Accept-Encoding', function () use ( $invoke ) {
+			expect( $invoke( array( 'Vary: Accept-Encoding' ) ) )->toBeNull();
+			expect( $invoke( array( 'Vary: Accept, Accept-Encoding' ) ) )->toBeNull();
+		} );
+
+		it( 'allows Vary on headers covered by request keying', function () use ( $invoke ) {
+			expect( $invoke( array( 'Vary: Authorization' ) ) )->toBeNull();
+			expect( $invoke( array( 'Vary: Host' ) ) )->toBeNull();
+		} );
+
+		it( 'bypasses Vary: Cookie to avoid per-visitor fragmentation', function () use ( $invoke ) {
+			expect( $invoke( array( 'Vary: Cookie' ) ) )->toBe( 'Vary: cookie is not supported' );
+		} );
+
+		it( 'allows Vary on inert request-body headers', function () use ( $invoke ) {
+			expect( $invoke( array( 'Vary: Content-Type' ) ) )->toBeNull();
+			expect( $invoke( array( 'Vary: Accept-Encoding, Content-Type' ) ) )->toBeNull();
+			expect( $invoke( array( 'Vary: Content-Length' ) ) )->toBeNull();
+		} );
+
+		it( 'allows the exact Vary header Jetpack sends on every frontend request', function () use ( $invoke ) {
+			// Automattic\Jetpack\Status\Request::is_frontend(), see issue #172.
+			expect( $invoke( array( 'Vary: accept, content-type' ) ) )->toBeNull();
+		} );
+
+		it( 'matches tokens case-insensitively', function () use ( $invoke ) {
+			expect( $invoke( array( 'vary: ACCEPT-ENCODING , Host' ) ) )->toBeNull();
+		} );
+
+		it( 'bypasses Vary: * with its own reason', function () use ( $invoke ) {
+			expect( $invoke( array( 'Vary: *' ) ) )->toBe( 'Vary: * is uncacheable' );
+			expect( $invoke( array( 'Vary: Accept-Encoding, *' ) ) )->toBe( 'Vary: * is uncacheable' );
+		} );
+
+		it( 'bypasses unsupported tokens and names the offender', function () use ( $invoke ) {
+			expect( $invoke( array( 'Vary: X-Device' ) ) )->toBe( 'Vary: x-device is not supported' );
+			expect( $invoke( array( 'Vary: Accept-Encoding, Accept-Language' ) ) )->toBe( 'Vary: accept-language is not supported' );
+		} );
+
+		it( 'merges multiple Vary headers per RFC 9110', function () use ( $invoke ) {
+			$unsupported_last = array(
+				'Vary: Accept-Encoding',
+				'Vary: X-Device',
+			);
+			$unsupported_first = array(
+				'Vary: X-Device',
+				'Vary: Accept-Encoding',
+			);
+			expect( $invoke( $unsupported_last ) )->toBe( 'Vary: x-device is not supported' );
+			expect( $invoke( $unsupported_first ) )->toBe( 'Vary: x-device is not supported' );
+
+			$all_supported = array(
+				'Vary: Accept-Encoding',
+				'Vary: Accept',
+			);
+			expect( $invoke( $all_supported ) )->toBeNull();
+		} );
+	} );
+
 	describe( 'constructor signature', function () {
 		it( 'constructor takes 5 parameters', function () {
 			$method = new ReflectionMethod( Processor::class, '__construct' );
