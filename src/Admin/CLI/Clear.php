@@ -194,8 +194,7 @@ final class Clear {
 			foreach ( $post_ids as $post_id ) {
 				$post = get_post( $post_id );
 				if ( $post ) {
-					$flags = MilliCache::get_post_related_flags( $post );
-					$clear->flags( $flags, $expire );
+					MilliCache::instance()->clear_post_and_related_cache( $post, $expire );
 				} else {
 					// Post not found, fall back to basic clearing.
 					$clear->posts( $post_id, $expire );

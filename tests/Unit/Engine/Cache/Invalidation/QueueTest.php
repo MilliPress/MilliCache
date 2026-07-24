@@ -197,6 +197,26 @@ describe( 'Invalidation Queue', function () {
 			expect( true )->toBeTrue();
 		} );
 
+		it( 'dedupes flags queued multiple times before dispatch', function () {
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )
+				->once()
+				->with(
+					Mockery::on( function ( $sets ) {
+						return $sets['mll:deleted-flags'] === array( 'post:123', 'feed', 'archive:post' ) &&
+							   $sets['mll:expired-flags'] === array( 'flag1' );
+					} ),
+					Mockery::any()
+				);
+
+			$flusher = new Queue( $this->storage, $this->multisite );
+			$flusher->add_to_delete( array( 'post:123', 'feed' ), false );
+			$flusher->add_to_delete( array( 'post:123', 'feed', 'archive:post' ), false );
+			$flusher->add_to_expire( array( 'flag1', 'flag1' ), false );
+			$flusher->execute();
+
+			expect( true )->toBeTrue();
+		} );
+
 		it( 'clears queues after execute', function () {
 			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
 

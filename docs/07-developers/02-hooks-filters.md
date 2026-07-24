@@ -104,7 +104,11 @@ add_action( 'millicache_cache_cleared_by_urls', function( $urls, $expire ) {
 
 #### millicache_cache_cleared_by_posts
 
-Fires after cache is cleared by post IDs.
+Fires after cache is cleared by post IDs — both explicit clears (`clear()->posts()`,
+WP-CLI `--id`) and the automatic invalidation that runs when a post is published,
+updated, unpublished, or deleted. The related-content flags cleared alongside a
+post (archives, author, taxonomies, dates) are reported separately by
+`millicache_cache_cleared_by_flags`.
 
 ```php
 add_action( 'millicache_cache_cleared_by_posts', function( $post_ids, $expire ) {

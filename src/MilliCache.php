@@ -314,6 +314,24 @@ final class MilliCache {
 	}
 
 	/**
+	 * Clear a post's cache together with its related content, firing both
+	 * the `by_posts` (post-ID path) and `by_flags` (related flags) actions.
+	 *
+	 * @since 1.7.5
+	 * @access public
+	 *
+	 * @param \WP_Post $post   The post-object.
+	 * @param bool     $expire Expire (true) or delete (false).
+	 *
+	 * @return void
+	 */
+	public function clear_post_and_related_cache( \WP_Post $post, bool $expire = false ): void {
+		$this->engine->clear()
+			->posts( $post->ID, $expire )
+			->flags( self::get_post_related_flags( $post ), $expire );
+	}
+
+	/**
 	 * Clear post-cache when post is updated, comment count changes, etc.
 	 *
 	 * @since 1.0.0
@@ -332,7 +350,7 @@ final class MilliCache {
 			return;
 		}
 
-		$this->engine->clear()->flags( $this->get_post_related_flags( $post ) );
+		$this->clear_post_and_related_cache( $post );
 	}
 
 	/**
@@ -352,8 +370,8 @@ final class MilliCache {
 			// Clear URL cache for any existing entry.
 			$this->engine->clear()->urls( (string) get_permalink( $post->ID ) );
 
-			// Clear the cache for related archives, author, taxonomies, etc.
-			$this->engine->clear()->flags( $this->get_post_related_flags( $post ) );
+			// Clear the cache for the post and related archives, author, taxonomies, etc.
+			$this->clear_post_and_related_cache( $post );
 		}
 	}
 

@@ -151,8 +151,8 @@ final class Queue {
 		}
 
 		$sets = array(
-			'mll:expired-flags' => $this->flags_to_expire,
-			'mll:deleted-flags' => $this->flags_to_delete,
+			'mll:expired-flags' => array_values( array_unique( $this->flags_to_expire ) ),
+			'mll:deleted-flags' => array_values( array_unique( $this->flags_to_delete ) ),
 		);
 
 		// Clear cache by sets.
