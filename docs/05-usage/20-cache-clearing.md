@@ -14,7 +14,7 @@ MilliCache automatically clears cache when content changes:
 
 ### Post Updates
 
-When a post is created, updated, or deleted:
+When a post is created, updated, unpublished (trashed, set to draft or private), or deleted:
 
 - The post's URL is cleared
 - Related archives are cleared (category, tag, author, date)

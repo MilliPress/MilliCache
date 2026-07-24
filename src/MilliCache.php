@@ -354,7 +354,7 @@ final class MilliCache {
 	}
 
 	/**
-	 * Clear URL cache on transition of newly published posts.
+	 * Clear cache when a post enters or leaves the published state.
 	 *
 	 * @since 1.0.0
 	 * @access public
@@ -371,6 +371,10 @@ final class MilliCache {
 			$this->engine->clear()->urls( (string) get_permalink( $post->ID ) );
 
 			// Clear the cache for the post and related archives, author, taxonomies, etc.
+			$this->clear_post_and_related_cache( $post );
+		} elseif ( 'publish' === $old_status && 'publish' !== $new_status ) {
+			// Unpublishing (trash, draft, private, pending): the cached entry
+			// and the archives listing the post are stale now.
 			$this->clear_post_and_related_cache( $post );
 		}
 	}

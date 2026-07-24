@@ -186,6 +186,11 @@ uses()->beforeEach( function () {
 	$test_posts = array();
 	$test_taxonomies = array();
 	$test_terms = array();
+
+	// Earlier test files may leave multisite mode enabled, which would
+	// prefix queued flags and break the raw-flag assertions below.
+	global $test_is_multisite;
+	$test_is_multisite = false;
 } );
 
 describe( 'MilliCache', function () {
@@ -403,6 +408,37 @@ describe( 'MilliCache', function () {
 
 			expect( true )->toBeTrue();
 		} );
+
+		it( 'fires millicache_cache_cleared_by_posts alongside by_flags', function () {
+			global $test_posts, $test_taxonomies, $test_did_actions;
+
+			$test_did_actions = array();
+			$test_posts[321]  = new WP_Post( array(
+				'ID'           => 321,
+				'post_type'    => 'post',
+				'post_status'  => 'publish',
+				'post_author'  => 5,
+				'post_date'    => '2024-03-15 10:30:00',
+			) );
+			$test_taxonomies['post'] = array();
+
+			$millicache = new MilliCache();
+			$millicache->clear_post_cache( 321 );
+
+			$hooks = array_column( $test_did_actions, 'hook' );
+			expect( $hooks )->toContain( 'millicache_cache_cleared_by_posts' );
+			expect( $hooks )->toContain( 'millicache_cache_cleared_by_flags' );
+
+			// The by_posts payload carries the post ID.
+			$by_posts = $test_did_actions[ array_search( 'millicache_cache_cleared_by_posts', $hooks, true ) ];
+			expect( $by_posts['args'][0] )->toBe( array( 321 ) );
+
+			// Both the surgical and the related flags are queued.
+			$queue = $millicache->get_engine()->clear()->get_queue()->get_delete_queue();
+			expect( $queue )->toContain( 'post:321' );
+			expect( $queue )->toContain( 'feed' );
+			expect( $queue )->toContain( 'archive:post' );
+		} );
 	} );
 
 	describe( 'transition_post_status', function () {
@@ -455,6 +491,50 @@ describe( 'MilliCache', function () {
 			$millicache->transition_post_status( 'pending', 'draft', $post );
 
 			expect( true )->toBeTrue();
+		} );
+
+		it( 'clears the post cache when a published post is unpublished', function () {
+			global $test_taxonomies, $test_did_actions;
+
+			$test_did_actions        = array();
+			$test_taxonomies['post'] = array();
+
+			$post = new WP_Post( array(
+				'ID'           => 654,
+				'post_type'    => 'post',
+				'post_status'  => 'trash',
+				'post_author'  => 3,
+				'post_date'    => '2024-05-01 08:00:00',
+			) );
+
+			$millicache = new MilliCache();
+			$millicache->transition_post_status( 'trash', 'publish', $post );
+
+			$hooks = array_column( $test_did_actions, 'hook' );
+			expect( $hooks )->toContain( 'millicache_cache_cleared_by_posts' );
+			expect( $hooks )->toContain( 'millicache_cache_cleared_by_flags' );
+
+			$queue = $millicache->get_engine()->clear()->get_queue()->get_delete_queue();
+			expect( $queue )->toContain( 'post:654' );
+		} );
+
+		it( 'does not clear for transitions between unpublished states', function () {
+			global $test_did_actions;
+
+			$test_did_actions = array();
+
+			$post = new WP_Post( array(
+				'ID'           => 777,
+				'post_type'    => 'post',
+				'post_status'  => 'draft',
+			) );
+
+			$millicache = new MilliCache();
+			$millicache->transition_post_status( 'draft', 'pending', $post );
+
+			$hooks = array_column( $test_did_actions, 'hook' );
+			expect( $hooks )->not->toContain( 'millicache_cache_cleared_by_posts' );
+			expect( $hooks )->not->toContain( 'millicache_cache_cleared_by_flags' );
 		} );
 	} );
 
