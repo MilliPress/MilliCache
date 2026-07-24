@@ -200,10 +200,12 @@ final class Processor {
 	/**
 	 * Decide whether to bypass storage entirely based on Vary directives.
 	 *
-	 * Vary: *, Vary: Cookie, and Vary on any header outside the supported
-	 * allowlist (Accept, Accept-Encoding) make a response unsafe to cache
-	 * without a richer keying mechanism. Returns a human-readable bypass
-	 * reason when storage should be skipped, or null to proceed.
+	 * Allowed tokens are either covered by request keying (Host,
+	 * Authorization via the auth bucket, Accept via the optional accept
+	 * bucket, Accept-Encoding via gzip storage) or describe request bodies
+	 * that cacheable GET/HEAD requests do not carry (Content-Type,
+	 * Content-Length). Vary: Cookie bypasses on purpose: caching
+	 * per-cookie responses would fragment storage into per-visitor entries.
 	 *
 	 * @since 1.6.0
 	 *
@@ -211,7 +213,7 @@ final class Processor {
 	 * @return string|null Bypass reason, or null to allow caching.
 	 */
 	private function should_bypass_for_vary( array $headers ): ?string {
-		$vary = $this->extract_header_value( $headers, 'vary' );
+		$vary = implode( ',', $this->extract_header_values( $headers, 'vary' ) );
 		if ( '' === $vary ) {
 			return null;
 		}
@@ -222,7 +224,14 @@ final class Processor {
 			return 'Vary: * is uncacheable';
 		}
 
-		$allowed = array( 'accept', 'accept-encoding' );
+		$allowed = array(
+			'host',
+			'accept',
+			'accept-encoding',
+			'authorization',
+			'content-type',
+			'content-length',
+		);
 		foreach ( $tokens as $token ) {
 			if ( ! in_array( $token, $allowed, true ) ) {
 				return 'Vary: ' . $token . ' is not supported';
@@ -233,29 +242,31 @@ final class Processor {
 	}
 
 	/**
-	 * Extract a single header value from a "Key: Value" header list.
+	 * Extract all values of a named header from a "Key: Value" header list.
 	 *
-	 * Returns the trimmed value of the last occurrence of the named header
-	 * (matching is case-insensitive). Returns an empty string when missing.
+	 * Returns the trimmed values of every occurrence of the named header
+	 * (matching is case-insensitive), in source order. Multiple occurrences
+	 * of a list-valued header combine per RFC 9110 §5.2, so callers must
+	 * consider all of them, not just the last.
 	 *
 	 * @since 1.6.0
 	 *
 	 * @param array<string> $headers Header lines.
 	 * @param string        $name    Lowercase header name.
-	 * @return string Header value, or empty string.
+	 * @return array<string> Header values, empty when the header is missing.
 	 */
-	private function extract_header_value( array $headers, string $name ): string {
-		$value = '';
+	private function extract_header_values( array $headers, string $name ): array {
+		$values = array();
 		foreach ( $headers as $header ) {
 			if ( false === strpos( $header, ':' ) ) {
 				continue;
 			}
 			list( $key, $candidate ) = explode( ':', $header, 2 );
 			if ( strtolower( trim( $key ) ) === $name ) {
-				$value = trim( $candidate );
+				$values[] = trim( $candidate );
 			}
 		}
-		return $value;
+		return $values;
 	}
 
 	/**
