@@ -139,9 +139,12 @@ final class Resolver {
 	/**
 	 * Resolve the Authorization-header bucket.
 	 *
-	 * Each unique Authorization header maps to a per-value bucket so
+	 * Each unique Authorization credential maps to a per-value bucket so
 	 * authenticated requests don't share cache entries with each other or
-	 * with anonymous requests.
+	 * with anonymous requests. Reads `HTTP_AUTHORIZATION` first, then the
+	 * channels SAPIs use when the raw header is stripped from the CGI
+	 * environment: `REDIRECT_HTTP_AUTHORIZATION` (Apache rewrite shim) and
+	 * the `PHP_AUTH_USER`/`PHP_AUTH_PW` pair (mod_php basic auth).
 	 *
 	 * @since 1.7.0
 	 *
@@ -149,11 +152,24 @@ final class Resolver {
 	 */
 	private function resolve_authorization(): ?string {
 		$auth = ServerVars::get( 'HTTP_AUTHORIZATION' );
-		if ( empty( $auth ) ) {
+
+		if ( '' === $auth ) {
+			$auth = ServerVars::get( 'REDIRECT_HTTP_AUTHORIZATION' );
+		}
+
+		if ( '' === $auth ) {
+			$user = ServerVars::get( 'PHP_AUTH_USER' );
+			$pw   = ServerVars::get( 'PHP_AUTH_PW' );
+			if ( '' !== $user || '' !== $pw ) {
+				$auth = $user . ':' . $pw;
+			}
+		}
+
+		if ( '' === $auth ) {
 			return null;
 		}
 
-		return md5( (string) $auth );
+		return md5( $auth );
 	}
 
 	/**

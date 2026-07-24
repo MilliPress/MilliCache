@@ -96,6 +96,43 @@ describe('Hasher', function () {
 			expect($hash1)->not->toBe($hash2);
 		});
 
+		it('includes redirected authorization header in hash', function () {
+			$hash1 = $this->hasher->generate();
+
+			$_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = 'Bearer token123';
+			$hasher2 = new Hasher($this->config, $this->parser);
+			$hash2 = $hasher2->generate();
+
+			expect($hash1)->not->toBe($hash2);
+		});
+
+		it('includes basic auth credentials in hash when the raw header is stripped', function () {
+			$hash1 = $this->hasher->generate();
+
+			$_SERVER['PHP_AUTH_USER'] = 'alice';
+			$_SERVER['PHP_AUTH_PW']   = 'secret';
+			$hasher2 = new Hasher($this->config, $this->parser);
+			$hash2 = $hasher2->generate();
+
+			$_SERVER['PHP_AUTH_USER'] = 'bob';
+			$hasher3 = new Hasher($this->config, $this->parser);
+			$hash3 = $hasher3->generate();
+
+			expect($hash1)->not->toBe($hash2);
+			expect($hash2)->not->toBe($hash3);
+		});
+
+		it('prefers the raw authorization header over fallback channels', function () {
+			$_SERVER['HTTP_AUTHORIZATION'] = 'Bearer token123';
+			$hash1 = (new Hasher($this->config, $this->parser))->generate();
+
+			$_SERVER['PHP_AUTH_USER'] = 'alice';
+			$_SERVER['PHP_AUTH_PW']   = 'secret';
+			$hash2 = (new Hasher($this->config, $this->parser))->generate();
+
+			expect($hash1)->toBe($hash2);
+		});
+
 		it('includes unique variables in hash', function () {
 			$config1 = new Config(
 				3600, 600, true, false,
