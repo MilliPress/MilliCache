@@ -6,6 +6,18 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.5](https://github.com/MilliPress/MilliCache/compare/v1.7.4...v1.7.5) (2026-07-24)
+
+
+### Bug Fixes
+
+* **cache:** clear a post's cache when it is unpublished ([43a1a88](https://github.com/MilliPress/MilliCache/commit/43a1a883c1e28eb633ac7b427e32bcb5842da656))
+* **cache:** clear feed caches when a post is published or updated ([b04ede8](https://github.com/MilliPress/MilliCache/commit/b04ede8a015f8d2a34ded93236e76be825538c57))
+* **cache:** fire millicache_cache_cleared_by_posts on automatic post invalidation ([6615c7d](https://github.com/MilliPress/MilliCache/commit/6615c7d44eae208ccc5730bd23b386c347930917))
+* **engine:** accept Vary tokens covered by request keying or inert on GET ([53ad7b7](https://github.com/MilliPress/MilliCache/commit/53ad7b74b7f2d3cd9118a64bca28aaee3b994427)), closes [#172](https://github.com/MilliPress/MilliCache/issues/172)
+* **engine:** resolve Authorization bucket from redirect and basic-auth channels ([7e7ed1b](https://github.com/MilliPress/MilliCache/commit/7e7ed1b78d17323ab77afe5fbc71b8c6ceb53591))
+* **storage:** prevent a fatal error when toggling MilliCache alongside MilliCache Pro ([1ad4949](https://github.com/MilliPress/MilliCache/commit/1ad4949e9a2f667d5942bf0cb7f5eb3f8c513fc3))
+
 ## [1.7.4](https://github.com/MilliPress/MilliCache/compare/v1.7.3...v1.7.4) (2026-07-22)
 
 
