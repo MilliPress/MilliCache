@@ -231,6 +231,7 @@ describe( 'MilliCache', function () {
 			$flags = MilliCache::get_post_related_flags( $post );
 
 			expect( $flags )->toContain( 'post:123' );
+			expect( $flags )->toContain( 'feed' );
 			expect( $flags )->toContain( 'archive:post' );
 			expect( $flags )->toContain( 'archive:author:5' );
 			expect( $flags )->toContain( 'archive:2024' );

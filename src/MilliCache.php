@@ -264,6 +264,9 @@ final class MilliCache {
 			// Singular post.
 			$flags[] = "post:$post_id";
 
+			// Feeds include this post's content.
+			$flags[] = 'feed';
+
 			// Post-Type archive.
 			$flags[] = "archive:$post_type";
 
