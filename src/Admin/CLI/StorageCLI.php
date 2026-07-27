@@ -141,8 +141,12 @@ final class StorageCLI {
 		\WP_CLI::line( __( 'Type "quit" to exit.', 'millicache' ) );
 		\WP_CLI::line( '' );
 
-		// Launch interactive session using passthru for proper TTY handling.
-		// phpcs:ignore Generic.PHP.ForbiddenFunctions.Found -- Interactive redis-cli session in WP-CLI context only; output must stream unbuffered to the TTY and the command is escapeshellarg-escaped.
-		passthru( $command );
+		// Launch the interactive session with the real terminal.
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_proc_open -- Interactive redis-cli session in WP-CLI context only; the command is escapeshellarg-escaped.
+		$process = proc_open( $command, array( STDIN, STDOUT, STDERR ), $pipes );
+
+		if ( is_resource( $process ) ) {
+			proc_close( $process );
+		}
 	}
 }
