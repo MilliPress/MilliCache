@@ -63,17 +63,15 @@ final class DropIn {
 	/**
 	 * Install a drop-in pointing at the given source plugin folder.
 	 *
-	 * A symlink already pointing at the source is reported as 'unchanged'.
-	 * A plain-copy destination with a higher version is preserved as
-	 * 'preserved' unless $force is true — guards user customizations from
-	 * being silently clobbered on activation or `wp millicache drop`.
+	 * Reports 'unchanged' for a symlink already pointing at the source and
+	 * 'preserved' for a higher-version plain copy; $force overrides both.
 	 *
 	 * @since 1.6.0
 	 * @access public
 	 *
 	 * @param string      $filename   Drop-in filename ('advanced-cache.php').
 	 * @param string|null $source_dir Absolute path to the plugin folder containing $filename. Defaults to plugin root.
-	 * @param bool        $force      Override the higher-version safeguard.
+	 * @param bool        $force      Reinstall even when 'unchanged' or 'preserved' would apply.
 	 * @return null|string 'symlinked', 'copied', 'unchanged', 'preserved', 'unwritable', or null on failure.
 	 */
 	public static function install( string $filename = 'advanced-cache.php', ?string $source_dir = null, bool $force = false ): ?string {
@@ -91,7 +89,7 @@ final class DropIn {
 		}
 
 		if ( self::exists( $filename ) ) {
-			if ( is_link( $destination ) && readlink( $destination ) === $source_file ) {
+			if ( ! $force && is_link( $destination ) && readlink( $destination ) === $source_file ) {
 				return 'unchanged';
 			}
 

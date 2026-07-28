@@ -111,6 +111,18 @@ describe( 'DropIn::install', function () {
 		expect( DropIn::install( 'advanced-cache.php', MILLICACHE_DIR ) )->toBe( 'unchanged' );
 	} );
 
+	it( 'reinstalls a correct symlink when $force is true', function () {
+		$source = dropin_write_source( 'advanced-cache.php' );
+		symlink( $source, WP_CONTENT_DIR . '/advanced-cache.php' );
+
+		$result = DropIn::install( 'advanced-cache.php', MILLICACHE_DIR, true );
+
+		expect( $result )->toBe( 'symlinked' );
+		$dest = WP_CONTENT_DIR . '/advanced-cache.php';
+		expect( is_link( $dest ) )->toBeTrue();
+		expect( readlink( $dest ) )->toBe( $source );
+	} );
+
 	it( 'returns "preserved" when destination is a plain copy with a higher version', function () {
 		dropin_write_source( 'advanced-cache.php', '1.0.0' );
 		dropin_write_destination( 'advanced-cache.php', '2.0.0' );
