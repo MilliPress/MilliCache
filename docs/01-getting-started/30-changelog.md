@@ -6,6 +6,24 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.6](https://github.com/MilliPress/MilliCache/compare/v1.7.5...v1.7.6) (2026-07-28)
+
+
+### Features
+
+* **engine:** announce every cache clear as one merged flag batch ([e2f1513](https://github.com/MilliPress/MilliCache/commit/e2f15137798c35e975f3c7d1a5da4bbca786da4a))
+* **status:** warn before the storage server runs out of memory ([a4fc9e6](https://github.com/MilliPress/MilliCache/commit/a4fc9e69116e4419bc1fd4f8b9fe793e322f2552))
+
+
+### Bug Fixes
+
+* **cli:** give the interactive redis-cli session the real terminal ([14e2128](https://github.com/MilliPress/MilliCache/commit/14e21281b09e5a009b3617c56d7cbcfa5343737f))
+
+
+### Miscellaneous
+
+* **deps:** update dev dependencies ([2aa340a](https://github.com/MilliPress/MilliCache/commit/2aa340a8656abc5fb5ecac0ee5fd571d86424c22))
+
 ## [1.7.5](https://github.com/MilliPress/MilliCache/compare/v1.7.4...v1.7.5) (2026-07-24)
 
 
