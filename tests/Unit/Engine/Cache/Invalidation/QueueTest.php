@@ -44,7 +44,7 @@ describe( 'Invalidation Queue', function () {
 	describe( 'add_to_expire', function () {
 		it( 'adds flags to expire queue', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_expire( array( 'flag1', 'flag2' ), false );
+			$flusher->add_to_expire( array( 'flag1', 'flag2' ) );
 
 			$queue = $flusher->get_expire_queue();
 			expect( $queue )->toContain( 'flag1' );
@@ -53,7 +53,7 @@ describe( 'Invalidation Queue', function () {
 
 		it( 'handles empty flags array', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_expire( array(), false );
+			$flusher->add_to_expire( array() );
 
 			$queue = $flusher->get_expire_queue();
 			expect( $queue )->toBeEmpty();
@@ -61,8 +61,8 @@ describe( 'Invalidation Queue', function () {
 
 		it( 'accumulates multiple additions', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_expire( array( 'flag1' ), false );
-			$flusher->add_to_expire( array( 'flag2' ), false );
+			$flusher->add_to_expire( array( 'flag1' ) );
+			$flusher->add_to_expire( array( 'flag2' ) );
 
 			$queue = $flusher->get_expire_queue();
 			expect( count( $queue ) )->toBe( 2 );
@@ -72,7 +72,7 @@ describe( 'Invalidation Queue', function () {
 	describe( 'add_to_delete', function () {
 		it( 'adds flags to delete queue', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_delete( array( 'flag1', 'flag2' ), false );
+			$flusher->add_to_delete( array( 'flag1', 'flag2' ) );
 
 			$queue = $flusher->get_delete_queue();
 			expect( $queue )->toContain( 'flag1' );
@@ -81,7 +81,7 @@ describe( 'Invalidation Queue', function () {
 
 		it( 'handles empty flags array', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_delete( array(), false );
+			$flusher->add_to_delete( array() );
 
 			$queue = $flusher->get_delete_queue();
 			expect( $queue )->toBeEmpty();
@@ -89,8 +89,8 @@ describe( 'Invalidation Queue', function () {
 
 		it( 'accumulates multiple additions', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_delete( array( 'flag1' ), false );
-			$flusher->add_to_delete( array( 'flag2' ), false );
+			$flusher->add_to_delete( array( 'flag1' ) );
+			$flusher->add_to_delete( array( 'flag2' ) );
 
 			$queue = $flusher->get_delete_queue();
 			expect( count( $queue ) )->toBe( 2 );
@@ -106,7 +106,7 @@ describe( 'Invalidation Queue', function () {
 
 		it( 'returns accumulated expire flags', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_expire( array( 'flag1', 'flag2' ), false );
+			$flusher->add_to_expire( array( 'flag1', 'flag2' ) );
 
 			$queue = $flusher->get_expire_queue();
 			expect( count( $queue ) )->toBe( 2 );
@@ -122,7 +122,7 @@ describe( 'Invalidation Queue', function () {
 
 		it( 'returns accumulated delete flags', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_delete( array( 'flag1', 'flag2' ), false );
+			$flusher->add_to_delete( array( 'flag1', 'flag2' ) );
 
 			$queue = $flusher->get_delete_queue();
 			expect( count( $queue ) )->toBe( 2 );
@@ -143,7 +143,7 @@ describe( 'Invalidation Queue', function () {
 				->with( Mockery::type( 'array' ), 3600 );
 
 			$flusher = new Queue( $this->storage, $this->multisite, 3600 );
-			$flusher->add_to_delete( array( 'flag1' ), false );
+			$flusher->add_to_delete( array( 'flag1' ) );
 			$flusher->execute();
 
 			expect( true )->toBeTrue();
@@ -161,7 +161,7 @@ describe( 'Invalidation Queue', function () {
 				);
 
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_expire( array( 'flag1' ), false );
+			$flusher->add_to_expire( array( 'flag1' ) );
 			$flusher->execute();
 
 			expect( true )->toBeTrue();
@@ -179,7 +179,7 @@ describe( 'Invalidation Queue', function () {
 				);
 
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_delete( array( 'flag1' ), false );
+			$flusher->add_to_delete( array( 'flag1' ) );
 			$flusher->execute();
 
 			expect( true )->toBeTrue();
@@ -191,7 +191,7 @@ describe( 'Invalidation Queue', function () {
 				->with( Mockery::any(), 7200 );
 
 			$flusher = new Queue( $this->storage, $this->multisite, 7200 );
-			$flusher->add_to_delete( array( 'flag1' ), false );
+			$flusher->add_to_delete( array( 'flag1' ) );
 			$flusher->execute();
 
 			expect( true )->toBeTrue();
@@ -209,9 +209,9 @@ describe( 'Invalidation Queue', function () {
 				);
 
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_delete( array( 'post:123', 'feed' ), false );
-			$flusher->add_to_delete( array( 'post:123', 'feed', 'archive:post' ), false );
-			$flusher->add_to_expire( array( 'flag1', 'flag1' ), false );
+			$flusher->add_to_delete( array( 'post:123', 'feed' ) );
+			$flusher->add_to_delete( array( 'post:123', 'feed', 'archive:post' ) );
+			$flusher->add_to_expire( array( 'flag1', 'flag1' ) );
 			$flusher->execute();
 
 			expect( true )->toBeTrue();
@@ -221,8 +221,8 @@ describe( 'Invalidation Queue', function () {
 			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
 
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_delete( array( 'flag1' ), false );
-			$flusher->add_to_expire( array( 'flag2' ), false );
+			$flusher->add_to_delete( array( 'flag1' ) );
+			$flusher->add_to_expire( array( 'flag2' ) );
 
 			$flusher->execute();
 
@@ -243,7 +243,7 @@ describe( 'Invalidation Queue', function () {
 	describe( 'clear_queues', function () {
 		it( 'empties expire queue', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_expire( array( 'flag1' ), false );
+			$flusher->add_to_expire( array( 'flag1' ) );
 			$flusher->clear_queues();
 
 			expect( $flusher->get_expire_queue() )->toBeEmpty();
@@ -251,7 +251,7 @@ describe( 'Invalidation Queue', function () {
 
 		it( 'empties delete queue', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_delete( array( 'flag1' ), false );
+			$flusher->add_to_delete( array( 'flag1' ) );
 			$flusher->clear_queues();
 
 			expect( $flusher->get_delete_queue() )->toBeEmpty();
@@ -269,7 +269,7 @@ describe( 'Invalidation Queue', function () {
 
 		it( 'returns correct expire count', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_expire( array( 'flag1', 'flag2', 'flag3' ), false );
+			$flusher->add_to_expire( array( 'flag1', 'flag2', 'flag3' ) );
 
 			$sizes = $flusher->get_queue_sizes();
 			expect( $sizes['expire'] )->toBe( 3 );
@@ -277,7 +277,7 @@ describe( 'Invalidation Queue', function () {
 
 		it( 'returns correct delete count', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_delete( array( 'flag1', 'flag2' ), false );
+			$flusher->add_to_delete( array( 'flag1', 'flag2' ) );
 
 			$sizes = $flusher->get_queue_sizes();
 			expect( $sizes['delete'] )->toBe( 2 );
@@ -289,7 +289,7 @@ describe( 'Invalidation Queue', function () {
 			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
 
 			$flusher = new Queue( $this->storage, $this->multisite );
-			$flusher->add_to_delete( array( 'flag1' ), false );
+			$flusher->add_to_delete( array( 'flag1' ) );
 			$flusher->execute();
 
 			// Verify queues are empty after execute.

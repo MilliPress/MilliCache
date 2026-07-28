@@ -122,10 +122,14 @@ final class Manager {
 	 * @param bool          $add_prefix Whether to add the multisite prefix.
 	 */
 	private function enqueue_flags( array $flags, bool $expire, bool $add_prefix = true ): void {
+		if ( $add_prefix ) {
+			$flags = $this->queue->prefix_flags( $flags );
+		}
+
 		if ( $expire ) {
-			$this->queue->add_to_expire( $flags, $add_prefix );
+			$this->queue->add_to_expire( $flags );
 		} else {
-			$this->queue->add_to_delete( $flags, $add_prefix );
+			$this->queue->add_to_delete( $flags );
 		}
 	}
 
@@ -195,8 +199,15 @@ final class Manager {
 		// Add to the clearer queue.
 		$this->enqueue_flags( $flags, $expire, false );
 
-		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
+			/**
+			 * Fires when a cache clear by URLs is requested.
+			 *
+			 * @since 1.0.0
+			 *
+			 * @param array<string> $urls   The URLs as the caller passed them.
+			 * @param bool          $expire Expire (true) or delete (false).
+			 */
 			do_action( 'millicache_cache_cleared_by_urls', $urls, $expire );
 		}
 
@@ -225,8 +236,18 @@ final class Manager {
 		// Add to the clearer queue.
 		$this->enqueue_flags( $flags, $expire );
 
-		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
+			/**
+			 * Fires when a cache clear by post IDs is requested.
+			 *
+			 * The related-content flags resolved alongside each post are
+			 * announced by `millicache_delete_flags` / `millicache_expire_flags`.
+			 *
+			 * @since 1.0.0
+			 *
+			 * @param array<int> $post_ids The cleared post IDs.
+			 * @param bool       $expire   Expire (true) or delete (false).
+			 */
 			do_action( 'millicache_cache_cleared_by_posts', $post_ids, $expire );
 		}
 
@@ -255,8 +276,19 @@ final class Manager {
 		// Add to the clearer queue.
 		$this->enqueue_flags( $flags, $expire, $add_prefix );
 
-		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
+			/**
+			 * Fires when a cache clear by flags is requested.
+			 *
+			 * Carries the flags as the caller passed them — normalized but
+			 * un-prefixed. The canonical, merged batch is announced at queue
+			 * execution by `millicache_delete_flags` / `millicache_expire_flags`.
+			 *
+			 * @since 1.0.0
+			 *
+			 * @param array<string> $flags  The normalized, un-prefixed flags.
+			 * @param bool          $expire Expire (true) or delete (false).
+			 */
 			do_action( 'millicache_cache_cleared_by_flags', $flags, $expire );
 		}
 
@@ -280,8 +312,16 @@ final class Manager {
 		// Add to the clearer queue.
 		$this->enqueue_flags( $flags, $expire, false );
 
-		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
+			/**
+			 * Fires when a cache clear for whole site(s) is requested.
+			 *
+			 * @since 1.0.0
+			 *
+			 * @param int|array<int>|null $site_ids   The cleared site ID(s), as passed (null = current).
+			 * @param int|null            $network_id The network ID, or null for the current network.
+			 * @param bool                $expire     Expire (true) or delete (false).
+			 */
 			do_action( 'millicache_cache_cleared_by_sites', $site_ids, $network_id, $expire );
 		}
 
@@ -308,8 +348,15 @@ final class Manager {
 			}
 		}
 
-		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
+			/**
+			 * Fires when a cache clear for whole network(s) is requested.
+			 *
+			 * @since 1.0.0
+			 *
+			 * @param array<int|null> $network_ids The cleared network IDs (null = current).
+			 * @param bool            $expire      Expire (true) or delete (false).
+			 */
 			do_action( 'millicache_cache_cleared_by_networks', $network_ids, $expire );
 		}
 
@@ -331,8 +378,15 @@ final class Manager {
 			$this->networks( $network_id, $expire );
 		}
 
-		// Fire WordPress action.
 		if ( function_exists( 'do_action' ) ) {
+			/**
+			 * Fires when a full cache clear — every site on every network —
+			 * is requested.
+			 *
+			 * @since 1.0.0
+			 *
+			 * @param bool $expire Expire (true) or delete (false).
+			 */
 			do_action( 'millicache_cache_cleared', $expire );
 		}
 

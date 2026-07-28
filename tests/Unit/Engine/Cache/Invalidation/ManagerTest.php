@@ -463,6 +463,117 @@ describe( 'Invalidation Manager', function () {
 
 			expect( true )->toBeTrue(); // Action fired
 		} );
+
+		it( 'keeps by_flags raw while millicache_delete_flags announces the canonical flags', function () {
+			global $test_is_multisite, $test_networks, $test_did_actions;
+			$test_is_multisite = true;
+			$test_networks     = array( 1 );
+			$test_did_actions  = array();
+
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
+
+			$handler = new Manager(
+				$this->storage,
+				$this->request_handler,
+				new Multisite()
+			);
+
+			$handler->flags( 'flag4' );
+
+			expect( $handler->get_queue()->get_delete_queue() )->toContain( '1:flag4' );
+
+			$handler->execute_queue();
+
+			$hooks    = array_column( $test_did_actions, 'hook' );
+			$by_flags = $test_did_actions[ array_search( 'millicache_cache_cleared_by_flags', $hooks, true ) ];
+			$deleting = $test_did_actions[ array_search( 'millicache_delete_flags', $hooks, true ) ];
+
+			expect( $by_flags['args'][0] )->toBe( array( 'flag4' ) );
+			expect( $deleting['args'][0] )->toBe( array( '1:flag4' ) );
+		} );
+
+		it( 'keeps raw patterns raw when add_prefix is false', function () {
+			global $test_is_multisite, $test_networks, $test_did_actions;
+			$test_is_multisite = true;
+			$test_networks     = array( 1 );
+			$test_did_actions  = array();
+
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
+
+			$handler = new Manager(
+				$this->storage,
+				$this->request_handler,
+				new Multisite()
+			);
+
+			$handler->flags( '*:test', false, false );
+
+			expect( $handler->get_queue()->get_delete_queue() )->toBe( array( '*:test' ) );
+
+			$handler->execute_queue();
+
+			$hooks    = array_column( $test_did_actions, 'hook' );
+			$deleting = $test_did_actions[ array_search( 'millicache_delete_flags', $hooks, true ) ];
+
+			expect( $deleting['args'][0] )->toBe( array( '*:test' ) );
+		} );
+
+		it( 'fires millicache_delete_flags once with the merged batch of post and site clears', function () {
+			global $test_is_multisite, $test_networks, $test_did_actions;
+			$test_is_multisite = true;
+			$test_networks     = array( 1 );
+			$test_did_actions  = array();
+
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
+
+			$handler = new Manager(
+				$this->storage,
+				$this->request_handler,
+				new Multisite()
+			);
+
+			$handler->posts( 123 );
+			$handler->sites( 5 );
+			$handler->execute_queue();
+
+			$hooks    = array_column( $test_did_actions, 'hook' );
+			$deleting = array_values(
+				array_filter(
+					$test_did_actions,
+					static fn ( array $a ) => 'millicache_delete_flags' === $a['hook']
+				)
+			);
+
+			expect( $hooks )->not->toContain( 'millicache_cache_cleared_by_flags' );
+			expect( $deleting )->toHaveCount( 1 );
+			expect( $deleting[0]['args'][0] )->toContain( '1:post:123' );
+			expect( $deleting[0]['args'][0] )->toContain( '5:*' );
+		} );
+
+		it( 'routes expire-mode clears to millicache_expire_flags', function () {
+			global $test_is_multisite, $test_networks, $test_did_actions;
+			$test_is_multisite = true;
+			$test_networks     = array( 1 );
+			$test_did_actions  = array();
+
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
+
+			$handler = new Manager(
+				$this->storage,
+				$this->request_handler,
+				new Multisite()
+			);
+
+			$handler->flags( 'flag4', true );
+			$handler->execute_queue();
+
+			$hooks = array_column( $test_did_actions, 'hook' );
+			expect( $hooks )->toContain( 'millicache_expire_flags' );
+			expect( $hooks )->not->toContain( 'millicache_delete_flags' );
+
+			$expiring = $test_did_actions[ array_search( 'millicache_expire_flags', $hooks, true ) ];
+			expect( $expiring['args'][0] )->toBe( array( '1:flag4' ) );
+		} );
 	} );
 
 	describe( 'sites', function () {

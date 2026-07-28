@@ -1338,6 +1338,31 @@ class Storage {
 	}
 
 	/**
+	 * Resolve a flag pattern to the concrete flag names present in storage.
+	 *
+	 * @since 1.7.6
+	 *
+	 * @param string $pattern The flag pattern (may contain `*` / `?`).
+	 * @return array<string> The concrete flag names matching the pattern.
+	 */
+	public function get_flags_by_pattern( string $pattern ): array {
+		if ( ! preg_match( '/[*?]/', $pattern ) ) {
+			return array( $pattern );
+		}
+
+		return $this->execute(
+			function () use ( $pattern ) {
+				return array_map(
+					array( $this, 'toggle_flag_key' ),
+					$this->get_cache_keys_by_pattern( $this->toggle_flag_key( $pattern ) )
+				);
+			},
+			array(),
+			'Unable to get flags by pattern from the storage server'
+		);
+	}
+
+	/**
 	 * Clean up expired flags.
 	 *
 	 * @since 1.0.0

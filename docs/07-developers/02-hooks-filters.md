@@ -87,6 +87,36 @@ add_action( 'millicache_entry_expired', function( $hash, $key, $flags, $url ) {
 
 ### Cache Clearing Events
 
+#### millicache_delete_flags / millicache_expire_flags
+
+Fire when the clearing queue executes — once per request, with the complete,
+deduplicated set of canonical flags collected from **every** clear, no matter
+the trigger. The `millicache_cache_cleared_by_*` actions below are
+trigger-scoped and carry the caller's vocabulary (post IDs, URLs, raw flags);
+these two are the content-level counterpart: the final list as it goes to
+storage — site-prefixed on multisite (`2:post:123`), raw patterns kept raw
+(`*:test`, `5:*`). They fire immediately before the entries are removed;
+per-entry outcomes are reported by `millicache_entry_deleted` /
+`millicache_entry_expired`.
+
+`millicache_delete_flags` carries the flags being deleted,
+`millicache_expire_flags` the ones being expired (soft-cleared). Hook both
+with the same callback when the distinction doesn't matter.
+
+These are the hooks to use when you mirror MilliCache's invalidation
+elsewhere (edge caches, external systems) and need the complete, canonical
+picture from a single listener.
+
+```php
+$purge = function( $flags ) {
+    // $flags - The complete batch of canonical flags being cleared.
+    external_cache_purge_by_tags( $flags );
+};
+
+add_action( 'millicache_delete_flags', $purge );
+add_action( 'millicache_expire_flags', $purge );
+```
+
 #### millicache_cache_cleared_by_urls
 
 Fires after cache is cleared by URLs.
@@ -123,15 +153,18 @@ add_action( 'millicache_cache_cleared_by_posts', function( $post_ids, $expire ) 
 
 #### millicache_cache_cleared_by_flags
 
-Fires after cache is cleared by flags.
+Fires after cache is cleared explicitly by flags (`clear()->flags()`, WP-CLI
+`--flag`, the settings-page target clears). Carries the flags as the caller
+passed them — normalized but un-prefixed. For the canonical, complete flag
+batch of every clear, listen to `millicache_delete_flags` /
+`millicache_expire_flags` instead.
 
 ```php
 add_action( 'millicache_cache_cleared_by_flags', function( $flags, $expire ) {
-    // $flags  - Array of cleared flags
+    // $flags  - Array of flags as requested by the caller
     // $expire - Whether expire mode was used
 
-    // Notify external cache
-    external_cache_purge_by_tags( $flags );
+    error_log( 'Flag clear requested: ' . implode( ', ', $flags ) );
 }, 10, 2 );
 ```
 

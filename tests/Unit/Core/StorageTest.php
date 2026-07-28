@@ -418,6 +418,58 @@ describe( 'Storage', function () {
 		} );
 	} );
 
+	describe( 'get_flags_by_pattern', function () {
+		it( 'returns a literal flag as-is without a storage round-trip', function () {
+			$settings = array(
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'prefix'     => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			// No client injected: the early return is the only way this succeeds.
+			expect( $storage->get_flags_by_pattern( '1:test' ) )->toBe( array( '1:test' ) );
+		} );
+
+		it( 'expands a wildcard pattern against the stored flag index', function () {
+			$settings = array(
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'prefix'     => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			// A stub answering SCAN with two matching flag-set keys in one page.
+			$stub = new class() extends \Predis\Client {
+				/** @var array<int, string> */
+				public array $scan_matches = array();
+
+				public function scan( ...$arguments ) {
+					$options              = is_array( $arguments[1] ?? null ) ? $arguments[1] : array();
+					$this->scan_matches[] = (string) ( $options['MATCH'] ?? '' );
+					return array( 0, array( 'test:f:1:test', 'test:f:5:test' ) );
+				}
+
+				public function __call( $command_id, $arguments ) {
+					return null;
+				}
+			};
+
+			$client_prop = new \ReflectionProperty( Storage::class, 'client' );
+			$client_prop->setAccessible( true );
+			$client_prop->setValue( $storage, $stub );
+
+			$flags = $storage->get_flags_by_pattern( '*:test' );
+
+			expect( $flags )->toBe( array( '1:test', '5:test' ) );
+			expect( $stub->scan_matches )->toBe( array( 'test:f:*:test' ) );
+		} );
+	} );
+
 	describe( 'cache operations', function () {
 		it( 'returns null when getting non-existent cache', function () {
 			$settings = array(

@@ -87,15 +87,10 @@ final class Queue {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string> $flags Flags to expire.
-	 * @param bool          $add_prefix Whether to add multisite prefix.
+	 * @param array<string> $flags Canonical flags to expire.
 	 * @return void
 	 */
-	public function add_to_expire( array $flags, bool $add_prefix = true ): void {
-		if ( $add_prefix ) {
-			$flags = $this->prefix_flags( $flags );
-		}
-
+	public function add_to_expire( array $flags ): void {
 		array_push( $this->flags_to_expire, ...$flags );
 	}
 
@@ -104,15 +99,10 @@ final class Queue {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string> $flags Flags to delete.
-	 * @param bool          $add_prefix Whether to add multisite prefix.
+	 * @param array<string> $flags Canonical flags to delete.
 	 * @return void
 	 */
-	public function add_to_delete( array $flags, bool $add_prefix = true ): void {
-		if ( $add_prefix ) {
-			$flags = $this->prefix_flags( $flags );
-		}
-
+	public function add_to_delete( array $flags ): void {
 		array_push( $this->flags_to_delete, ...$flags );
 	}
 
@@ -154,6 +144,41 @@ final class Queue {
 			'mll:expired-flags' => array_values( array_unique( $this->flags_to_expire ) ),
 			'mll:deleted-flags' => array_values( array_unique( $this->flags_to_delete ) ),
 		);
+
+		if ( function_exists( 'do_action' ) ) {
+			if ( ! empty( $sets['mll:deleted-flags'] ) ) {
+				/**
+				 * Fires when the clearing queue executes — once per request,
+				 * with the complete, deduplicated set of canonical flags
+				 * collected from every clear (by post, URL, flag, site, or
+				 * network) that deletes. This is the final list as it goes to
+				 * storage: site-prefixed on multisite (`2:post:123`), patterns
+				 * kept raw (`*:test`, `5:*`). Fires before the entries are
+				 * removed; per-entry outcomes are reported by
+				 * `millicache_entry_deleted`.
+				 *
+				 * @since 1.7.6
+				 *
+				 * @param array<string> $flags The canonical flags being deleted.
+				 */
+				do_action( 'millicache_delete_flags', $sets['mll:deleted-flags'] );
+			}
+
+			if ( ! empty( $sets['mll:expired-flags'] ) ) {
+				/**
+				 * Fires when the clearing queue executes, with the complete
+				 * set of canonical flags being expired (soft-cleared). The
+				 * expiring counterpart of `millicache_delete_flags` — same
+				 * timing, same guarantees; per-entry outcomes are reported by
+				 * `millicache_entry_expired`.
+				 *
+				 * @since 1.7.6
+				 *
+				 * @param array<string> $flags The canonical flags being expired.
+				 */
+				do_action( 'millicache_expire_flags', $sets['mll:expired-flags'] );
+			}
+		}
 
 		// Clear cache by sets.
 		$this->storage->clear_cache_by_sets( $sets, $this->default_ttl );
