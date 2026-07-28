@@ -81,7 +81,7 @@ final class Drop {
 		 * Handlers should act only when $target is 'all' or their own drop-in
 		 * name, and report their result via WP_CLI themselves.
 		 *
-		 * @since 1.8.0
+		 * @since 1.7.3
 		 *
 		 * @param string $target Requested drop-in: 'all', 'advanced-cache', or 'object-cache'.
 		 * @param bool   $force  Whether --force was passed.
@@ -92,7 +92,7 @@ final class Drop {
 	/**
 	 * Reinstall the advanced-cache.php drop-in and report the outcome.
 	 *
-	 * @since 1.8.0
+	 * @since 1.7.3
 	 *
 	 * @param bool $force Whether to override the higher-version safeguard.
 	 * @return void
