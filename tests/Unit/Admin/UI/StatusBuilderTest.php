@@ -108,9 +108,11 @@ describe( 'StatusBuilder/build', function () {
 					'connected' => true,
 					'info'      => array(
 						'Memory' => array(
-							'maxmemory'        => 536870912,
-							'maxmemory_human'  => '512M',
-							'maxmemory_policy' => 'allkeys-lru',
+							'used_memory'       => 184549376,
+							'used_memory_human' => '176M',
+							'maxmemory'         => 536870912,
+							'maxmemory_human'   => '512M',
+							'maxmemory_policy'  => 'allkeys-lru',
 						),
 					),
 				),
@@ -186,6 +188,57 @@ describe( 'StatusBuilder/build', function () {
 			$by_id  = array_column( $checks, null, 'id' );
 
 			expect( $by_id['storage_eviction_policy']['status'] )->toBe( 'recommended' );
+		} );
+
+		it( 'reports storage_memory_usage with used, limit, and percentage', function () {
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $this->healthy ) );
+			$by_id  = array_column( $checks, null, 'id' );
+
+			expect( $by_id )->toHaveKey( 'storage_memory_usage' );
+			expect( $by_id['storage_memory_usage']['status'] )->toBe( 'good' );
+			expect( $by_id['storage_memory_usage']['value'] )->toBe( '176M of 512M (34%)' );
+		} );
+
+		it( 'keeps storage_memory_usage good when allkeys-lru runs near the limit', function () {
+			$payload = $this->healthy;
+			$payload['storage']['info']['Memory']['used_memory'] = 515396076;
+
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $payload ) );
+			$by_id  = array_column( $checks, null, 'id' );
+
+			expect( $by_id['storage_memory_usage']['status'] )->toBe( 'good' );
+		} );
+
+		it( 'flags storage_memory_usage as critical when noeviction is nearly full', function () {
+			$payload = $this->healthy;
+			$payload['storage']['info']['Memory']['maxmemory_policy'] = 'noeviction';
+			$payload['storage']['info']['Memory']['used_memory']      = 515396076;
+
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $payload ) );
+			$by_id  = array_column( $checks, null, 'id' );
+
+			expect( $by_id['storage_memory_usage']['status'] )->toBe( 'critical' );
+		} );
+
+		it( 'flags storage_memory_usage as recommended when a volatile policy approaches the limit', function () {
+			$payload = $this->healthy;
+			$payload['storage']['info']['Memory']['maxmemory_policy'] = 'volatile-lru';
+			$payload['storage']['info']['Memory']['used_memory']      = 456340276;
+
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $payload ) );
+			$by_id  = array_column( $checks, null, 'id' );
+
+			expect( $by_id['storage_memory_usage']['status'] )->toBe( 'recommended' );
+		} );
+
+		it( 'omits storage_memory_usage when no memory limit is set', function () {
+			$payload = $this->healthy;
+			$payload['storage']['info']['Memory']['maxmemory'] = 0;
+
+			$checks = invoke_builder_method( $this->builder, 'gather_checks', array( $payload ) );
+			$by_id  = array_column( $checks, null, 'id' );
+
+			expect( $by_id )->not->toHaveKey( 'storage_memory_usage' );
 		} );
 
 		it( 'omits install-wide checks on per-site multisite (no dropin key)', function () {

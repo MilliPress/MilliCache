@@ -576,6 +576,41 @@ final class StatusBuilder {
 					: __( 'Default', 'millicache' ),
 				'url'         => $policy_docs,
 			);
+
+			// Memory usage — only meaningful against a configured limit.
+			$used_mem = is_numeric( $memory['used_memory'] ?? null ) ? (int) $memory['used_memory'] : 0;
+
+			if ( $max_mem_ok && $used_mem > 0 ) {
+				$pct       = (int) round( $used_mem / $max_mem * 100 );
+				$can_evict = is_string( $policy ) && 0 === strpos( $policy, 'allkeys-' );
+				$stuck     = is_string( $policy ) && '' !== $policy && ! $can_evict;
+
+				if ( $stuck && $pct >= 95 ) {
+					$usage_status      = 'critical';
+					$usage_description = __( 'The storage server is effectively full and its eviction policy cannot reclaim space from cache entries, so writes are failing or about to fail. Switch the policy to allkeys-lru, or raise maxmemory.', 'millicache' );
+				} elseif ( $stuck && $pct >= 80 ) {
+					$usage_status      = 'recommended';
+					$usage_description = __( 'The storage server is approaching its memory limit and its eviction policy cannot reclaim space from cache entries — once full, writes will fail. Switch the policy to allkeys-lru, or raise maxmemory.', 'millicache' );
+				} else {
+					$usage_status      = 'good';
+					$usage_description = $can_evict
+						? __( 'With allkeys-lru the server evicts least-recently-used entries when the limit is reached, so running close to it is normal for a cache.', 'millicache' )
+						: __( 'Memory usage is comfortably within the configured limit.', 'millicache' );
+				}
+
+				$used_human = is_string( $memory['used_memory_human'] ?? null ) ? $memory['used_memory_human'] : (string) $used_mem;
+				$max_human  = is_string( $memory['maxmemory_human'] ?? null ) ? $memory['maxmemory_human'] : (string) $max_mem;
+
+				$checks[] = array(
+					'id'          => 'storage_memory_usage',
+					'label'       => __( 'Storage memory usage', 'millicache' ),
+					'status'      => $usage_status,
+					'description' => $usage_description,
+					// translators: %1$s: used memory (e.g. 312M), %2$s: memory limit (e.g. 512M), %3$d: percentage used.
+					'value'       => sprintf( __( '%1$s of %2$s (%3$d%%)', 'millicache' ), $used_human, $max_human, $pct ),
+					'url'         => $mem_docs,
+				);
+			}
 		}
 
 		return $checks;
