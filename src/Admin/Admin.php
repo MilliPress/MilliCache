@@ -180,6 +180,13 @@ final class Admin {
 		if ( method_exists( DropIn::class, 'heal' ) ) {
 			DropIn::heal();
 		}
+
+		/**
+		 * Fires so extensions can heal drop-ins they own.
+		 *
+		 * @since 1.7.7
+		 */
+		do_action( 'millicache_heal_dropins' );
 	}
 
 	/**

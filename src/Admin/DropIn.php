@@ -233,6 +233,64 @@ final class DropIn {
 	}
 
 	/**
+	 * Translate an install() result into a user-facing status and message.
+	 *
+	 * Shared by the activation notice, `wp millicache drop`, and extension
+	 * drop-ins ('foreign' is an extension-wrapper result). Call sites append
+	 * context-specific advice themselves.
+	 *
+	 * @since 1.7.7
+	 * @access public
+	 *
+	 * @param string|null $result   An install() result code, or null on failure.
+	 * @param string      $filename Drop-in filename the result belongs to.
+	 * @return array{status: string, message: string} status: 'success', 'warning', or 'error'.
+	 */
+	public static function describe( ?string $result, string $filename ): array {
+		switch ( $result ) {
+			case 'symlinked':
+				$status = 'success';
+				/* translators: %s: drop-in filename, e.g. advanced-cache.php. */
+				$message = sprintf( __( 'Created symlink for %s.', 'millicache' ), $filename );
+				break;
+			case 'copied':
+				$status = 'success';
+				/* translators: %s: drop-in filename, e.g. advanced-cache.php. */
+				$message = sprintf( __( 'Copied %s to the wp-content directory.', 'millicache' ), $filename );
+				break;
+			case 'unchanged':
+				$status = 'success';
+				/* translators: %s: drop-in filename, e.g. advanced-cache.php. */
+				$message = sprintf( __( '%s is already installed and correctly configured.', 'millicache' ), $filename );
+				break;
+			case 'preserved':
+				$status = 'warning';
+				/* translators: %s: drop-in filename, e.g. advanced-cache.php. */
+				$message = sprintf( __( 'A higher-version %s is in place and was preserved.', 'millicache' ), $filename );
+				break;
+			case 'foreign':
+				$status = 'warning';
+				/* translators: %s: drop-in filename, e.g. object-cache.php. */
+				$message = sprintf( __( 'A third-party %s is installed and was left in place.', 'millicache' ), $filename );
+				break;
+			case 'unwritable':
+				$status = 'error';
+				/* translators: %s: drop-in filename, e.g. advanced-cache.php. */
+				$message = sprintf( __( 'The wp-content directory is not writable, so %s could not be installed. Make the directory writable and try again, or copy the file there manually from the plugin folder.', 'millicache' ), $filename );
+				break;
+			default:
+				$status = 'error';
+				/* translators: %s: drop-in filename, e.g. advanced-cache.php. */
+				$message = sprintf( __( 'Could not install %s. Copy it manually from the plugin folder to the wp-content directory.', 'millicache' ), $filename );
+		}
+
+		return array(
+			'status'  => $status,
+			'message' => $message,
+		);
+	}
+
+	/**
 	 * Resolve the plugin folder the installed drop-in boots from.
 	 *
 	 * Symlinks resolve via readlink(); plain copies via the `$engine_path` /

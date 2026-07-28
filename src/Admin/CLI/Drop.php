@@ -98,24 +98,23 @@ final class Drop {
 	 * @return void
 	 */
 	private function reinstall_advanced_cache( bool $force ): void {
-		switch ( DropIn::install( 'advanced-cache.php', null, $force ) ) {
-			case 'symlinked':
-				\WP_CLI::success( __( 'Created symlink for advanced-cache.php.', 'millicache' ) );
+		$result   = DropIn::install( 'advanced-cache.php', null, $force );
+		$describe = DropIn::describe( $result, 'advanced-cache.php' );
+		$message  = $describe['message'];
+
+		if ( 'preserved' === $result ) {
+			$message .= ' ' . __( 'Use --force to overwrite.', 'millicache' );
+		}
+
+		switch ( $describe['status'] ) {
+			case 'success':
+				\WP_CLI::success( $message );
 				return;
-			case 'copied':
-				\WP_CLI::success( __( 'Copied advanced-cache.php to wp-content directory.', 'millicache' ) );
+			case 'warning':
+				\WP_CLI::warning( $message );
 				return;
-			case 'unchanged':
-				\WP_CLI::success( __( 'advanced-cache.php symlink is already correctly configured.', 'millicache' ) );
-				return;
-			case 'preserved':
-				\WP_CLI::warning( __( 'A higher-version advanced-cache.php is in place. Use --force to overwrite.', 'millicache' ) );
-				return;
-			case 'unwritable':
-				\WP_CLI::error( __( 'The wp-content directory is not writable.', 'millicache' ) );
-				// WP_CLI::error() halts execution — fallthrough is unreachable.
 			default:
-				\WP_CLI::error( __( 'Could not create advanced-cache.php file.', 'millicache' ) );
+				\WP_CLI::error( $message );
 		}
 	}
 }

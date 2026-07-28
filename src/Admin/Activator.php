@@ -78,39 +78,14 @@ final class Activator {
 	 * @return   void
 	 */
 	private static function create_advanced_cache_file( ?string $source_dir = null ): void {
-		switch ( DropIn::install( 'advanced-cache.php', $source_dir ) ) {
-			case 'symlinked':
-				Admin::add_notice(
-					__( 'Symlink created for advanced-cache.php. Please make sure to configure MilliCache to start caching.', 'millicache' ),
-					'success'
-				);
-				return;
-			case 'copied':
-				Admin::add_notice(
-					__( 'The file advanced-cache.php has been copied to the /wp-content directory. Please make sure to configure MilliCache to start caching.', 'millicache' ),
-					'success'
-				);
-				return;
-			case 'unchanged':
-				Admin::add_notice( __( 'The advanced-cache.php symlink already exists and is correctly configured.', 'millicache' ) );
-				return;
-			case 'preserved':
-				Admin::add_notice(
-					__( 'Your version of advanced-cache.php is higher than the one shipped with the plugin. Replacement skipped to preserve customizations.', 'millicache' ),
-					'error'
-				);
-				return;
-			case 'unwritable':
-				Admin::add_notice(
-					__( 'The wp-content directory is not writable. Please make sure that the directory is writable and try again or manually copy advanced-cache.php from the plugin folder.', 'millicache' ),
-					'error'
-				);
-				return;
-			default:
-				Admin::add_notice(
-					__( 'Could not create symlink for advanced-cache.php. Please copy the file manually from the plugin directory to your /wp-content directory.', 'millicache' ),
-					'error'
-				);
+		$result   = DropIn::install( 'advanced-cache.php', $source_dir );
+		$describe = DropIn::describe( $result, 'advanced-cache.php' );
+		$message  = $describe['message'];
+
+		if ( in_array( $result, array( 'symlinked', 'copied' ), true ) ) {
+			$message .= ' ' . __( 'Please make sure to configure MilliCache to start caching.', 'millicache' );
 		}
+
+		Admin::add_notice( $message, $describe['status'] );
 	}
 }
