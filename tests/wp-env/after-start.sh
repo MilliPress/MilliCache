@@ -15,7 +15,8 @@ echo "=== MilliCache afterStart ==="
 # 1. Determine the wp-env Docker network name
 # ---------------------------------------------------------------------------
 # The network is named <project>_default where <project> is the basename of
-# the wp-env install path (an MD5 hash of the .wp-env.json path).
+# the wp-env install path, lowercased (Docker Compose normalizes project
+# names to lowercase, but newer wp-env install dirs contain uppercase).
 INSTALL_PATH=$(npx wp-env status --json 2>/dev/null \
   | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).installPath))" 2>/dev/null)
 
@@ -24,7 +25,7 @@ if [ -z "$INSTALL_PATH" ]; then
   exit 1
 fi
 
-PROJECT_NAME=$(basename "$INSTALL_PATH")
+PROJECT_NAME=$(basename "$INSTALL_PATH" | tr '[:upper:]' '[:lower:]')
 export WP_ENV_NETWORK="${PROJECT_NAME}_default"
 
 echo "Docker network: $WP_ENV_NETWORK"
