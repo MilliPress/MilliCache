@@ -200,6 +200,16 @@ final class Engine {
 	private bool $autoloaded = false;
 
 	/**
+	 * Whether the constructor has finished.
+	 *
+	 * @since 1.7.7
+	 * @access private
+	 *
+	 * @var bool
+	 */
+	private bool $ready = false;
+
+	/**
 	 * Constructor with dependency injection.
 	 *
 	 * @param Storage|null                    $storage           Storage.
@@ -244,6 +254,8 @@ final class Engine {
 		$this->request_processor = $request_manager;
 		$this->cache_manager = $cache_manager;
 		$this->invalidation_manager = $clearing_manager;
+
+		$this->ready = true;
 	}
 
 	/**
@@ -264,6 +276,18 @@ final class Engine {
 		}
 
 		return self::$instance;
+	}
+
+	/**
+	 * Whether the engine is fully constructed and safe to use.
+	 *
+	 * @since 1.7.7
+	 * @access public
+	 *
+	 * @return bool True once the constructor has completed.
+	 */
+	public function is_ready(): bool {
+		return $this->ready;
 	}
 
 	/**
