@@ -13,6 +13,8 @@
 namespace MilliCache\Admin\UI;
 
 use MilliCache\Admin\Utils;
+use MilliCache\Base\Network;
+use MilliCache\Base\Site;
 use MilliCache\Core\Connection;
 use MilliCache\Engine;
 
@@ -119,7 +121,7 @@ final class StatusBuilder {
 		// MilliCache's own per-blog page-cache hit ratio (subsites get their own).
 		$payload['metrics'] = $this->engine->metrics()->read( $network_cache );
 
-		$checks = $this->gather_checks( $payload );
+		$checks = $this->gather_checks( $payload, $network_admin );
 
 		/**
 		 * Filter the status checks. Each entry (see {@see StatusBuilder::gather_checks()}):
@@ -408,10 +410,11 @@ final class StatusBuilder {
 	 *
 	 * @since 1.7.0
 	 *
-	 * @param array<string, mixed> $payload The (in-progress) payload.
+	 * @param array<string, mixed> $payload       The (in-progress) payload.
+	 * @param bool                 $network_admin Whether the network-scope endpoint is building.
 	 * @return array<int, array{id: string, label: string, status: string, description: string, value?: string, url?: string}>
 	 */
-	private function gather_checks( array $payload ): array {
+	private function gather_checks( array $payload, bool $network_admin = false ): array {
 		$dropin  = is_array( $payload['dropin'] ?? null ) ? $payload['dropin'] : null;
 		$storage = is_array( $payload['storage'] ?? null ) ? $payload['storage'] : array();
 		$info    = is_array( $storage['info'] ?? null ) ? $storage['info'] : array();
@@ -611,6 +614,19 @@ final class StatusBuilder {
 					'url'         => $mem_docs,
 				);
 			}
+		}
+
+		// Config file writability — surfaces only while the last write failed.
+		$sync_settings = $network_admin ? Network::settings() : Site::settings();
+		if ( null !== $sync_settings->config_sync_failed_at() ) {
+			$checks[] = array(
+				'id'          => 'config_file',
+				'label'       => __( 'Config file', 'millicache' ),
+				'status'      => 'recommended',
+				'description' => __( 'The config file could not be written. Components that load before WordPress may use outdated settings until the settings directory inside wp-content is writable again; MilliCache repairs the file automatically once it is.', 'millicache' ),
+				'value'       => __( 'Write failed', 'millicache' ),
+				'url'         => self::DOCS_BASE . '/02-configuration/01-overview',
+			);
 		}
 
 		return $checks;

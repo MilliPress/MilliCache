@@ -45,6 +45,8 @@ define( 'MC_CACHE_DEBUG', true );      // Debug headers
 define( 'MC_STORAGE_HOST', 'redis' );  // Redis hostname
 ```
 
+Defining a constant sets the value and locks it in the admin UI; removing the constant unlocks the setting but keeps its last value. Changing a constant behaves exactly like changing the setting in the admin UI: any side effects (such as rescheduling background jobs) are applied automatically on the next admin visit.
+
 ### Using Admin UI
 
 Navigate to **Settings → MilliCache** to configure via the WordPress admin.
