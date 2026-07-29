@@ -66,6 +66,24 @@ function install_multisite_metrics( array $network_metrics, array $site_metrics 
 	);
 }
 
+/**
+ * Write a network config file into a fresh temp directory and return the
+ * directory path, mimicking MilliBase's ConfigFile sync output.
+ *
+ * @param array<string, mixed> $settings The settings tree the file returns.
+ */
+function write_network_config_file( array $settings ): string {
+	$dir = sys_get_temp_dir() . '/mc-metrics-test-' . uniqid();
+	mkdir( $dir );
+
+	file_put_contents(
+		$dir . '/_network-1.php',
+		'<?php return ' . var_export( $settings, true ) . ';'
+	);
+
+	return $dir;
+}
+
 beforeEach( function () {
 	$GLOBALS['test_is_multisite'] = true;
 } );
@@ -73,9 +91,9 @@ beforeEach( function () {
 it( 'resolves metrics from the network scope, overriding the site toggle', function () {
 	install_multisite_metrics(
 		network_metrics: array(
-			'active'           => true,
-			'retention_hourly' => 10,
-			'retention_daily'  => 20,
+			'active' => true,
+			'hourly' => 10,
+			'daily'  => 20,
 		),
 		site_metrics: array(
 			'active' => false,
@@ -86,6 +104,68 @@ it( 'resolves metrics from the network scope, overriding the site toggle', funct
 	$metrics = $engine->get_settings( 'metrics' );
 
 	expect( $metrics['active'] )->toBeTrue();
-	expect( $metrics['retention_hourly'] )->toBe( 10 );
-	expect( $metrics['retention_daily'] )->toBe( 20 );
+	expect( $metrics['hourly'] )->toBe( 10 );
+	expect( $metrics['daily'] )->toBe( 20 );
+} );
+
+it( 'declares every engine-read metrics key in the owning scope\'s defaults', function () {
+	// The defaults-gate (MilliBase overlay_known) strips stored keys absent
+	// from the scope's defaults, and the engine resolves settings before any
+	// plugin can widen them via filters — so the keys Engine::metrics() reads
+	// must be declared here or config-file values silently resolve to defaults.
+	// Metrics is network-owned: declared once in Network::defaults(), reaching
+	// Site::defaults() only through the single-site merge.
+	expect( Network::defaults()['metrics'] )->toHaveKeys( array( 'active', 'hourly', 'daily' ) );
+
+	expect( Site::defaults() )->not->toHaveKey( 'metrics' );
+
+	$GLOBALS['test_is_multisite'] = false;
+	expect( Site::defaults()['metrics'] )->toHaveKeys( array( 'active', 'hourly', 'daily' ) );
+} );
+
+it( 'keeps config-file metrics values through the real network defaults-gate', function () {
+	$dir = write_network_config_file(
+		array(
+			'metrics' => array(
+				'active' => true,
+				'hourly' => 60,
+				'daily'  => 730,
+			),
+		)
+	);
+
+	try {
+		$settings = BaseSettings::standalone(
+			array(
+				'slug'        => 'millicache',
+				'network'     => true,
+				'defaults'    => Network::defaults(),
+				'config_file' => array( 'directory' => $dir . '/' ),
+			)
+		);
+
+		expect( $settings->get( 'metrics.active' ) )->toBeTrue();
+		expect( $settings->get( 'metrics.hourly' ) )->toBe( 60 );
+		expect( $settings->get( 'metrics.daily' ) )->toBe( 730 );
+	} finally {
+		unlink( $dir . '/_network-1.php' );
+		rmdir( $dir );
+	}
+} );
+
+it( 'passes retention through as null so the Recorder falls back when unconfigured', function () {
+	install_multisite_metrics(
+		network_metrics: Network::defaults()['metrics'],
+		site_metrics: array(),
+	);
+
+	$engine  = new Engine();
+	$metrics = $engine->get_settings( 'metrics' );
+
+	// Free declares the keys but owns no values: Engine::metrics()'s
+	// is_numeric guard skips null, so the Recorder uses its own constants.
+	expect( $metrics['active'] )->toBeFalse();
+	expect( $metrics['hourly'] )->toBeNull();
+	expect( $metrics['daily'] )->toBeNull();
+	expect( $engine->metrics() )->toBeInstanceOf( \MilliCache\Engine\Metrics\Manager::class );
 } );

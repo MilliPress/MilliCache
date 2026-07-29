@@ -106,6 +106,11 @@ final class Network extends Manager {
 			'rules'   => array(
 				'items' => array(),
 			),
+			'metrics' => array(
+				'active' => false,
+				'hourly' => null,
+				'daily'  => null,
+			),
 		);
 	}
 

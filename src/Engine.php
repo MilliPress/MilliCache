@@ -662,8 +662,8 @@ final class Engine {
 
 			$retention = array();
 			foreach ( array(
-				Metrics\Recorder::RES_HOURLY => 'retention_hourly',
-				Metrics\Recorder::RES_DAILY  => 'retention_daily',
+				Metrics\Recorder::RES_HOURLY => 'hourly',
+				Metrics\Recorder::RES_DAILY  => 'daily',
 			) as $resolution => $key ) {
 				if ( is_numeric( $settings[ $key ] ?? null ) ) {
 					$retention[ $resolution ] = max( 1, (int) $settings[ $key ] );

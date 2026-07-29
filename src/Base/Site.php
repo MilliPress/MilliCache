@@ -51,8 +51,9 @@ final class Site extends Manager {
 	/**
 	 * Get the per-site MilliBase Settings instance.
 	 *
-	 * Holds `cache`, `rules`, and `metrics` on multisite; on single-site it
-	 * additionally holds `storage` (since there is no separate network scope).
+	 * Holds `cache` and `rules`; on single-site it additionally holds the
+	 * network-owned modules (`storage`, `metrics`), since there is no
+	 * separate network scope.
 	 *
 	 * @since 1.7.0
 	 *
@@ -79,8 +80,8 @@ final class Site extends Manager {
 	/**
 	 * Build the per-site default settings array.
 	 *
-	 * On single-site the storage module is bundled here too, since there is
-	 * no separate network scope to host it.
+	 * On single-site the network-owned modules (storage, metrics) are bundled
+	 * here too, since there is no separate network scope to host them.
 	 *
 	 * @since 1.7.0
 	 *
@@ -102,9 +103,6 @@ final class Site extends Manager {
 			),
 			'rules' => array(
 				'items' => array(),
-			),
-			'metrics' => array(
-				'active' => false,
 			),
 		);
 
