@@ -8,6 +8,13 @@ menu_order: 30
 
 ## [1.7.7](https://github.com/MilliPress/MilliCache/compare/v1.7.6...v1.7.7) (2026-07-29)
 
+<!-- mc:auto sha=36dc5e53f3fb -->
+Multisite metrics are the headlining fix here: response times, bandwidth, and stale-serve counts were silently dropped on network installs, leaving Insights charts flat. That's resolved, and configured retention windows now reach the pruner correctly instead of falling back to built-in defaults.
+
+On the status side, a new dashboard check surfaces when the settings config file can't be written — meaning components that load before WordPress would otherwise run on stale settings without any warning. MilliCache heals the file automatically once the directory is writable again. Relatedly, constants now behave more predictably: defining one sets and locks the value, and removing it unlocks the setting while preserving whatever was last saved.
+
+Drop-in management also got attention: `wp millicache drop --force` was a no-op on already-correct symlinks despite promising a reinstall — that's fixed. Extension drop-ins (such as Pro's object-cache) are now re-pointed automatically after `advanced-cache.php` is healed on plugin activation, deactivation, and updates, so extensions stay wired up without manual intervention. Install outcome messages are consistent across the activation notice and WP-CLI.
+<!-- /mc:auto -->
 
 ### Features
 
