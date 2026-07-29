@@ -6,6 +6,31 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.7](https://github.com/MilliPress/MilliCache/compare/v1.7.5...v1.7.7) (2026-07-29)
+
+
+### Features
+
+* **dropins:** share install reporting and heal extension drop-ins ([800111c](https://github.com/MilliPress/MilliCache/commit/800111c9cf4b4666669ca075ac606b4deb2d24aa))
+* **engine:** announce every cache clear as one merged flag batch ([e2f1513](https://github.com/MilliPress/MilliCache/commit/e2f15137798c35e975f3c7d1a5da4bbca786da4a))
+* **engine:** expose readiness for exception-free drop-in probes ([24b8d37](https://github.com/MilliPress/MilliCache/commit/24b8d37146f2dd8e2a0b83d5a0214c2527af9c64))
+* **status:** report when the config file cannot be written ([54f2e82](https://github.com/MilliPress/MilliCache/commit/54f2e821843c0d165db4fc463b9346af2b88822e))
+* **status:** warn before the storage server runs out of memory ([a4fc9e6](https://github.com/MilliPress/MilliCache/commit/a4fc9e69116e4419bc1fd4f8b9fe793e322f2552))
+
+
+### Bug Fixes
+
+* **cli:** give the interactive redis-cli session the real terminal ([14e2128](https://github.com/MilliPress/MilliCache/commit/14e21281b09e5a009b3617c56d7cbcfa5343737f))
+* **deps:** require millipress/millibase ^2.8.0 ([6e0528e](https://github.com/MilliPress/MilliCache/commit/6e0528e70eff71497b6d5c06bf52d6101aabdbf7))
+* **metrics:** record response times and honor retention on multisite ([087e764](https://github.com/MilliPress/MilliCache/commit/087e7645a2c168d2eca40001b81dc6b44986c09f))
+* Reinstall an already-correct drop-in symlink when --force is passed ([3b2ed2f](https://github.com/MilliPress/MilliCache/commit/3b2ed2fc2540f0987e6623b8091401ccb50fa181))
+
+
+### Miscellaneous
+
+* **deps:** update dev dependencies ([2aa340a](https://github.com/MilliPress/MilliCache/commit/2aa340a8656abc5fb5ecac0ee5fd571d86424c22))
+* pin the next release to 1.7.7 ([dd67e0c](https://github.com/MilliPress/MilliCache/commit/dd67e0c8fe214974e0c965d1e1503e0fe2277222))
+
 ## [1.7.6](https://github.com/MilliPress/MilliCache/compare/v1.7.5...v1.7.6) (2026-07-28)
 
 
