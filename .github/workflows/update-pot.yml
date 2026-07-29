@@ -65,20 +65,31 @@ jobs:
           fi
 
       # [skip ci] keeps ci.yml from re-running on a template-only commit; the
-      # Weblate webhook still fires. Rebase-retry absorbs races with the
-      # build-assets auto-commit pushed by the same source push.
+      # Weblate webhook still fires. On a push race, rebasing would conflict
+      # inside the .pot — regenerating on top of the new remote is always
+      # clean, and often shows the winner already pushed this very template.
       - name: Commit & push
         if: steps.diff.outputs.changed == 'true'
         run: |
-          git add assets/lang/*.pot
-          git -c user.name="millipress-bot[bot]" \
-              -c user.email="millipress-bot[bot]@users.noreply.github.com" \
-              commit -m "chore(i18n): regenerate translation template [skip ci]"
+          commit_template() {
+            git add assets/lang/*.pot
+            git -c user.name="millipress-bot[bot]" \
+                -c user.email="millipress-bot[bot]@users.noreply.github.com" \
+                commit -m "chore(i18n): regenerate translation template [skip ci]"
+          }
+          commit_template
           for attempt in 1 2 3; do
             if git push origin HEAD:main; then
               exit 0
             fi
-            git pull --rebase origin main
+            git fetch origin main
+            git reset --hard origin/main
+            npm run translate
+            if git diff -I'^"POT-Creation-Date' --quiet -- assets/lang/*.pot; then
+              echo "Remote already carries the current template — nothing to push."
+              exit 0
+            fi
+            commit_template
           done
           echo "::error::Could not push the regenerated template after 3 attempts."
           exit 1
