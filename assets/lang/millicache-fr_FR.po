@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MilliCache 1.7.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/MilliCache\n"
-"POT-Creation-Date: 2026-07-29T13:04:13+00:00\n"
+"POT-Creation-Date: 2026-07-29T21:49:58+00:00\n"
 "PO-Revision-Date: 2026-07-22 15:04+0000\n"
 "Last-Translator: Philipp Wellmer <philipp@millipress.com>\n"
 "Language-Team: French (France) <https://translate.millipress.com/projects/"
@@ -18,19 +18,19 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
 
 #. Plugin Name of the plugin
-#: millicache.php:10 src/Admin/SiteHealth.php:103 src/Admin/SiteHealth.php:395
+#: millicache.php src/Admin/SiteHealth.php:103 src/Admin/SiteHealth.php:395
 #: src/Base/Network.php:161 src/Base/Network.php:162 src/Base/Site.php:158
 #: src/Base/Site.php:159 src/Base/Site.php:162
 msgid "MilliCache"
 msgstr "MilliCache"
 
 #. Plugin URI of the plugin
-#: millicache.php:11
+#: millicache.php
 msgid "https://www.millipress.com/millicache"
 msgstr ""
 
 #. Description of the plugin
-#: millicache.php:12
+#: millicache.php
 msgid ""
 "The most flexible Full Page Cache for scaling WordPress sites. Enterprise-"
 "grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any "
@@ -41,12 +41,12 @@ msgstr ""
 "ValKey, Dragonfly, KeyDB ou toute autre alternative."
 
 #. Author of the plugin
-#: millicache.php:20
+#: millicache.php
 msgid "MilliPress Team"
 msgstr "MilliPress Team"
 
 #. Author URI of the plugin
-#: millicache.php:21
+#: millicache.php
 msgid "https://www.millipress.com/"
 msgstr ""
 
