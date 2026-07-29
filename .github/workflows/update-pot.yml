@@ -30,7 +30,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # Minted before checkout so its token becomes the persisted git
+      # credential — checkout's auth header overrides URL-embedded tokens,
+      # so pushing as the app only works when checkout used the app token.
+      - name: Mint App installation token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.MILLIPRESS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
+
       - uses: actions/checkout@v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
 
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
@@ -52,28 +64,18 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Mint App installation token
-        if: steps.diff.outputs.changed == 'true'
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.MILLIPRESS_BOT_CLIENT_ID }}
-          private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
-
       # [skip ci] keeps ci.yml from re-running on a template-only commit; the
       # Weblate webhook still fires. Rebase-retry absorbs races with the
       # build-assets auto-commit pushed by the same source push.
       - name: Commit & push
         if: steps.diff.outputs.changed == 'true'
-        env:
-          APP_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           git add assets/lang/*.pot
           git -c user.name="millipress-bot[bot]" \
               -c user.email="millipress-bot[bot]@users.noreply.github.com" \
               commit -m "chore(i18n): regenerate translation template [skip ci]"
           for attempt in 1 2 3; do
-            if git push "https://x-access-token:${APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main; then
+            if git push origin HEAD:main; then
               exit 0
             fi
             git pull --rebase origin main
