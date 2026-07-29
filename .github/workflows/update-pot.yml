@@ -1,0 +1,82 @@
+name: Update Translation Template
+
+# Regenerates assets/lang/millicache.pot whenever translatable source lands on
+# main and commits it back. That push fires the Weblate webhook, so the fresh
+# template is pulled within seconds and msgmerge fans the new strings into
+# every language catalog — no manual `npm run translate` needed anymore.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'assets/js/**'
+      - 'millicache.php'
+      - 'advanced-cache.php'
+      - 'functions.php'
+      - 'package.json'
+      - '.github/workflows/update-pot.yml'
+  workflow_dispatch: {}
+
+concurrency:
+  group: update-pot-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  make-pot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.3'
+          tools: wp-cli
+
+      - name: Regenerate template
+        run: npm run translate
+
+      # POT-Creation-Date moves on every extraction; only content counts.
+      - name: Detect string changes
+        id: diff
+        run: |
+          if git diff -I'^"POT-Creation-Date' --quiet -- assets/lang/*.pot; then
+            git checkout -- assets/lang
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No string changes — template left untouched."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Mint App installation token
+        if: steps.diff.outputs.changed == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.MILLIPRESS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.MILLIPRESS_BOT_PRIVATE_KEY }}
+
+      # [skip ci] keeps ci.yml from re-running on a template-only commit; the
+      # Weblate webhook still fires. Rebase-retry absorbs races with the
+      # build-assets auto-commit pushed by the same source push.
+      - name: Commit & push
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git add assets/lang/*.pot
+          git -c user.name="millipress-bot[bot]" \
+              -c user.email="millipress-bot[bot]@users.noreply.github.com" \
+              commit -m "chore(i18n): regenerate translation template [skip ci]"
+          for attempt in 1 2 3; do
+            if git push "https://x-access-token:${APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main; then
+              exit 0
+            fi
+            git pull --rebase origin main
+          done
+          echo "::error::Could not push the regenerated template after 3 attempts."
+          exit 1
