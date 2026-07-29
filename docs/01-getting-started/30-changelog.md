@@ -6,6 +6,32 @@ menu_order: 30
 
 # Changelog
 
+## [1.7.7](https://github.com/MilliPress/MilliCache/compare/v1.7.6...v1.7.7) (2026-07-29)
+
+<!-- mc:auto sha=36dc5e53f3fb -->
+Multisite metrics are the headlining fix here: response times, bandwidth, and stale-serve counts were silently dropped on network installs, leaving Insights charts flat. That's resolved.
+
+On the status side, a new dashboard check surfaces when the settings config file can't be written — meaning components that load before WordPress would otherwise run on stale settings without any warning. MilliCache heals the file automatically once the directory is writable again. Relatedly, constants now behave more predictably: defining one sets and locks the value, and removing it unlocks the setting while preserving whatever was last saved.
+<!-- /mc:auto -->
+
+### Features
+
+* **dropins:** share install reporting and heal extension drop-ins ([800111c](https://github.com/MilliPress/MilliCache/commit/800111c9cf4b4666669ca075ac606b4deb2d24aa))
+* **engine:** expose readiness for exception-free drop-in probes ([24b8d37](https://github.com/MilliPress/MilliCache/commit/24b8d37146f2dd8e2a0b83d5a0214c2527af9c64))
+* **status:** report when the config file cannot be written ([54f2e82](https://github.com/MilliPress/MilliCache/commit/54f2e821843c0d165db4fc463b9346af2b88822e))
+
+
+### Bug Fixes
+
+* **deps:** require millipress/millibase ^2.8.0 ([dd906d9](https://github.com/MilliPress/MilliCache/commit/dd906d9f241b121b865a9f8ba7acd883e95e489f))
+* **metrics:** record response times and honor retention on multisite ([087e764](https://github.com/MilliPress/MilliCache/commit/087e7645a2c168d2eca40001b81dc6b44986c09f))
+* Reinstall an already-correct drop-in symlink when --force is passed ([3b2ed2f](https://github.com/MilliPress/MilliCache/commit/3b2ed2fc2540f0987e6623b8091401ccb50fa181))
+
+
+### Miscellaneous
+
+* pin the next release to 1.7.7 ([dd67e0c](https://github.com/MilliPress/MilliCache/commit/dd67e0c8fe214974e0c965d1e1503e0fe2277222))
+
 ## [1.7.6](https://github.com/MilliPress/MilliCache/compare/v1.7.5...v1.7.6) (2026-07-28)
 
 
