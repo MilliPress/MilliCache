@@ -8,6 +8,17 @@ menu_order: 30
 
 ## [1.7.7](https://github.com/MilliPress/MilliCache/compare/v1.7.5...v1.7.7) (2026-07-29)
 
+<!-- mc:auto sha=7573ded80ba8 -->
+Multisite metrics, config-file write detection, and drop-in healing are the headliners here.
+
+On multisite, the Insights charts were staying flat at zero: the engine could not see the network's Detailed Metrics toggle, so response times, bandwidth, and stale-serve counts were never recorded. That is fixed, and configured retention windows now reach the pruner correctly on both multisite and single-site installs.
+
+A new **Config file** status check appears whenever MilliCache cannot write its settings config file. Components that load before WordPress (like the cache drop-in) would otherwise keep running on outdated settings without any visible warning; MilliCache repairs the file automatically once the directory is writable. Alongside this, constants now behave more consistently: defining one sets and locks the value, and removing it unlocks the setting while keeping its last saved value.
+
+Drop-in install messaging is now unified: activation notices and `wp millicache drop` both render outcomes from the same source, so the wording is consistent everywhere. Plugin activations, deactivations, and updates also fire a new `millicache_heal_dropins` action after `advanced-cache.php` is healed, giving extensions (such as Pro's `object-cache.php`) a reliable hook to re-point their own drop-ins on those same events. `wp millicache drop --force` also now correctly reinstalls a healthy symlink instead of silently doing nothing.
+
+This release bundles MilliBase 2.8.0, which writes the settings sync file directly and atomically, and fixes settings buttons that were clipped with longer translated labels.
+<!-- /mc:auto -->
 
 ### Features
 
