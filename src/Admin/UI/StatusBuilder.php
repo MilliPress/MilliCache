@@ -409,6 +409,7 @@ final class StatusBuilder {
 	 * storage memory) are omitted on per-site multisite.
 	 *
 	 * @since 1.7.0
+	 * @since 1.7.7 Added the $network_admin parameter.
 	 *
 	 * @param array<string, mixed> $payload       The (in-progress) payload.
 	 * @param bool                 $network_admin Whether the network-scope endpoint is building.
