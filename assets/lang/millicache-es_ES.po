@@ -4,28 +4,23 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MilliCache 1.7.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/MilliCache\n"
+"POT-Creation-Date: 2026-07-29T13:04:13+00:00\n"
+"PO-Revision-Date: 2026-07-22 15:04+0000\n"
 "Last-Translator: Philipp Wellmer <philipp@millipress.com>\n"
 "Language-Team: Spanish (Spain) <https://translate.millipress.com/projects/"
 "millicache/millicache/es_ES/>\n"
+"Language: es_ES\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-07-19T14:33:36+00:00\n"
-"PO-Revision-Date: 2026-07-22 15:04+0000\n"
 "X-Generator: Weblate 2026.7.1\n"
 "X-Domain: millicache\n"
-"Language: es_ES\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 #. Plugin Name of the plugin
-#: millicache.php:10
-#: src/Admin/SiteHealth.php:103
-#: src/Admin/SiteHealth.php:395
-#: src/Base/Network.php:156
-#: src/Base/Network.php:157
-#: src/Base/Site.php:160
-#: src/Base/Site.php:161
-#: src/Base/Site.php:164
+#: millicache.php:10 src/Admin/SiteHealth.php:103 src/Admin/SiteHealth.php:395
+#: src/Base/Network.php:161 src/Base/Network.php:162 src/Base/Site.php:158
+#: src/Base/Site.php:159 src/Base/Site.php:162
 msgid "MilliCache"
 msgstr "MilliCache"
 
@@ -36,7 +31,10 @@ msgstr ""
 
 #. Description of the plugin
 #: millicache.php:12
-msgid "The most flexible Full Page Cache for scaling WordPress sites. Enterprise-grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any alternative."
+msgid ""
+"The most flexible Full Page Cache for scaling WordPress sites. Enterprise-"
+"grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any "
+"alternative."
 msgstr ""
 "La caché de página completa más flexible para sitios WordPress que escalan. "
 "Almacenamiento en memoria de nivel empresarial con Redis, ValKey, Dragonfly, "
@@ -52,53 +50,27 @@ msgstr "MilliPress Team"
 msgid "https://www.millipress.com/"
 msgstr ""
 
-#: src/Admin/Activator.php:84
-msgid "Symlink created for advanced-cache.php. Please make sure to configure MilliCache to start caching."
+#: src/Admin/Activator.php:86
+#, fuzzy
+#| msgid ""
+#| "Symlink created for advanced-cache.php. Please make sure to configure "
+#| "MilliCache to start caching."
+msgid "Please make sure to configure MilliCache to start caching."
 msgstr ""
 "Se ha creado el enlace simbólico para advanced-cache.php. Asegúrate de "
 "configurar MilliCache para empezar a almacenar en caché."
 
-#: src/Admin/Activator.php:90
-msgid "The file advanced-cache.php has been copied to the /wp-content directory. Please make sure to configure MilliCache to start caching."
-msgstr ""
-"El archivo advanced-cache.php se ha copiado al directorio /wp-content. "
-"Asegúrate de configurar MilliCache para empezar a almacenar en caché."
-
-#: src/Admin/Activator.php:95
-msgid "The advanced-cache.php symlink already exists and is correctly configured."
-msgstr ""
-"El enlace simbólico de advanced-cache.php ya existe y está configurado "
-"correctamente."
-
-#: src/Admin/Activator.php:99
-msgid "Your version of advanced-cache.php is higher than the one shipped with the plugin. Replacement skipped to preserve customizations."
-msgstr ""
-"Tu versión de advanced-cache.php es más reciente que la incluida con el "
-"plugin. No se ha reemplazado para conservar tus personalizaciones."
-
-#: src/Admin/Activator.php:105
-msgid "The wp-content directory is not writable. Please make sure that the directory is writable and try again or manually copy advanced-cache.php from the plugin folder."
-msgstr ""
-"El directorio wp-content no tiene permisos de escritura. Haz que el "
-"directorio sea escribible e inténtalo de nuevo, o copia advanced-cache.php "
-"manualmente desde la carpeta del plugin."
-
-#: src/Admin/Activator.php:111
-msgid "Could not create symlink for advanced-cache.php. Please copy the file manually from the plugin directory to your /wp-content directory."
-msgstr ""
-"No se ha podido crear el enlace simbólico para advanced-cache.php. Copia el "
-"archivo manualmente desde el directorio del plugin a tu directorio /wp-"
-"content."
-
-#: src/Admin/Admin.php:292
-msgid "The constant WP_CACHE is either not defined or set to false in your wp-config.php. Please add \"define( 'WP_CACHE', true );\" to activate MilliCache caching."
+#: src/Admin/Admin.php:299
+msgid ""
+"The constant WP_CACHE is either not defined or set to false in your wp-"
+"config.php. Please add \"define( 'WP_CACHE', true );\" to activate "
+"MilliCache caching."
 msgstr ""
 "La constante WP_CACHE no está definida o está establecida en false en tu wp-"
 "config.php. Añade «define( 'WP_CACHE', true );» para activar el "
 "almacenamiento en caché de MilliCache."
 
-#: src/Admin/Admin.php:312
-#: src/Admin/UI/Sections/Cache.php:40
+#: src/Admin/Admin.php:319 src/Admin/UI/Sections/Cache.php:40
 msgid "Cache Settings"
 msgstr "Ajustes de caché"
 
@@ -107,14 +79,12 @@ msgid "Cache"
 msgstr "Caché"
 
 #: src/Admin/Adminbar.php:117
-#: assets/js/settings/partials/ClearCacheButton.jsx:87
-#: build/settings.js:1
+#: assets/js/settings/partials/ClearCacheButton.jsx:87 build/settings.js:1
 msgid "Clear Website Cache"
 msgstr "Vaciar la caché del sitio"
 
 #. translators: %s: Target name
-#: src/Admin/Adminbar.php:143
-#: src/Admin/Adminbar.php:182
+#: src/Admin/Adminbar.php:143 src/Admin/Adminbar.php:182
 #, php-format
 msgid "Clear %s Cache"
 msgstr "Vaciar la caché de %s"
@@ -183,35 +153,11 @@ msgstr "Se ha vaciado la caché de %s flags."
 msgid "Unknown drop-in \"%s\". Use advanced-cache or object-cache."
 msgstr "Drop-in «%s» desconocido. Usa advanced-cache u object-cache."
 
-#: src/Admin/CLI/Drop.php:103
-msgid "Created symlink for advanced-cache.php."
-msgstr "Se ha creado el enlace simbólico para advanced-cache.php."
-
 #: src/Admin/CLI/Drop.php:106
-msgid "Copied advanced-cache.php to wp-content directory."
-msgstr "Se ha copiado advanced-cache.php al directorio wp-content."
-
-#: src/Admin/CLI/Drop.php:109
-msgid "advanced-cache.php symlink is already correctly configured."
+msgid "Use --force to overwrite."
 msgstr ""
-"El enlace simbólico de advanced-cache.php ya está configurado correctamente."
 
-#: src/Admin/CLI/Drop.php:112
-msgid "A higher-version advanced-cache.php is in place. Use --force to overwrite."
-msgstr ""
-"Ya hay instalada una versión más reciente de advanced-cache.php. Usa --force "
-"para sobrescribirla."
-
-#: src/Admin/CLI/Drop.php:115
-msgid "The wp-content directory is not writable."
-msgstr "El directorio wp-content no tiene permisos de escritura."
-
-#: src/Admin/CLI/Drop.php:118
-msgid "Could not create advanced-cache.php file."
-msgstr "No se ha podido crear el archivo advanced-cache.php."
-
-#: src/Admin/CLI/Storage.php:51
-#: src/Admin/CLI/StorageCLI.php:53
+#: src/Admin/CLI/Storage.php:51 src/Admin/CLI/StorageCLI.php:53
 msgid "redis-cli is not installed or not in PATH. Please install Redis tools."
 msgstr ""
 "redis-cli no está instalado o no está en el PATH. Instala las herramientas "
@@ -223,8 +169,7 @@ msgstr ""
 msgid "Connecting to Redis at %1$s:%2$d (database %3$d)..."
 msgstr "Conectando con Redis en %1$s:%2$d (base de datos %3$d)..."
 
-#: src/Admin/CLI/Storage.php:93
-#: src/Admin/CLI/StorageCLI.php:122
+#: src/Admin/CLI/Storage.php:93 src/Admin/CLI/StorageCLI.php:122
 msgid "Connection timed out"
 msgstr "Tiempo de espera de la conexión agotado"
 
@@ -234,8 +179,7 @@ msgstr "Tiempo de espera de la conexión agotado"
 msgid "Cannot connect to Redis at %1$s:%2$d - %3$s"
 msgstr "No se puede conectar con Redis en %1$s:%2$d - %3$s"
 
-#: src/Admin/CLI/Storage.php:118
-#: src/Admin/CLI/StorageCLI.php:141
+#: src/Admin/CLI/Storage.php:118 src/Admin/CLI/StorageCLI.php:141
 msgid "Type \"quit\" to exit."
 msgstr "Escribe «quit» para salir."
 
@@ -248,7 +192,9 @@ msgid "The cache is disabled."
 msgstr "La caché está desactivada."
 
 #: src/Admin/CLI/StorageCLI.php:70
-msgid "Interactive CLI is not available for Sentinel topologies. Connect redis-cli to a specific data node directly."
+msgid ""
+"Interactive CLI is not available for Sentinel topologies. Connect redis-cli "
+"to a specific data node directly."
 msgstr ""
 "La CLI interactiva no está disponible para topologías Sentinel. Conecta "
 "redis-cli directamente a un nodo de datos concreto."
@@ -281,8 +227,7 @@ msgstr "Probando la conexión con Redis..."
 msgid "Server: %s"
 msgstr "Servidor: %s"
 
-#: src/Admin/CLI/Test.php:68
-#: src/Admin/CLI/Test.php:74
+#: src/Admin/CLI/Test.php:68 src/Admin/CLI/Test.php:74
 msgid "Connection"
 msgstr "Conexión"
 
@@ -290,8 +235,7 @@ msgstr "Conexión"
 msgid "Unknown error"
 msgstr "Error desconocido"
 
-#: src/Admin/CLI/Test.php:89
-#: src/Admin/CLI/Test.php:99
+#: src/Admin/CLI/Test.php:89 src/Admin/CLI/Test.php:99
 msgid "Ping"
 msgstr "Ping"
 
@@ -301,18 +245,15 @@ msgstr "Ping"
 msgid "%sms"
 msgstr "%s ms"
 
-#: src/Admin/CLI/Test.php:118
-#: src/Admin/CLI/Test.php:127
+#: src/Admin/CLI/Test.php:118 src/Admin/CLI/Test.php:127
 msgid "Write"
 msgstr "Escritura"
 
-#: src/Admin/CLI/Test.php:139
-#: src/Admin/CLI/Test.php:148
+#: src/Admin/CLI/Test.php:139 src/Admin/CLI/Test.php:148
 msgid "Read"
 msgstr "Lectura"
 
-#: src/Admin/CLI/Test.php:159
-#: src/Admin/CLI/Test.php:168
+#: src/Admin/CLI/Test.php:159 src/Admin/CLI/Test.php:168
 msgid "Delete"
 msgstr "Borrado"
 
@@ -357,13 +298,17 @@ msgid "MilliCache deactivated & advanced-cache.php removed."
 msgstr "MilliCache desactivado y advanced-cache.php eliminado."
 
 #: src/Admin/Deactivator.php:99
-msgid "Your version of advanced-cache.php is higher than the original plugin version. We did not delete it, please do it yourself."
+msgid ""
+"Your version of advanced-cache.php is higher than the original plugin "
+"version. We did not delete it, please do it yourself."
 msgstr ""
 "Tu versión de advanced-cache.php es más reciente que la versión original del "
 "plugin. No la hemos eliminado; hazlo manualmente."
 
 #: src/Admin/Deactivator.php:104
-msgid "The wp-content directory is not writable. Please remove advanced-cache.php manually."
+msgid ""
+"The wp-content directory is not writable. Please remove advanced-cache.php "
+"manually."
 msgstr ""
 "El directorio wp-content no tiene permisos de escritura. Elimina advanced-"
 "cache.php manualmente."
@@ -371,6 +316,76 @@ msgstr ""
 #: src/Admin/Deactivator.php:107
 msgid "Could not remove advanced-cache.php. Please remove it manually."
 msgstr "No se ha podido eliminar advanced-cache.php. Elimínalo manualmente."
+
+#. translators: %s: drop-in filename, e.g. advanced-cache.php.
+#: src/Admin/DropIn.php:254
+#, fuzzy, php-format
+#| msgid "Created symlink for advanced-cache.php."
+msgid "Created symlink for %s."
+msgstr "Se ha creado el enlace simbólico para advanced-cache.php."
+
+#. translators: %s: drop-in filename, e.g. advanced-cache.php.
+#: src/Admin/DropIn.php:259
+#, fuzzy, php-format
+#| msgid "Copied advanced-cache.php to wp-content directory."
+msgid "Copied %s to the wp-content directory."
+msgstr "Se ha copiado advanced-cache.php al directorio wp-content."
+
+#. translators: %s: drop-in filename, e.g. advanced-cache.php.
+#: src/Admin/DropIn.php:264
+#, fuzzy, php-format
+#| msgid ""
+#| "The advanced-cache.php symlink already exists and is correctly configured."
+msgid "%s is already installed and correctly configured."
+msgstr ""
+"El enlace simbólico de advanced-cache.php ya existe y está configurado "
+"correctamente."
+
+#. translators: %s: drop-in filename, e.g. advanced-cache.php.
+#: src/Admin/DropIn.php:269
+#, fuzzy, php-format
+#| msgid ""
+#| "A higher-version advanced-cache.php is in place. Use --force to overwrite."
+msgid "A higher-version %s is in place and was preserved."
+msgstr ""
+"Ya hay instalada una versión más reciente de advanced-cache.php. Usa --force "
+"para sobrescribirla."
+
+#. translators: %s: drop-in filename, e.g. object-cache.php.
+#: src/Admin/DropIn.php:274
+#, php-format
+msgid "A third-party %s is installed and was left in place."
+msgstr ""
+
+#. translators: %s: drop-in filename, e.g. advanced-cache.php.
+#: src/Admin/DropIn.php:279
+#, fuzzy, php-format
+#| msgid ""
+#| "The wp-content directory is not writable. Please make sure that the "
+#| "directory is writable and try again or manually copy advanced-cache.php "
+#| "from the plugin folder."
+msgid ""
+"The wp-content directory is not writable, so %s could not be installed. Make "
+"the directory writable and try again, or copy the file there manually from "
+"the plugin folder."
+msgstr ""
+"El directorio wp-content no tiene permisos de escritura. Haz que el "
+"directorio sea escribible e inténtalo de nuevo, o copia advanced-cache.php "
+"manualmente desde la carpeta del plugin."
+
+#. translators: %s: drop-in filename, e.g. advanced-cache.php.
+#: src/Admin/DropIn.php:284
+#, fuzzy, php-format
+#| msgid ""
+#| "Could not create symlink for advanced-cache.php. Please copy the file "
+#| "manually from the plugin directory to your /wp-content directory."
+msgid ""
+"Could not install %s. Copy it manually from the plugin folder to the wp-"
+"content directory."
+msgstr ""
+"No se ha podido crear el enlace simbólico para advanced-cache.php. Copia el "
+"archivo manualmente desde el directorio del plugin a tu directorio /wp-"
+"content."
 
 #: src/Admin/SiteHealth.php:104
 msgid "Page cache status, drop-in state, and storage backend."
@@ -394,18 +409,15 @@ msgstr "Versión de MilliRules"
 msgid "Predis version"
 msgstr "Versión de Predis"
 
-#: src/Admin/SiteHealth.php:154
-#: src/Admin/UI/StatusBuilder.php:477
+#: src/Admin/SiteHealth.php:154 src/Admin/UI/StatusBuilder.php:481
 msgid "WP_CACHE constant"
 msgstr "Constante WP_CACHE"
 
-#: src/Admin/SiteHealth.php:156
-#: src/Admin/UI/StatusBuilder.php:483
+#: src/Admin/SiteHealth.php:156 src/Admin/UI/StatusBuilder.php:487
 msgid "Enabled"
 msgstr "Activada"
 
-#: src/Admin/SiteHealth.php:157
-#: src/Admin/UI/StatusBuilder.php:484
+#: src/Admin/SiteHealth.php:157 src/Admin/UI/StatusBuilder.php:488
 msgid "Disabled"
 msgstr "Desactivada"
 
@@ -425,12 +437,11 @@ msgstr "Sí"
 msgid "No"
 msgstr "No"
 
-#: src/Admin/SiteHealth.php:172
-#: src/Admin/UI/StatusBuilder.php:491
+#: src/Admin/SiteHealth.php:172 src/Admin/UI/StatusBuilder.php:495
 msgid "Storage backend"
 msgstr "Backend de almacenamiento"
 
-#: src/Admin/SiteHealth.php:176
+#: src/Admin/SiteHealth.php:176 src/Admin/UI/StatusBuilder.php:610
 msgid "Storage memory usage"
 msgstr "Uso de memoria del almacenamiento"
 
@@ -438,9 +449,8 @@ msgstr "Uso de memoria del almacenamiento"
 msgid "Cached pages"
 msgstr "Páginas en caché"
 
-#: src/Admin/SiteHealth.php:191
-#: src/Admin/UI/StatusBuilder.php:697
-#: src/Admin/UI/StatusBuilder.php:707
+#: src/Admin/SiteHealth.php:191 src/Admin/UI/StatusBuilder.php:749
+#: src/Admin/UI/StatusBuilder.php:759
 msgid "Cache size"
 msgstr "Tamaño de la caché"
 
@@ -448,26 +458,25 @@ msgstr "Tamaño de la caché"
 msgid "Registered cache flags"
 msgstr "Flags de caché registrados"
 
-#: src/Admin/SiteHealth.php:248
-#: src/Admin/SiteHealth.php:311
+#: src/Admin/SiteHealth.php:248 src/Admin/SiteHealth.php:311
 msgid "MilliCache is healthy"
 msgstr "MilliCache funciona correctamente"
 
 #: src/Admin/SiteHealth.php:312
-msgid "Every MilliCache status check passes: the drop-in, the WP_CACHE constant, the storage backend, and any active Pro modules are configured correctly."
+msgid ""
+"Every MilliCache status check passes: the drop-in, the WP_CACHE constant, "
+"the storage backend, and any active Pro modules are configured correctly."
 msgstr ""
 "Todas las comprobaciones de estado de MilliCache se superan: el drop-in, la "
 "constante WP_CACHE, el backend de almacenamiento y los módulos Pro activos "
 "están configurados correctamente."
 
-#: src/Admin/SiteHealth.php:313
-#: src/Admin/SiteHealth.php:335
+#: src/Admin/SiteHealth.php:313 src/Admin/SiteHealth.php:335
 msgid "Open MilliCache status"
 msgstr "Abrir el estado de MilliCache"
 
 #: src/Admin/SiteHealth.php:340
-#: assets/js/settings/partials/FooterStatus.jsx:173
-#: build/settings.js:1
+#: assets/js/settings/partials/FooterStatus.jsx:173 build/settings.js:1
 msgid "Learn more"
 msgstr "Más información"
 
@@ -481,19 +490,16 @@ msgstr "Comprobación de MilliCache"
 msgid "%1$s: %2$s"
 msgstr "%1$s: %2$s"
 
-#: src/Admin/UI/CacheActions.php:80
-#: src/Admin/UI/CacheActions.php:178
+#: src/Admin/UI/CacheActions.php:80 src/Admin/UI/CacheActions.php:178
 msgid "Invalid cache action."
 msgstr "Acción de caché no válida."
 
-#: src/Admin/UI/CacheActions.php:88
-#: src/Admin/UI/CacheActions.php:160
+#: src/Admin/UI/CacheActions.php:88 src/Admin/UI/CacheActions.php:160
 #: src/Admin/UI/CacheActions.php:170
 msgid "The network cache has been cleared."
 msgstr "Se ha vaciado la caché de la red."
 
-#: src/Admin/UI/CacheActions.php:91
-#: src/Admin/UI/CacheActions.php:113
+#: src/Admin/UI/CacheActions.php:91 src/Admin/UI/CacheActions.php:113
 msgid "The site cache has been cleared."
 msgstr "Se ha vaciado la caché del sitio."
 
@@ -505,18 +511,15 @@ msgstr "No se han indicado flags para vaciar la caché."
 msgid "The current page cache has been cleared."
 msgstr "Se ha vaciado la caché de la página actual."
 
-#: src/Admin/UI/CacheActions.php:109
-#: src/Admin/UI/CacheActions.php:166
+#: src/Admin/UI/CacheActions.php:109 src/Admin/UI/CacheActions.php:166
 msgid "Invalid targets parameter. Must be a string or an array."
 msgstr "Parámetro targets no válido: debe ser una cadena o un array."
 
-#: src/Admin/UI/CacheActions.php:114
-#: src/Admin/UI/CacheActions.php:173
+#: src/Admin/UI/CacheActions.php:114 src/Admin/UI/CacheActions.php:173
 msgid "Cache for the targets has been cleared."
 msgstr "Se ha vaciado la caché de los destinos indicados."
 
-#: src/Admin/UI/CacheActions.php:133
-#: src/Admin/UI/CacheActions.php:201
+#: src/Admin/UI/CacheActions.php:133 src/Admin/UI/CacheActions.php:201
 msgid "Failed to perform cache action: "
 msgstr "No se ha podido ejecutar la acción de caché: "
 
@@ -525,7 +528,9 @@ msgid "TTL (Cache Expiry)"
 msgstr "TTL (caducidad de la caché)"
 
 #: src/Admin/UI/Sections/Cache.php:53
-msgid "Time To Live - How long cache is considered fresh before becoming stale. Fresh cache is served directly without regeneration."
+msgid ""
+"Time To Live - How long cache is considered fresh before becoming stale. "
+"Fresh cache is served directly without regeneration."
 msgstr ""
 "Time To Live: cuánto tiempo se considera fresca la caché antes de quedar "
 "obsoleta (stale). La caché fresca se sirve directamente, sin regenerarla."
@@ -538,23 +543,23 @@ msgstr "Segundos"
 msgid "Minutes"
 msgstr "Minutos"
 
-#: src/Admin/UI/Sections/Cache.php:68
-#: src/Admin/UI/Sections/Cache.php:87
+#: src/Admin/UI/Sections/Cache.php:68 src/Admin/UI/Sections/Cache.php:87
 msgid "Hours"
 msgstr "Horas"
 
-#: src/Admin/UI/Sections/Cache.php:72
-#: src/Admin/UI/Sections/Cache.php:91
+#: src/Admin/UI/Sections/Cache.php:72 src/Admin/UI/Sections/Cache.php:91
 msgid "Days"
 msgstr "Días"
 
-#: src/Admin/UI/Sections/Cache.php:79
-#: src/Rules/Actions/PHP/SetGrace.php:63
+#: src/Admin/UI/Sections/Cache.php:79 src/Rules/Actions/PHP/SetGrace.php:63
 msgid "Grace Period"
 msgstr "Período de gracia"
 
 #: src/Admin/UI/Sections/Cache.php:80
-msgid "Time after TTL expiration when stale cache can still be served while new content is generated in the background. Helps reduce user wait times. 0 = disable."
+msgid ""
+"Time after TTL expiration when stale cache can still be served while new "
+"content is generated in the background. Helps reduce user wait times. 0 = "
+"disable."
 msgstr ""
 "Tiempo tras la caducidad del TTL durante el cual la caché obsoleta aún puede "
 "servirse mientras el nuevo contenido se genera en segundo plano. Reduce los "
@@ -573,7 +578,9 @@ msgid "Enable Gzip Compression"
 msgstr "Activar la compresión Gzip"
 
 #: src/Admin/UI/Sections/Cache.php:107
-msgid "Compresses cached data to reduce storage space usage. Slightly increases CPU usage but significantly reduces memory consumption."
+msgid ""
+"Compresses cached data to reduce storage space usage. Slightly increases CPU "
+"usage but significantly reduces memory consumption."
 msgstr ""
 "Comprime los datos en caché para reducir el espacio de almacenamiento. "
 "Aumenta ligeramente el uso de CPU, pero reduce notablemente el consumo de "
@@ -584,7 +591,9 @@ msgid "Enable Debugging"
 msgstr "Activar la depuración"
 
 #: src/Admin/UI/Sections/Cache.php:114
-msgid "Adds detailed debug information to response headers such as the cache flags and times."
+msgid ""
+"Adds detailed debug information to response headers such as the cache flags "
+"and times."
 msgstr ""
 "Añade información de depuración detallada a las cabeceras de respuesta, como "
 "los flags de caché y las marcas de tiempo."
@@ -594,7 +603,9 @@ msgid "No-Cache Paths"
 msgstr "Rutas No-Cache"
 
 #: src/Admin/UI/Sections/Cache.php:121
-msgid "URL paths that are not cached. You can use * wildcards (e.g. \"/shop/*\") or regular expressions enclosed in / characters."
+msgid ""
+"URL paths that are not cached. You can use * wildcards (e.g. \"/shop/*\") or "
+"regular expressions enclosed in / characters."
 msgstr ""
 "Rutas de URL que no se almacenan en caché. Puedes usar comodines * (p. ej. «/"
 "shop/*») o expresiones regulares delimitadas por caracteres /."
@@ -608,7 +619,9 @@ msgid "No-Cache Cookies"
 msgstr "Cookies No-Cache"
 
 #: src/Admin/UI/Sections/Cache.php:129
-msgid "Cookies that prevent caching. Example: \"session_*\" will skip caching if a cookie starting with \"session_\" is set. * = wildcard."
+msgid ""
+"Cookies that prevent caching. Example: \"session_*\" will skip caching if a "
+"cookie starting with \"session_\" is set. * = wildcard."
 msgstr ""
 "Cookies que impiden el almacenamiento en caché. Ejemplo: «session_*» omite "
 "la caché en cuanto hay una cookie que empiece por «session_». * = comodín."
@@ -622,7 +635,10 @@ msgid "Ignored Cookies"
 msgstr "Cookies ignoradas"
 
 #: src/Admin/UI/Sections/Cache.php:137
-msgid "Cookies that are ignored when creating cache keys. Example: \"dark_mode\" means all users share the same cache regardless of the preference. * = wildcard."
+msgid ""
+"Cookies that are ignored when creating cache keys. Example: \"dark_mode\" "
+"means all users share the same cache regardless of the preference. * = "
+"wildcard."
 msgstr ""
 "Cookies que se ignoran al generar las claves de caché. Ejemplo: «dark_mode» "
 "hace que todos los visitantes compartan la misma caché, independientemente "
@@ -637,10 +653,12 @@ msgid "Ignored Request Keys"
 msgstr "Parámetros de URL ignorados"
 
 #: src/Admin/UI/Sections/Cache.php:145
-msgid "URL parameters that are ignored when creating cache keys. Example: \"utm_*\" means analytics parameters are ignored. * = wildcard."
+msgid ""
+"URL parameters that are ignored when creating cache keys. Example: \"utm_*\" "
+"means analytics parameters are ignored. * = wildcard."
 msgstr ""
-"Parámetros de URL que se ignoran al generar las claves de caché. Ejemplo: «"
-"utm_*» ignora todos los parámetros de analítica. * = comodín."
+"Parámetros de URL que se ignoran al generar las claves de caché. Ejemplo: "
+"«utm_*» ignora todos los parámetros de analítica. * = comodín."
 
 #: src/Admin/UI/Sections/Cache.php:146
 msgid "Add parameter name or pattern (e.g. \"utm_*\")"
@@ -651,7 +669,9 @@ msgid "Server Host"
 msgstr "Host del servidor"
 
 #: src/Admin/UI/Sections/Storage.php:49
-msgid "The hostname or IP address of your Redis, Valkey, KeyDB, or other compatible server. Typically \"localhost\" or \"127.0.0.1\" for local servers."
+msgid ""
+"The hostname or IP address of your Redis, Valkey, KeyDB, or other compatible "
+"server. Typically \"localhost\" or \"127.0.0.1\" for local servers."
 msgstr ""
 "El nombre de host o la dirección IP de tu servidor Redis, Valkey, KeyDB u "
 "otro compatible. Normalmente «localhost» o «127.0.0.1» para servidores "
@@ -662,7 +682,9 @@ msgid "Server Port"
 msgstr "Puerto del servidor"
 
 #: src/Admin/UI/Sections/Storage.php:58
-msgid "The port your storage server listens on. Default is 6379 for most installations."
+msgid ""
+"The port your storage server listens on. Default is 6379 for most "
+"installations."
 msgstr ""
 "El puerto en el que escucha tu servidor de almacenamiento. El valor por "
 "defecto es 6379 en la mayoría de las instalaciones."
@@ -672,7 +694,9 @@ msgid "Username"
 msgstr "Nombre de usuario"
 
 #: src/Admin/UI/Sections/Storage.php:70
-msgid "Username used to authenticate with your Redis, Valkey, or other compatible server. Leave empty if your server does not use ACL with named users."
+msgid ""
+"Username used to authenticate with your Redis, Valkey, or other compatible "
+"server. Leave empty if your server does not use ACL with named users."
 msgstr ""
 "Nombre de usuario para autenticarte en tu servidor Redis, Valkey u otro "
 "compatible. Déjalo vacío si tu servidor no usa ACL con usuarios con nombre."
@@ -682,7 +706,9 @@ msgid "Password"
 msgstr "Contraseña"
 
 #: src/Admin/UI/Sections/Storage.php:78
-msgid "Password used to authenticate with your Redis, Valkey, or other compatible server. Leave empty if your server does not require authentication."
+msgid ""
+"Password used to authenticate with your Redis, Valkey, or other compatible "
+"server. Leave empty if your server does not require authentication."
 msgstr ""
 "Contraseña para autenticarte en tu servidor Redis, Valkey u otro compatible. "
 "Déjala vacía si tu servidor no requiere autenticación."
@@ -692,7 +718,9 @@ msgid "Database ID"
 msgstr "ID de la base de datos"
 
 #: src/Admin/UI/Sections/Storage.php:87
-msgid "The database to use within your storage server (typically 0-15, with 0 being the default)."
+msgid ""
+"The database to use within your storage server (typically 0-15, with 0 being "
+"the default)."
 msgstr ""
 "La base de datos que se usará dentro de tu servidor de almacenamiento "
 "(normalmente 0-15; el valor por defecto es 0)."
@@ -702,7 +730,10 @@ msgid "Persistent Storage Connection"
 msgstr "Conexión persistente al almacenamiento"
 
 #: src/Admin/UI/Sections/Storage.php:99
-msgid "When enabled, maintains a persistent connection to the server instead of creating a new connection for each request. Improves performance but uses more server resources."
+msgid ""
+"When enabled, maintains a persistent connection to the server instead of "
+"creating a new connection for each request. Improves performance but uses "
+"more server resources."
 msgstr ""
 "Mantiene una conexión persistente con el servidor en lugar de crear una "
 "nueva en cada petición. Mejora el rendimiento, pero consume más recursos del "
@@ -712,164 +743,188 @@ msgstr ""
 msgid "Storage Server"
 msgstr "Servidor de almacenamiento"
 
-#: src/Admin/UI/Sections/Storage.php:125
-#: src/Admin/UI/StatusBuilder.php:497
+#: src/Admin/UI/Sections/Storage.php:125 src/Admin/UI/StatusBuilder.php:501
 msgid "Connected"
 msgstr "Conectado"
 
-#: src/Admin/UI/Sections/Storage.php:126
-#: src/Admin/UI/StatusBuilder.php:498
+#: src/Admin/UI/Sections/Storage.php:126 src/Admin/UI/StatusBuilder.php:502
 msgid "Disconnected"
 msgstr "Desconectado"
 
 #: src/Admin/UI/Sections/Storage.php:134
-msgid "This storage connection is configured via a constant. The credentials below apply to every node."
+msgid ""
+"This storage connection is configured via a constant. The credentials below "
+"apply to every node."
 msgstr ""
 "Esta conexión de almacenamiento está configurada mediante una constante. Las "
 "credenciales de abajo se aplican a todos los nodos."
 
-#: src/Admin/UI/StatusBuilder.php:436
+#: src/Admin/UI/StatusBuilder.php:440
 msgid "advanced-cache.php drop-in"
 msgstr "Drop-in advanced-cache.php"
 
-#: src/Admin/UI/StatusBuilder.php:439
+#: src/Admin/UI/StatusBuilder.php:443
 msgid "The drop-in is in place. MilliCache can intercept page requests early."
 msgstr ""
 "El drop-in está instalado. MilliCache puede interceptar las peticiones de "
 "página en una fase temprana."
 
-#: src/Admin/UI/StatusBuilder.php:440
-msgid "The drop-in is missing. Re-install it from MilliCache settings; without it, no pages are cached."
+#: src/Admin/UI/StatusBuilder.php:444
+msgid ""
+"The drop-in is missing. Re-install it from MilliCache settings; without it, "
+"no pages are cached."
 msgstr ""
 "Falta el drop-in. Reinstálalo desde los ajustes de MilliCache; sin él no se "
 "almacena ninguna página en caché."
 
-#: src/Admin/UI/StatusBuilder.php:442
+#: src/Admin/UI/StatusBuilder.php:446
 msgid "Installed"
 msgstr "Instalado"
 
-#: src/Admin/UI/StatusBuilder.php:443
+#: src/Admin/UI/StatusBuilder.php:447
 msgid "Missing"
 msgstr "Falta"
 
-#: src/Admin/UI/StatusBuilder.php:453
-msgid "The installed drop-in is older than the version bundled with the plugin. Re-install it to pick up improvements and bug fixes."
+#: src/Admin/UI/StatusBuilder.php:457
+msgid ""
+"The installed drop-in is older than the version bundled with the plugin. Re-"
+"install it to pick up improvements and bug fixes."
 msgstr ""
 "El drop-in instalado es anterior a la versión incluida con el plugin. "
 "Reinstálalo para incorporar mejoras y correcciones de errores."
 
-#: src/Admin/UI/StatusBuilder.php:454
+#: src/Admin/UI/StatusBuilder.php:458
 msgid "Outdated"
 msgstr "Desactualizado"
 
-#: src/Admin/UI/StatusBuilder.php:456
-msgid "The drop-in differs from the bundled version. MilliCache won't overwrite your changes, but plugin updates require manual merging."
+#: src/Admin/UI/StatusBuilder.php:460
+msgid ""
+"The drop-in differs from the bundled version. MilliCache won't overwrite "
+"your changes, but plugin updates require manual merging."
 msgstr ""
 "El drop-in difiere de la versión incluida. MilliCache no sobrescribirá tus "
 "cambios, pero con las actualizaciones del plugin tendrás que fusionarlos "
 "manualmente."
 
-#: src/Admin/UI/StatusBuilder.php:457
+#: src/Admin/UI/StatusBuilder.php:461
 msgid "Customized"
 msgstr "Personalizado"
 
-#: src/Admin/UI/StatusBuilder.php:459
+#: src/Admin/UI/StatusBuilder.php:463
 msgid "The drop-in matches the bundled version."
 msgstr "El drop-in coincide con la versión incluida."
 
-#: src/Admin/UI/StatusBuilder.php:460
+#: src/Admin/UI/StatusBuilder.php:464
 msgid "Current"
 msgstr "Actualizado"
 
-#: src/Admin/UI/StatusBuilder.php:465
+#: src/Admin/UI/StatusBuilder.php:469
 msgid "Drop-in version"
 msgstr "Versión del drop-in"
 
-#: src/Admin/UI/StatusBuilder.php:480
-msgid "<code>WP_CACHE</code> is defined and truthy. WordPress will load the advanced-cache.php drop-in."
+#: src/Admin/UI/StatusBuilder.php:484
+msgid ""
+"<code>WP_CACHE</code> is defined and truthy. WordPress will load the "
+"advanced-cache.php drop-in."
 msgstr ""
 "<code>WP_CACHE</code> está definida y activa. WordPress cargará el drop-in "
 "advanced-cache.php."
 
-#: src/Admin/UI/StatusBuilder.php:481
-msgid "<code>WP_CACHE</code> is not defined or false in wp-config.php. WordPress won't load the drop-in, so MilliCache can't intercept page requests."
+#: src/Admin/UI/StatusBuilder.php:485
+msgid ""
+"<code>WP_CACHE</code> is not defined or false in wp-config.php. WordPress "
+"won't load the drop-in, so MilliCache can't intercept page requests."
 msgstr ""
 "<code>WP_CACHE</code> no está definida o está en false en wp-config.php. "
 "WordPress no cargará el drop-in, por lo que MilliCache no puede interceptar "
 "las peticiones de página."
 
-#: src/Admin/UI/StatusBuilder.php:494
+#: src/Admin/UI/StatusBuilder.php:498
 msgid "MilliCache successfully connected to its configured storage server."
 msgstr ""
 "MilliCache se ha conectado correctamente al servidor de almacenamiento "
 "configurado."
 
-#: src/Admin/UI/StatusBuilder.php:495
-msgid "MilliCache cannot reach the configured storage server. Cache reads and writes are failing. Check the host, port, and credentials."
+#: src/Admin/UI/StatusBuilder.php:499
+msgid ""
+"MilliCache cannot reach the configured storage server. Cache reads and "
+"writes are failing. Check the host, port, and credentials."
 msgstr ""
 "MilliCache no puede conectar con el servidor de almacenamiento configurado. "
 "Las lecturas y escrituras de la caché están fallando. Comprueba el host, el "
 "puerto y las credenciales."
 
 #. translators: %1$s is the Sentinel service name, %2$s the sentinel node list (each host in its own <code> element).
-#: src/Admin/UI/StatusBuilder.php:524
+#: src/Admin/UI/StatusBuilder.php:528
 #, php-format
 msgid "Sentinel-managed failover for service \"%1$s\" via %2$s."
 msgstr ""
 "Failover gestionado por Sentinel para el servicio «%1$s» a través de %2$s."
 
 #. translators: %s is the comma-separated node list (each host in its own <code> element).
-#: src/Admin/UI/StatusBuilder.php:530
+#: src/Admin/UI/StatusBuilder.php:534
 #, php-format
 msgid "Master/replica replication across %s."
 msgstr "Replicación master/replica entre %s."
 
-#: src/Admin/UI/StatusBuilder.php:535
+#: src/Admin/UI/StatusBuilder.php:539
 msgid "Storage connection mode"
 msgstr "Modo de conexión del almacenamiento"
 
-#: src/Admin/UI/StatusBuilder.php:539
+#: src/Admin/UI/StatusBuilder.php:543
 msgid "Sentinel"
 msgstr "Sentinel"
 
-#: src/Admin/UI/StatusBuilder.php:540
+#: src/Admin/UI/StatusBuilder.php:544
 msgid "Replication"
 msgstr "Replicación"
 
-#: src/Admin/UI/StatusBuilder.php:553
+#: src/Admin/UI/StatusBuilder.php:557
 msgid "Storage memory limit"
 msgstr "Límite de memoria del almacenamiento"
 
-#: src/Admin/UI/StatusBuilder.php:556
-msgid "A maxmemory limit is configured. The storage server can evict entries when full."
+#: src/Admin/UI/StatusBuilder.php:560
+msgid ""
+"A maxmemory limit is configured. The storage server can evict entries when "
+"full."
 msgstr ""
 "Hay un límite maxmemory configurado. El servidor de almacenamiento puede "
 "desalojar entradas cuando se llena."
 
-#: src/Admin/UI/StatusBuilder.php:557
-msgid "No maxmemory limit is set on the storage server. Without one, the cache can grow until it crowds out other workloads on the host. Set one live with <code>redis-cli CONFIG SET maxmemory 512mb</code>, or run the same command inside <code>wp millicache cli</code>."
+#: src/Admin/UI/StatusBuilder.php:561
+msgid ""
+"No maxmemory limit is set on the storage server. Without one, the cache can "
+"grow until it crowds out other workloads on the host. Set one live with "
+"<code>redis-cli CONFIG SET maxmemory 512mb</code>, or run the same command "
+"inside <code>wp millicache cli</code>."
 msgstr ""
 "El servidor de almacenamiento no tiene ningún límite maxmemory. Sin él, la "
 "caché puede crecer hasta desplazar otras cargas de trabajo del host. "
 "Configúralo en caliente con <code>redis-cli CONFIG SET maxmemory 512mb</"
 "code> o ejecuta el mismo comando dentro de <code>wp millicache cli</code>."
 
-#: src/Admin/UI/StatusBuilder.php:560
+#: src/Admin/UI/StatusBuilder.php:564
 msgid "Not set"
 msgstr "Sin configurar"
 
-#: src/Admin/UI/StatusBuilder.php:569
+#: src/Admin/UI/StatusBuilder.php:573
 msgid "Storage eviction policy"
 msgstr "Política de desalojo (eviction)"
 
-#: src/Admin/UI/StatusBuilder.php:572
-msgid "The storage server is configured with allkeys-lru, the recommended policy for a cache workload."
+#: src/Admin/UI/StatusBuilder.php:576
+msgid ""
+"The storage server is configured with allkeys-lru, the recommended policy "
+"for a cache workload."
 msgstr ""
 "El servidor de almacenamiento está configurado con allkeys-lru, la política "
 "recomendada para una carga de trabajo de caché."
 
-#: src/Admin/UI/StatusBuilder.php:573
-msgid "For a cache workload, allkeys-lru is recommended so the server can automatically evict least-recently-used entries when full. Set it live with <code>redis-cli CONFIG SET maxmemory-policy allkeys-lru</code>, or run the same command inside <code>wp millicache cli</code>."
+#: src/Admin/UI/StatusBuilder.php:577
+msgid ""
+"For a cache workload, allkeys-lru is recommended so the server can "
+"automatically evict least-recently-used entries when full. Set it live with "
+"<code>redis-cli CONFIG SET maxmemory-policy allkeys-lru</code>, or run the "
+"same command inside <code>wp millicache cli</code>."
 msgstr ""
 "Para una carga de trabajo de caché se recomienda allkeys-lru, de modo que el "
 "servidor pueda desalojar automáticamente las entradas menos usadas "
@@ -877,257 +932,310 @@ msgstr ""
 "CONFIG SET maxmemory-policy allkeys-lru</code> o ejecuta el mismo comando "
 "dentro de <code>wp millicache cli</code>."
 
-#: src/Admin/UI/StatusBuilder.php:576
+#: src/Admin/UI/StatusBuilder.php:580
 msgid "Default"
 msgstr "Por defecto"
 
-#: src/Admin/UI/StatusBuilder.php:679
+#: src/Admin/UI/StatusBuilder.php:594
+msgid ""
+"The storage server is effectively full and its eviction policy cannot "
+"reclaim space from cache entries, so writes are failing or about to fail. "
+"Switch the policy to allkeys-lru, or raise maxmemory."
+msgstr ""
+
+#: src/Admin/UI/StatusBuilder.php:597
+msgid ""
+"The storage server is approaching its memory limit and its eviction policy "
+"cannot reclaim space from cache entries — once full, writes will fail. "
+"Switch the policy to allkeys-lru, or raise maxmemory."
+msgstr ""
+
+#: src/Admin/UI/StatusBuilder.php:601
+msgid ""
+"With allkeys-lru the server evicts least-recently-used entries when the "
+"limit is reached, so running close to it is normal for a cache."
+msgstr ""
+
+#: src/Admin/UI/StatusBuilder.php:602
+msgid "Memory usage is comfortably within the configured limit."
+msgstr ""
+
+#. translators: %1$s: used memory (e.g. 312M), %2$s: memory limit (e.g. 512M), %3$d: percentage used.
+#: src/Admin/UI/StatusBuilder.php:614
+#, fuzzy, php-format
+#| msgid "%1$s %2$s (%3$s)"
+msgid "%1$s of %2$s (%3$d%%)"
+msgstr "%1$s %2$s (%3$s)"
+
+#: src/Admin/UI/StatusBuilder.php:625
+msgid "Config file"
+msgstr ""
+
+#: src/Admin/UI/StatusBuilder.php:627
+msgid ""
+"The config file could not be written. Components that load before WordPress "
+"may use outdated settings until the settings directory inside wp-content is "
+"writable again; MilliCache repairs the file automatically once it is."
+msgstr ""
+
+#: src/Admin/UI/StatusBuilder.php:628
+#, fuzzy
+#| msgid "Some tests failed."
+msgid "Write failed"
+msgstr "Algunas pruebas han fallado."
+
+#: src/Admin/UI/StatusBuilder.php:731
 msgid "Entries"
 msgstr "Entradas"
 
 #. translators: %s: number of distinct cached bodies, formatted.
-#: src/Admin/UI/StatusBuilder.php:684
+#: src/Admin/UI/StatusBuilder.php:736
 #, php-format
 msgid "%s unique response"
 msgid_plural "%s unique responses"
 msgstr[0] "%s respuesta única"
 msgstr[1] "%s respuestas únicas"
 
-#: src/Admin/UI/StatusBuilder.php:689
+#: src/Admin/UI/StatusBuilder.php:741
 msgid "Cached entries"
 msgstr "Entradas en caché"
 
-#: src/Admin/UI/StatusBuilder.php:690
-msgid "Number of distinct cached responses currently held in storage. Each URL variant (including unique query strings) counts as a separate entry."
+#: src/Admin/UI/StatusBuilder.php:742
+msgid ""
+"Number of distinct cached responses currently held in storage. Each URL "
+"variant (including unique query strings) counts as a separate entry."
 msgstr ""
 "Número de respuestas distintas almacenadas actualmente en caché. Cada "
 "variante de URL (incluidas las cadenas de consulta únicas) cuenta como una "
 "entrada independiente."
 
 #. translators: %s: average entry size in KB, formatted.
-#: src/Admin/UI/StatusBuilder.php:702
+#: src/Admin/UI/StatusBuilder.php:754
 #, php-format
 msgid "Ø %s KB per entry"
 msgstr "%s KB de media por entrada"
 
-#: src/Admin/UI/StatusBuilder.php:708
-msgid "Total bytes stored in the storage backend right now, after compression and deduplication."
+#: src/Admin/UI/StatusBuilder.php:760
+msgid ""
+"Total bytes stored in the storage backend right now, after compression and "
+"deduplication."
 msgstr ""
 "Total de bytes almacenados ahora mismo en el backend de almacenamiento, tras "
 "la compresión y la deduplicación."
 
-#: src/Admin/UI/StatusBuilder.php:715
-#: src/Admin/UI/StatusBuilder.php:725
+#: src/Admin/UI/StatusBuilder.php:767 src/Admin/UI/StatusBuilder.php:777
 msgid "Saved storage"
 msgstr "Almacenamiento ahorrado"
 
 #. translators: %s: human-readable bytes saved, e.g. "1.31 MB".
-#: src/Admin/UI/StatusBuilder.php:720
+#: src/Admin/UI/StatusBuilder.php:772
 #, php-format
 msgid "%s saved"
 msgstr "%s ahorrados"
 
-#: src/Admin/UI/StatusBuilder.php:726
-msgid "How much smaller the stored cache is than the raw response output, thanks to compression and body deduplication. MilliCache stores identical page bodies only once."
+#: src/Admin/UI/StatusBuilder.php:778
+msgid ""
+"How much smaller the stored cache is than the raw response output, thanks to "
+"compression and body deduplication. MilliCache stores identical page bodies "
+"only once."
 msgstr ""
 "Cuánto más pequeña es la caché almacenada respecto a la salida de respuesta "
 "sin procesar, gracias a la compresión y a la deduplicación de cuerpos. "
 "MilliCache almacena los cuerpos de página idénticos una sola vez."
 
-#: src/Admin/UI/StatusBuilder.php:733
+#: src/Admin/UI/StatusBuilder.php:785
 msgid "Hit ratio"
 msgstr "Tasa de aciertos"
 
-#: src/Admin/UI/StatusBuilder.php:739
+#: src/Admin/UI/StatusBuilder.php:791
 msgid "Cache hit ratio"
 msgstr "Tasa de aciertos de la caché"
 
-#: src/Admin/UI/StatusBuilder.php:740
-msgid "Share of cacheable front-end requests this site served straight from the page cache over the last 7 days. Misses are requests that had to be generated; uncacheable requests (excluded URLs, custom rules) are not counted."
+#: src/Admin/UI/StatusBuilder.php:792
+msgid ""
+"Share of cacheable front-end requests this site served straight from the "
+"page cache over the last 7 days. Misses are requests that had to be "
+"generated; uncacheable requests (excluded URLs, custom rules) are not "
+"counted."
 msgstr ""
 "Porcentaje de peticiones cacheables del frontend que este sitio ha servido "
 "directamente desde la caché de páginas en los últimos 7 días. Los misses son "
 "peticiones que hubo que generar; las peticiones no cacheables (URL "
 "excluidas, reglas personalizadas) no se cuentan."
 
-#: src/Admin/UI/StatusBuilder.php:748
+#: src/Admin/UI/StatusBuilder.php:800
 msgid "Fast already. Faster with %PRO%."
 msgstr "Ya es rápido. Aún más rápido con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:749
+#: src/Admin/UI/StatusBuilder.php:801
 msgid "More hits. Fewer misses. Meet %PRO%."
 msgstr "Más aciertos. Menos misses. Descubre %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:750
+#: src/Admin/UI/StatusBuilder.php:802
 msgid "Turn good cache stats into great ones with %PRO%."
 msgstr ""
 "Convierte unas buenas estadísticas de caché en unas excelentes con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:751
+#: src/Admin/UI/StatusBuilder.php:803
 msgid "Unlock the full potential of your cache with %PRO%."
 msgstr "Libera todo el potencial de tu caché con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:754
+#: src/Admin/UI/StatusBuilder.php:806
 msgid "See every cached URL at a glance with %PRO%."
 msgstr "Con %PRO% ves todas las URL en caché de un vistazo."
 
-#: src/Admin/UI/StatusBuilder.php:755
+#: src/Admin/UI/StatusBuilder.php:807
 msgid "Browse, inspect and purge cached URLs with %PRO%."
 msgstr "Explora, inspecciona y purga las URL en caché con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:756
+#: src/Admin/UI/StatusBuilder.php:808
 msgid "Find and clear the exact cache entry with %PRO%."
 msgstr "Encuentra y vacía justo la entrada de caché que buscas con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:757
+#: src/Admin/UI/StatusBuilder.php:809
 msgid "No guessing: inspect your cache with %PRO%."
 msgstr "Sin adivinanzas: inspecciona tu caché con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:760
+#: src/Admin/UI/StatusBuilder.php:812
 msgid "Custom TTL for specific pages? Easy with %PRO%."
 msgstr "¿TTL personalizado para páginas concretas? Con %PRO% es muy fácil."
 
-#: src/Admin/UI/StatusBuilder.php:761
+#: src/Admin/UI/StatusBuilder.php:813
 msgid "HTML for humans, Markdown for AIs? Easy with %PRO%."
-msgstr "¿HTML para las personas y Markdown para las IA? Con %PRO% es muy fácil."
+msgstr ""
+"¿HTML para las personas y Markdown para las IA? Con %PRO% es muy fácil."
 
-#: src/Admin/UI/StatusBuilder.php:762
+#: src/Admin/UI/StatusBuilder.php:814
 msgid "Cache by URL, cookie, query string or user with %PRO%."
 msgstr ""
 "Almacena en caché por URL, cookie, cadena de consulta o usuario con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:763
+#: src/Admin/UI/StatusBuilder.php:815
 msgid "Short TTL for news, long TTL for docs? Easy with %PRO%."
 msgstr ""
 "¿TTL corto para noticias y largo para documentación? Con %PRO% es muy fácil."
 
-#: src/Admin/UI/StatusBuilder.php:764
+#: src/Admin/UI/StatusBuilder.php:816
 msgid "Cache landing pages longer than blog posts? Easy with %PRO%."
 msgstr ""
 "¿Mantener las páginas de destino en caché más tiempo que las entradas del "
 "blog? Con %PRO% es muy fácil."
 
-#: src/Admin/UI/StatusBuilder.php:765
+#: src/Admin/UI/StatusBuilder.php:817
 msgid "Always cache this, never cache that? Easy with %PRO%."
 msgstr "¿Esto siempre en caché y aquello nunca? Con %PRO% es muy fácil."
 
-#: src/Admin/UI/StatusBuilder.php:766
+#: src/Admin/UI/StatusBuilder.php:818
 msgid "Different cache behavior for bots and visitors? Easy with %PRO%."
 msgstr ""
 "¿Un comportamiento de caché distinto para bots y visitantes? Con %PRO% es "
 "muy fácil."
 
-#: src/Admin/UI/StatusBuilder.php:769
+#: src/Admin/UI/StatusBuilder.php:821
 msgid "Warm pages before visitors arrive with %PRO%."
 msgstr "Precalienta las páginas antes de que lleguen los visitantes con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:770
+#: src/Admin/UI/StatusBuilder.php:822
 msgid "Serve warmed pages from the first click with %PRO%."
 msgstr "Sirve páginas precalentadas desde el primer clic con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:771
+#: src/Admin/UI/StatusBuilder.php:823
 msgid "Keep key pages ready with %PRO%."
 msgstr "Mantén tus páginas clave siempre listas con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:772
+#: src/Admin/UI/StatusBuilder.php:824
 msgid "Prefetch important URLs automatically with %PRO%."
 msgstr "Precarga automáticamente las URL importantes con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:775
+#: src/Admin/UI/StatusBuilder.php:827
 msgid "Take your cache global with %PRO%."
 msgstr "Lleva tu caché a todo el mundo con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:776
+#: src/Admin/UI/StatusBuilder.php:828
 msgid "Serve pages closer to every visitor with %PRO%."
 msgstr "Sirve las páginas más cerca de cada visitante con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:777
+#: src/Admin/UI/StatusBuilder.php:829
 msgid "Push cached pages to the edge with %PRO%."
 msgstr "Lleva las páginas en caché al edge con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:778
+#: src/Admin/UI/StatusBuilder.php:830
 msgid "Edge delivery for Cloudflare, Bunny.net and more with %PRO%."
 msgstr "Entrega en el edge para Cloudflare, Bunny.net y más con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:781
+#: src/Admin/UI/StatusBuilder.php:833
 msgid "Edit a synced pattern. %PRO% clears the right cache entries."
 msgstr ""
 "¿Editas un patrón sincronizado? %PRO% vacía justo las entradas de caché "
 "adecuadas."
 
-#: src/Admin/UI/StatusBuilder.php:782
+#: src/Admin/UI/StatusBuilder.php:834
 msgid "Even smarter cache invalidation, handled by %PRO%."
 msgstr "Una invalidación de caché aún más inteligente, a cargo de %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:785
+#: src/Admin/UI/StatusBuilder.php:837
 msgid "Better caching for dynamic WordPress sites with %PRO%."
 msgstr "Mejor caché para sitios WordPress dinámicos con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:786
+#: src/Admin/UI/StatusBuilder.php:838
 msgid "Cache smarter on busy WooCommerce sites with %PRO%."
 msgstr ""
 "Caché más inteligente para tiendas WooCommerce con mucho tráfico gracias a "
 "%PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:789
+#: src/Admin/UI/StatusBuilder.php:841
 msgid "Know exactly what's in your cache with %PRO%."
 msgstr "Con %PRO% sabes exactamente qué hay en tu caché."
 
-#: src/Admin/UI/StatusBuilder.php:790
+#: src/Admin/UI/StatusBuilder.php:842
 msgid "Debug cache behavior faster with %PRO%."
 msgstr "Depura el comportamiento de la caché más rápido con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:791
+#: src/Admin/UI/StatusBuilder.php:843
 msgid "Less cache mystery. More control with %PRO%."
 msgstr "Menos misterio en la caché. Más control con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:794
+#: src/Admin/UI/StatusBuilder.php:846
 msgid "MilliCache already flies. %PRO% adds the afterburner."
 msgstr "MilliCache ya vuela. %PRO% enciende la postcombustión."
 
-#: src/Admin/UI/StatusBuilder.php:795
+#: src/Admin/UI/StatusBuilder.php:847
 msgid "Love MilliCache? Power its future with %PRO%."
 msgstr "¿Te encanta MilliCache? Impulsa su futuro con %PRO%."
 
-#: src/Admin/UI/StatusBuilder.php:802
+#: src/Admin/UI/StatusBuilder.php:854
 msgid "MilliCache Pro"
 msgstr "MilliCache Pro"
 
-#: src/Admin/UI/StatusBuilder.php:813
+#: src/Admin/UI/StatusBuilder.php:865
 msgid "Requests served · last 7 days"
 msgstr "Peticiones servidas · últimos 7 días"
 
-#: src/Admin/UI/StatusBuilder.php:817
+#: src/Admin/UI/StatusBuilder.php:869
 msgid "Total requests"
 msgstr "Peticiones totales"
 
-#: src/Admin/UI/StatusBuilder.php:823
+#: src/Admin/UI/StatusBuilder.php:875
 msgid "Cached requests"
 msgstr "Peticiones en caché"
 
-#: src/Admin/UI/StatusBuilder.php:829
+#: src/Admin/UI/StatusBuilder.php:881
 msgid "Uncached requests"
 msgstr "Peticiones sin caché"
 
 #. translators: %1$s is the number of pages, %2$s is singular or plural "page", %3$s is the cache size.
-#: src/Admin/Utils.php:224
-#: assets/js/adminbar.js:176
-#: build/adminbar.js:3
-#, php-format,js-format
+#: src/Admin/Utils.php:220 assets/js/adminbar.js:176 build/adminbar.js:3
+#, php-format
 msgid "%1$s %2$s (%3$s)"
 msgstr "%1$s %2$s (%3$s)"
 
-#: src/Admin/Utils.php:226
-#: assets/js/adminbar.js:178
-#: build/adminbar.js:3
+#: src/Admin/Utils.php:222 assets/js/adminbar.js:178 build/adminbar.js:3
 msgid "page"
 msgid_plural "pages"
 msgstr[0] "página"
 msgstr[1] "páginas"
 
-#: src/Admin/Utils.php:231
-#: assets/js/adminbar.js:183
-#: build/adminbar.js:3
+#: src/Admin/Utils.php:227 assets/js/adminbar.js:183 build/adminbar.js:3
 msgid "No cached pages"
 msgstr "No hay páginas en caché"
 
@@ -1143,12 +1251,10 @@ msgstr "Ajustes de la red"
 msgid "Support"
 msgstr "Soporte"
 
-#: src/Base/Manager.php:195
-#: src/Rules/Actions/WP/ClearCache.php:43
+#: src/Base/Manager.php:195 src/Rules/Actions/WP/ClearCache.php:43
 #: assets/js/settings/partials/ClearCacheButton.jsx:35
 #: assets/js/settings/partials/ClearCacheButton.jsx:46
-#: assets/js/settings/partials/ClearCacheButton.jsx:51
-#: build/settings.js:1
+#: assets/js/settings/partials/ClearCacheButton.jsx:51 build/settings.js:1
 msgid "Clear Cache"
 msgstr "Vaciar la caché"
 
@@ -1159,22 +1265,24 @@ msgstr "Estado"
 #. translators: %s: URL to the network admin MilliCache settings page.
 #: src/Base/Migrations/MoveStorageToNetwork.php:78
 #, php-format
-msgid "MilliCache: Multisite detected. Your storage settings have been moved to the network level — <a href=\"%s\">manage them under Network Admin → MilliCache</a>."
+msgid ""
+"MilliCache: Multisite detected. Your storage settings have been moved to the "
+"network level — <a href=\"%s\">manage them under Network Admin → MilliCache</"
+"a>."
 msgstr ""
 "MilliCache: se ha detectado un multisitio. Tus ajustes de almacenamiento se "
 "han movido al nivel de red: <a href=\"%s\">gestiónalos en Administrador de "
 "la red → MilliCache</a>."
 
-#: src/Base/Network.php:160
+#: src/Base/Network.php:165
 msgid "MilliCache Network"
 msgstr "MilliCache de la red"
 
-#: src/Base/Network.php:173
-#: src/Base/Site.php:185
+#: src/Base/Network.php:178 src/Base/Site.php:183
 msgid "Settings"
 msgstr "Ajustes"
 
-#: src/Base/Site.php:169
+#: src/Base/Site.php:167
 msgid "Get Help"
 msgstr "Obtener ayuda"
 
@@ -1201,7 +1309,9 @@ msgid "Reason"
 msgstr "Motivo"
 
 #: src/Rules/Actions/PHP/DoCache.php:71
-msgid "A human-readable reason for the cache decision, for debugging and logging purposes."
+msgid ""
+"A human-readable reason for the cache decision, for debugging and logging "
+"purposes."
 msgstr "Un motivo legible de la decisión de caché, para depuración y registro."
 
 #: src/Rules/Actions/PHP/SetBucket.php:57
@@ -1209,7 +1319,9 @@ msgid "Set Bucket"
 msgstr "Establecer bucket"
 
 #: src/Rules/Actions/PHP/SetBucket.php:58
-msgid "Add a bucket (name + token) to the request hash so matching requests share a cache entry."
+msgid ""
+"Add a bucket (name + token) to the request hash so matching requests share a "
+"cache entry."
 msgstr ""
 "Añade un bucket (nombre + token) al hash de la petición para que las "
 "peticiones coincidentes compartan una entrada de caché."
@@ -1241,7 +1353,9 @@ msgstr ""
 "obsoleta mientras se regenera."
 
 #: src/Rules/Actions/PHP/SetGrace.php:64
-msgid "How long to keep serving the stale cache while a fresh copy is generated, in seconds."
+msgid ""
+"How long to keep serving the stale cache while a fresh copy is generated, in "
+"seconds."
 msgstr ""
 "Cuánto tiempo se sigue sirviendo la caché obsoleta mientras se genera una "
 "copia nueva, en segundos."
@@ -1271,8 +1385,7 @@ msgstr "Añadir flag"
 msgid "Tag the response with a flag for bulk invalidation."
 msgstr "Etiqueta la respuesta con un flag para invalidarla en bloque."
 
-#: src/Rules/Actions/WP/AddFlag.php:73
-#: src/Rules/Actions/WP/RemoveFlag.php:73
+#: src/Rules/Actions/WP/AddFlag.php:73 src/Rules/Actions/WP/RemoveFlag.php:73
 msgid "Flag"
 msgstr "Flag"
 
@@ -1299,7 +1412,8 @@ msgstr "Solo caducar"
 
 #: src/Rules/Actions/WP/ClearCache.php:54
 #: src/Rules/Actions/WP/ClearSiteCache.php:50
-msgid "Mark entries as stale instead of deleting, allowing grace-period serving."
+msgid ""
+"Mark entries as stale instead of deleting, allowing grace-period serving."
 msgstr ""
 "Marca las entradas como obsoletas en lugar de eliminarlas, lo que permite "
 "servirlas durante el período de gracia."
@@ -1324,162 +1438,167 @@ msgstr "Elimina de la respuesta un flag añadido previamente."
 msgid "The flag identifier to remove from the response."
 msgstr "El identificador del flag que se eliminará de la respuesta."
 
-#: assets/js/settings/partials/ClearCacheButton.jsx:60
-#: build/settings.js:1
-msgid "Enter one or more flag patterns to clear across the network. Use a site-prefixed pattern like \"5:*\" to clear every entry on a specific site, \"*:posts\" to clear a flag on every site, or \"5:posts\" for a single flag on a single site. Leave empty to clear the entire network cache."
+#: assets/js/settings/partials/ClearCacheButton.jsx:60 build/settings.js:1
+msgid ""
+"Enter one or more flag patterns to clear across the network. Use a site-"
+"prefixed pattern like \"5:*\" to clear every entry on a specific site, "
+"\"*:posts\" to clear a flag on every site, or \"5:posts\" for a single flag "
+"on a single site. Leave empty to clear the entire network cache."
 msgstr ""
 "Introduce uno o más patrones de flags para vaciar en toda la red. Usa un "
 "patrón con prefijo de sitio como «5:*» para vaciar todas las entradas de un "
-"sitio concreto, «*:posts» para vaciar un flag en todos los sitios, o «5:posts"
-"» para un único flag en un único sitio. Déjalo vacío para vaciar la caché de "
-"toda la red."
+"sitio concreto, «*:posts» para vaciar un flag en todos los sitios, o "
+"«5:posts» para un único flag en un único sitio. Déjalo vacío para vaciar la "
+"caché de toda la red."
 
-#: assets/js/settings/partials/ClearCacheButton.jsx:64
-#: build/settings.js:1
-msgid "Enter one or more Cache Flags, Post-IDs or URLs for which you want to clear the cache. You can use wildcards (*) to clear multiple related flags."
+#: assets/js/settings/partials/ClearCacheButton.jsx:64 build/settings.js:1
+msgid ""
+"Enter one or more Cache Flags, Post-IDs or URLs for which you want to clear "
+"the cache. You can use wildcards (*) to clear multiple related flags."
 msgstr ""
 "Introduce uno o más flags de caché, ID de entrada o URL cuya caché quieras "
 "vaciar. Puedes usar comodines (*) para vaciar varios flags relacionados a la "
 "vez."
 
-#: assets/js/settings/partials/ClearCacheButton.jsx:73
-#: build/settings.js:1
+#: assets/js/settings/partials/ClearCacheButton.jsx:73 build/settings.js:1
 msgid "Targets to clear (Optional)"
 msgstr "Destinos a vaciar (opcional)"
 
-#: assets/js/settings/partials/ClearCacheButton.jsx:86
-#: build/settings.js:1
+#: assets/js/settings/partials/ClearCacheButton.jsx:86 build/settings.js:1
 msgid "Clear Network Cache"
 msgstr "Vaciar la caché de la red"
 
-#: assets/js/settings/partials/ClearCacheButton.jsx:88
-#: build/settings.js:1
+#: assets/js/settings/partials/ClearCacheButton.jsx:88 build/settings.js:1
 msgid "Clear Cache of Targets"
 msgstr "Vaciar la caché de los destinos"
 
-#: assets/js/settings/partials/FooterStatus.jsx:89
-#: build/settings.js:1
+#: assets/js/settings/partials/FooterStatus.jsx:89 build/settings.js:1
 msgid "Checking…"
 msgstr "Comprobando…"
 
 #. translators: %d: number of critical issues
-#: assets/js/settings/partials/FooterStatus.jsx:100
-#: build/settings.js:2
-#, js-format
+#: assets/js/settings/partials/FooterStatus.jsx:100 build/settings.js:2
 msgid "%d Issue"
 msgid_plural "%d Issues"
 msgstr[0] "%d problema"
 msgstr[1] "%d problemas"
 
 #. translators: %d: number of recommendations (warnings)
-#: assets/js/settings/partials/FooterStatus.jsx:108
-#: build/settings.js:3
-#, js-format
+#: assets/js/settings/partials/FooterStatus.jsx:108 build/settings.js:3
 msgid "%d Warning"
 msgid_plural "%d Warnings"
 msgstr[0] "%d aviso"
 msgstr[1] "%d avisos"
 
 #: assets/js/settings/partials/FooterStatus.jsx:113
-#: assets/js/settings/tabs/Status.jsx:539
-#: build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:539 build/settings.js:1
 #: build/settings.js:3
 msgid "Healthy"
 msgstr "Correcto"
 
-#: assets/js/settings/partials/FooterStatus.jsx:128
-#: build/settings.js:1
+#: assets/js/settings/partials/FooterStatus.jsx:128 build/settings.js:1
 msgid "No status checks are available yet. Try refreshing this page."
 msgstr ""
 "Aún no hay comprobaciones de estado disponibles. Prueba a recargar la página."
 
-#: assets/js/settings/partials/FooterStatus.jsx:189
-#: build/settings.js:1
-msgid "A sanitized debug snapshot. No hosts, credentials, or customer paths are included. “Open GitHub Issue” starts a bug report with the snapshot and your environment versions pre-filled."
+#: assets/js/settings/partials/FooterStatus.jsx:189 build/settings.js:1
+msgid ""
+"A sanitized debug snapshot. No hosts, credentials, or customer paths are "
+"included. “Open GitHub Issue” starts a bug report with the snapshot and your "
+"environment versions pre-filled."
 msgstr ""
 "Una instantánea de depuración anonimizada. No incluye hosts, credenciales ni "
 "rutas de clientes. «Abrir issue en GitHub» inicia un informe de error con la "
 "instantánea y las versiones de tu entorno ya rellenadas."
 
-#: assets/js/settings/partials/FooterStatus.jsx:210
-#: build/settings.js:1
+#: assets/js/settings/partials/FooterStatus.jsx:210 build/settings.js:1
 msgid "Copied!"
 msgstr "¡Copiado!"
 
-#: assets/js/settings/partials/FooterStatus.jsx:212
-#: build/settings.js:1
+#: assets/js/settings/partials/FooterStatus.jsx:212 build/settings.js:1
 msgid "Select & copy manually"
 msgstr "Seleccionar y copiar manualmente"
 
-#: assets/js/settings/partials/FooterStatus.jsx:213
-#: build/settings.js:1
+#: assets/js/settings/partials/FooterStatus.jsx:213 build/settings.js:1
 msgid "Copy to clipboard"
 msgstr "Copiar al portapapeles"
 
-#: assets/js/settings/partials/FooterStatus.jsx:217
-#: build/settings.js:1
+#: assets/js/settings/partials/FooterStatus.jsx:217 build/settings.js:1
 msgid "Open GitHub Issue"
 msgstr "Abrir issue en GitHub"
 
 #. translators: %s: status summary
-#: assets/js/settings/partials/FooterStatus.jsx:272
-#: build/settings.js:4
-#, js-format
+#: assets/js/settings/partials/FooterStatus.jsx:272 build/settings.js:4
 msgid "MilliCache status: %s. Open details."
 msgstr "Estado de MilliCache: %s. Abrir los detalles."
 
-#: assets/js/settings/partials/FooterStatus.jsx:288
-#: build/settings.js:4
+#: assets/js/settings/partials/FooterStatus.jsx:288 build/settings.js:4
 msgid "MilliCache Status"
 msgstr "Estado de MilliCache"
 
-#: assets/js/settings/partials/FooterStatus.jsx:299
-#: build/settings.js:4
+#: assets/js/settings/partials/FooterStatus.jsx:299 build/settings.js:4
 msgid "Status Checks"
 msgstr "Comprobaciones de estado"
 
-#: assets/js/settings/partials/FooterStatus.jsx:303
-#: build/settings.js:4
+#: assets/js/settings/partials/FooterStatus.jsx:303 build/settings.js:4
 msgid "Debug Info"
 msgstr "Información de depuración"
 
-#: assets/js/settings/tabs/Status.jsx:304
-#: build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:304 build/settings.js:1
 msgid "Total and uncached requests over the last 7 days"
 msgstr "Peticiones totales y sin caché de los últimos 7 días"
 
-#: assets/js/settings/tabs/Status.jsx:401
-#: build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:401 build/settings.js:1
 msgid "Requests"
 msgstr "Peticiones"
 
-#: assets/js/settings/tabs/Status.jsx:409
-#: build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:409 build/settings.js:1
 msgid "Uncached"
 msgstr "Sin caché"
 
-#: assets/js/settings/tabs/Status.jsx:495
-#: build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:495 build/settings.js:1
 msgid "Loading cache status…"
 msgstr "Cargando el estado de la caché…"
 
-#: assets/js/settings/tabs/Status.jsx:540
-#: build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:540 build/settings.js:1
 msgid "Needs attention"
 msgstr "Requiere atención"
 
-#: assets/js/settings/tabs/Status.jsx:541
-#: build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:541 build/settings.js:1
 msgid "Issues detected"
 msgstr "Problemas detectados"
 
-#: assets/js/settings/tabs/Status.jsx:554
-#: build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:554 build/settings.js:1
 msgid "Open the full Status checks and debug info"
-msgstr "Abrir todas las comprobaciones de estado y la información de depuración"
+msgstr ""
+"Abrir todas las comprobaciones de estado y la información de depuración"
 
-#: assets/js/settings/tabs/Status.jsx:567
-#: build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:567 build/settings.js:1
 msgid "Open the full check list and debug snapshot"
 msgstr ""
 "Abrir la lista completa de comprobaciones y la instantánea de depuración"
+
+#~ msgid ""
+#~ "The file advanced-cache.php has been copied to the /wp-content directory. "
+#~ "Please make sure to configure MilliCache to start caching."
+#~ msgstr ""
+#~ "El archivo advanced-cache.php se ha copiado al directorio /wp-content. "
+#~ "Asegúrate de configurar MilliCache para empezar a almacenar en caché."
+
+#~ msgid ""
+#~ "Your version of advanced-cache.php is higher than the one shipped with "
+#~ "the plugin. Replacement skipped to preserve customizations."
+#~ msgstr ""
+#~ "Tu versión de advanced-cache.php es más reciente que la incluida con el "
+#~ "plugin. No se ha reemplazado para conservar tus personalizaciones."
+
+#~ msgid "advanced-cache.php symlink is already correctly configured."
+#~ msgstr ""
+#~ "El enlace simbólico de advanced-cache.php ya está configurado "
+#~ "correctamente."
+
+#~ msgid "The wp-content directory is not writable."
+#~ msgstr "El directorio wp-content no tiene permisos de escritura."
+
+#~ msgid "Could not create advanced-cache.php file."
+#~ msgstr "No se ha podido crear el archivo advanced-cache.php."
