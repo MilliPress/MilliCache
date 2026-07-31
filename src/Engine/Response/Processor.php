@@ -132,6 +132,26 @@ final class Processor {
 			return $output;
 		}
 
+		// When the buffer opens early (outermost, for TranslatePress), WP-typed
+		// rules have not run yet at open time, but they have all resolved by the
+		// time this callback flushes at end of request. Fold their
+		// TTL/grace/decision overrides into the state now. On the default
+		// template_redirect path the options were already applied, so this is a
+		// harmless no-op.
+		$this->state = Engine::instance()->options()->apply_to_state( $this->state );
+
+		// Honour a rule-driven bypass decided after the buffer opened.
+		$decision = $this->state->get_cache_decision();
+		if ( null !== $decision && false === $decision['decision'] ) {
+			if ( ! $this->state->should_fcgi_regenerate() ) {
+				$this->headers->set_status( 'bypass' );
+				if ( ! empty( $decision['reason'] ) ) {
+					$this->headers->set_reason( $decision['reason'] );
+				}
+			}
+			return $this->state->should_fcgi_regenerate() ? null : $output;
+		}
+
 		// Get all flags for this request.
 		$flags = $this->collect_flags();
 

@@ -334,23 +334,109 @@ final class Engine {
 		// Create State object.
 		$context = Response\State::create( $hash );
 
-		// Get and return cached content (options applied in ResponseManager).
+		// Serve cached content. A fresh hit echoes the entry and exit()s inside
+		// the reader; only a MISS or a stale hit flagged for background
+		// regeneration returns control here.
 		$context = $this->response()->retrieve_and_serve_cache( $context );
 
-		// Start the output buffer.
-		add_action(
-			'template_redirect',
-			function () use ( $context ) {
-				if ( $this->check_cache_decision() ) {
-					// Apply any options set by rules.
-					$context = $this->options()->apply_to_state( $context );
+		// A fresh hit already exited — nothing left to capture.
+		if ( $context->was_cache_served() && ! $context->should_fcgi_regenerate() ) {
+			return;
+		}
 
-					// Start the output buffer.
+		// Register the response capture buffer (strategy resolved once plugins load).
+		$this->start_capture( $context );
+	}
+
+	/**
+	 * Register the response capture buffer.
+	 *
+	 * Whether an output-buffer post-processor such as TranslatePress is active
+	 * can only be known once plugins have loaded, so the strategy is resolved
+	 * on `init` at the lowest possible priority:
+	 *
+	 * - Default (no such plugin): keep the historical late buffer on
+	 *   `template_redirect` (PHP_INT_MAX - 10) — i.e. the innermost buffer.
+	 * - TranslatePress active: open the buffer here on `init`, ahead of
+	 *   TranslatePress' own `init` (priority 0) buffer, so MilliCache is the
+	 *   OUTERMOST buffer. TranslatePress then nests inside, flushes and
+	 *   translates first, and MilliCache captures the final translated HTML
+	 *   instead of the untranslated default language.
+	 *
+	 * TTL/grace/decision overrides from WP-typed rules are applied in the
+	 * buffer callback at flush time (Response\Processor::process_output_buffer()),
+	 * which runs at the end of the request — so opening the buffer early on the
+	 * outermost path loses nothing.
+	 *
+	 * @since 1.7.8
+	 *
+	 * @param Response\State $context The request state.
+	 * @return void
+	 */
+	private function start_capture( Response\State $context ): void {
+		add_action(
+			'init',
+			function () use ( $context ) {
+				if ( $this->needs_outermost_buffer() ) {
+					// Outermost: open now, ahead of init-phase post-processors.
 					$this->response()->start_output_buffer( $context );
+					return;
 				}
+
+				// Default: keep the historical innermost buffer.
+				add_action(
+					'template_redirect',
+					function () use ( $context ) {
+						if ( $this->check_cache_decision() ) {
+							// Apply any options set by rules.
+							$context = $this->options()->apply_to_state( $context );
+
+							// Start the output buffer.
+							$this->response()->start_output_buffer( $context );
+						}
+					},
+					PHP_INT_MAX - 10
+				);
 			},
-			PHP_INT_MAX - 10
+			PHP_INT_MIN
 		);
+	}
+
+	/**
+	 * Whether MilliCache must capture the outermost output buffer.
+	 *
+	 * True only for front-end page renders while TranslatePress — which opens
+	 * its translation buffer on `init` — is active. Being outermost lets
+	 * MilliCache capture the fully translated HTML instead of the untranslated
+	 * default language served on every cache hit otherwise.
+	 *
+	 * @since 1.7.8
+	 *
+	 * @return bool True when the outermost buffer strategy is required.
+	 */
+	private function needs_outermost_buffer(): bool {
+		// Only front-end page renders are buffered this way; leave admin and
+		// AJAX (and other non-page contexts) on the default path.
+		if ( is_admin() || ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) ) {
+			return false;
+		}
+
+		$active = class_exists( 'TRP_Translate_Press', false );
+
+		/**
+		 * Filter whether MilliCache opens its capture buffer as the OUTERMOST
+		 * buffer (early, ahead of init-phase output-buffer post-processors)
+		 * instead of the default late/innermost buffer on `template_redirect`.
+		 *
+		 * Auto-enabled when TranslatePress is active. Return true to force it
+		 * for other output-buffer post-processors, or false to always keep the
+		 * historical behaviour.
+		 *
+		 * @since 1.7.8
+		 *
+		 * @param bool $needed Whether the outermost buffer is required.
+		 */
+		return (bool) apply_filters( 'millicache_capture_outermost_buffer', $active );
 	}
 
 	/**
