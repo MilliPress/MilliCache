@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: MilliCache 1.7.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/MilliCache\n"
 "POT-Creation-Date: 2026-07-29T21:49:58+00:00\n"
-"PO-Revision-Date: 2026-07-22 15:04+0000\n"
+"PO-Revision-Date: 2026-07-31 06:34+0000\n"
 "Last-Translator: Philipp Wellmer <philipp@millipress.com>\n"
 "Language-Team: Portuguese (Brazil) <https://translate.millipress.com/"
 "projects/millicache/millicache/pt_BR/>\n"
@@ -51,14 +51,8 @@ msgid "https://www.millipress.com/"
 msgstr ""
 
 #: src/Admin/Activator.php:86
-#, fuzzy
-#| msgid ""
-#| "Symlink created for advanced-cache.php. Please make sure to configure "
-#| "MilliCache to start caching."
 msgid "Please make sure to configure MilliCache to start caching."
-msgstr ""
-"O link simbólico para advanced-cache.php foi criado. Configure o MilliCache "
-"para começar a armazenar em cache."
+msgstr "Configure o MilliCache para começar a armazenar em cache."
 
 #: src/Admin/Admin.php:299
 msgid ""
@@ -155,7 +149,7 @@ msgstr "Drop-in desconhecido: “%s”. Use advanced-cache ou object-cache."
 
 #: src/Admin/CLI/Drop.php:106
 msgid "Use --force to overwrite."
-msgstr ""
+msgstr "Use --force para sobrescrever."
 
 #: src/Admin/CLI/Storage.php:51 src/Admin/CLI/StorageCLI.php:53
 msgid "redis-cli is not installed or not in PATH. Please install Redis tools."
@@ -320,72 +314,55 @@ msgstr ""
 
 #. translators: %s: drop-in filename, e.g. advanced-cache.php.
 #: src/Admin/DropIn.php:254
-#, fuzzy, php-format
-#| msgid "Created symlink for advanced-cache.php."
+#, php-format
 msgid "Created symlink for %s."
-msgstr "Link simbólico para advanced-cache.php criado."
+msgstr "Link simbólico criado para %s."
 
 #. translators: %s: drop-in filename, e.g. advanced-cache.php.
 #: src/Admin/DropIn.php:259
-#, fuzzy, php-format
-#| msgid "Copied advanced-cache.php to wp-content directory."
+#, php-format
 msgid "Copied %s to the wp-content directory."
-msgstr "advanced-cache.php copiado para o diretório wp-content."
+msgstr "%s copiado para o diretório wp-content."
 
 #. translators: %s: drop-in filename, e.g. advanced-cache.php.
 #: src/Admin/DropIn.php:264
-#, fuzzy, php-format
-#| msgid ""
-#| "The advanced-cache.php symlink already exists and is correctly configured."
+#, php-format
 msgid "%s is already installed and correctly configured."
-msgstr ""
-"O link simbólico de advanced-cache.php já existe e está configurado "
-"corretamente."
+msgstr "%s já está instalado e configurado corretamente."
 
 #. translators: %s: drop-in filename, e.g. advanced-cache.php.
 #: src/Admin/DropIn.php:269
-#, fuzzy, php-format
-#| msgid ""
-#| "A higher-version advanced-cache.php is in place. Use --force to overwrite."
+#, php-format
 msgid "A higher-version %s is in place and was preserved."
-msgstr ""
-"Uma versão mais recente de advanced-cache.php já está instalada. Use --force "
-"para sobrescrever."
+msgstr "Uma versão mais recente de %s já está instalada e foi mantida."
 
 #. translators: %s: drop-in filename, e.g. object-cache.php.
 #: src/Admin/DropIn.php:274
 #, php-format
 msgid "A third-party %s is installed and was left in place."
-msgstr ""
+msgstr "Um %s de terceiros está instalado e foi mantido no lugar."
 
 #. translators: %s: drop-in filename, e.g. advanced-cache.php.
 #: src/Admin/DropIn.php:279
-#, fuzzy, php-format
-#| msgid ""
-#| "The wp-content directory is not writable. Please make sure that the "
-#| "directory is writable and try again or manually copy advanced-cache.php "
-#| "from the plugin folder."
+#, php-format
 msgid ""
 "The wp-content directory is not writable, so %s could not be installed. Make "
 "the directory writable and try again, or copy the file there manually from "
 "the plugin folder."
 msgstr ""
-"O diretório wp-content não tem permissão de escrita. Torne o diretório "
-"gravável e tente novamente, ou copie advanced-cache.php manualmente da pasta "
-"do plugin."
+"O diretório wp-content não tem permissão de escrita, então %s não pôde ser "
+"instalado. Torne o diretório gravável e tente novamente, ou copie o arquivo "
+"manualmente da pasta do plugin."
 
 #. translators: %s: drop-in filename, e.g. advanced-cache.php.
 #: src/Admin/DropIn.php:284
-#, fuzzy, php-format
-#| msgid ""
-#| "Could not create symlink for advanced-cache.php. Please copy the file "
-#| "manually from the plugin directory to your /wp-content directory."
+#, php-format
 msgid ""
 "Could not install %s. Copy it manually from the plugin folder to the wp-"
 "content directory."
 msgstr ""
-"Não foi possível criar o link simbólico para advanced-cache.php. Copie o "
-"arquivo manualmente do diretório do plugin para o seu diretório /wp-content."
+"Não foi possível instalar %s. Copie o arquivo manualmente da pasta do plugin "
+"para o diretório wp-content."
 
 #: src/Admin/SiteHealth.php:104
 msgid "Page cache status, drop-in state, and storage backend."
@@ -939,6 +916,10 @@ msgid ""
 "reclaim space from cache entries, so writes are failing or about to fail. "
 "Switch the policy to allkeys-lru, or raise maxmemory."
 msgstr ""
+"O servidor de armazenamento está praticamente cheio e sua política de "
+"remoção não consegue liberar espaço das entradas do cache, então as "
+"gravações estão falhando ou prestes a falhar. Mude a política para allkeys-"
+"lru ou aumente o maxmemory."
 
 #: src/Admin/UI/StatusBuilder.php:597
 msgid ""
@@ -946,27 +927,33 @@ msgid ""
 "cannot reclaim space from cache entries — once full, writes will fail. "
 "Switch the policy to allkeys-lru, or raise maxmemory."
 msgstr ""
+"O servidor de armazenamento está se aproximando do limite de memória e sua "
+"política de remoção não consegue liberar espaço das entradas do cache; "
+"quando encher, as gravações falharão. Mude a política para allkeys-lru ou "
+"aumente o maxmemory."
 
 #: src/Admin/UI/StatusBuilder.php:601
 msgid ""
 "With allkeys-lru the server evicts least-recently-used entries when the "
 "limit is reached, so running close to it is normal for a cache."
 msgstr ""
+"Com allkeys-lru, o servidor remove as entradas menos usadas recentemente "
+"quando o limite é atingido, então operar perto do limite é normal para um "
+"cache."
 
 #: src/Admin/UI/StatusBuilder.php:602
 msgid "Memory usage is comfortably within the configured limit."
-msgstr ""
+msgstr "O uso de memória está confortavelmente dentro do limite configurado."
 
 #. translators: %1$s: used memory (e.g. 312M), %2$s: memory limit (e.g. 512M), %3$d: percentage used.
 #: src/Admin/UI/StatusBuilder.php:614
-#, fuzzy, php-format
-#| msgid "%1$s %2$s (%3$s)"
+#, php-format
 msgid "%1$s of %2$s (%3$d%%)"
-msgstr "%1$s %2$s (%3$s)"
+msgstr "%1$s de %2$s (%3$d%%)"
 
 #: src/Admin/UI/StatusBuilder.php:625
 msgid "Config file"
-msgstr ""
+msgstr "Arquivo de configuração"
 
 #: src/Admin/UI/StatusBuilder.php:627
 msgid ""
@@ -974,12 +961,14 @@ msgid ""
 "may use outdated settings until the settings directory inside wp-content is "
 "writable again; MilliCache repairs the file automatically once it is."
 msgstr ""
+"Não foi possível gravar o arquivo de configuração. Componentes que carregam "
+"antes do WordPress podem usar configurações desatualizadas até que o "
+"diretório de configurações dentro de wp-content volte a ser gravável; o "
+"MilliCache repara o arquivo automaticamente assim que isso acontecer."
 
 #: src/Admin/UI/StatusBuilder.php:628
-#, fuzzy
-#| msgid "Some tests failed."
 msgid "Write failed"
-msgstr "Alguns testes falharam."
+msgstr "Falha na gravação"
 
 #: src/Admin/UI/StatusBuilder.php:731
 msgid "Entries"
