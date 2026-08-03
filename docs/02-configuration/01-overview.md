@@ -73,8 +73,8 @@ wp millicache config get --show-source
 
 Connection to your Redis-compatible server:
 
-| Constant              | Default     | Description                    |
-|-----------------------|-------------|--------------------------------|
+| Constant              | Default     | Description                           |
+|-----------------------|-------------|---------------------------------------|
 | `MC_STORAGE_HOST`     | `127.0.0.1` | Hostname, IP, socket, or `tls://host` |
 | `MC_STORAGE_PORT`     | `6379`      | TCP port                              |
 | `MC_STORAGE_USERNAME` | `''`        | Redis ACL username                    |
@@ -108,9 +108,9 @@ What to skip:
 
 How cache entries differentiate from each other:
 
-| Constant            | Default | Description                                                                |
-|---------------------|---------|----------------------------------------------------------------------------|
-| `MC_CACHE_UNIQUE`   | `[]`    | Static deployment-level keys folded into every request hash                |
+| Constant            | Default | Description                                                              |
+|---------------------|---------|--------------------------------------------------------------------------|
+| `MC_CACHE_UNIQUE`   | `[]`    | Static deployment-level keys folded into every request hash              |
 | `MC_CACHE_BUCKETS`  | `[]`    | Per-request signal → token map (Accept negotiation, language, device, …) |
 
 ### Update Settings
@@ -151,14 +151,26 @@ define( 'MC_CACHE_DEBUG', true );     // Show debug headers
 
 ### WooCommerce Site
 
+WooCommerce already marks its dynamic pages (cart, checkout, my account) with the
+`DONOTCACHEPAGE` constant, which MilliCache respects out of the box. What you should
+configure is cookie handling: WooCommerce sets several cookies for ordinary browsing
+visitors, and any cookie MilliCache does not ignore becomes part of the cache key.
+
 ```php
-define( 'MC_CACHE_NOCACHE_COOKIES', [
-    'wp-*pass*',
-    'comment_author_*',
-    'woocommerce_*',
-    'sbjs_*'
+define( 'MC_CACHE_IGNORE_COOKIES', [
+    '_*',                        // Keep the default (analytics cookies)
+    'sbjs_*',                    // Order Attribution tracking (every visitor)
+    'woocommerce_*',             // Recently viewed, cart hash, items in cart
+    'wp_woocommerce_session_*',  // Customer session
+    'store_notice*',             // Dismissed store notices
 ] );
 ```
+
+Do **not** add `woocommerce_*` or `sbjs_*` to `MC_CACHE_NOCACHE_COOKIES`. Cookies like
+`woocommerce_recently_viewed` are set the moment a visitor views a product, so a
+bypass on them silently turns most browsing traffic into cache misses. See the
+[FAQ](../09-troubleshooting/02-faq.md#does-millicache-work-with-woocommerce) for the
+full explanation.
 
 ## Viewing Current Configuration
 

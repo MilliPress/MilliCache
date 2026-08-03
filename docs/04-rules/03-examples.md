@@ -43,23 +43,29 @@ Rules::create( 'mysite:docs-ttl', 'php' )
     ->register();
 ```
 
-## Example 2: WooCommerce Cart/Checkout Bypass
+## Example 2: WooCommerce Custom Page Bypass
 
-Never cache cart, checkout, or account pages:
+WooCommerce's own cart, checkout, and account pages need no rule: WooCommerce
+marks them with `DONOTCACHEPAGE` and a built-in MilliCache rule respects that.
+Use a rule for custom dynamic pages WooCommerce does not know about:
 
 ```php
 // Bootstrap phase for early bypass
 Rules::create( 'mysite:woo-no-cache', 'php' )
     ->order( 1 )
     ->when_any()
-        ->request_url( '*/cart/*' )
-        ->request_url( '*/checkout/*' )
-        ->request_url( '*/my-account/*' )
-        ->cookie( 'woocommerce_*' )
+        ->request_url( '*/order-tracking/*' )
+        ->request_url( '*/wishlist/*' )
     ->then()
-        ->do_cache( false, 'WooCommerce dynamic page' )
+        ->do_cache( false, 'Dynamic shop page' )
     ->register();
 ```
+
+Avoid bypassing on `cookie( 'woocommerce_*' )`: cookies like
+`woocommerce_recently_viewed` match for ordinary browsing visitors, which would
+disable caching for most of your traffic. Ignore WooCommerce cookies instead; see
+the [FAQ](../09-troubleshooting/02-faq.md#does-millicache-work-with-woocommerce)
+for the recommended configuration.
 
 ## Example 3: Membership Site Caching
 

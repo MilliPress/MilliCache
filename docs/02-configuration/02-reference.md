@@ -318,9 +318,15 @@ Cookies that cause cache bypass. Supports wildcards.
 define( 'MC_CACHE_NOCACHE_COOKIES', [
     'wp-*pass*',
     'comment_author_*',
-    'woocommerce_cart_hash',
+    'memberpress_*',
 ] );
 ```
+
+Bypass only on cookies that mark a genuinely personalized session (memberships,
+logged-in states). For tracking or widget cookies that do not change the rendered
+page, use `MC_CACHE_IGNORE_COOKIES` instead; a bypass on those disables caching
+for every visitor carrying them. For WooCommerce specifically, see the
+[FAQ](../09-troubleshooting/02-faq.md#does-millicache-work-with-woocommerce).
 
 ### MC_CACHE_IGNORE_COOKIES
 
@@ -333,14 +339,18 @@ define( 'MC_CACHE_IGNORE_COOKIES', [ '_*' ] );
 | Default    | `['_*']` |
 | Type       | `array`  |
 
-Cookies stripped from cache key calculation. Supports wildcards.
+Cookies stripped from cache key calculation. Supports wildcards. Ignored cookies
+are also allowed in `Set-Cookie` response headers without preventing the page
+from being cached.
 
 ```php
 define( 'MC_CACHE_IGNORE_COOKIES', [
-    '_*',       // Analytics
-    '__utm*',   // UTM tracking
+    '_*',       // Keep the default (analytics cookies)
+    'sbjs_*',   // WooCommerce Order Attribution tracking
 ] );
 ```
+
+Defining the constant replaces the default, so include `_*` in your list.
 
 ### MC_CACHE_IGNORE_REQUEST_KEYS
 
@@ -396,6 +406,8 @@ define( 'DONOTCACHEPAGE', true );
 ```
 
 Set dynamically in themes/plugins to skip caching for the current request.
+WooCommerce, for example, sets it on the cart, checkout, and my-account pages,
+so those are excluded without any MilliCache configuration.
 
 ```php
 // In your template

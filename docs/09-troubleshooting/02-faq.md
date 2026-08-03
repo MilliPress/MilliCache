@@ -142,22 +142,60 @@ This means updating one post doesn't clear the entire cache—only affected page
 
 ### Does MilliCache work with WooCommerce?
 
-Yes, with proper configuration:
+Yes, and the critical pages are safe out of the box: WooCommerce sets the
+`DONOTCACHEPAGE` constant on the cart, checkout, and my-account pages, and a
+built-in MilliCache rule respects it. You do not need path exclusions for a
+standard setup.
+
+What you should configure is cookie handling. WooCommerce sets several cookies
+for ordinary browsing visitors, and any cookie MilliCache does not ignore becomes
+part of the cache key, which fragments the cache into per-visitor variants:
+
+- `sbjs_*`: Order Attribution tracking (Sourcebuster), set for every visitor
+- `woocommerce_recently_viewed`: set as soon as a visitor views a product
+- `woocommerce_cart_hash`, `woocommerce_items_in_cart`, `wp_woocommerce_session_*`: set once something is in the cart
+- `store_notice*`: set when a visitor dismisses a store notice
+
+Ignore all of them:
 
 ```php
-define( 'MC_CACHE_NOCACHE_COOKIES', [
-    'wp-*pass*',
-    'comment_author_*',
-    'woocommerce_cart_hash',
-    'woocommerce_items_in_cart',
-] );
-
-define( 'MC_CACHE_NOCACHE_PATHS', [
-    '/my-account/*',
-    '/checkout/*',
-    '/cart/*',
+define( 'MC_CACHE_IGNORE_COOKIES', [
+    '_*',                        // Keep the default (analytics cookies)
+    'sbjs_*',
+    'woocommerce_*',
+    'wp_woocommerce_session_*',
+    'store_notice*',
 ] );
 ```
+
+Do **not** put `woocommerce_*` or `sbjs_*` into `MC_CACHE_NOCACHE_COOKIES`.
+`woocommerce_recently_viewed` matches that pattern and is set the moment anyone
+views a product, so a blanket bypass silently turns most of your browsing traffic
+into cache misses. Bypassing is also unnecessary: themes add products to the cart
+via AJAX and refresh the mini cart client-side (cart fragments in classic themes,
+the Store API in the Mini-Cart block), so shop and product pages stay correct even
+for visitors with items in their cart.
+
+Two exceptions:
+
+- If your theme renders cart contents into the page server-side without any AJAX
+  refresh (rare in modern themes), bypass for visitors with a cart instead of
+  ignoring: add `woocommerce_items_in_cart` to `MC_CACHE_NOCACHE_COOKIES`.
+- If you use custom dynamic pages WooCommerce does not know about (a custom order
+  tracking page, for example), exclude them by path:
+
+  ```php
+  define( 'MC_CACHE_NOCACHE_PATHS', [ '/order-tracking/*' ] );
+  ```
+
+To verify the result, watch the hit ratio on the Status tab after deploying the
+configuration. [MilliCache Pro](https://www.millipress.com/millicache-pro/) makes
+this much easier to inspect: the
+[Cache Entries Browser](https://www.millipress.com/docs/millicache-pro/02-modules/02-cache-entries/)
+lists every cached page with its variants, so you can see exactly what gets cached
+and spot cookie-driven fragmentation, and
+[Detailed Metrics](https://www.millipress.com/docs/millicache-pro/02-modules/06-detailed-metrics/)
+charts the hit ratio over time.
 
 ### Does MilliCache work with membership plugins?
 
