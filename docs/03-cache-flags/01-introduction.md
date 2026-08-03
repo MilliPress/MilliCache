@@ -1,6 +1,6 @@
 ---
 title: 'Cache Flags: Targeted Invalidation'
-post_excerpt: 'Cache flags let you tag pages with labels like post:123 and clear only related entries instead of flushing the entire cache. MilliCache assigns flags automatically.'
+description: 'Cache flags tag every MilliCache entry with labels like post:123, so WordPress content changes clear only affected pages instead of the whole cache.'
 menu_order: 10
 ---
 

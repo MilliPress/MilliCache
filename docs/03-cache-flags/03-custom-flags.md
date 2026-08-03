@@ -1,6 +1,6 @@
 ---
 title: 'Custom Cache Flags'
-post_excerpt: 'Create custom cache flags via PHP filters, rules, or helper functions. Includes wildcard patterns and design patterns for hierarchical and feature-based cache tagging.'
+description: 'Create custom MilliCache cache flags via the flags filter, PHP helper functions, or rules, with wildcard patterns and tagging strategies for WordPress sites.'
 menu_order: 30
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: 'WordPress Multisite Caching'
-post_excerpt: 'MilliCache supports WordPress Multisite with per-site cache isolation, network-wide clearing, and subdomain or subdirectory handling. Network-activate for full control.'
+description: 'Run MilliCache on WordPress multisite: network activation, per-site cache isolation via flag prefixes, network-wide settings, and site or network clearing.'
 menu_order: 30
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: 'MilliCache Changelog'
-post_excerpt: 'Version-by-version breakdown of new features, bug fixes, and improvements in MilliCache.'
+description: 'Release notes for every MilliCache version: new features, bug fixes, and improvements to the Redis full-page cache plugin for WordPress, with commit links.'
 menu_order: 30
 ---
 
