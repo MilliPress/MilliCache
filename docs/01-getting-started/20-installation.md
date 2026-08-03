@@ -27,7 +27,7 @@ Get MilliCache installed and caching your WordPress site in 5 minutes.
 2. Upload the ZIP file via **Plugins → Add New → Upload Plugin**
 3. Activate the plugin
 
-The release package includes all dependencies pre-bundled and prefixed to avoid conflicts.
+The release package includes all dependencies pre-bundled. Internal dependencies are prefixed to avoid conflicts; the MilliRules rule engine keeps its own `MilliRules\` namespace, so custom rules use the same classes on every install type.
 
 When activated, MilliCache automatically creates the `advanced-cache.php` drop-in file required for early request interception.
 
@@ -39,7 +39,7 @@ For developers managing WordPress with Composer:
 composer require millipress/millicache
 ```
 
-Dependencies (`predis/predis` and `millipress/millirules`) are automatically installed and prefixed.
+Dependencies (`predis/predis` and `millipress/millirules`) are installed as regular Composer packages, without prefixing.
 
 ## Setup (2 Steps)
 

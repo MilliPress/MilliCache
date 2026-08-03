@@ -52,7 +52,7 @@ if ( get_field( 'show_pricing_table' ) ) {
 Use MilliRules for condition-based flag assignment:
 
 ```php
-use MilliCache\Deps\MilliRules\Rules;
+use MilliRules\Rules;
 
 Rules::create( 'mysite:seasonal-flag' )
     ->on( 'template_redirect', 25 )

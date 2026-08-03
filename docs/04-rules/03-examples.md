@@ -13,7 +13,7 @@ Practical MilliCache rule examples for common scenarios. All examples use the [M
 Add rules early in your plugin or theme:
 
 ```php
-use MilliCache\Deps\MilliRules\Rules;
+use MilliRules\Rules;
 
 // You do not need to wrap them into an add_action() call - rules register themselves
 // Instead use ->on() to hook into WordPress actions if needed

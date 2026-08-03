@@ -51,7 +51,7 @@ flowchart LR
 Rules use a readable, chainable syntax powered by [MilliRules](https://www.millipress.com/docs/millirules/):
 
 ```php
-use MilliCache\Deps\MilliRules\Rules;
+use MilliRules\Rules;
 
 Rules::create( 'mysite:example-rule', 'php' )  // Create rule with ID and phase
     ->order( 10 )                              // Set priority

@@ -200,7 +200,7 @@ The `X-MilliCache-Status` header shows the caching result:
 ### List Registered Rules
 
 ```php
-use MilliCache\Deps\MilliRules\Rules;
+use MilliRules\Rules;
 
 // Log all rules
 foreach ( Rules::all() as $rule ) {
