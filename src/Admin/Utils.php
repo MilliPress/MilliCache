@@ -63,12 +63,15 @@ final class Utils {
 
 		$asset = include $asset_file;
 
-		wp_enqueue_style(
-			"millicache-{$asset_name}",
-			plugins_url( 'build/' . $asset_name . '.css', $basename ),
-			$css_deps,
-			$asset['version']
-		);
+		// Script-only bundles produce no stylesheet.
+		if ( file_exists( plugin_dir_path( WP_PLUGIN_DIR . '/' . $basename ) . '/build/' . $asset_name . '.css' ) ) {
+			wp_enqueue_style(
+				"millicache-{$asset_name}",
+				plugins_url( 'build/' . $asset_name . '.css', $basename ),
+				$css_deps,
+				$asset['version']
+			);
+		}
 
 		$js_dependencies = array_merge( $asset['dependencies'], $js_deps );
 

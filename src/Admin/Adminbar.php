@@ -83,18 +83,59 @@ final class Adminbar {
 			return;
 		}
 
-		if ( Utils::enqueue_assets( 'adminbar', array( 'wp-api-fetch', 'wp-i18n' ) ) ) {
+		$has_palette = $this->has_command_palette();
+
+		if ( Utils::enqueue_assets( 'adminbar', array( 'wp-api-fetch', 'wp-hooks', 'wp-i18n' ) ) ) {
 			$context = array(
 				'rest_url' => esc_url_raw( rest_url( 'millicache/v1/cache' ) ),
 				'is_network_admin' => is_network_admin(),
+				'has_palette' => $has_palette,
+				'settings_url' => is_network_admin()
+					? network_admin_url( 'settings.php?page=millicache' )
+					: admin_url( 'options-general.php?page=millicache' ),
 			);
 
 			wp_add_inline_script( 'millicache-adminbar', 'const millicache = ' . json_encode( $context ) . ';', 'before' );
+
+			// The adminbar dependency guarantees the millicache context is set.
+			if ( $has_palette && current_user_can( MilliCache::get_clear_cache_capability() ) ) {
+				if ( Utils::enqueue_assets( 'commands', array( 'millicache-adminbar' ) ) ) {
+					/**
+					 * Fires after the command palette bundle has been enqueued.
+					 *
+					 * Extensions (e.g. MilliCache Pro) can hook this to enqueue
+					 * their own palette commands with a dependency on the
+					 * `millicache-commands` handle; the palette availability,
+					 * admin context and clear capability are already vetted.
+					 *
+					 * @since 1.8.0
+					 */
+					do_action( 'millicache_commands_enqueued' );
+				}
+			}
 		}
 	}
 
 	/**
+	 * Whether the admin-wide command palette is available.
+	 *
+	 * Core mounts the palette on every wp-admin screen since WordPress 7.0;
+	 * it does not exist on the front end.
+	 *
+	 * @since 1.8.0
+	 * @access private
+	 *
+	 * @return bool
+	 */
+	private function has_command_palette(): bool {
+		return is_admin() && version_compare( get_bloginfo( 'version' ), '7.0', '>=' );
+	}
+
+	/**
 	 * Add the clear cache menu to the admin bar.
+	 *
+	 * The root node carries no clear action; clicking it opens the clear
+	 * panel (JS dialog), while the submenu offers direct clear shortcuts.
 	 *
 	 * @since    1.0.0
 	 * @access   public
@@ -111,10 +152,12 @@ final class Adminbar {
 		$wp_admin_bar->add_menu(
 			array(
 				'id'     => 'millicache',
-				'href'   => add_query_arg( '_millicache', 'clear' ),
 				'parent' => 'top-secondary',
 				'title'  => '<span class="ab-icon dashicons"></span><span class="ab-label">' . __( 'Cache', 'millicache' ) . '</span>',
-				'meta'   => array( 'title' => esc_html__( 'Clear Website Cache', 'millicache' ) ),
+				'meta'   => array(
+					'title'    => esc_html__( 'MilliCache', 'millicache' ),
+					'tabindex' => 0,
+				),
 			)
 		);
 

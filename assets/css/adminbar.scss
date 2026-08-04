@@ -39,6 +39,19 @@
 
 	.ab-label {
 		margin: 0 5px;
+
+		&.is-success {
+			color: #4ab866;
+		}
+
+		&.is-error {
+			color: #f86368;
+		}
+	}
+
+	// stylelint-disable-next-line no-descending-specificity
+	button.ab-item.is-confirming {
+		color: #f86368;
 	}
 
 	.millicache-cache-size {
@@ -87,3 +100,4 @@
 		opacity: 0.5;
 	}
 }
+

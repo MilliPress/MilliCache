@@ -12,9 +12,15 @@
     "dotenv": "^17.4.2"
   },
   "dependencies": {
+    "@wordpress/api-fetch": "^7.52.0",
+    "@wordpress/commands": "^1.52.0",
     "@wordpress/components": "^36.1.0",
+    "@wordpress/data": "^10.52.0",
     "@wordpress/element": "^8.0.1",
-    "@wordpress/i18n": "^6.11.0"
+    "@wordpress/hooks": "^4.52.0",
+    "@wordpress/i18n": "^6.11.0",
+    "@wordpress/icons": "^15.3.0",
+    "@wordpress/primitives": "^4.52.0"
   },
   "scripts": {
     "build": "wp-scripts build",

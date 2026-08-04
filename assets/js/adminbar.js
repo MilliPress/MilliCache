@@ -2,6 +2,8 @@
 
 import '../css/adminbar.scss';
 
+import { showAdminbarFeedback } from './shared/adminbar-feedback';
+
 // Throttle: at most one storage scan per window, not per hover.
 const REFRESH_COOLDOWN_MS = 5000;
 
@@ -9,13 +11,60 @@ const REFRESH_COOLDOWN_MS = 5000;
 // the post-clear recount sees the settled state.
 const POST_CLEAR_REFRESH_DELAY_MS = 500;
 
+// Window for the second confirming click on destructive clears.
+const CONFIRM_TIMEOUT_MS = 5000;
+
 let isRefreshing = false;
 let lastRefresh = 0;
+
+const confirmTimeouts = new WeakMap();
 
 document.addEventListener( 'DOMContentLoaded', () => {
 	const adminbar = document.getElementById( 'wp-admin-bar-millicache' );
 	if ( ! adminbar ) {
 		return;
+	}
+
+	// The root item never clears; it opens the palette or toggles the submenu.
+	const rootItem = adminbar.querySelector( ':scope > .ab-item' );
+	if ( rootItem ) {
+		const rootButton = document.createElement( 'button' );
+		rootButton.className = 'ab-item';
+		rootButton.innerHTML = rootItem.innerHTML;
+		rootButton.setAttribute(
+			'aria-haspopup',
+			hasCommandPalette() ? 'dialog' : 'menu'
+		);
+		rootItem.parentNode.replaceChild( rootButton, rootItem );
+
+		rootButton.addEventListener( 'click', ( e ) => {
+			e.preventDefault();
+			// Keep core's touch handling from toggling the submenu underneath.
+			e.stopPropagation();
+
+			if ( hasCommandPalette() ) {
+				adminbar.classList.remove( 'hover' );
+				// Must fire before open(): commands.js promotes our commands.
+				window.wp.hooks.doAction( 'millicache.adminbar.paletteOpen' );
+				window.wp.data.dispatch( window.wp.commands.store ).open();
+				setPalettePlaceholder();
+				return;
+			}
+
+			const isOpen = adminbar.classList.toggle( 'hover' );
+			rootButton.setAttribute( 'aria-expanded', isOpen );
+		} );
+
+		// Touch gets no mouseout; close a click-opened submenu on outside click.
+		document.addEventListener( 'click', ( e ) => {
+			if (
+				! adminbar.contains( e.target ) &&
+				adminbar.classList.contains( 'hover' )
+			) {
+				adminbar.classList.remove( 'hover' );
+				rootButton.setAttribute( 'aria-expanded', 'false' );
+			}
+		} );
 	}
 
 	// Replace admin bar links with buttons for correct semantics.
@@ -38,46 +87,134 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		link.parentNode.replaceChild( button, link );
 	} );
 
-	// Add AJAX event listeners to admin bar buttons.
-	adminbar.querySelectorAll( 'button.ab-item' ).forEach( ( button ) => {
-		button.addEventListener( 'click', ( e ) => {
-			e.preventDefault();
+	// Add AJAX event listeners to admin bar action buttons.
+	adminbar
+		.querySelectorAll( 'button.ab-item[data-action]' )
+		.forEach( ( button ) => {
+			button.addEventListener( 'click', ( e ) => {
+				e.preventDefault();
 
-			if ( button.classList.contains( 'disabled' ) ) {
-				return;
-			}
-
-			const mainButton = button.closest( '#wp-admin-bar-millicache' );
-			const action = button.dataset.action;
-
-			if ( action ) {
-				try {
-					mainButton.classList.add( 'flushing' );
-					button.classList.add( 'disabled' );
-					clearCache(
-						action,
-						button.dataset.targets
-							? button.dataset.targets.split( ',' )
-							: null
-					);
-				} finally {
-					setTimeout( () => {
-						mainButton.classList.remove( 'flushing' );
-						button.classList.remove( 'disabled' );
-					}, 750 );
+				if ( button.classList.contains( 'disabled' ) ) {
+					return;
 				}
-			}
+
+				const action = button.dataset.action;
+
+				if ( isDestructive( action ) && ! isConfirmed( button ) ) {
+					return;
+				}
+
+				runClearAction(
+					adminbar,
+					button,
+					action,
+					button.dataset.targets
+						? button.dataset.targets.split( ',' )
+						: null
+				);
+			} );
 		} );
-	} );
 
 	// Refresh size on menu open (hover + keyboard/touch).
 	adminbar.addEventListener( 'mouseenter', () => refreshCacheSize() );
 	adminbar.addEventListener( 'focusin', () => refreshCacheSize() );
 } );
 
+function hasCommandPalette() {
+	return Boolean(
+		millicache.has_palette && window.wp.commands && window.wp.data
+	);
+}
+
+// The palette unmounts on close, so a Cmd+K open gets the default
+// placeholder back; React leaves the attribute alone while the prop is unchanged.
+function setPalettePlaceholder() {
+	const { __ } = wp.i18n;
+
+	const text = millicache.is_network_admin
+		? __(
+				'Enter flag patterns to clear, e.g. "5:*" or "*:posts"…',
+				'millicache'
+		  )
+		: __(
+				'Enter the flags, post IDs or URLs you want to clear…',
+				'millicache'
+		  );
+
+	// The palette mounts asynchronously; retry briefly until the input exists.
+	let attempts = 0;
+	const assign = () => {
+		const input = document.querySelector( '.commands-command-menu input' );
+		if ( input ) {
+			input.placeholder = text;
+			return;
+		}
+		if ( attempts++ < 20 ) {
+			window.requestAnimationFrame( assign );
+		}
+	};
+	assign();
+}
+
+// The network-wide clear invalidates every site; require a second click.
+function isDestructive( action ) {
+	return action === 'clear' && millicache.is_network_admin;
+}
+
+function isConfirmed( button ) {
+	const { __ } = wp.i18n;
+
+	if ( button.classList.contains( 'is-confirming' ) ) {
+		resetConfirmation( button );
+		return true;
+	}
+
+	button.dataset.originalLabel = button.textContent;
+	button.textContent = __( 'Click again to confirm', 'millicache' );
+	button.classList.add( 'is-confirming' );
+
+	confirmTimeouts.set(
+		button,
+		setTimeout( () => resetConfirmation( button ), CONFIRM_TIMEOUT_MS )
+	);
+
+	return false;
+}
+
+function resetConfirmation( button ) {
+	if ( ! button.classList.contains( 'is-confirming' ) ) {
+		return;
+	}
+
+	clearTimeout( confirmTimeouts.get( button ) );
+	confirmTimeouts.delete( button );
+	button.classList.remove( 'is-confirming' );
+	button.textContent = button.dataset.originalLabel;
+}
+
+function runClearAction( adminbar, button, action, targets = null ) {
+	try {
+		adminbar.classList.add( 'flushing' );
+		button.classList.add( 'disabled' );
+		clearCache( action, targets );
+	} finally {
+		setTimeout( () => {
+			adminbar.classList.remove( 'flushing' );
+			button.classList.remove( 'disabled' );
+		}, 750 );
+	}
+}
+
 function clearCache( action, targets = null ) {
+	// Network admin clears go through the network endpoint, which treats
+	// flag targets as raw patterns (no per-site prefix) and requires
+	// manage_network_options.
+	const cacheEndpoint = millicache.is_network_admin
+		? 'network/cache'
+		: 'cache';
+
 	// Determine the endpoint based on the action value.
-	const endpoint = action.startsWith( 'clear' ) ? 'cache' : 'action';
+	const endpoint = action.startsWith( 'clear' ) ? cacheEndpoint : 'action';
 
 	// Prepare the data for the REST API request.
 	const data = { action };
@@ -91,7 +228,11 @@ function clearCache( action, targets = null ) {
 			return;
 		}
 		data.request_flags = targets;
-	} else if ( action === 'clear_targets' && targets ) {
+	} else if ( action === 'clear_targets' ) {
+		// No targets => no-op (the server treats empty as a full clear).
+		if ( ! targets || ! targets.length ) {
+			return;
+		}
 		data.targets = targets;
 	}
 
@@ -102,7 +243,10 @@ function clearCache( action, targets = null ) {
 		data,
 	} )
 		.then( ( result ) => {
-			showNotice( result.message, result.success ? 'success' : 'error' );
+			showAdminbarFeedback(
+				result.message,
+				result.success ? 'success' : 'error'
+			);
 			// Pulse now so the wait reads as "updating", then recount
 			// once the shutdown-time purge has settled.
 			const size = document.querySelector(
@@ -119,7 +263,10 @@ function clearCache( action, targets = null ) {
 		.catch( ( error ) => {
 			// eslint-disable-next-line no-console
 			console.error( 'Error:', error );
-			showNotice( error.message || 'Error clearing cache', 'error' );
+			showAdminbarFeedback(
+				error.message || 'Error clearing cache',
+				'error'
+			);
 		} );
 }
 
@@ -181,9 +328,4 @@ function formatCacheSize( cache ) {
 	}
 
 	return __( 'No cached pages', 'millicache' );
-}
-
-function showNotice( message, type ) {
-	// eslint-disable-next-line no-console
-	console.log( `${ type }: ${ message }` );
 }
