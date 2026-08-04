@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: MilliCache 1.7.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/MilliCache\n"
 "POT-Creation-Date: 2026-07-29T21:49:58+00:00\n"
-"PO-Revision-Date: 2026-07-31 06:34+0000\n"
+"PO-Revision-Date: 2026-08-04 10:33+0000\n"
 "Last-Translator: Philipp Wellmer <philipp@millipress.com>\n"
 "Language-Team: Spanish (Spain) <https://translate.millipress.com/projects/"
 "millicache/millicache/es_ES/>\n"
@@ -339,7 +339,7 @@ msgstr "Ya hay una versión más reciente de %s instalada y se ha conservado."
 #: src/Admin/DropIn.php:274
 #, php-format
 msgid "A third-party %s is installed and was left in place."
-msgstr "Hay un %s de terceros instalado y se ha dejado en su lugar."
+msgstr "Hay un %s de otro plugin instalado y se ha dejado en su lugar."
 
 #. translators: %s: drop-in filename, e.g. advanced-cache.php.
 #: src/Admin/DropIn.php:279
