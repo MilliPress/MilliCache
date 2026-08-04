@@ -44,11 +44,23 @@ These events clear the entire site cache:
 
 ### Admin Bar
 
-For logged-in users with the `publish_pages` capability:
+For logged-in users with the `publish_pages` capability, hover the **Cache** button in the admin bar:
 
-1. Click **MilliCache** in the admin bar
-2. Select **Clear Site Cache** (or **Clear Network Cache** in multisite)
-3. To clear the current page, select **Clear Current Page Cache**
+- **Clear Current View Cache** clears only the page you are viewing. On post edit screens this becomes **Clear {Post Type} Cache** for the edited post.
+- **Clear Website Cache** clears the current site.
+- **Clear Network Cache** (network admin only) clears every site and asks for a confirming second click.
+
+Clicking the **Cache** button itself never clears anything: in wp-admin on WordPress 7.0+ it opens the command palette, elsewhere it toggles the submenu.
+
+### Command Palette
+
+In wp-admin on WordPress 7.0 or newer, click the **Cache** admin bar button (or press <kbd>Cmd</kbd>+<kbd>K</kbd> / <kbd>Ctrl</kbd>+<kbd>K</kbd> and search for "MilliCache"):
+
+- **MilliCache: Clear website cache** (or **MilliCache: Clear network cache** in the network admin)
+- **MilliCache: Clear cache for `<targets>`**: type flags, post IDs or URLs into the palette search, comma-separated, e.g. `post:123, https://example.com/pricing/`
+- **MilliCache: Status & Settings**
+
+In the network admin, typed targets are raw flag patterns cleared across all sites: `*:home` clears every site's home page, `5:*` everything on site 5.
 
 ### WP-CLI
 
