@@ -194,12 +194,30 @@ Error: Permission denied [unix:///var/run/redis/redis.sock]
    - **Excluded path?** Check `MC_CACHE_NOCACHE_PATHS`
    - **TTL = 0?** Check `MC_CACHE_TTL`
    - **Oversized response?** Responses larger than 5MB (before compression) are never stored
+   - **Redirect?** Responses with a 3xx status are never stored
+   - **Plugin-level compression?** A `Content-Encoding` reason means another plugin compresses the page inside PHP (e.g. `ob_gzhandler`). Disable that plugin's compression — server-level compression (nginx/Apache) is unaffected and preferred
 
 4. **Verify WP_CACHE:**
    ```bash
    wp config get WP_CACHE
    # Should be: true
    ```
+
+### Output Buffering Conflicts
+
+MilliCache captures pages in an output buffer that opens before any plugin
+loads, so plugins that post-process HTML in their own buffer (translation
+plugins, optimizers) are cached correctly. One situation needs attention:
+
+- **Streaming endpoints** (Server-Sent Events, long-polling, large file
+  downloads served on URLs without a file extension): these should never
+  run through a page cache. Add them to `MC_CACHE_NOCACHE_PATHS` so the
+  buffer is never opened for them.
+
+> [!NOTE]
+> With `display_errors` enabled, PHP notices printed during boot become part
+> of the captured page. Keep `display_errors` off in production (WordPress'
+> default) — notices belong in the error log.
 
 ### Cache Not Clearing
 

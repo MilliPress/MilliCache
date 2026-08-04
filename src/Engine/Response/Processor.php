@@ -16,6 +16,7 @@ use MilliCache\Engine;
 use MilliCache\Engine\Cache\Config;
 use MilliCache\Engine\Cache\Entry;
 use MilliCache\Engine\Cache\Manager as CacheManager;
+use MilliCache\Engine\Cache\Writer;
 use MilliCache\Engine\Flags;
 use MilliCache\Engine\Request\Processor as RequestManager;
 use MilliCache\Engine\Utilities\ServerVars;
@@ -80,6 +81,26 @@ final class Processor {
 	private RequestManager $request_manager;
 
 	/**
+	 * Sentinel decision: null until template_redirect fires, true when
+	 * storable, false when refused or the buffer was aborted (sticky).
+	 *
+	 * @since 1.8.0
+	 *
+	 * @var bool|null
+	 */
+	private ?bool $storable = null;
+
+	/**
+	 * Set once PHP enters shutdown; a FINAL flush before then means a
+	 * third-party fastcgi_finish_request().
+	 *
+	 * @since 1.8.0
+	 *
+	 * @var bool
+	 */
+	private bool $in_shutdown = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 1.0.0
@@ -107,6 +128,9 @@ final class Processor {
 	/**
 	 * Start output buffering for this request.
 	 *
+	 * Opened in the drop-in phase so MilliCache is the outermost buffer:
+	 * init-phase post-processors nest inside and flush before capture.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @param State $context Request context.
@@ -114,22 +138,67 @@ final class Processor {
 	 */
 	public function start_output_buffer( State $context ): void {
 		$this->state = $context;
-		ob_start( array( $this, 'process_output_buffer' ) );
+
+		// Shutdown functions run before PHP finalizes output buffers; a
+		// FINAL arriving earlier is a third-party fastcgi_finish_request().
+		register_shutdown_function(
+			function () {
+				$this->in_shutdown = true;
+			}
+		);
+
+		add_action(
+			'template_redirect',
+			function () {
+				$this->mark_storable( Engine::instance()->check_cache_decision() );
+			},
+			PHP_INT_MAX - 10
+		);
+
+		// The chunk-size cap makes oversized responses overflow the buffer:
+		// the handler then runs without FINAL, aborts storage, and streams.
+		ob_start( array( $this, 'process_output_buffer' ), Writer::MAX_ENTRY_SIZE + 1 );
 	}
 
 	/**
 	 * Process output buffer callback.
 	 *
 	 * Caches the output if appropriate, sets headers, and returns the output.
+	 * Every path before the storable branch must stay free of WordPress
+	 * functions: it can run after a boot fatal, when only
+	 * wp-includes/plugin.php is loaded.
 	 *
 	 * @since 1.0.0
+	 * @since 1.8.0 Added the $phase parameter and abort semantics.
 	 *
 	 * @param string $output The buffered output.
+	 * @param int    $phase  Output-handler phase bitmask (PHP_OUTPUT_HANDLER_* flags).
 	 * @return string|null Output to send (null for background FCGI tasks).
 	 */
-	public function process_output_buffer( string $output ): ?string {
+	public function process_output_buffer( string $output, int $phase = 0 ): ?string {
+		// CLEAN (buffer discarded) or no FINAL (mid-request flush / chunk
+		// overflow): abort storage and pass the chunk through.
+		if ( 0 !== ( $phase & PHP_OUTPUT_HANDLER_CLEAN ) || 0 === ( $phase & PHP_OUTPUT_HANDLER_FINAL ) ) {
+			$this->storable = false;
+			return $output;
+		}
+
 		if ( ! $this->state ) {
 			return $output;
+		}
+
+		$regenerate = $this->state->should_fcgi_regenerate();
+
+		// Store only on the shutdown FINAL after a positive sentinel; an
+		// earlier FINAL means a third-party fastcgi_finish_request().
+		if ( true !== $this->storable || ! $this->in_shutdown ) {
+			return $regenerate ? null : $output;
+		}
+
+		// Fold in rule options set during rendering; a late bypass wins.
+		$this->state = Engine::instance()->options()->apply_to_state( $this->state );
+		if ( ! Engine::instance()->check_cache_decision() ) {
+			return $regenerate ? null : $output;
 		}
 
 		// Get all flags for this request.
@@ -152,14 +221,14 @@ final class Processor {
 		$regen_headers = $this->state->get_regen_headers();
 		$headers       = null !== $regen_headers ? $regen_headers : headers_list();
 
-		// Bypass storage entirely for unsupported Vary directives.
-		$vary_bypass = $this->should_bypass_for_vary( $headers );
-		if ( null !== $vary_bypass ) {
-			if ( ! $this->state->should_fcgi_regenerate() ) {
+		// Bypass storage entirely for unsupported Vary directives or encoded bodies.
+		$bypass = $this->should_bypass_storage( $headers );
+		if ( null !== $bypass ) {
+			if ( ! $regenerate ) {
 				$this->headers->set_status( 'bypass' );
 			}
-			$this->headers->set_reason( $vary_bypass );
-			return $this->state->should_fcgi_regenerate() ? null : $output;
+			$this->headers->set_reason( $bypass );
+			return $regenerate ? null : $output;
 		}
 
 		// Store the response. Identical bodies across variants are deduplicated
@@ -177,7 +246,7 @@ final class Processor {
 		);
 
 		// Set headers based on result.
-		if ( ! $result['cached'] && ! $this->state->should_fcgi_regenerate() ) {
+		if ( ! $result['cached'] && ! $regenerate ) {
 			$this->headers->set_status( 'bypass' );
 		}
 
@@ -188,7 +257,6 @@ final class Processor {
 
 		// Count a cacheable miss — but not the background regenerate of a
 		// stale hit (already counted as a hit), nor uncacheable responses.
-		$regenerate = $this->state->should_fcgi_regenerate();
 		if ( ! $regenerate && $result['cached'] ) {
 			$this->record_miss_metric( strlen( $output ) );
 		}
@@ -198,26 +266,54 @@ final class Processor {
 	}
 
 	/**
-	 * Decide whether to bypass storage entirely based on Vary directives.
+	 * Whether the response is still on track to be stored: the sentinel
+	 * fired positive and nothing aborted the buffer.
 	 *
-	 * Allowed tokens are either covered by request keying (Host,
+	 * @since 1.8.0
+	 *
+	 * @return bool
+	 */
+	public function is_storable(): bool {
+		return true === $this->storable;
+	}
+
+	/**
+	 * Record the template_redirect sentinel's cache decision. Sticky-negative:
+	 * once false, replays can never flip it back to positive.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param bool $storable Whether the sentinel decision allows storage.
+	 * @return void
+	 */
+	private function mark_storable( bool $storable ): void {
+		if ( false === $this->storable ) {
+			return;
+		}
+		$this->storable = $storable;
+	}
+
+	/**
+	 * Decide whether to bypass storage based on Vary and Content-Encoding.
+	 *
+	 * Allowed Vary tokens are either covered by request keying (Host,
 	 * Authorization via the auth bucket, Accept via the optional accept
 	 * bucket, Accept-Encoding via gzip storage) or describe request bodies
 	 * that cacheable GET/HEAD requests do not carry (Content-Type,
 	 * Content-Length). Vary: Cookie bypasses on purpose: caching
 	 * per-cookie responses would fragment storage into per-visitor entries.
 	 *
+	 * Any Content-Encoding also bypasses: the buffered bytes are not the
+	 * plain payload MilliCache stores and re-serves.
+	 *
 	 * @since 1.6.0
+	 * @since 1.8.0 Renamed from should_bypass_for_vary(), now also checks Content-Encoding.
 	 *
 	 * @param array<string> $headers Response headers ("Key: Value" strings).
 	 * @return string|null Bypass reason, or null to allow caching.
 	 */
-	private function should_bypass_for_vary( array $headers ): ?string {
-		$vary = implode( ',', $this->extract_header_values( $headers, 'vary' ) );
-		if ( '' === $vary ) {
-			return null;
-		}
-
+	private function should_bypass_storage( array $headers ): ?string {
+		$vary   = implode( ',', $this->extract_header_values( $headers, 'vary' ) );
 		$tokens = $this->parse_vary( $vary );
 
 		if ( in_array( '*', $tokens, true ) ) {
@@ -236,6 +332,11 @@ final class Processor {
 			if ( ! in_array( $token, $allowed, true ) ) {
 				return 'Vary: ' . $token . ' is not supported';
 			}
+		}
+
+		$encoding = implode( ', ', $this->extract_header_values( $headers, 'content-encoding' ) );
+		if ( '' !== $encoding ) {
+			return 'Content-Encoding: ' . $encoding . ' is not supported';
 		}
 
 		return null;
@@ -383,11 +484,11 @@ final class Processor {
 			$this->request_manager->process();
 		}
 
-		$vary_bypass = $this->should_bypass_for_vary( $headers );
-		if ( null !== $vary_bypass ) {
+		$bypass = $this->should_bypass_storage( $headers );
+		if ( null !== $bypass ) {
 			return array(
 				'cached' => false,
-				'reason' => $vary_bypass,
+				'reason' => $bypass,
 			);
 		}
 

@@ -518,6 +518,44 @@ describe( 'Storage', function () {
 
 			expect( $result )->toBeFalse();
 		} );
+
+		it( 'sets regeneration locks with an expiry so aborted regens release themselves', function () {
+			$settings = array(
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'prefix'     => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			// A stub capturing the SET arguments. If a regeneration is
+			// aborted (buffer cleaned, mid-request flush), nothing ever
+			// unlocks explicitly; the EX TTL is what releases the lock.
+			$stub = new class() extends \Predis\Client {
+				/** @var array<int, mixed> */
+				public array $set_args = array();
+
+				public function set( ...$arguments ) {
+					$this->set_args = $arguments;
+					return 'OK';
+				}
+
+				public function __call( $command_id, $arguments ) {
+					return null;
+				}
+			};
+
+			$client_prop = new \ReflectionProperty( Storage::class, 'client' );
+			$client_prop->setAccessible( true );
+			$client_prop->setValue( $storage, $stub );
+
+			$result = $storage->lock( 'regen-hash' );
+
+			expect( $result )->toBeTrue();
+			expect( (string) $stub->set_args[0] )->toContain( 'regen-hash-lock' );
+			expect( array_slice( $stub->set_args, 2 ) )->toBe( array( 'EX', 30, 'NX' ) );
+		} );
 	} );
 
 	describe( 'Layer-1 fail-fast', function () {
