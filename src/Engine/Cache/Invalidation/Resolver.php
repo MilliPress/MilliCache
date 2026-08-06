@@ -107,6 +107,14 @@ final class Resolver {
 	 * @return array<string> Array of flags for this URL.
 	 */
 	public function resolve_url( string $url ): array {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- May run pre-WordPress where wp_parse_url() is not loaded.
+		$parsed = parse_url( $url );
+
+		// Anchor a host-less target (a bare path like `/blog/`) onto the home URL.
+		if ( empty( $parsed['host'] ) && function_exists( 'home_url' ) ) {
+			$url = home_url( $url );
+		}
+
 		$flags = array();
 
 		// Add URL with trailing slash.

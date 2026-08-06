@@ -271,3 +271,20 @@ if ( ! function_exists( 'get_file_data' ) ) {
 		return $result;
 	}
 }
+
+// Simulated home URL, shared by every suite.
+if ( ! function_exists( 'home_url' ) ) {
+	function home_url( $path = '', $scheme = null ) {
+		global $millicache_reentry_probe;
+
+		if ( is_callable( $millicache_reentry_probe ) ) {
+			$probe = $millicache_reentry_probe;
+			// Fire at most once: caps recursion so a regressed fix fails the
+			// reentrancy assertions instead of crashing the whole test run.
+			$millicache_reentry_probe = null;
+			$probe();
+		}
+
+		return 'http://millicache.test' . ( is_string( $path ) ? $path : '' );
+	}
+}

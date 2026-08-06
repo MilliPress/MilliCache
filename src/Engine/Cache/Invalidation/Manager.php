@@ -137,7 +137,12 @@ final class Manager {
 	/**
 	 * Clear cache by mixed target(s).
 	 *
-	 * Accepts URLs, post-IDs, or flags and clears appropriate cache entries.
+	 * A convenience parser for mixed input: each target is interpreted by
+	 * shape, in order: full URLs and leading-slash paths clear by URL,
+	 * numeric strings clear by post ID, anything else clears by flag.
+	 * Flags may contain any character, so a flag that looks like a path or
+	 * an ID cannot be reached through here; use {@see self::flags()} for
+	 * literal, uninterpreted flag clearing.
 	 *
 	 * @since 1.0.0
 	 *
@@ -165,6 +170,9 @@ final class Manager {
 				if ( function_exists( 'get_home_url' ) && strpos( $target_str, get_home_url() ) === 0 ) {
 					$this->urls( $target_str, $expire );
 				}
+			} elseif ( 0 === strpos( $target_str, '/' ) ) {
+				// A bare path is inherently a current-site URL, never a flag.
+				$this->urls( $target_str, $expire );
 			} elseif ( $this->resolver->is_post_id( $target_str ) ) {
 				$this->posts( (int) $target, $expire );
 			} else {

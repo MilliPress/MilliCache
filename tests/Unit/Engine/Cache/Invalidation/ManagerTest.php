@@ -210,6 +210,21 @@ describe( 'Invalidation Manager', function () {
 			expect( count( $handler->get_queue()->get_delete_queue() ) )->toBeGreaterThan( 0 );
 		} );
 
+		it( 'routes bare paths to the URL clearer, not the flag clearer', function () {
+			$handler = new Manager(
+				$this->storage,
+				$this->request_handler,
+				$this->multisite
+			);
+
+			$handler->targets( '/blog/' );
+
+			$queue = $handler->get_queue()->get_delete_queue();
+			expect( count( $queue ) )->toBe( 2 );
+			expect( $queue[0] )->toStartWith( 'url:' );
+			expect( $queue[1] )->toStartWith( 'url:' );
+		} );
+
 		it( 'identifies and clears post ID targets', function () {
 			$handler = new Manager(
 				$this->storage,
