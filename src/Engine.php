@@ -301,9 +301,6 @@ final class Engine {
 	public function start() {
 		$this->register_rules();
 
-		// Register the shutdown function to expire/delete cache flags.
-		register_shutdown_function( fn() => $this->invalidation()->get_queue()->execute() );
-
 		// Flush buffered metrics post-response.
 		register_shutdown_function( fn() => null !== $this->metrics ? $this->metrics->flush() : null );
 
@@ -603,13 +600,19 @@ final class Engine {
 			$cache_settings = $this->get_settings( 'cache' );
 			$ttl = is_numeric( $cache_settings['ttl'] ?? null ) ? (int) $cache_settings['ttl'] : 3600;
 
-			$this->invalidation_manager = new Cache\Invalidation\Manager(
+			$manager = new Cache\Invalidation\Manager(
 				$this->storage(),
 				$this->request(),
 				$this->multisite(),
 				$ttl
 			);
+
+			// Registered here for WP-CLI support.
+			register_shutdown_function( static fn() => $manager->get_queue()->execute() );
+
+			$this->invalidation_manager = $manager;
 		}
+
 		return $this->invalidation_manager;
 	}
 
