@@ -334,20 +334,8 @@ final class Engine {
 		// Get and return cached content (options applied in ResponseManager).
 		$context = $this->response()->retrieve_and_serve_cache( $context );
 
-		// Start the output buffer.
-		add_action(
-			'template_redirect',
-			function () use ( $context ) {
-				if ( $this->check_cache_decision() ) {
-					// Apply any options set by rules.
-					$context = $this->options()->apply_to_state( $context );
-
-					// Start the output buffer.
-					$this->response()->start_output_buffer( $context );
-				}
-			},
-			PHP_INT_MAX - 10
-		);
+		// Start the OUTERMOST output buffer and do some magic.
+		$this->response()->start_output_buffer( $context );
 	}
 
 	/**

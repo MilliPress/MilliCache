@@ -291,22 +291,30 @@ $cacheable = $request->is_cacheable();
        └─► Bootstrap rules evaluated
            └─► Request parsed and hashed
                └─► Cache lookup (Redis GET)
-                   └─► MISS: Continue to WordPress
+                   └─► MISS: Output buffering starts (outermost buffer)
+                       └─► Continue to WordPress
 
 2. plugins_loaded hook
    └─► WordPress rules registered
 
-3. template_redirect hook (priority 200)
+3. template_redirect hook
    └─► WordPress rules evaluated
-       └─► Output buffering starts
+       └─► Storage sentinel arms (response may be stored)
 
 4. shutdown hook
    └─► Output buffer captured
-       └─► Response validated
-           └─► Flags collected
-               └─► Cache stored (Redis SET)
-                   └─► Output sent to browser
+       └─► Rule decisions applied (bypass passes through unstored)
+           └─► Response validated
+               └─► Flags collected
+                   └─► Cache stored (Redis SET)
+                       └─► Output sent to browser
 ```
+
+The buffer opens before any plugin or mu-plugin loads, so output-buffer
+post-processors (translation plugins, HTML optimizers) always nest inside
+it and flush first: the cache captures their transformed HTML. Requests
+that never reach the `template_redirect` sentinel (admin screens, canonical
+redirects, early exits) pass through the buffer unstored.
 
 ## Extension Points
 

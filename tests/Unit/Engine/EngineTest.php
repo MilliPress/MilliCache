@@ -432,3 +432,114 @@ describe( 'Engine', function () {
 		} );
 	} );
 } );
+
+/**
+ * Invoke the private Engine::run().
+ *
+ * @param Engine $engine The engine.
+ * @return void
+ */
+function millicache_invoke_engine_run( Engine $engine ): void {
+	$method = new ReflectionMethod( Engine::class, 'run' );
+	$method->setAccessible( true );
+	$method->invoke( $engine );
+}
+
+/**
+ * Find the sentinel callback recorded by the add_action() test mock.
+ *
+ * @return callable|null The template_redirect sentinel, or null.
+ */
+function millicache_find_sentinel(): ?callable {
+	global $test_actions;
+
+	foreach ( array_reverse( (array) $test_actions ) as $action ) {
+		if ( 'template_redirect' === $action['hook'] && PHP_INT_MAX - 10 === $action['priority'] ) {
+			return $action['callable'];
+		}
+	}
+
+	return null;
+}
+
+/**
+ * Build an Engine whose storage always misses.
+ *
+ * @return Engine
+ */
+function millicache_engine_with_missing_storage(): Engine {
+	$storage = Mockery::mock( Storage::class );
+	$storage->shouldReceive( 'is_available' )->andReturn( false );
+
+	return new Engine( $storage );
+}
+
+describe( 'Engine output buffer', function () {
+
+	beforeEach( function () {
+		global $test_actions;
+		$test_actions = array();
+
+		$this->ob_base = ob_get_level();
+
+		$_SERVER['REQUEST_METHOD'] = 'GET';
+		$_SERVER['HTTP_HOST']      = 'example.test';
+		$_SERVER['REQUEST_URI']    = '/engine-buffer-test/';
+	} );
+
+	afterEach( function () {
+		global $test_actions;
+		$test_actions = array();
+
+		while ( ob_get_level() > $this->ob_base ) {
+			@ob_end_clean();
+		}
+
+		// Don't leak an Engine built around a mocked Storage as the singleton.
+		$instance = new ReflectionProperty( Engine::class, 'instance' );
+		$instance->setAccessible( true );
+		$instance->setValue( null, null );
+	} );
+
+	it( 'run() opens the buffer immediately, before any template_redirect', function () {
+		$engine = millicache_engine_with_missing_storage();
+
+		millicache_invoke_engine_run( $engine );
+
+		expect( ob_get_level() )->toBe( $this->ob_base + 1 );
+
+		// Not storable until the sentinel fires.
+		expect( $engine->response()->is_storable() )->toBeFalse();
+	} );
+
+	it( 'sentinel records the decision, opens no second buffer across replays', function () {
+		$engine = millicache_engine_with_missing_storage();
+
+		millicache_invoke_engine_run( $engine );
+		$sentinel = millicache_find_sentinel();
+
+		expect( $sentinel )->not->toBeNull();
+
+		$sentinel();
+		$sentinel();
+
+		expect( $engine->response()->is_storable() )->toBeTrue();
+		expect( ob_get_level() )->toBe( $this->ob_base + 1 );
+	} );
+
+	it( 'keeps a negative sentinel sticky across replays', function () {
+		$engine = millicache_engine_with_missing_storage();
+		$engine->options()->set_cache_decision( false, 'test-bypass' );
+
+		millicache_invoke_engine_run( $engine );
+		$sentinel = millicache_find_sentinel();
+
+		$sentinel();
+		expect( $engine->response()->is_storable() )->toBeFalse();
+
+		// Flipping the decision positive afterwards must not resurrect it.
+		$engine->options()->set_cache_decision( true, '' );
+		$sentinel();
+		expect( $engine->response()->is_storable() )->toBeFalse();
+	} );
+} );

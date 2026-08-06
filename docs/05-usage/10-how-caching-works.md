@@ -76,13 +76,15 @@ Response time: typically **5-15ms**.
 
 If no cache exists or content is expired:
 
-1. Let WordPress load normally
-2. Register WordPress Rules on `plugins_loaded`
-3. Start output buffering on `template_redirect` (priority 200)
-4. Evaluate WordPress Rules to either cache or bypass
+1. Start output buffering immediately, before any plugin loads
+2. Let WordPress load normally
+3. Register WordPress Rules on `plugins_loaded`
+4. Evaluate WordPress Rules on `template_redirect` to either cache or bypass
 5. Capture the complete response
-6. Store in Redis with flags
+6. Store in Redis with flags (only when the rules allowed caching)
 7. Send response to browser
+
+Because the buffer opens before any plugin, it is always the *outermost* buffer: plugins that transform the page in their own output buffer (translation plugins, HTML optimizers) run inside it, and the cache stores their final HTML. The rules decide whether a response is *stored*, not whether it is captured — a bypassed response simply passes through unstored.
 
 The first visitor to an uncached page pays this full render cost. [MilliCache Pro](https://www.millipress.com/millicache-pro/)'s [Cache Preloading](https://www.millipress.com/docs/millicache-pro/02-modules/05-cache-preloading/) avoids that by requesting pages in the background after publishing and after cache clears, so visitors always hit a warm cache.
 
