@@ -15,6 +15,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', '/tmp/' );
 }
 
+if ( ! function_exists( 'is_multisite' ) ) {
+	function is_multisite() {
+		global $test_is_multisite;
+		return $test_is_multisite ?? false;
+	}
+}
+
+if ( ! class_exists( 'WP_CLI' ) ) {
+	class WP_CLI {
+		public static $config = array();
+
+		public static function get_config( $key = null ) {
+			return self::$config[ $key ] ?? null;
+		}
+	}
+}
+
 describe( 'CLI/Clear', function () {
 
 	describe( 'class structure', function () {
@@ -86,6 +103,72 @@ describe( 'CLI/Clear', function () {
 			expect( $params[1]->getName() )->toBe( 'post_ids' );
 			expect( $params[2]->getName() )->toBe( 'expire' );
 			expect( $params[3]->getName() )->toBe( 'related' );
+		} );
+	} );
+
+	describe( 'should_prefix_flag method', function () {
+		$should_prefix = function ( string $flag ): bool {
+			$method = new ReflectionMethod( Clear::class, 'should_prefix_flag' );
+			$method->setAccessible( true );
+
+			return $method->invoke( new Clear(), $flag );
+		};
+
+		beforeEach( function () {
+			global $test_is_multisite;
+			$test_is_multisite = false;
+			WP_CLI::$config    = array();
+		} );
+
+		// Later-loading suites read the same globals; leave them clean.
+		afterEach( function () {
+			global $test_is_multisite;
+			$test_is_multisite = false;
+			WP_CLI::$config    = array();
+		} );
+
+		it( 'prefixes bare flags on single site', function () use ( $should_prefix ) {
+			expect( $should_prefix( 'home' ) )->toBeTrue();
+			expect( $should_prefix( 'archive:post' ) )->toBeTrue();
+			expect( $should_prefix( 'archive:2026:07' ) )->toBeTrue();
+		} );
+
+		it( 'prefixes bare flags on multisite when --url scopes to a site', function () use ( $should_prefix ) {
+			global $test_is_multisite;
+			$test_is_multisite = true;
+			WP_CLI::$config    = array( 'url' => 'https://wp.test' );
+
+			expect( $should_prefix( 'home' ) )->toBeTrue();
+		} );
+
+		it( 'keeps bare flags raw on multisite without --url (network scope)', function () use ( $should_prefix ) {
+			global $test_is_multisite;
+			$test_is_multisite = true;
+
+			expect( $should_prefix( 'home' ) )->toBeFalse();
+		} );
+
+		it( 'passes site-prefixed flags through raw', function () use ( $should_prefix ) {
+			WP_CLI::$config = array( 'url' => 'https://wp.test' );
+
+			expect( $should_prefix( '5:home' ) )->toBeFalse();
+			expect( $should_prefix( '2:5:home' ) )->toBeFalse();
+		} );
+
+		it( 'passes patterns through raw', function () use ( $should_prefix ) {
+			WP_CLI::$config = array( 'url' => 'https://wp.test' );
+
+			expect( $should_prefix( '*:home' ) )->toBeFalse();
+			expect( $should_prefix( '5:*' ) )->toBeFalse();
+			expect( $should_prefix( 'archive:?' ) )->toBeFalse();
+		} );
+
+		it( 'never prefixes url: flags (stored unprefixed even on multisite)', function () use ( $should_prefix ) {
+			global $test_is_multisite;
+			$test_is_multisite = true;
+			WP_CLI::$config    = array( 'url' => 'https://wp.test' );
+
+			expect( $should_prefix( 'url:9cf5dfa8aa42f85b' ) )->toBeFalse();
 		} );
 	} );
 

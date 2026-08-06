@@ -41,7 +41,11 @@ final class Clear {
 	 *   `--url=<site-url>` to scope to a specific site on multisite.
 	 *
 	 * [--flag=<flag>]
-	 * : Comma separated list of flags.
+	 * : Comma separated list of flags. With the global `--url=<site-url>`,
+	 *   bare flags (`home`) are scoped to that site. Without it the command
+	 *   is network-scoped on multisite and flags must be site-prefixed
+	 *   (`1:home`). Patterns (`*:home`, `5:*`) and `url:` flags are always
+	 *   used as-is.
 	 *
 	 * [--site=<site>]
 	 * : Comma separated list of site IDs.
@@ -123,7 +127,7 @@ final class Clear {
 
 		if ( '' !== $assoc_args['flag'] ) {
 			foreach ( array_map( 'trim', explode( ',', $assoc_args['flag'] ) ) as $flag ) {
-				$clear->flags( $flag, $expire, false );
+				$clear->flags( $flag, $expire, $this->should_prefix_flag( $flag ) );
 			}
 		}
 
@@ -168,4 +172,26 @@ final class Clear {
 		}
 	}
 
+	/**
+	 * Whether a CLI-supplied flag should get the current site's prefix.
+	 *
+	 * With an explicit `--url`, bare flags (`home`) are scoped to that site.
+	 * Without it the command is network-scoped on multisite: bare flags pass
+	 * through raw and must be site-prefixed (`1:home`), so nothing is
+	 * silently attributed to the main site. Already-prefixed flags
+	 * (`5:home`, `2:5:home`), patterns (`*:home`, `5:*`), and `url:` flags
+	 * (stored unprefixed even on multisite) are always used as-is.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $flag The flag as supplied on the command line.
+	 * @return bool True when the current site's prefix should be added.
+	 */
+	private function should_prefix_flag( string $flag ): bool {
+		if ( preg_match( '/^(?:\d+:)+|^url:|[*?]/', $flag ) ) {
+			return false;
+		}
+
+		return ! is_multisite() || null !== \WP_CLI::get_config( 'url' );
+	}
 }
