@@ -1,6 +1,6 @@
 ---
 title: 'What Is MilliCache?'
-post_excerpt: 'MilliCache is a Redis-powered full-page cache plugin for WordPress. It serves pages from memory before WordPress loads, eliminating database queries for cached requests.'
+description: 'MilliCache is a Redis-powered full-page cache for WordPress that serves pages from memory in under 10ms, with cache flags and rules for precise control.'
 menu_order: 10
 ---
 

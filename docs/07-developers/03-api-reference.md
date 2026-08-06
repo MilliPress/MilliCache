@@ -1,6 +1,6 @@
 ---
 title: 'PHP & REST API Reference'
-post_excerpt: 'MilliCache developer API: PHP functions for cache clearing, flag management, and configuration. REST endpoints at /millicache/v1/ for status, clearing, and settings.'
+description: 'MilliCache developer API reference: PHP functions for clearing cache and managing flags, plus REST endpoints under /millicache/v1/ for remote control.'
 menu_order: 40
 ---
 

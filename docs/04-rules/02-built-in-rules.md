@@ -1,6 +1,6 @@
 ---
 title: 'Built-in Caching Rules'
-post_excerpt: 'Reference of default MilliCache rules: logged-in user bypass, REST API exclusion, POST request handling, and more. Includes the priority system and available conditions.'
+description: 'Reference of MilliCache default rules: locked core bypasses, configured exclusions, logged-in and REST handling, plus the priority system for overrides.'
 menu_order: 20
 ---
 

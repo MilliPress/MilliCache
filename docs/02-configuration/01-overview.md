@@ -1,6 +1,6 @@
 ---
 title: 'Configuration Overview'
-post_excerpt: 'Configure MilliCache via wp-config.php constants, the admin UI, or WP-CLI. Constants override database settings, which override defaults — giving you full control.'
+description: 'Configure MilliCache through wp-config.php constants, the WordPress admin UI, or WP-CLI. Covers priority order, setting categories, and common setups.'
 menu_order: 10
 ---
 

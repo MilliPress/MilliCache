@@ -1,6 +1,6 @@
 ---
 title: 'Cache Clearing & Invalidation'
-post_excerpt: 'Clear the MilliCache cache via admin bar, WP-CLI, PHP functions, or REST API. Supports flag-based targeted invalidation and automatic clearing on content changes.'
+description: 'Clear or purge the WordPress page cache in MilliCache: automatic invalidation on content changes, plus targeted clearing by cache flags, URLs, or post IDs.'
 menu_order: 20
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: 'Built-in Cache Flags'
-post_excerpt: 'MilliCache automatically assigns cache flags for posts, pages, archives, categories, tags, date archives, feeds, and the homepage. Full reference with multisite prefixes.'
+description: 'Reference of cache flags MilliCache assigns automatically: home, post IDs, post type, taxonomy, author and date archives, feeds, and multisite prefixes.'
 menu_order: 20
 ---
 

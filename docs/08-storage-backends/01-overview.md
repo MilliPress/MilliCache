@@ -1,6 +1,6 @@
 ---
 title: 'Storage Backends: Redis, ValKey, KeyDB & Dragonfly'
-post_excerpt: 'MilliCache works with Redis, ValKey, KeyDB, and Dragonfly. Compare backends, configure connections, set memory limits, and choose the right server for your WordPress site.'
+description: 'Compare MilliCache storage backends: Redis, ValKey as a drop-in Redis replacement, KeyDB, and Dragonfly, with connection setup and managed hosting tips.'
 menu_order: 10
 ---
 
@@ -160,7 +160,8 @@ define( 'MC_STORAGE_HOST', array(
 ```
 
 Sentinel discovers the master and re-resolves it on failover. Cluster mode
-(sharding across multiple masters) is not supported.
+(sharding across multiple masters) is not supported; if your project requires
+it, [reach out](https://www.millipress.com/contact/).
 
 A misconfigured array (both `master` and `service`, Sentinel without
 `sentinels`, or no recognized key) disables the cache and logs the reason rather
@@ -307,17 +308,87 @@ Error: Connection timed out
 
 ## Cloud Provider Options
 
-Most cloud providers offer managed Redis:
+MilliCache works with managed Redis and Valkey services out of the box. Point
+`MC_STORAGE_HOST` at the endpoint your provider gives you; most managed
+services require TLS (use the `tls://` prefix) and password authentication.
 
 | Provider | Service |
 |----------|---------|
-| AWS | ElastiCache for Redis |
+| AWS | ElastiCache (Redis OSS / Valkey) |
 | Google Cloud | Memorystore |
 | Azure | Azure Cache for Redis |
-| DigitalOcean | Managed Redis |
+| DigitalOcean | Managed Caching (Valkey) |
 | Upstash | Serverless Redis |
 
-For managed services, use the provided connection details in your MilliCache configuration.
+> [!NOTE]
+> Managed services must run in **non-cluster mode**: a single primary endpoint,
+> optionally with replicas. Cluster mode (sharding across multiple masters) is
+> not supported. If your project requires cluster mode,
+> [reach out](https://www.millipress.com/contact/) and tell us about your setup.
+
+Because a managed endpoint is reached over the network rather than localhost,
+also review the [timeout settings](#timeouts) if the service runs in a
+different region than your web servers.
+
+### AWS ElastiCache
+
+ElastiCache offers both Redis OSS and Valkey engines; both work with
+MilliCache. Create the cache with **cluster mode disabled** and connect to the
+primary endpoint. With in-transit encryption enabled, prefix the host with
+`tls://`:
+
+```php
+define( 'MC_STORAGE_HOST', 'tls://master.example.abc123.euc1.cache.amazonaws.com' );
+define( 'MC_STORAGE_PORT', 6379 );
+define( 'MC_STORAGE_PASSWORD', 'your-auth-token' );  // if AUTH is enabled
+```
+
+### Google Cloud Memorystore
+
+Memorystore instances are reachable over private IP from within the same VPC,
+so your WordPress servers must run in that network (Compute Engine, GKE, or
+Cloud Run with a VPC connector):
+
+```php
+define( 'MC_STORAGE_HOST', '10.0.0.3' );  // instance IP
+define( 'MC_STORAGE_PORT', 6379 );
+define( 'MC_STORAGE_PASSWORD', 'your-auth-string' );  // if AUTH is enabled
+```
+
+### Azure Cache for Redis
+
+Azure exposes caches at `*.redis.cache.windows.net` with TLS on port 6380. Use
+an access key as the password:
+
+```php
+define( 'MC_STORAGE_HOST', 'tls://example.redis.cache.windows.net' );
+define( 'MC_STORAGE_PORT', 6380 );
+define( 'MC_STORAGE_PASSWORD', 'your-access-key' );
+```
+
+### DigitalOcean Managed Caching
+
+DigitalOcean's managed caching service (formerly Managed Redis, now backed by
+Valkey) requires TLS and provides host, port, username, and password in the
+control panel's connection details:
+
+```php
+define( 'MC_STORAGE_HOST', 'tls://db-example-do-user-123456-0.db.ondigitalocean.com' );
+define( 'MC_STORAGE_PORT', 25061 );
+define( 'MC_STORAGE_USERNAME', 'default' );
+define( 'MC_STORAGE_PASSWORD', 'your-password' );
+```
+
+### Upstash
+
+Upstash offers serverless Redis with per-request pricing. Connections require
+TLS:
+
+```php
+define( 'MC_STORAGE_HOST', 'tls://example-12345.upstash.io' );
+define( 'MC_STORAGE_PORT', 6379 );
+define( 'MC_STORAGE_PASSWORD', 'your-password' );
+```
 
 ## Performance Tips
 

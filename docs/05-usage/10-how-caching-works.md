@@ -1,6 +1,6 @@
 ---
 title: 'How Full-Page Caching Works'
-post_excerpt: 'MilliCache intercepts requests via the advanced-cache.php drop-in before WordPress loads. Learn the full request lifecycle, cache storage, and stale-while-revalidate flow.'
+description: 'See how MilliCache serves WordPress pages from memory: request interception via advanced-cache.php, cache keys, hits and misses, and grace period serving.'
 menu_order: 10
 ---
 

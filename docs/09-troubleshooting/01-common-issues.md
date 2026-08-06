@@ -1,6 +1,6 @@
 ---
 title: 'Troubleshooting'
-post_excerpt: 'Diagnose and fix common MilliCache issues: Redis connection failures, pages not caching, drop-in conflicts, stale content, and multisite problems with WP-CLI diagnostics.'
+description: 'Fix common MilliCache errors: Redis connection refused, pages not caching, drop-in conflicts, and stale content, using WP-CLI diagnostic commands.'
 menu_order: 10
 ---
 

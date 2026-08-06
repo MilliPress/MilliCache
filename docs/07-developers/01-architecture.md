@@ -1,6 +1,6 @@
 ---
 title: 'Plugin Architecture'
-post_excerpt: 'MilliCache architecture overview for developers: Engine, Storage, Cache Manager, Rules integration, and the advanced-cache.php drop-in request flow.'
+description: 'Inside the MilliCache architecture: the Engine singleton, Redis storage layer, cache manager, invalidation queue, and the advanced-cache.php request flow.'
 menu_order: 10
 ---
 

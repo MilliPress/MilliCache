@@ -1,6 +1,6 @@
 ---
 title: 'Frequently Asked Questions'
-post_excerpt: 'Answers to common questions about MilliCache: WooCommerce compatibility, CDN integration, membership sites, performance impact, security, migration, and best practices.'
+description: 'Answers to frequent MilliCache questions on WordPress caching: requirements, verifying cache hits, WooCommerce, troubleshooting errors, and Pro features.'
 menu_order: 20
 ---
 
