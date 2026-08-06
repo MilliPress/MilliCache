@@ -12,6 +12,7 @@
 
 namespace MilliCache\Admin\UI;
 
+use MilliCache\Admin\Utils;
 use MilliCache\Engine;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -85,10 +86,8 @@ final class CacheActions {
 				case 'clear':
 					if ( (bool) $request->get_param( 'is_network_admin' ) ) {
 						$this->engine->clear()->networks();
-						$message = __( 'The network cache has been cleared.', 'millicache' );
 					} else {
 						$this->engine->clear()->sites();
-						$message = __( 'The site cache has been cleared.', 'millicache' );
 					}
 					break;
 
@@ -97,10 +96,8 @@ final class CacheActions {
 					if ( empty( $flags ) ) {
 						return $this->error( 'no_flags', __( 'No flags provided to clear cache.', 'millicache' ) );
 					}
-					// url: flag is stored unprefixed (even on multisite) —
-					// clear as-is. Empty already handled above.
+					// url: flag is stored unprefixed (even on multisite).
 					$this->engine->clear()->flags( $flags, false, false );
-					$message = __( 'The current page cache has been cleared.', 'millicache' );
 					break;
 
 				case 'clear_targets':
@@ -109,11 +106,10 @@ final class CacheActions {
 						return $this->error( 'invalid_targets', __( 'Invalid targets parameter. Must be a string or an array.', 'millicache' ) );
 					}
 					$this->engine->clear()->targets( $targets );
-					$message = empty( $targets )
-						? __( 'The site cache has been cleared.', 'millicache' )
-						: __( 'Cache for the targets has been cleared.', 'millicache' );
 					break;
 			}
+
+			$cleared = $this->engine->clear()->execute_queue();
 
 			/**
 			 * Fires after a MilliCache cache action has been processed.
@@ -126,7 +122,7 @@ final class CacheActions {
 			 */
 			do_action( 'millicache_rest_cache_action_performed', $action, $request->get_params(), $request );
 
-			return $this->response( $action, $message ?? '' );
+			return $this->response( $action, $cleared );
 		} catch ( \Exception $e ) {
 			return $this->error(
 				'cache_action_failed',
@@ -156,8 +152,7 @@ final class CacheActions {
 		try {
 			switch ( $action ) {
 				case 'clear':
-					$this->engine->clear()->networks()->execute_queue();
-					$message = __( 'The network cache has been cleared.', 'millicache' );
+					$this->engine->clear()->networks();
 					break;
 
 				case 'clear_targets':
@@ -166,17 +161,17 @@ final class CacheActions {
 						return $this->error( 'invalid_targets', __( 'Invalid targets parameter. Must be a string or an array.', 'millicache' ) );
 					}
 					if ( empty( $targets ) ) {
-						$this->engine->clear()->networks()->execute_queue();
-						$message = __( 'The network cache has been cleared.', 'millicache' );
+						$this->engine->clear()->networks();
 					} else {
 						$this->clear_network_targets( $targets );
-						$message = __( 'Cache for the targets has been cleared.', 'millicache' );
 					}
 					break;
 
 				default:
 					return $this->error( 'invalid_action', __( 'Invalid cache action.', 'millicache' ) );
 			}
+
+			$cleared = $this->engine->clear()->execute_queue();
 
 			/**
 			 * Fires after a MilliCache network cache action has been processed.
@@ -194,7 +189,7 @@ final class CacheActions {
 				$request
 			);
 
-			return $this->response( is_string( $action ) ? $action : '', $message );
+			return $this->response( is_string( $action ) ? $action : '', $cleared );
 		} catch ( \Exception $e ) {
 			return $this->error(
 				'cache_action_failed',
@@ -226,8 +221,6 @@ final class CacheActions {
 			}
 			$clear->flags( $target, false, false );
 		}
-
-		$clear->execute_queue();
 	}
 
 	/**
@@ -286,16 +279,18 @@ final class CacheActions {
 	 * Build the standard cache-action success response.
 	 *
 	 * @since 1.7.0
+	 * @since 1.8.0 Reports the number of entries actually removed.
 	 *
 	 * @param string $action  Action that was performed.
-	 * @param string $message User-facing message.
+	 * @param int    $cleared Number of entries deleted or expired.
 	 * @return \WP_REST_Response
 	 */
-	private function response( string $action, string $message ): \WP_REST_Response {
+	private function response( string $action, int $cleared ): \WP_REST_Response {
 		return rest_ensure_response(
 			array(
 				'success'   => true,
-				'message'   => $message,
+				'message'   => Utils::cleared_entries_message( $cleared ),
+				'cleared'   => $cleared,
 				'action'    => $action,
 				'timestamp' => time(),
 			)

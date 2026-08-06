@@ -132,12 +132,13 @@ final class Queue {
 	 * Clear queued flags immediately.
 	 *
 	 * @since 1.0.0
+	 * @since 1.8.0 Returns the number of entries removed.
 	 *
-	 * @return bool True if cleared successfully.
+	 * @return int Number of entries deleted or expired.
 	 */
-	public function execute(): bool {
+	public function execute(): int {
 		if ( empty( $this->flags_to_expire ) && empty( $this->flags_to_delete ) ) {
-			return true;
+			return 0;
 		}
 
 		$sets = array(
@@ -181,12 +182,12 @@ final class Queue {
 		}
 
 		// Clear cache by sets.
-		$this->storage->clear_cache_by_sets( $sets, $this->default_ttl );
+		$cleared = $this->storage->clear_cache_by_sets( $sets, $this->default_ttl );
 
 		// Clear queues after executing.
 		$this->clear_queues();
 
-		return true;
+		return $cleared;
 	}
 
 	/**

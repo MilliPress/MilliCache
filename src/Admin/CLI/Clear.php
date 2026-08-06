@@ -11,6 +11,7 @@
 
 namespace MilliCache\Admin\CLI;
 
+use MilliCache\Admin\Utils;
 use MilliCache\Engine\Cache\Invalidation\Manager as InvalidationManager;
 use MilliCache\MilliCache;
 
@@ -87,92 +88,51 @@ final class Clear {
 		$expire  = (bool) $assoc_args['expire'];
 		$related = (bool) $assoc_args['related'];
 
-		// Warn if --related is used without --id.
 		if ( $related && '' === $assoc_args['id'] ) {
 			\WP_CLI::warning( esc_html__( 'The --related flag only applies to --id.', 'millicache' ) );
 		}
 
-		// Clear the full cache if no arguments are given.
+		$clear = millicache()->clear();
+
+		// No arguments means a full clear.
 		if ( '' === $assoc_args['id'] && '' === $assoc_args['uri'] && '' === $assoc_args['flag'] && '' === $assoc_args['site'] && '' === $assoc_args['network'] ) {
-			millicache()->clear()->all( $expire )->execute_queue();
-			\WP_CLI::success( is_multisite() ? esc_html__( 'Network cache cleared.', 'millicache' ) : esc_html__( 'Site cache cleared.', 'millicache' ) );
-			return;
+			$clear->all( $expire );
 		}
 
-		$clear    = millicache()->clear();
-		$messages = array();
-
-		// Queue network cache clearing.
 		if ( '' !== $assoc_args['network'] ) {
-			$network_ids = array_map( 'intval', explode( ',', $assoc_args['network'] ) );
-			foreach ( $network_ids as $network_id ) {
+			foreach ( array_map( 'intval', explode( ',', $assoc_args['network'] ) ) as $network_id ) {
 				$clear->networks( $network_id, $expire );
 			}
-			$messages[] = sprintf(
-				// translators: %s is the number of cleared network IDs.
-				esc_html__( 'Cleared cache for %s networks.', 'millicache' ),
-				implode( ', ', $network_ids )
-			);
 		}
 
-		// Queue site cache clearing.
 		if ( '' !== $assoc_args['site'] ) {
-			$site_ids = array_map( 'intval', explode( ',', $assoc_args['site'] ) );
-			foreach ( $site_ids as $site_id ) {
+			foreach ( array_map( 'intval', explode( ',', $assoc_args['site'] ) ) as $site_id ) {
 				$clear->sites( $site_id, null, $expire );
 			}
-			$messages[] = sprintf(
-				// translators: %s is the number of cleared site IDs.
-				esc_html__( 'Cleared cache for %s sites.', 'millicache' ),
-				count( $site_ids )
-			);
 		}
 
-		// Queue cache clearing by post-IDs.
 		if ( '' !== $assoc_args['id'] ) {
-			$post_ids = array_map( 'intval', explode( ',', $assoc_args['id'] ) );
-			$this->clear_posts( $clear, $post_ids, $expire, $related );
-			$messages[] = sprintf(
-				// translators: %s is the number of cleared post-IDs.
-				esc_html__( 'Cleared cache for %s posts.', 'millicache' ),
-				count( $post_ids )
-			);
-			if ( $related ) {
-				$messages[] = esc_html__( 'Included related archives and taxonomies.', 'millicache' );
-			}
+			$this->clear_posts( $clear, array_map( 'intval', explode( ',', $assoc_args['id'] ) ), $expire, $related );
 		}
 
-		// Queue cache clearing by URIs (paths or full URLs).
 		if ( '' !== $assoc_args['uri'] ) {
-			$urls = array_map( 'trim', explode( ',', $assoc_args['uri'] ) );
-			foreach ( $urls as $url ) {
+			foreach ( array_map( 'trim', explode( ',', $assoc_args['uri'] ) ) as $url ) {
 				$clear->urls( $url, $expire );
 			}
-			$messages[] = sprintf(
-				// translators: %s is the number of cleared URIs.
-				esc_html__( 'Cleared cache for %s URIs.', 'millicache' ),
-				count( $urls )
-			);
 		}
 
-		// Queue cache clearing by flags.
 		if ( '' !== $assoc_args['flag'] ) {
-			$flags = array_map( 'trim', explode( ',', $assoc_args['flag'] ) );
-			foreach ( $flags as $flag ) {
+			foreach ( array_map( 'trim', explode( ',', $assoc_args['flag'] ) ) as $flag ) {
 				$clear->flags( $flag, $expire, false );
 			}
-			$messages[] = sprintf(
-				// translators: %s is the number of cleared flags.
-				esc_html__( 'Cleared cache for %s flags.', 'millicache' ),
-				count( $flags )
-			);
 		}
 
-		// Execute all queued operations.
-		$clear->execute_queue();
+		$cleared = $clear->execute_queue();
+		$message = esc_html( Utils::cleared_entries_message( $cleared, $expire ) );
 
-		// Output success messages.
-		foreach ( $messages as $message ) {
+		if ( 0 === $cleared ) {
+			\WP_CLI::warning( $message );
+		} else {
 			\WP_CLI::success( $message );
 		}
 	}
@@ -207,4 +167,5 @@ final class Clear {
 			}
 		}
 	}
+
 }

@@ -1199,19 +1199,24 @@ class Storage {
 	 * Clear stale and deleted cache entries, running on shutdown.
 	 *
 	 * @since 1.0.0
+	 * @since 1.8.0 Returns the number of entries removed.
 	 * @access public
 	 *
 	 * @param array<array<string>> $sets The cache sets to clear.
 	 * @param int                  $ttl The time-to-live for the cache.
-	 * @return void
+	 * @return int Number of entries deleted or expired.
 	 */
-	public function clear_cache_by_sets( array $sets, int $ttl ): void {
+	public function clear_cache_by_sets( array $sets, int $ttl ): int {
+		$cleared = 0;
+
 		// Delete the stored entries for the deleted flags. Every flag is resolved
 		// to its keys in one pipelined round-trip, de-duplicated so keys shared by
 		// overlapping flags are deleted once rather than re-read per flag.
 		if ( ! empty( $sets['mll:deleted-flags'] ) ) {
 			foreach ( $this->get_cache_keys_by_flag( $sets['mll:deleted-flags'] ) as $key ) {
-				$this->delete_cache( $key );
+				if ( $this->delete_cache( $key ) ) {
+					++$cleared;
+				}
 			}
 		}
 
@@ -1225,6 +1230,7 @@ class Storage {
 						$updated          = isset( $data['updated'] ) && is_numeric( $data['updated'] ) ? (int) $data['updated'] : time();
 						$data['updated']  = $updated - $ttl;
 						$this->set_cache( $key, $data, $flags );
+						++$cleared;
 
 						$url = isset( $data['url'] ) && is_string( $data['url'] ) ? $data['url'] : '';
 
@@ -1247,6 +1253,8 @@ class Storage {
 				}
 			}
 		}
+
+		return $cleared;
 	}
 
 	/**

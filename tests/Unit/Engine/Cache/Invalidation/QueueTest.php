@@ -130,17 +130,16 @@ describe( 'Invalidation Queue', function () {
 	} );
 
 	describe( 'execute', function () {
-		it( 'returns true when queues empty', function () {
+		it( 'returns zero when queues empty', function () {
 			$flusher = new Queue( $this->storage, $this->multisite );
 
-			$result = $flusher->execute();
-			expect( $result )->toBeTrue();
+			expect( $flusher->execute() )->toBe( 0 );
 		} );
 
 		it( 'calls storage clear_cache_by_sets with correct params', function () {
 			$this->storage->shouldReceive( 'clear_cache_by_sets' )
 				->once()
-				->with( Mockery::type( 'array' ), 3600 );
+				->with( Mockery::type( 'array' ), 3600 )->andReturn( 1 );
 
 			$flusher = new Queue( $this->storage, $this->multisite, 3600 );
 			$flusher->add_to_delete( array( 'flag1' ) );
@@ -188,7 +187,7 @@ describe( 'Invalidation Queue', function () {
 		it( 'passes default_ttl to storage', function () {
 			$this->storage->shouldReceive( 'clear_cache_by_sets' )
 				->once()
-				->with( Mockery::any(), 7200 );
+				->with( Mockery::any(), 7200 )->andReturn( 1 );
 
 			$flusher = new Queue( $this->storage, $this->multisite, 7200 );
 			$flusher->add_to_delete( array( 'flag1' ) );
@@ -218,7 +217,7 @@ describe( 'Invalidation Queue', function () {
 		} );
 
 		it( 'clears queues after execute', function () {
-			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once()->andReturn( 1 );
 
 			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_delete( array( 'flag1' ) );
@@ -286,7 +285,7 @@ describe( 'Invalidation Queue', function () {
 
 	describe( 'shutdown behavior', function () {
 		it( 'execute clears queues after processing', function () {
-			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once()->andReturn( 1 );
 
 			$flusher = new Queue( $this->storage, $this->multisite );
 			$flusher->add_to_delete( array( 'flag1' ) );

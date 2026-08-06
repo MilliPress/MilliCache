@@ -105,10 +105,11 @@ final class Manager {
 	 * For web requests, the queue is executed on shutdown.
 	 *
 	 * @since 1.0.0
+	 * @since 1.8.0 Returns the number of entries removed.
 	 *
-	 * @return bool True if executed successfully.
+	 * @return int Number of entries deleted or expired.
 	 */
-	public function execute_queue(): bool {
+	public function execute_queue(): int {
 		return $this->queue->execute();
 	}
 
