@@ -278,6 +278,10 @@ final class MilliCache {
 			// Taxonomy term archives.
 			$taxonomies = get_object_taxonomies( $post_type );
 			foreach ( $taxonomies as $taxonomy ) {
+				if ( ! is_taxonomy_viewable( $taxonomy ) ) {
+					continue;
+				}
+
 				$terms = get_the_terms( $post, $taxonomy );
 				if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
 					foreach ( $terms as $term ) {
