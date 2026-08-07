@@ -141,19 +141,33 @@ function setPalettePlaceholder() {
 				'millicache'
 		  );
 
-	// The palette mounts asynchronously; retry briefly until the input exists.
-	let attempts = 0;
+	// The palette mounts asynchronously; watch the DOM until the input exists.
 	const assign = () => {
 		const input = document.querySelector( '.commands-command-menu input' );
-		if ( input ) {
-			input.placeholder = text;
-			return;
+		if ( ! input ) {
+			return false;
 		}
-		if ( attempts++ < 20 ) {
-			window.requestAnimationFrame( assign );
+		input.placeholder = text;
+		// Widen only our session; the class dies with the modal on close.
+		const modal = input.closest( '.commands-command-menu' );
+		if ( modal ) {
+			modal.classList.add( 'millicache-palette' );
 		}
+		return true;
 	};
-	assign();
+
+	if ( assign() ) {
+		return;
+	}
+
+	const observer = new window.MutationObserver( () => {
+		if ( assign() ) {
+			observer.disconnect();
+		}
+	} );
+	observer.observe( document.body, { childList: true, subtree: true } );
+	// Stop watching if the palette never mounts.
+	setTimeout( () => observer.disconnect(), 5000 );
 }
 
 // The network-wide clear invalidates every site; require a second click.
