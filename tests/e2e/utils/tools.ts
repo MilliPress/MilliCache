@@ -29,10 +29,12 @@ export async function getCategoryUrl(slug = 'uncategorized'): Promise<string> {
  * @param flags The cache flags to clear. Use '*' to clear all.
  */
 export async function clearCache(flags = '') {
-    const stdout = await runWpCliCommand(
+    const output = await runWpCliCommand(
         flags ? `millicache clear -- --flag="${flags}"` : 'millicache clear'
     );
-    expect(stdout).toContain('Success');
+    // Clearing an empty cache warns "No cache entries matched" (on stderr,
+    // exit 0) since removed-entry counts are reported; both outcomes are fine.
+    expect(output).toMatch(/Success|No cache entries matched/);
 }
 
 /**
@@ -47,7 +49,9 @@ export async function runWpCliCommand(command: string): Promise<string> {
                 console.error(`Error executing command: ${stderr}`);
                 reject(error);
             } else {
-                resolve(stdout);
+                // WP-CLI warnings land on stderr with exit 0; include them
+                // so callers can assert on warning outcomes.
+                resolve(stdout + stderr);
             }
         });
     });
