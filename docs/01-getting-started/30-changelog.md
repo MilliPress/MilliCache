@@ -8,6 +8,15 @@ menu_order: 30
 
 ## [1.8.0-beta](https://github.com/MilliPress/MilliCache/compare/v1.7.7...v1.8.0-beta) (2026-08-07)
 
+<!-- mc:auto sha=df2f4a4a2b26 -->
+1.8.0-beta is a significant release centered on two themes: a smarter cache-clearing experience and a more reliable caching engine.
+
+**Command palette integration.** The admin bar Cache button now opens the WordPress command palette (wp-admin, WordPress 7.0+) instead of immediately flushing. From there you can clear or expire the website or network cache, jump to settings, or type a post ID, URL, or flag to target exactly what needs clearing. Expire is new — it marks entries stale for stale-while-revalidate regeneration rather than deleting them outright. Clear and expire results surface as snackbar toasts with the actual entry count removed, so you know whether anything was matched. On the front end and older WordPress the submenu behaves as before, with a two-step confirmation added for the network-wide clear.
+
+**Accurate cache invalidation.** Several bugs that caused clears to silently match nothing are fixed: path-only URL targets (e.g. `/blog/`) are now anchored to the home URL before hashing, so they find what was actually stored. Sites running on non-standard ports no longer miss URL-based clears due to a port mismatch in the hash. WP-CLI flag clears on multisite now respect the `--url` site context instead of looking for a bare flag that was never stored. Internal taxonomies (Polylang language terms, nav menus) are excluded from post-related invalidation batches, which reduces unnecessary purge payloads. And queue execution is now guaranteed even in WP-CLI processes where the drop-in never loads, so publishes and imports triggered from the CLI actually clear the cache.
+
+**Outermost output buffer capture.** The engine now opens its capture buffer before any plugin loads, meaning HTML post-processors (TranslatePress, HTML optimizers) run inside it. Their final output is what gets stored, eliminating a class of caching issues where transformed HTML was bypassed. Redirect responses (3xx) are never stored. The new `millicache()->response()->is_storable()` method is available for extensions.
+<!-- /mc:auto -->
 
 ### Features
 
