@@ -82,7 +82,8 @@ if ( ! function_exists( 'delete_site_transient' ) ) {
 
 if ( ! function_exists( 'wp_remote_get' ) ) {
 	function wp_remote_get( $url, $args = array() ) {
-		global $test_wp_remote_get_response;
+		global $test_wp_remote_get_response, $test_wp_remote_get_calls;
+		++$test_wp_remote_get_calls;
 		return $test_wp_remote_get_response ?? new \WP_Error( 'http_request_failed', 'Mock error' );
 	}
 }
@@ -170,11 +171,12 @@ function mock_remote_info( string $version = '2.0.0' ): object {
 }
 
 uses()->beforeEach( function () {
-	global $test_actions, $test_filters, $test_site_transients, $test_wp_remote_get_response, $test_apply_filters_returns;
+	global $test_actions, $test_filters, $test_site_transients, $test_wp_remote_get_response, $test_wp_remote_get_calls, $test_apply_filters_returns;
 	$test_actions                = array();
 	$test_filters                = array();
 	$test_site_transients        = array();
 	$test_wp_remote_get_response = null;
+	$test_wp_remote_get_calls    = 0;
 	$test_apply_filters_returns  = array();
 } );
 
@@ -193,7 +195,7 @@ describe( 'Updater', function () {
 			$filter_hooks = array_column( $test_filters, 'hook' );
 			$action_hooks = array_column( $test_actions, 'hook' );
 
-			expect( $filter_hooks )->toContain( 'site_transient_update_plugins' );
+			expect( $filter_hooks )->toContain( 'pre_set_site_transient_update_plugins' );
 			expect( $filter_hooks )->toContain( 'plugins_api' );
 			expect( $action_hooks )->toContain( 'delete_site_transient_update_plugins' );
 		} );
@@ -213,7 +215,7 @@ describe( 'Updater', function () {
 			$filter_hooks = array_column( $test_filters, 'hook' );
 			$action_hooks = array_column( $test_actions, 'hook' );
 
-			expect( $filter_hooks )->toContain( 'site_transient_update_plugins' );
+			expect( $filter_hooks )->toContain( 'pre_set_site_transient_update_plugins' );
 			expect( $filter_hooks )->toContain( 'plugins_api' );
 			expect( $action_hooks )->toContain( 'delete_site_transient_update_plugins' );
 		} );
@@ -230,7 +232,7 @@ describe( 'Updater', function () {
 			$filter_hooks = array_column( $test_filters, 'hook' );
 			$action_hooks = array_column( $test_actions, 'hook' );
 
-			expect( $filter_hooks )->not->toContain( 'site_transient_update_plugins' );
+			expect( $filter_hooks )->not->toContain( 'pre_set_site_transient_update_plugins' );
 			expect( $filter_hooks )->not->toContain( 'plugins_api' );
 			expect( $action_hooks )->not->toContain( 'delete_site_transient_update_plugins' );
 		} );
@@ -248,7 +250,7 @@ describe( 'Updater', function () {
 			$filter_hooks = array_column( $test_filters, 'hook' );
 			$action_hooks = array_column( $test_actions, 'hook' );
 
-			expect( $filter_hooks )->not->toContain( 'site_transient_update_plugins' );
+			expect( $filter_hooks )->not->toContain( 'pre_set_site_transient_update_plugins' );
 			expect( $filter_hooks )->not->toContain( 'plugins_api' );
 			expect( $action_hooks )->not->toContain( 'delete_site_transient_update_plugins' );
 		} );
@@ -547,20 +549,54 @@ describe( 'Updater', function () {
 			expect( $test_site_transients['millicache_update_info']->version )->toBe( '2.0.0' );
 		} );
 
-		it( 'does not cache on network failure', function () {
+		it( 'caches a failure marker on network failure', function () {
 			global $test_wp_remote_get_response, $test_site_transients;
 			$test_wp_remote_get_response = new WP_Error( 'http_request_failed', 'Timeout' );
 
 			$loader  = new Loader();
 			$updater = new Updater( $loader, MILLICACHE_BASENAME );
 
-			$transient           = new stdClass();
-			$transient->response = array();
+			$transient            = new stdClass();
+			$transient->response  = array();
 			$transient->no_update = array();
 
 			$updater->check_for_update( $transient );
 
-			expect( $test_site_transients )->not->toHaveKey( 'millicache_update_info' );
+			expect( $test_site_transients['millicache_update_info'] )->toBe( array() );
+		} );
+
+		it( 'caches a failure marker on a malformed response', function () {
+			global $test_wp_remote_get_response, $test_site_transients;
+			$test_wp_remote_get_response = mock_http_response( array( 'no' => 'version' ) );
+
+			$loader  = new Loader();
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
+
+			$transient            = new stdClass();
+			$transient->response  = array();
+			$transient->no_update = array();
+
+			$updater->check_for_update( $transient );
+
+			expect( $test_site_transients['millicache_update_info'] )->toBe( array() );
+		} );
+
+		it( 'makes no request while a cached failure is still fresh', function () {
+			global $test_site_transients, $test_wp_remote_get_calls;
+			$test_site_transients['millicache_update_info'] = array();
+
+			$loader  = new Loader();
+			$updater = new Updater( $loader, MILLICACHE_BASENAME );
+
+			$transient            = new stdClass();
+			$transient->response  = array();
+			$transient->no_update = array();
+
+			$result = $updater->check_for_update( $transient );
+
+			expect( $test_wp_remote_get_calls )->toBe( 0 );
+			expect( $result->response )->toBe( array() );
+			expect( $result->no_update )->toBe( array() );
 		} );
 	} );
 } );

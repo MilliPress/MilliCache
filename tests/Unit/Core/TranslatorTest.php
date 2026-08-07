@@ -338,6 +338,6 @@ it( 'registers the transient filter and the force-check cache clear', function (
 	new Translator( $loader );
 	$loader->run();
 
-	expect( array_column( $test_filters, 'hook' ) )->toContain( 'site_transient_update_plugins' );
+	expect( array_column( $test_filters, 'hook' ) )->toContain( 'pre_set_site_transient_update_plugins' );
 	expect( array_column( $test_actions, 'hook' ) )->toContain( 'delete_site_transient_update_plugins' );
 } );

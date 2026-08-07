@@ -62,6 +62,15 @@ final class Translator {
 	private const CACHE_DURATION = 43200;
 
 	/**
+	 * Request timeout in seconds. Short by design: the fetch runs inside an
+	 * admin request, and a missed manifest only delays a language pack.
+	 *
+	 * @since 1.8.0
+	 * @var   int
+	 */
+	private const REQUEST_TIMEOUT = 3;
+
+	/**
 	 * Register hooks.
 	 *
 	 * @since  1.7.4
@@ -70,7 +79,7 @@ final class Translator {
 	 * @param Loader $loader The plugin hook loader.
 	 */
 	public function __construct( Loader $loader ) {
-		$loader->add_filter( 'site_transient_update_plugins', $this, 'inject_translations' );
+		$loader->add_filter( 'pre_set_site_transient_update_plugins', $this, 'inject_translations' );
 		$loader->add_action( 'delete_site_transient_update_plugins', $this, 'clear_manifest_cache' );
 	}
 
@@ -316,7 +325,7 @@ final class Translator {
 		$response = wp_remote_get(
 			$url,
 			array(
-				'timeout' => 10,
+				'timeout' => self::REQUEST_TIMEOUT,
 				'headers' => array(
 					'Accept' => 'application/json',
 				),
