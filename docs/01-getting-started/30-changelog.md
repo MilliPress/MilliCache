@@ -25,9 +25,7 @@ menu_order: 30
 * **clear:** report removed-entry counts instead of processed inputs ([23ec58f](https://github.com/MilliPress/MilliCache/commit/23ec58f9b5b2d09a23fae07137aafb171c912837))
 * **cli:** scope bare clear flags to the WP-CLI site context ([d30d31e](https://github.com/MilliPress/MilliCache/commit/d30d31e386408c3a072c513a29108eb7528b9a6e))
 * **commands:** offer expire alongside clear with descriptive target labels ([880c9eb](https://github.com/MilliPress/MilliCache/commit/880c9ebc4bf0e57edff930cb4f31c55578c58d01))
-* **engine:** capture the page in the outermost output buffer ([6c4d393](https://github.com/MilliPress/MilliCache/commit/6c4d393ba419e569ab4b8e5aca0f989ecf95d240))
 * **engine:** capture the page in the outermost output buffer ([7606f04](https://github.com/MilliPress/MilliCache/commit/7606f04b2ea9749f4ffd41f4a52e203bc477b2b6))
-* **engine:** capture the page in the outermost output buffer ([6cee142](https://github.com/MilliPress/MilliCache/commit/6cee14202bdaf15594dfd7b9ed659533ef025d4b))
 
 
 ### Bug Fixes
@@ -38,8 +36,6 @@ menu_order: 30
 * **commands:** drop the stray focus ring after palette clears ([880c9eb](https://github.com/MilliPress/MilliCache/commit/880c9ebc4bf0e57edff930cb4f31c55578c58d01))
 * **engine:** execute the invalidation queue when the drop-in never loads ([746bd0e](https://github.com/MilliPress/MilliCache/commit/746bd0eb9cfafe57df36c39a45ac8074d0708819))
 * **engine:** keep non-default ports in URL-based cache hashes ([ed6f3d6](https://github.com/MilliPress/MilliCache/commit/ed6f3d670305dcf7750ed49bf8425e1149d80efa))
-* **engine:** never store redirect responses ([6c4d393](https://github.com/MilliPress/MilliCache/commit/6c4d393ba419e569ab4b8e5aca0f989ecf95d240))
-* **engine:** never store redirect responses ([7606f04](https://github.com/MilliPress/MilliCache/commit/7606f04b2ea9749f4ffd41f4a52e203bc477b2b6))
 * **engine:** never store redirect responses ([6cee142](https://github.com/MilliPress/MilliCache/commit/6cee14202bdaf15594dfd7b9ed659533ef025d4b))
 
 ## [1.7.7](https://github.com/MilliPress/MilliCache/compare/v1.7.6...v1.7.7) (2026-07-29)
