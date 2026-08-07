@@ -6,6 +6,42 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.0-beta](https://github.com/MilliPress/MilliCache/compare/v1.7.7...v1.8.0-beta) (2026-08-07)
+
+<!-- mc:auto sha=df2f4a4a2b26 -->
+1.8.0-beta is a significant release centered on two themes: a smarter cache-clearing experience and a more reliable caching engine.
+
+**Command palette integration.** The admin bar Cache button now opens the WordPress command palette (wp-admin, WordPress 7.0+) instead of immediately flushing. From there you can clear or expire the website or network cache, jump to settings, or type a post ID, URL, or flag to target exactly what needs clearing. Expire is new — it marks entries stale for stale-while-revalidate regeneration rather than deleting them outright. Clear and expire results surface as snackbar toasts with the actual entry count removed, so you know whether anything was matched. On the front end and older WordPress the submenu behaves as before, with a two-step confirmation added for the network-wide clear.
+
+**Accurate cache invalidation.** Several bugs that caused clears to silently match nothing are fixed: path-only URL targets (e.g. `/blog/`) are now anchored to the home URL before hashing, so they find what was actually stored. Sites running on non-standard ports no longer miss URL-based clears due to a port mismatch in the hash. WP-CLI flag clears on multisite now respect the `--url` site context instead of looking for a bare flag that was never stored. Internal taxonomies (Polylang language terms, nav menus) are excluded from post-related invalidation batches, which reduces unnecessary purge payloads. And queue execution is now guaranteed even in WP-CLI processes where the drop-in never loads, so publishes and imports triggered from the CLI actually clear the cache.
+
+**Outermost output buffer capture.** The engine now opens its capture buffer before any plugin loads, meaning HTML post-processors (TranslatePress, HTML optimizers) run inside it. Their final output is what gets stored, eliminating a class of caching issues where transformed HTML was bypassed. Redirect responses (3xx) are never stored. The new `millicache()->response()->is_storable()` method is available for extensions.
+<!-- /mc:auto -->
+
+### Features
+
+* **adminbar:** replace one-click flush with command palette integration ([382b10b](https://github.com/MilliPress/MilliCache/commit/382b10beec75a421834632919875090c65d21443))
+* **adminbar:** snackbar clear feedback and a wider palette ([2c77206](https://github.com/MilliPress/MilliCache/commit/2c77206eb6b1635730c2047168b942b88bb03b03))
+* **clear:** report removed-entry counts instead of processed inputs ([23ec58f](https://github.com/MilliPress/MilliCache/commit/23ec58f9b5b2d09a23fae07137aafb171c912837))
+* **cli:** scope bare clear flags to the WP-CLI site context ([d30d31e](https://github.com/MilliPress/MilliCache/commit/d30d31e386408c3a072c513a29108eb7528b9a6e))
+* **commands:** offer expire alongside clear with descriptive target labels ([880c9eb](https://github.com/MilliPress/MilliCache/commit/880c9ebc4bf0e57edff930cb4f31c55578c58d01))
+* **engine:** capture the page in the outermost output buffer ([6c4d393](https://github.com/MilliPress/MilliCache/commit/6c4d393ba419e569ab4b8e5aca0f989ecf95d240))
+* **engine:** capture the page in the outermost output buffer ([7606f04](https://github.com/MilliPress/MilliCache/commit/7606f04b2ea9749f4ffd41f4a52e203bc477b2b6))
+* **engine:** capture the page in the outermost output buffer ([6cee142](https://github.com/MilliPress/MilliCache/commit/6cee14202bdaf15594dfd7b9ed659533ef025d4b))
+
+
+### Bug Fixes
+
+* **adminbar:** keep the admin bar button size stable on page load ([2c77206](https://github.com/MilliPress/MilliCache/commit/2c77206eb6b1635730c2047168b942b88bb03b03))
+* **clear:** anchor path-only URL targets onto the home URL ([27bd7dc](https://github.com/MilliPress/MilliCache/commit/27bd7dc6c42f3d2210bd02ae148d31fb461a08e5))
+* **clear:** skip non-viewable taxonomies in post-related flags ([40cd884](https://github.com/MilliPress/MilliCache/commit/40cd88414019eda097f910bce72fb6acd40a01e8))
+* **commands:** drop the stray focus ring after palette clears ([880c9eb](https://github.com/MilliPress/MilliCache/commit/880c9ebc4bf0e57edff930cb4f31c55578c58d01))
+* **engine:** execute the invalidation queue when the drop-in never loads ([746bd0e](https://github.com/MilliPress/MilliCache/commit/746bd0eb9cfafe57df36c39a45ac8074d0708819))
+* **engine:** keep non-default ports in URL-based cache hashes ([ed6f3d6](https://github.com/MilliPress/MilliCache/commit/ed6f3d670305dcf7750ed49bf8425e1149d80efa))
+* **engine:** never store redirect responses ([6c4d393](https://github.com/MilliPress/MilliCache/commit/6c4d393ba419e569ab4b8e5aca0f989ecf95d240))
+* **engine:** never store redirect responses ([7606f04](https://github.com/MilliPress/MilliCache/commit/7606f04b2ea9749f4ffd41f4a52e203bc477b2b6))
+* **engine:** never store redirect responses ([6cee142](https://github.com/MilliPress/MilliCache/commit/6cee14202bdaf15594dfd7b9ed659533ef025d4b))
+
 ## [1.7.7](https://github.com/MilliPress/MilliCache/compare/v1.7.6...v1.7.7) (2026-07-29)
 
 <!-- mc:auto sha=36dc5e53f3fb -->
