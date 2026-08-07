@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=7.4",
-        "millipress/millibase": "^2.8.0",
+        "millipress/millibase": "^2.8.2",
         "millipress/millirules": "^1.2.1",
         "predis/predis": "^3.0"
     },
