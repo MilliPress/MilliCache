@@ -56,6 +56,8 @@ final class CacheActions {
 	 * Handle cache clear actions from the per-site REST API.
 	 *
 	 * @since 1.7.0
+	 * @since 1.8.0 The boolean `expire` param marks entries stale instead
+	 *              of deleting them (stale-while-revalidate regeneration).
 	 *
 	 * @param \WP_REST_Request $request The REST API request object.
 	 * @phpstan-param \WP_REST_Request<array<string, mixed>> $request
@@ -64,6 +66,7 @@ final class CacheActions {
 	 */
 	public function handle_site( \WP_REST_Request $request ) {
 		$action = $request->get_param( 'action' );
+		$expire = (bool) $request->get_param( 'expire' );
 
 		/**
 		 * Filters allowed REST cache actions.
@@ -85,9 +88,9 @@ final class CacheActions {
 			switch ( $action ) {
 				case 'clear':
 					if ( (bool) $request->get_param( 'is_network_admin' ) ) {
-						$this->engine->clear()->networks();
+						$this->engine->clear()->networks( null, $expire );
 					} else {
-						$this->engine->clear()->sites();
+						$this->engine->clear()->sites( null, null, $expire );
 					}
 					break;
 
@@ -97,7 +100,7 @@ final class CacheActions {
 						return $this->error( 'no_flags', __( 'No flags provided to clear cache.', 'millicache' ) );
 					}
 					// url: flag is stored unprefixed (even on multisite).
-					$this->engine->clear()->flags( $flags, false, false );
+					$this->engine->clear()->flags( $flags, $expire, false );
 					break;
 
 				case 'clear_targets':
@@ -105,7 +108,7 @@ final class CacheActions {
 					if ( null === $targets ) {
 						return $this->error( 'invalid_targets', __( 'Invalid targets parameter. Must be a string or an array.', 'millicache' ) );
 					}
-					$this->engine->clear()->targets( $targets );
+					$this->engine->clear()->targets( $targets, $expire );
 					break;
 			}
 
@@ -122,7 +125,7 @@ final class CacheActions {
 			 */
 			do_action( 'millicache_rest_cache_action_performed', $action, $request->get_params(), $request );
 
-			return $this->response( $action, $cleared );
+			return $this->response( $action, $cleared, $expire );
 		} catch ( \Exception $e ) {
 			return $this->error(
 				'cache_action_failed',
@@ -140,6 +143,8 @@ final class CacheActions {
 	 * as raw flag patterns (no per-site prefix prepended).
 	 *
 	 * @since 1.7.0
+	 * @since 1.8.0 The boolean `expire` param marks entries stale instead
+	 *              of deleting them (stale-while-revalidate regeneration).
 	 *
 	 * @param \WP_REST_Request $request The REST API request object.
 	 * @phpstan-param \WP_REST_Request<array<string, mixed>> $request
@@ -148,11 +153,12 @@ final class CacheActions {
 	 */
 	public function handle_network( \WP_REST_Request $request ) {
 		$action = $request->get_param( 'action' );
+		$expire = (bool) $request->get_param( 'expire' );
 
 		try {
 			switch ( $action ) {
 				case 'clear':
-					$this->engine->clear()->networks();
+					$this->engine->clear()->networks( null, $expire );
 					break;
 
 				case 'clear_targets':
@@ -161,9 +167,9 @@ final class CacheActions {
 						return $this->error( 'invalid_targets', __( 'Invalid targets parameter. Must be a string or an array.', 'millicache' ) );
 					}
 					if ( empty( $targets ) ) {
-						$this->engine->clear()->networks();
+						$this->engine->clear()->networks( null, $expire );
 					} else {
-						$this->clear_network_targets( $targets );
+						$this->clear_network_targets( $targets, $expire );
 					}
 					break;
 
@@ -189,7 +195,7 @@ final class CacheActions {
 				$request
 			);
 
-			return $this->response( is_string( $action ) ? $action : '', $cleared );
+			return $this->response( is_string( $action ) ? $action : '', $cleared, $expire );
 		} catch ( \Exception $e ) {
 			return $this->error(
 				'cache_action_failed',
@@ -207,11 +213,13 @@ final class CacheActions {
 	 * `posts` flag, and `5:posts` clears one specific flag.
 	 *
 	 * @since 1.7.0
+	 * @since 1.8.0 Added the `$expire` parameter.
 	 *
 	 * @param string|array<int, mixed> $targets Targets from the REST request.
+	 * @param bool                     $expire  Expire (true) or delete (false).
 	 * @return void
 	 */
-	private function clear_network_targets( $targets ): void {
+	private function clear_network_targets( $targets, bool $expire = false ): void {
 		$list  = is_array( $targets ) ? $targets : array( $targets );
 		$clear = $this->engine->clear();
 
@@ -219,7 +227,7 @@ final class CacheActions {
 			if ( ! is_string( $target ) || '' === $target ) {
 				continue;
 			}
-			$clear->flags( $target, false, false );
+			$clear->flags( $target, $expire, false );
 		}
 	}
 
@@ -279,17 +287,19 @@ final class CacheActions {
 	 * Build the standard cache-action success response.
 	 *
 	 * @since 1.7.0
-	 * @since 1.8.0 Reports the number of entries actually removed.
+	 * @since 1.8.0 Reports the number of entries actually removed and
+	 *              words the message for expire vs delete.
 	 *
 	 * @param string $action  Action that was performed.
 	 * @param int    $cleared Number of entries deleted or expired.
+	 * @param bool   $expire  Whether entries were expired instead of deleted.
 	 * @return \WP_REST_Response
 	 */
-	private function response( string $action, int $cleared ): \WP_REST_Response {
+	private function response( string $action, int $cleared, bool $expire = false ): \WP_REST_Response {
 		return rest_ensure_response(
 			array(
 				'success'   => true,
-				'message'   => Utils::cleared_entries_message( $cleared ),
+				'message'   => Utils::cleared_entries_message( $cleared, $expire ),
 				'cleared'   => $cleared,
 				'action'    => $action,
 				'timestamp' => time(),

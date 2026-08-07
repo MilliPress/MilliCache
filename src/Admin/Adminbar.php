@@ -87,6 +87,7 @@ final class Adminbar {
 
 		if ( Utils::enqueue_assets( 'adminbar', array( 'wp-api-fetch', 'wp-hooks', 'wp-i18n' ) ) ) {
 			$context = array(
+				'home_url' => home_url(),
 				'rest_url' => esc_url_raw( rest_url( 'millicache/v1/cache' ) ),
 				'is_network_admin' => is_network_admin(),
 				'has_palette' => $has_palette,
