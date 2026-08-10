@@ -6,6 +6,16 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.0-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.8.0-beta...v1.8.0-beta.1) (2026-08-10)
+
+<!-- mc:auto sha=98337a07d375 -->
+Plugin and language-pack update checks previously ran on every admin page load, so a slow or unresponsive millipress.com could stall every admin request waiting for a timeout. Both checks now run only during WordPress's scheduled update refresh cycles, with a 3-second timeout and a 15-minute back-off after any failure. "Check again" still triggers an immediate fresh check.
+<!-- /mc:auto -->
+
+### Bug Fixes
+
+* **updates:** keep update checks off every admin page load ([1661d07](https://github.com/MilliPress/MilliCache/commit/1661d079641cccc28003d304659cbdbe769070df))
+
 ## [1.8.0-beta](https://github.com/MilliPress/MilliCache/compare/v1.7.7...v1.8.0-beta) (2026-08-07)
 
 <!-- mc:auto sha=df2f4a4a2b26 -->
