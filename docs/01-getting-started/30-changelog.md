@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.0-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.8.0-beta...v1.8.0-beta.1) (2026-08-10)
+
+
+### Bug Fixes
+
+* **updates:** keep update checks off every admin page load ([1661d07](https://github.com/MilliPress/MilliCache/commit/1661d079641cccc28003d304659cbdbe769070df))
+
 ## [1.8.0-beta](https://github.com/MilliPress/MilliCache/compare/v1.7.7...v1.8.0-beta) (2026-08-07)
 
 <!-- mc:auto sha=df2f4a4a2b26 -->
