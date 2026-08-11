@@ -288,3 +288,113 @@ if ( ! function_exists( 'home_url' ) ) {
 		return 'http://millicache.test' . ( is_string( $path ) ? $path : '' );
 	}
 }
+
+if ( ! function_exists( 'wp_strip_all_tags' ) ) {
+	function wp_strip_all_tags( $text ) {
+		return trim( strip_tags( (string) $text ) );
+	}
+}
+
+if ( ! function_exists( 'is_wp_error' ) ) {
+	function is_wp_error( $thing ) {
+		return $thing instanceof WP_Error;
+	}
+}
+
+// Canonical stubs. Individual test files guard their own copies with
+// class_exists, so defining these here makes every unit test share one
+// definition instead of racing on file order.
+if ( ! class_exists( 'WP_Error' ) ) {
+	// phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound
+	class WP_Error {
+		private string $code;
+		private string $message;
+		/** @var array<string, mixed> */
+		private array $data;
+
+		/**
+		 * @param array<string, mixed> $data Error data.
+		 */
+		public function __construct( string $code = '', string $message = '', array $data = array() ) {
+			$this->code    = $code;
+			$this->message = $message;
+			$this->data    = $data;
+		}
+
+		public function get_error_code(): string {
+			return $this->code;
+		}
+
+		public function get_error_message(): string {
+			return $this->message;
+		}
+
+		/**
+		 * @return array<string, mixed>
+		 */
+		public function get_error_data(): array {
+			return $this->data;
+		}
+	}
+}
+
+if ( ! class_exists( 'WP_REST_Request' ) ) {
+	// phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound
+	class WP_REST_Request {
+		/** @var array<string, mixed> */
+		private array $params = array();
+
+		private string $method;
+
+		public function __construct( string $method = 'GET' ) {
+			$this->method = $method;
+		}
+
+		public function get_method(): string {
+			return $this->method;
+		}
+
+		/**
+		 * @param mixed $value The value to set.
+		 */
+		public function set_param( string $key, $value ): void {
+			$this->params[ $key ] = $value;
+		}
+
+		/**
+		 * @return mixed
+		 */
+		public function get_param( string $key ) {
+			return $this->params[ $key ] ?? null;
+		}
+
+		/**
+		 * @return array<string, mixed>
+		 */
+		public function get_params(): array {
+			return $this->params;
+		}
+	}
+}
+
+if ( ! class_exists( 'WP_REST_Response' ) ) {
+	// phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound
+	class WP_REST_Response {
+		/** @var mixed */
+		private $data;
+
+		/**
+		 * @param mixed $data The response data.
+		 */
+		public function __construct( $data = null ) {
+			$this->data = $data;
+		}
+
+		/**
+		 * @return mixed
+		 */
+		public function get_data() {
+			return $this->data;
+		}
+	}
+}

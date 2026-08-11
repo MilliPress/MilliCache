@@ -193,6 +193,18 @@ final class Network extends Manager {
 
 			'abilities' => array(
 				'expose' => array( 'settings' ),
+				'extend' => Abilities::cache(
+					function (): array {
+						return $this->status_builder->build( true );
+					},
+					function ( \WP_REST_Request $request ) {
+						return $this->cache_actions->handle_network( $request );
+					},
+					true
+				),
+
+				'rest'   => true,
+				'mcp'    => array( 'network-cache-status' ),
 			),
 
 			'status'          => array(
