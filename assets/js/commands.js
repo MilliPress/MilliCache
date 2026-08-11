@@ -3,7 +3,7 @@
 import apiFetch from '@wordpress/api-fetch';
 import { store as commandsStore } from '@wordpress/commands';
 import { dispatch, select, subscribe } from '@wordpress/data';
-import { addAction } from '@wordpress/hooks';
+import { addAction, doAction } from '@wordpress/hooks';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { cog } from '@wordpress/icons';
 import { SVG, Path } from '@wordpress/primitives';
@@ -302,7 +302,15 @@ function registerCommands( context ) {
 			};
 		},
 	} );
+
+	// Add-ons re-register on this.
+	doAction( 'millicache.commands.context', context );
 }
+
+millicache.commands = {
+	showFeedback: showAdminbarFeedback,
+	releaseFocus: releaseAdminbarFocus,
+};
 
 registerCommands( undefined );
 

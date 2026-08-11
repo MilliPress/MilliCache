@@ -109,6 +109,11 @@ final class Adminbar {
 					 * `millicache-commands` handle; the palette availability,
 					 * admin context and clear capability are already vetted.
 					 *
+					 * That bundle exposes the JS side: re-register on the
+					 * `millicache.commands.context` action to follow the admin
+					 * bar button's promote/demote cycle, and report results
+					 * through `millicache.commands.showFeedback()`.
+					 *
 					 * @since 1.8.0
 					 */
 					do_action( 'millicache_commands_enqueued' );
