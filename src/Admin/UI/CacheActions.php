@@ -65,8 +65,9 @@ final class CacheActions {
 	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function handle_site( \WP_REST_Request $request ) {
-		$action = $request->get_param( 'action' );
-		$expire = (bool) $request->get_param( 'expire' );
+		$action  = $request->get_param( 'action' );
+		$expire  = (bool) $request->get_param( 'expire' );
+		$skipped = array();
 
 		/**
 		 * Filters allowed REST cache actions.
@@ -109,6 +110,7 @@ final class CacheActions {
 						return $this->error( 'invalid_targets', __( 'Invalid targets parameter. Must be a string or an array.', 'millicache' ) );
 					}
 					$this->engine->clear()->targets( $targets, $expire );
+					$skipped = $this->engine->clear()->skipped();
 					break;
 			}
 
@@ -125,7 +127,7 @@ final class CacheActions {
 			 */
 			do_action( 'millicache_rest_cache_action_performed', $action, $request->get_params(), $request );
 
-			return $this->response( $action, $cleared, $expire );
+			return $this->response( $action, $cleared, $expire, $skipped );
 		} catch ( \Exception $e ) {
 			return $this->error(
 				'cache_action_failed',
@@ -290,21 +292,34 @@ final class CacheActions {
 	 * @since 1.8.0 Reports the number of entries actually removed and
 	 *              words the message for expire vs delete.
 	 *
-	 * @param string $action  Action that was performed.
-	 * @param int    $cleared Number of entries deleted or expired.
-	 * @param bool   $expire  Whether entries were expired instead of deleted.
+	 * @param string             $action  Action that was performed.
+	 * @param int                $cleared Number of entries deleted or expired.
+	 * @param bool               $expire  Whether entries were expired instead of deleted.
+	 * @param array<int, string> $skipped Targets that belong to another site.
 	 * @return \WP_REST_Response
 	 */
-	private function response( string $action, int $cleared, bool $expire = false ): \WP_REST_Response {
-		return rest_ensure_response(
-			array(
-				'success'   => true,
-				'message'   => Utils::cleared_entries_message( $cleared, $expire ),
-				'cleared'   => $cleared,
-				'action'    => $action,
-				'timestamp' => time(),
-			)
+	private function response( string $action, int $cleared, bool $expire = false, array $skipped = array() ): \WP_REST_Response {
+		$payload = array(
+			'success'   => true,
+			'message'   => Utils::cleared_entries_message( $cleared, $expire ),
+			'cleared'   => $cleared,
+			'action'    => $action,
+			'timestamp' => time(),
 		);
+
+		// Without this a caller cannot tell an empty cache from a target that
+		// never applied, since both report zero cleared entries.
+		if ( array() !== $skipped ) {
+			$payload['skipped'] = array_values( $skipped );
+			$payload['message'] = sprintf(
+				/* translators: 1: the result message; 2: comma-separated list of URLs that belong to another site. */
+				__( '%1$s Skipped, not on this site: %2$s', 'millicache' ),
+				$payload['message'],
+				implode( ', ', $skipped )
+			);
+		}
+
+		return rest_ensure_response( $payload );
 	}
 
 	/**

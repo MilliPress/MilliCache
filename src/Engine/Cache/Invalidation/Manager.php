@@ -56,6 +56,14 @@ final class Manager {
 	private Multisite $multisite;
 
 	/**
+	 * Targets from the last {@see self::targets()} call that could not be applied.
+	 *
+	 * @since 1.8.0
+	 * @var array<int, string>
+	 */
+	private array $skipped = array();
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 1.0.0
@@ -114,6 +122,22 @@ final class Manager {
 	}
 
 	/**
+	 * Targets from the last {@see self::targets()} call that were not applied.
+	 *
+	 * Only URLs belonging to another site land here. A flag that matches no
+	 * entry is a legitimate query with zero hits, not a skipped target. Read
+	 * it before {@see self::execute_queue()} so callers can tell "nothing was
+	 * cached" from "that target does not apply here".
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return array<int, string>
+	 */
+	public function skipped(): array {
+		return $this->skipped;
+	}
+
+	/**
 	 * Add flags to the clearing queue.
 	 *
 	 * @since 1.0.3
@@ -151,6 +175,8 @@ final class Manager {
 	 * @return self                    For fluent chaining.
 	 */
 	public function targets( $targets, bool $expire = false ): self {
+		$this->skipped = array();
+
 		// Convert to array.
 		if ( ! is_array( $targets ) ) {
 			$targets = array( $targets );
@@ -169,6 +195,8 @@ final class Manager {
 				// Only clear URLs from current site.
 				if ( function_exists( 'get_home_url' ) && strpos( $target_str, get_home_url() ) === 0 ) {
 					$this->urls( $target_str, $expire );
+				} else {
+					$this->skipped[] = $target_str;
 				}
 			} elseif ( 0 === strpos( $target_str, '/' ) ) {
 				// A bare path is inherently a current-site URL, never a flag.
