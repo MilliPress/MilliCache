@@ -91,9 +91,6 @@ final class Adminbar {
 				'rest_url' => esc_url_raw( rest_url( 'millicache/v1/cache' ) ),
 				'is_network_admin' => is_network_admin(),
 				'has_palette' => $has_palette,
-				'settings_url' => is_network_admin()
-					? network_admin_url( 'settings.php?page=millicache' )
-					: admin_url( 'options-general.php?page=millicache' ),
 			);
 
 			wp_add_inline_script( 'millicache-adminbar', 'const millicache = ' . json_encode( $context ) . ';', 'before' );

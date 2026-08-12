@@ -5,7 +5,6 @@ import { store as commandsStore } from '@wordpress/commands';
 import { dispatch, select, subscribe } from '@wordpress/data';
 import { addAction, doAction } from '@wordpress/hooks';
 import { __, _n, sprintf } from '@wordpress/i18n';
-import { cog } from '@wordpress/icons';
 import { SVG, Path } from '@wordpress/primitives';
 
 import { showAdminbarFeedback } from './shared/adminbar-feedback';
@@ -88,6 +87,13 @@ function classifyTarget( target ) {
 	}
 	return 'flag';
 }
+
+// A flag can be any string, so a bare word outside our own session would rank
+// MilliCache above the real results in every admin search.
+const TARGET_SHAPE = /^https?:\/\/|^\/|^\d+$|[:*]/i;
+
+// How a bare flag opts in; stripped before the target is sent.
+const FLAG_MARKER = /^flag:/i;
 
 // Bare paths clear on the current site; show them resolved like the server does.
 function displayTarget( target ) {
@@ -227,28 +233,27 @@ function registerCommands( context ) {
 		},
 	} );
 
-	dispatch( commandsStore ).registerCommand( {
-		name: 'millicache/settings',
-		label: __( 'MilliCache: Status & Settings', 'millicache' ),
-		icon: cog,
-		context,
-		category: 'view',
-		callback: ( { close } ) => {
-			close();
-			document.location.href = millicache.settings_url;
-		},
-	} );
-
 	dispatch( commandsStore ).registerCommandLoader( {
 		name: 'millicache/clear-targets',
 		context,
 		hook: ( { search } ) => {
-			const targets = ( search || '' )
+			const typed = ( search || '' )
 				.split( ',' )
 				.map( ( target ) => target.trim() )
 				.filter( Boolean );
 
-			// Empty targets are a full clear server-side; never offer them.
+			// One ambiguous token drops the whole offer.
+			const offer =
+				typed.length &&
+				( context || typed.every( ( t ) => TARGET_SHAPE.test( t ) ) );
+
+			// A lone `flag:` strips to empty, which is a full clear.
+			const targets = offer
+				? typed
+						.map( ( target ) => target.replace( FLAG_MARKER, '' ) )
+						.filter( Boolean )
+				: [];
+
 			if ( ! targets.length ) {
 				return { commands: [], isLoading: false };
 			}
