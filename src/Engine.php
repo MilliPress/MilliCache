@@ -359,6 +359,8 @@ final class Engine {
 		Rules\Custom::register();
 		Rules\RequestFlags::register();
 
+		Rules\Manager::mark_registered();
+
 		// Load the WP package once WordPress is up; this flushes the pending
 		// queue in insertion order, finalizing every WP-typed rule above.
 		add_action(

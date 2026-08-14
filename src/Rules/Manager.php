@@ -20,6 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use MilliRules\Actions\ActionMeta;
 use MilliRules\Conditions\ConditionMeta;
+use MilliRules\MilliRules;
 use MilliRules\Packages\PackageManager;
 use MilliRules\Rules;
 
@@ -58,6 +59,8 @@ final class Manager {
 	 * @return Rules The rule builder instance.
 	 */
 	public function create( string $id, ?string $type = null ): Rules {
+		self::ensure_rules_registered();
+
 		return Rules::create( $id, $type );
 	}
 
@@ -122,6 +125,20 @@ final class Manager {
 	 */
 	public function register_placeholder( string $placeholder, callable $resolver ): void {
 		Rules::register_placeholder( $placeholder, $resolver );
+	}
+
+	/**
+	 * Remove a registered rule, built-in ones included.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $rule_id The rule ID to remove.
+	 * @return bool True when a rule was found and removed.
+	 */
+	public function unregister( string $rule_id ): bool {
+		self::ensure_rules_registered();
+
+		return Rules::unregister( $rule_id );
 	}
 
 	/**
@@ -207,7 +224,26 @@ final class Manager {
 	 * @return array<int, array<string, mixed>> Flat array of rules, each with '_package' key added.
 	 */
 	public function get_packages_rules(): array {
+		self::ensure_rules_registered();
+
 		return PackageManager::get_all_rules();
+	}
+
+	/**
+	 * Orders of registrations that lost an id to another rule.
+	 *
+	 * The registry holds only the winner, so this is what tells a caller that
+	 * a rule it cannot see is competing for the same id.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $rule_id The rule ID.
+	 * @return array<int, int>
+	 */
+	public function discarded_orders( string $rule_id ): array {
+		self::ensure_rules_registered();
+
+		return PackageManager::discarded_orders( $rule_id );
 	}
 
 	/**
@@ -218,7 +254,91 @@ final class Manager {
 	 * @return array<int, string> Overriding rule IDs.
 	 */
 	public function overridden_rule_ids(): array {
+		self::ensure_rules_registered();
+
 		return PackageManager::get_overridden_rule_ids();
+	}
+
+	/**
+	 * Whether MilliCache's own rules are in the registry.
+	 *
+	 * Deliberately not derived from the registry being non-empty: a plugin can
+	 * register a rule of its own first, and reading that as "the drop-in
+	 * already ran" would leave every built-in unregistered.
+	 *
+	 * @since 1.8.0
+	 * @var bool
+	 */
+	private static bool $registered = false;
+
+	/**
+	 * Record that {@see \MilliCache\Engine::register_rules()} has run.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return void
+	 */
+	public static function mark_registered(): void {
+		self::$registered = true;
+	}
+
+	/**
+	 * Register the rule set when the drop-in has not.
+	 *
+	 * {@see \MilliCache\Engine::start()} does this on its way to serving a
+	 * cached response, so it only runs from the drop-in. Under WP-CLI, where the
+	 * drop-in is skipped, a rule registered through this manager would otherwise
+	 * sit in MilliRules' pending queue forever: nothing loads the packages that
+	 * would flush it, and the rule ends up in code and in nobody's list.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return void
+	 */
+	private static function ensure_rules_registered(): void {
+		if ( self::$registered ) {
+			return;
+		}
+
+		self::$registered = true;
+
+		MilliRules::init( array( 'PHP' ) );
+
+		Bootstrap::register();
+		WordPress::register();
+		Custom::register();
+		RequestFlags::register();
+
+		// Flushes anything the PHP phase left pending.
+		MilliRules::load_packages( array( 'WP' ) );
+	}
+
+	/**
+	 * Make sure condition and action types can be resolved.
+	 *
+	 * Type resolution needs the rule packages *registered* — that is what maps
+	 * `is_*` and `has_*` to their conditional classes. Registering them is
+	 * cheap; loading them and running the rules is not, and neither is needed
+	 * to answer what a type is.
+	 *
+	 * {@see \MilliCache\Engine::start()} does this on its way to executing
+	 * rules, but it only runs from the drop-in. Anything that asks about types
+	 * outside a cached request — the Rules Builder, the REST routes, the
+	 * abilities — would otherwise see an empty registry and report every
+	 * WordPress conditional as an unknown type, while the same rules evaluate
+	 * fine on the front end.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return void
+	 */
+	private static function ensure_types_resolvable(): void {
+		if ( PackageManager::has_packages() ) {
+			return;
+		}
+
+		// No package names: register the defaults, load nothing.
+		MilliRules::init( array() );
 	}
 
 	/**
@@ -231,6 +351,8 @@ final class Manager {
 	 * @return array<int, string> The valid match type identifiers.
 	 */
 	public function match_types(): array {
+		self::ensure_types_resolvable();
+
 		return Rules::MATCH_TYPES;
 	}
 
@@ -247,6 +369,8 @@ final class Manager {
 	 * @return array<int, string> Error messages. Empty if valid.
 	 */
 	public function validate( array $rule ): array {
+		self::ensure_types_resolvable();
+
 		return Rules::validate( $rule );
 	}
 
@@ -262,6 +386,8 @@ final class Manager {
 	 * @return array<string, ConditionMeta> Map of type string => ConditionMeta.
 	 */
 	public function get_all_condition_metas(): array {
+		self::ensure_types_resolvable();
+
 		return Rules::get_all_condition_metas();
 	}
 
@@ -276,6 +402,8 @@ final class Manager {
 	 * @return ConditionMeta|null The metadata, or null if not found.
 	 */
 	public function get_condition_meta( string $type ): ?ConditionMeta {
+		self::ensure_types_resolvable();
+
 		return Rules::get_condition_meta( $type );
 	}
 
@@ -290,6 +418,8 @@ final class Manager {
 	 * @return array<string, ActionMeta> Map of type string => ActionMeta.
 	 */
 	public function get_all_action_metas(): array {
+		self::ensure_types_resolvable();
+
 		return Rules::get_all_action_metas();
 	}
 
@@ -304,6 +434,25 @@ final class Manager {
 	 * @return ActionMeta|null The metadata, or null if not found.
 	 */
 	public function get_action_meta( string $type ): ?ActionMeta {
+		self::ensure_types_resolvable();
+
 		return Rules::get_action_meta( $type );
+	}
+
+	/**
+	 * Every placeholder category a rule value may use, as `{category.key}`.
+	 *
+	 * An empty `keys` array means the key is the caller's to choose, as with a
+	 * cookie name. Descriptions are raw English; MilliRules is vendored, so a
+	 * text domain there would never reach our POT.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return array<string, array{label: string, description: string, keys: array<int, string>, source: string}> Map of category => metadata.
+	 */
+	public function get_all_placeholder_metas(): array {
+		self::ensure_types_resolvable();
+
+		return Rules::get_all_placeholder_metas();
 	}
 }
