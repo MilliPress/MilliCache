@@ -207,7 +207,12 @@ final class Site extends Manager {
 					function ( \WP_REST_Request $request ) {
 						return $this->cache_actions->handle_site( $request );
 					},
-					false
+					false,
+					Multisite::is_enabled()
+						? function (): array {
+							return $this->status_builder->build( true );
+						}
+						: null
 				),
 
 				'rest'   => true,

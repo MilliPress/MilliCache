@@ -29,14 +29,15 @@ final class Abilities {
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param callable $status_provider Returns the full status payload.
-	 * @param callable $clear_handler   Takes a WP_REST_Request, returns a response or error.
-	 * @param bool     $is_network      Whether this is the network Manager.
+	 * @param callable      $status_provider Returns the full status payload.
+	 * @param callable      $clear_handler   Takes a WP_REST_Request, returns a response or error.
+	 * @param bool          $is_network      Whether this is the network Manager.
+	 * @param callable|null $network_status Returns the network payload on a subsite.
 	 * @return array<int, array<string, mixed>>
 	 */
-	public static function cache( callable $status_provider, callable $clear_handler, bool $is_network ): array {
+	public static function cache( callable $status_provider, callable $clear_handler, bool $is_network, ?callable $network_status = null ): array {
 		return array(
-			self::status( $status_provider, $is_network ),
+			self::status( $status_provider, $is_network, $network_status ),
 			self::clear( $clear_handler, $is_network ),
 		);
 	}
@@ -50,11 +51,14 @@ final class Abilities {
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param callable $status_provider Returns the full status payload.
-	 * @param bool     $is_network      Whether this is the network Manager.
+	 * @param callable      $status_provider Returns the full status payload.
+	 * @param bool          $is_network      Whether this is the network Manager.
+	 * @param callable|null $network_status  Returns the network payload on a
+	 *                                       subsite, whose own checks omit the
+	 *                                       network-owned ones.
 	 * @return array<string, mixed>
 	 */
-	private static function status( callable $status_provider, bool $is_network ): array {
+	private static function status( callable $status_provider, bool $is_network, ?callable $network_status = null ): array {
 		return array(
 			'id'            => ( $is_network ? 'network-' : '' ) . 'cache-status',
 			'label'         => $is_network
@@ -65,10 +69,14 @@ final class Abilities {
 				? __( 'Report whether the network cache is working: overall health, storage connectivity, cache size and the list of problems found. Call this before diagnosing why pages are not being cached. The `issues` list only contains checks that need attention; an empty list means everything passed.', 'millicache' )
 				/* translators: An AI reads this to decide when to call this operation. Keep `issues` and the status words verbatim; they are literal response values the AI checks for. */
 				: __( 'Report whether the cache is working: overall health, storage connectivity, cache size and the list of problems found. Call this before diagnosing why pages are not being cached. The `issues` list only contains checks that need attention; an empty list means everything passed.', 'millicache' ),
-			'callback'      => static function () use ( $status_provider ): array {
+			'callback'      => static function () use ( $status_provider, $network_status ): array {
 				$payload = $status_provider();
+				$network = null !== $network_status ? $network_status() : null;
 
-				return self::summarize( is_array( $payload ) ? $payload : array() );
+				return self::summarize(
+					is_array( $payload ) ? $payload : array(),
+					is_array( $network ) ? $network : array()
+				);
 			},
 			'input_schema'  => array(
 				'type'                 => array( 'object', 'null' ),
@@ -98,7 +106,8 @@ final class Abilities {
 					),
 					'issues'  => array(
 						'type'        => 'array',
-						'description' => __( 'Checks that need attention. Empty when everything passed.', 'millicache' ),
+						/* translators: An AI reads this. Keep `scope`, `site` and `network` verbatim; they are literal response values. */
+						'description' => __( 'Checks that need attention. Empty when everything passed. Each issue carries a `scope`: `site` for something this site controls, `network` for a network-wide setting only a network administrator can change.', 'millicache' ),
 						'items'       => array(
 							'type'                 => 'object',
 							'additionalProperties' => true,
@@ -121,40 +130,29 @@ final class Abilities {
 	 * @since 1.8.0
 	 *
 	 * @param array<string, mixed> $payload The payload from StatusBuilder::build().
+	 * @param array<string, mixed> $network The network payload, empty on a single site.
 	 * @return array<string, mixed>
 	 */
-	private static function summarize( array $payload ): array {
+	private static function summarize( array $payload, array $network = array() ): array {
 		$debug   = is_array( $payload['debug'] ?? null ) ? $payload['debug'] : array();
 		$checks  = is_array( $debug['checks'] ?? null ) ? $debug['checks'] : array();
 		$storage = is_array( $payload['storage'] ?? null ) ? $payload['storage'] : array();
 		$cache   = is_array( $payload['cache'] ?? null ) ? $payload['cache'] : array();
 		$config  = is_array( $storage['config'] ?? null ) ? $storage['config'] : array();
 
-		$issues = array();
+		$network_debug  = is_array( $network['debug'] ?? null ) ? $network['debug'] : array();
+		$network_checks = is_array( $network_debug['checks'] ?? null ) ? $network_debug['checks'] : array();
 
-		foreach ( $checks as $check ) {
-			if ( ! is_array( $check ) ) {
-				continue;
-			}
-
-			$status = self::as_string( $check, 'status' );
-
-			if ( ! in_array( $status, array( 'critical', 'recommended' ), true ) ) {
-				continue;
-			}
-
-			$issues[] = array(
-				'id'          => self::as_string( $check, 'id' ),
-				'label'       => self::as_string( $check, 'label' ),
-				'status'      => $status,
-				'description' => wp_strip_all_tags( self::as_string( $check, 'description' ) ),
-			);
-		}
+		$network_issues = self::problems( $network_checks, 'network' );
+		$issues         = array_merge( self::problems( $checks, 'site' ), $network_issues );
 
 		$mode = self::as_string( $config, 'mode' );
 
 		return array(
-			'health'    => is_string( $debug['health'] ?? null ) ? $debug['health'] : 'ok',
+			'health'    => self::health(
+				is_string( $debug['health'] ?? null ) ? $debug['health'] : 'ok',
+				$network_issues
+			),
 			'multisite' => is_multisite(),
 			// Subsites see only connectivity; the connection itself is
 			// network-owned, so `mode` is absent rather than empty there.
@@ -172,6 +170,67 @@ final class Abilities {
 			),
 			'issues'  => $issues,
 		);
+	}
+
+	/**
+	 * Overall health, raised to match the network-owned findings.
+	 *
+	 * The site's own health covers its own checks only, so leaving it alone
+	 * would answer `ok` while listing something that stops caching outright.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string                           $health The site's own health.
+	 * @param array<int, array<string, mixed>> $issues The network-scoped issues.
+	 * @return string
+	 */
+	private static function health( string $health, array $issues ): string {
+		$statuses = array_column( $issues, 'status' );
+
+		if ( in_array( 'critical', $statuses, true ) ) {
+			return 'error';
+		}
+
+		if ( 'ok' === $health && in_array( 'recommended', $statuses, true ) ) {
+			return 'warning';
+		}
+
+		return $health;
+	}
+
+	/**
+	 * The checks that need attention, as issues.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array<int, mixed> $checks The checks a status payload carries.
+	 * @param string            $scope  Where they were read: `site` or `network`.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function problems( array $checks, string $scope ): array {
+		$issues = array();
+
+		foreach ( $checks as $check ) {
+			if ( ! is_array( $check ) ) {
+				continue;
+			}
+
+			$status = self::as_string( $check, 'status' );
+
+			if ( ! in_array( $status, array( 'critical', 'recommended' ), true ) ) {
+				continue;
+			}
+
+			$issues[] = array(
+				'id'          => self::as_string( $check, 'id' ),
+				'label'       => self::as_string( $check, 'label' ),
+				'status'      => $status,
+				'scope'       => $scope,
+				'description' => wp_strip_all_tags( self::as_string( $check, 'description' ) ),
+			);
+		}
+
+		return $issues;
 	}
 
 	/**
