@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-12T09:20:09+00:00\n"
+"POT-Creation-Date: 2026-08-14T12:39:31+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.13.0-alpha-30473e0\n"
 "X-Domain: millicache\n"
@@ -1020,24 +1020,28 @@ msgid "Overall health: error when caching is broken, warning when something is r
 msgstr ""
 
 #: src/Base/Abilities.php:87
-msgid "Connectivity to the in-memory store. When connected is false, nothing can be cached."
+msgid "Connectivity to the in-memory store. When connected is false, nothing can be cached. `mode` is how that store is reached (single server, sentinel, or cluster) and says nothing about the WordPress installation."
 msgstr ""
 
 #: src/Base/Abilities.php:92
+msgid "Whether this is a multisite installation. On multisite the storage and several settings are network-wide, and there are separate network-scoped operations."
+msgstr ""
+
+#: src/Base/Abilities.php:96
 msgid "Cached entry count, total size as bytes and as a human-readable string, and the configured lifetime in seconds. Compute with size_bytes, not size."
 msgstr ""
 
-#: src/Base/Abilities.php:97
+#: src/Base/Abilities.php:101
 msgid "Checks that need attention. Empty when everything passed."
 msgstr ""
 
-#: src/Base/Abilities.php:218
+#: src/Base/Abilities.php:223
 #: assets/js/settings/partials/ClearCacheButton.jsx:86
 #: build/settings.js:1
 msgid "Clear Network Cache"
 msgstr ""
 
-#: src/Base/Abilities.php:219
+#: src/Base/Abilities.php:224
 #: src/Base/Manager.php:195
 #: src/Rules/Actions/WP/ClearCache.php:43
 #: assets/js/settings/partials/ClearCacheButton.jsx:35
@@ -1048,40 +1052,40 @@ msgid "Clear Cache"
 msgstr ""
 
 #. translators: An AI reads this to decide when to call this destructive operation. Keep `scope`, `targets`, `all` and `expire` verbatim; they are literal API field and value names.
-#: src/Base/Abilities.php:222
+#: src/Base/Abilities.php:227
 msgid "Clear cached pages across every site in the network. Set `scope` to `all` to clear everything, or list cache flags in `targets` to clear only those. Targets combine as a union: everything matching any of them is cleared. Set `expire` to regenerate pages in the background instead of deleting them outright."
 msgstr ""
 
 #. translators: An AI reads this to decide when to call this destructive operation. Keep `scope`, `targets`, `all` and `expire` verbatim; they are literal API field and value names.
-#: src/Base/Abilities.php:224
+#: src/Base/Abilities.php:229
 msgid "Clear cached pages for this site. Set `scope` to `all` to clear everything, or list URLs, post IDs or cache flags in `targets` to clear only those. Targets combine as a union: everything matching any of them is cleared. A post ID also clears the feeds, but never the homepage or archives, so list those separately when they need clearing too. Set `expire` to regenerate pages in the background instead of deleting them outright."
 msgstr ""
 
-#: src/Base/Abilities.php:236
+#: src/Base/Abilities.php:241
 msgid "Use all only when the whole cache should go; it is not the fallback for an empty target list."
 msgstr ""
 
-#: src/Base/Abilities.php:243
+#: src/Base/Abilities.php:248
 msgid "Cache flags to clear, for example post:12 or home."
 msgstr ""
 
-#: src/Base/Abilities.php:244
+#: src/Base/Abilities.php:249
 msgid "What to clear: a URL on this site (scheme and host must match the site exactly), a path such as /blog/, a post ID, or a cache flag such as home."
 msgstr ""
 
-#: src/Base/Abilities.php:249
+#: src/Base/Abilities.php:254
 msgid "Mark entries stale and regenerate them in the background instead of deleting them."
 msgstr ""
 
-#: src/Base/Abilities.php:259
+#: src/Base/Abilities.php:264
 msgid "Number of cache entries removed or expired."
 msgstr ""
 
-#: src/Base/Abilities.php:264
+#: src/Base/Abilities.php:269
 msgid "Targets that were not applied because they belong to another site. Present only when something was skipped; check it before reading cleared: 0 as an empty cache."
 msgstr ""
 
-#: src/Base/Abilities.php:304
+#: src/Base/Abilities.php:309
 msgid "No targets given. Pass at least one target, or set scope to all to clear the entire cache."
 msgstr ""
 
@@ -1271,7 +1275,7 @@ msgid "Click again to confirm"
 msgstr ""
 
 #. translators: %s: post IDs typed into the command palette.
-#: assets/js/commands.js:122
+#: assets/js/commands.js:117
 #: build/commands.js:2
 #, js-format
 msgid "MilliCache: Expire cache for post %s"
@@ -1280,7 +1284,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %s: URLs typed into the command palette.
-#: assets/js/commands.js:133
+#: assets/js/commands.js:128
 #: build/commands.js:3
 #, js-format
 msgid "MilliCache: Expire cache for URL %s"
@@ -1289,7 +1293,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %s: cache flags typed into the command palette.
-#: assets/js/commands.js:144
+#: assets/js/commands.js:139
 #: build/commands.js:4
 #, js-format
 msgid "MilliCache: Expire cache for flag %s"
@@ -1298,8 +1302,8 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %s: cache flags, post IDs or URLs typed into the command palette.
-#: assets/js/commands.js:155
-#: assets/js/commands.js:278
+#: assets/js/commands.js:150
+#: assets/js/commands.js:270
 #: build/commands.js:5
 #: build/commands.js:11
 #, js-format
@@ -1307,7 +1311,7 @@ msgid "MilliCache: Expire cache for %s"
 msgstr ""
 
 #. translators: %s: post IDs typed into the command palette.
-#: assets/js/commands.js:165
+#: assets/js/commands.js:160
 #: build/commands.js:6
 #, js-format
 msgid "MilliCache: Clear cache for post %s"
@@ -1316,7 +1320,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %s: URLs typed into the command palette.
-#: assets/js/commands.js:176
+#: assets/js/commands.js:171
 #: build/commands.js:7
 #, js-format
 msgid "MilliCache: Clear cache for URL %s"
@@ -1325,7 +1329,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %s: cache flags typed into the command palette.
-#: assets/js/commands.js:187
+#: assets/js/commands.js:182
 #: build/commands.js:8
 #, js-format
 msgid "MilliCache: Clear cache for flag %s"
@@ -1334,30 +1338,30 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %s: cache flags, post IDs or URLs typed into the command palette.
-#: assets/js/commands.js:198
-#: assets/js/commands.js:273
+#: assets/js/commands.js:193
+#: assets/js/commands.js:265
 #: build/commands.js:9
 #: build/commands.js:10
 #, js-format
 msgid "MilliCache: Clear cache for %s"
 msgstr ""
 
-#: assets/js/commands.js:209
+#: assets/js/commands.js:204
 #: build/commands.js:9
 msgid "MilliCache: Clear network cache"
 msgstr ""
 
-#: assets/js/commands.js:210
+#: assets/js/commands.js:205
 #: build/commands.js:9
 msgid "MilliCache: Clear website cache"
 msgstr ""
 
-#: assets/js/commands.js:226
+#: assets/js/commands.js:221
 #: build/commands.js:9
 msgid "MilliCache: Expire network cache"
 msgstr ""
 
-#: assets/js/commands.js:227
+#: assets/js/commands.js:222
 #: build/commands.js:9
 msgid "MilliCache: Expire website cache"
 msgstr ""

@@ -154,7 +154,7 @@ it( 'omits the plugin and theme inventory from the status summary', function () 
 
 	$result = ability( make_cache_abilities( $status )['abilities'], 'cache-status' )['callback']();
 
-	expect( array_keys( $result ) )->toBe( array( 'health', 'storage', 'cache', 'issues' ) );
+	expect( array_keys( $result ) )->toBe( array( 'health', 'multisite', 'storage', 'cache', 'issues' ) );
 } );
 
 it( 'survives a status payload whose fields are the wrong type', function () {

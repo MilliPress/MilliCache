@@ -71,7 +71,7 @@ final class Abilities {
 				return self::summarize( is_array( $payload ) ? $payload : array() );
 			},
 			'input_schema'  => array(
-				'type'                 => 'object',
+				'type'                 => array( 'object', 'null' ),
 				'additionalProperties' => false,
 			),
 			'output_schema' => array(
@@ -82,10 +82,14 @@ final class Abilities {
 						'enum'        => array( 'ok', 'warning', 'error' ),
 						'description' => __( 'Overall health: error when caching is broken, warning when something is recommended.', 'millicache' ),
 					),
-					'storage' => array(
+					'storage'   => array(
 						'type'                 => 'object',
-						'description'          => __( 'Connectivity to the in-memory store. When connected is false, nothing can be cached.', 'millicache' ),
+						'description'          => __( 'Connectivity to the in-memory store. When connected is false, nothing can be cached. `mode` is how that store is reached (single server, sentinel, or cluster) and says nothing about the WordPress installation.', 'millicache' ),
 						'additionalProperties' => true,
+					),
+					'multisite' => array(
+						'type'        => 'boolean',
+						'description' => __( 'Whether this is a multisite installation. On multisite the storage and several settings are network-wide, and there are separate network-scoped operations.', 'millicache' ),
 					),
 					'cache'   => array(
 						'type'                 => 'object',
@@ -150,7 +154,8 @@ final class Abilities {
 		$mode = self::as_string( $config, 'mode' );
 
 		return array(
-			'health'  => is_string( $debug['health'] ?? null ) ? $debug['health'] : 'ok',
+			'health'    => is_string( $debug['health'] ?? null ) ? $debug['health'] : 'ok',
+			'multisite' => is_multisite(),
 			// Subsites see only connectivity; the connection itself is
 			// network-owned, so `mode` is absent rather than empty there.
 			'storage' => '' === $mode
@@ -226,7 +231,7 @@ final class Abilities {
 				return self::run_clear( $clear_handler, is_array( $input ) ? $input : array() );
 			},
 			'input_schema'  => array(
-				'type'                 => 'object',
+				'type'                 => array( 'object', 'null' ),
 				'additionalProperties' => false,
 				'properties'           => array(
 					'scope'   => array(
