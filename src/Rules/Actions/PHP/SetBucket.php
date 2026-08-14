@@ -88,10 +88,10 @@ class SetBucket extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$name  = $this->get_arg( 0 )->string();
-		$token = $this->get_arg( 1 )->string();
+		$name  = $this->usable_arg( 0 );
+		$token = $this->usable_arg( 1 );
 
-		if ( '' === $name || '' === $token ) {
+		if ( null === $name || null === $token ) {
 			return;
 		}
 
