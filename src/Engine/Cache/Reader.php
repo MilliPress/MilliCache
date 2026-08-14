@@ -116,7 +116,6 @@ final class Reader {
 
 		$entry = $result->entry;
 
-		// Null entry should not happen after a hit, but guard against it.
 		if ( null === $entry ) {
 			return array(
 				'serve'      => false,
