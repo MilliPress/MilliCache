@@ -89,7 +89,8 @@ MilliRules evaluates **all rules** in order — there's no short-circuit behavio
 // millicache:request:check-method is locked, so it CANNOT be overridden.
 // For an unlocked built-in (e.g. millicache:config:nocache-paths), your
 // rule (order 10) runs AFTER and overrides it:
-Rules::create( 'mysite:cache-search-path', 'php' )
+millicache()->rules()->create( 'mysite:cache-search-path' )
+    ->on( 'template_redirect' )
     ->order( 10 )
     ->when()
         ->request_url( '/search/*' )
@@ -200,15 +201,15 @@ The `X-MilliCache-Status` header shows the caching result:
 ### List Registered Rules
 
 ```php
-use MilliCache\Deps\MilliRules\Rules;
+// Log every registered rule, built-in and custom alike.
+foreach ( millicache()->rules()->get_packages_rules() as $rule ) {
+    $meta = $rule['_metadata'] ?? array();
 
-// Log all rules
-foreach ( Rules::all() as $rule ) {
     error_log( sprintf(
         'Rule: %s (order: %d, phase: %s)',
         $rule['id'],
-        $rule['order'],
-        $rule['phase']
+        $meta['order'] ?? 0,
+        $meta['type'] ?? ''
     ) );
 }
 ```
@@ -218,13 +219,13 @@ foreach ( Rules::all() as $rule ) {
 To change the behavior of a built-in rule, you can unregister them or create your own with the **same ID**:
 
 ```php
-add_action('template_redirect', function() {
+add_action( 'template_redirect', function () {
     // Unregister a built-in rule to completely remove its behavior
-    Rules::unregister( 'millicache:wp:const:doing-ajax' );
-});
+    millicache()->rules()->unregister( 'millicache:wp:const:doing-ajax' );
+} );
 
 // Override the logged-in user bypass to allow caching for subscribers
-Rules::create( 'millicache:wp:logged-in' )  // Same ID as built-in
+millicache()->rules()->create( 'millicache:wp:logged-in' )  // Same ID as built-in
     ->on( 'template_redirect', 20 )         // Same hook & priority as built-in
     ->order( 10 )                           // Higher order to run after built-in
     ->when()

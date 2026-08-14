@@ -52,9 +52,7 @@ if ( get_field( 'show_pricing_table' ) ) {
 Use MilliRules for condition-based flag assignment:
 
 ```php
-use MilliCache\Deps\MilliRules\Rules;
-
-Rules::create( 'mysite:seasonal-flag' )
+millicache()->rules()->create( 'mysite:seasonal-flag' )
     ->on( 'template_redirect', 25 )
     ->when()
         ->has_term( 'seasonal', 'product_cat' )
@@ -78,7 +76,7 @@ if ( is_front_page() && get_option( 'custom_homepage' ) ) {
 
 ```php
 // Via rule
-Rules::create( 'mysite:no-archive-flag' )
+millicache()->rules()->create( 'mysite:no-archive-flag' )
     ->on( 'template_redirect', 30 )
     ->when()
         ->is_post_type_archive( 'product' )

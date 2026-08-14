@@ -346,23 +346,33 @@ add_filter( 'millicache_flags_for_request', function( $flags ) {
 ### Custom Rule Actions
 
 ```php
-// Create a custom action
-class MyCustomAction implements \MilliRules\Contracts\Action {
-    public function execute( $context ) {
-        // Custom logic
-    }
-}
+$rules = millicache()->rules();
 
-// Register with MilliRules
-use MilliRules\Rules;
+// Register the action, then use it by name like any built-in one.
+$rules->register_action( 'my_custom_action', function ( $args, $context ) {
+    // Custom logic.
+} )->label( 'My Custom Action' );
 
-Rules::add( [
-    'id'      => 'mysite:custom',
-    'condition' => [ 'request:path', 'matches', '/special/*' ],
-    'actions' => [ new MyCustomAction() ],
-    'order'   => 10,
-    'phase'   => 'wp',
-] );
+$rules->create( 'mysite:custom' )
+    ->order( 10 )
+    ->when()
+        ->request_url( '/special/*' )
+    ->then()
+        ->my_custom_action()
+    ->register();
+```
+
+An inline closure works too, without registering the action first:
+
+```php
+$rules->create( 'mysite:custom' )
+    ->when()
+        ->request_url( '/special/*' )
+    ->then()
+        ->custom( 'my-custom-action', function ( $context ) {
+            // Custom logic.
+        } )
+    ->register();
 ```
 
 ## Dependencies
