@@ -8,6 +8,23 @@ menu_order: 30
 
 ## [1.8.0-beta.2](https://github.com/MilliPress/MilliCache/compare/v1.8.0-beta.1...v1.8.0-beta.2) (2026-08-16)
 
+<!-- mc:auto sha=5f67c5ceb2e0 -->
+This release tightens how MilliCache interacts with CDNs and external caches, extends what AI assistants and WP-CLI can see, and closes a handful of gaps that caused silent failures.
+
+**Replayed pages now tell downstream caches their true remaining lifetime.** Previously a cached response replayed its original `Cache-Control` headers unchanged, so a shared cache or CDN that ignored the `Age` header would treat a near-expired entry as freshly filled and hold it for the full `s-maxage`. Replayed responses now carry only the share of `s-maxage` that actually remains, so caches that ignore `Age` expire in step with the stored entry rather than well after it.
+
+**AI assistants can now check cache status and clear the cache.** Two new abilities — available over REST and from MCP clients — answer the questions site owners most often ask through an assistant: "why is my page not cached" and "clear the cache for this URL". The status ability returns a curated health summary (connectivity, entry count, and the checks that need attention) without leaking the full plugin and theme inventory that the settings UI needs. The clear ability refuses an empty target list to prevent an assistant that found nothing to clear from silently purging the whole site; a full-site wipe requires an explicit `all` scope. **On a multisite, the status ability now also surfaces network-level problems** — the drop-in state, storage limits, and network-owned modules — that previously went unreported at the site level, leaving a site looking healthy while the real reason nothing was cached sat at the network layer. The ability also reports explicitly whether the install is a multisite, since the `mode` field describing how the store is reached was regularly misread as a description of the WordPress setup.
+
+**WP-CLI now sees the full rule registry.** Because WP-CLI skips the drop-in, `wp millicache rules list` previously showed an empty engine — no built-in rules and nothing registered through `millicache()->rules()`. The manager now registers the rule set itself when it finds it missing, so the same question gets the same answer regardless of how it is asked.
+
+**Placeholder-driven rule actions no longer silently write garbage.** When a bucket or flag was set from a placeholder that could not be filled — a missing cookie, for example — the literal placeholder text `{cookie.geo_country}` was used as the bucket name, pooling every visitor without that cookie together. Those actions now do nothing when the placeholder is empty or unresolved.
+
+**The admin palette no longer hijacks every admin search.** The clear-targets loader was treating any text typed anywhere in wp-admin as a potential cache flag, which pushed a "MilliCache: Clear cache for &lt;text&gt;" entry above whatever the user was actually looking for. Outside a MilliCache palette session, a bare token now has to look like a target — a URL, a path, a post ID, or a flag written with a separator or wildcard — to match. A plain flag opts in with the `flag:` prefix. The Settings entry has also been removed, since WordPress already registers "Go to: Settings > MilliCache" in both site and network admin, making the previous version show the same destination twice.
+
+**Cross-site clear targets are now reported rather than silently dropped.** Clearing `http://example.test/` on an `https` site used to succeed with zero entries cleared — indistinguishable from an empty cache. The response now includes a `skipped` list naming the targets that could not apply.
+
+**Add-ons can now follow the admin bar button's promote/demote cycle** without reimplementing the internal latch. `registerCommands()` broadcasts the context it just applied; an add-on registers on `millicache.commands.context` and follows the cycle in two lines. `showFeedback()` and `releaseFocus()` are also now part of the public bundle.
+<!-- /mc:auto -->
 
 ### Features
 
