@@ -278,6 +278,22 @@ final class Processor {
 	}
 
 	/**
+	 * The request's TTL override, when a rule set one — read as the store path
+	 * reads it, with pending engine options applied.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return ?int Override in seconds, or null without one.
+	 */
+	public function ttl_override(): ?int {
+		if ( ! $this->state ) {
+			return null;
+		}
+
+		return Engine::instance()->options()->apply_to_state( $this->state )->get_ttl_override();
+	}
+
+	/**
 	 * Record the template_redirect sentinel's cache decision. Sticky-negative:
 	 * once false, replays can never flip it back to positive.
 	 *
