@@ -232,16 +232,21 @@ final class Reader {
 			http_response_code( $entry->status );
 		}
 
+		$age = $entry->updated > 0 ? max( 0, time() - $entry->updated ) : 0;
+
 		// Output cached headers.
 		if ( ! empty( $entry->headers ) ) {
 			foreach ( $entry->headers as $header ) {
+				if ( $age > 0 && 0 === stripos( $header, 'cache-control:' ) ) {
+					$header = self::remaining_smaxage( $header, $age );
+				}
 				header( $header );
 			}
 		}
 
 		// State this response's age (RFC 9111).
 		if ( $entry->updated > 0 ) {
-			header( 'Age: ' . max( 0, time() - $entry->updated ) );
+			header( 'Age: ' . $age );
 		}
 
 		// No downstream cache for background regeneration.
@@ -261,5 +266,28 @@ final class Reader {
 		if ( ! $regenerate ) {
 			exit;
 		}
+	}
+
+	/**
+	 * Reduce every `s-maxage` token in a `Cache-Control` line by the entry's
+	 * age, clamped at zero: a replayed response states the shared-cache
+	 * lifetime it has left, since the major CDNs ignore the `Age` header. The
+	 * stored token is the value; the configured TTL is not reconsulted, so
+	 * filtered or per-rule lifetimes stay authoritative.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $header A `Cache-Control: …` header line.
+	 * @param int    $age    The entry's current age in seconds.
+	 * @return string The header line with reduced `s-maxage` values.
+	 */
+	public static function remaining_smaxage( string $header, int $age ): string {
+		return (string) preg_replace_callback(
+			'/(s-maxage=)(\d+)/i',
+			static function ( array $matches ) use ( $age ): string {
+				return $matches[1] . (string) max( 0, (int) $matches[2] - $age );
+			},
+			$header
+		);
 	}
 }
