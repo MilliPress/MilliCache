@@ -6,6 +6,37 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.0-beta.2](https://github.com/MilliPress/MilliCache/compare/v1.8.0-beta.1...v1.8.0-beta.2) (2026-08-16)
+
+<!-- mc:auto sha=5f67c5ceb2e0 -->
+This release tightens how MilliCache interacts with CDNs and external caches, extends what AI assistants and WP-CLI can see, and closes a handful of gaps that caused silent failures.
+
+**Replayed pages now tell downstream caches their true remaining lifetime.** Previously a cached response replayed its original `Cache-Control` headers unchanged, so a shared cache or CDN that ignored the `Age` header would treat a near-expired entry as freshly filled and hold it for the full `s-maxage`. Replayed responses now carry only the share of `s-maxage` that actually remains, so caches that ignore `Age` expire in step with the stored entry rather than well after it.
+
+**AI assistants can now check cache status and clear the cache.** Two new abilities — available over REST and from MCP clients — answer the questions site owners most often ask through an assistant: "why is my page not cached" and "clear the cache for this post or URL". The status ability returns a curated health summary (connectivity, entry count, and the checks that need attention) without leaking the full plugin and theme inventory that the settings UI needs.
+
+**WP-CLI now sees the full rule registry.** Because WP-CLI skips the drop-in, `wp millicache rules list` previously showed an empty engine — no built-in rules and nothing registered through `millicache()->rules()`. The manager now registers the rule set itself when it finds it missing, so the same question gets the same answer regardless of how it is asked.
+
+**Placeholder-driven rule actions no longer silently write garbage.** When a bucket or flag was set from a placeholder that could not be filled — a missing cookie, for example — the literal placeholder text `{cookie.geo_country}` was used as the bucket name, pooling every visitor without that cookie together. Those actions now do nothing when the placeholder is empty or unresolved.
+<!-- /mc:auto -->
+
+### Features
+
+* **abilities:** let assistants read cache status and clear the cache ([f80b057](https://github.com/MilliPress/MilliCache/commit/f80b057e2d88a2d6ab68a88d63495b2bad36a149))
+* **abilities:** report network-wide problems in a site's cache status ([4e2b9f1](https://github.com/MilliPress/MilliCache/commit/4e2b9f1be5fc0e3a6841d7463a555fd57002b544))
+* **abilities:** say whether the install is a multisite ([4573485](https://github.com/MilliPress/MilliCache/commit/457348597a48a8cd7e7feb2dcdf306d73d392078))
+* **cache:** state the lifetime a replayed page has left ([8f699fd](https://github.com/MilliPress/MilliCache/commit/8f699fdad02c3d797f7923cb26b09c99cd5596d2))
+* **commands:** let add-ons ride the palette's promote/demote cycle ([1db3d3f](https://github.com/MilliPress/MilliCache/commit/1db3d3f1a7475c2fe5221e82ae9fed2c5645c609))
+* **engine:** expose the request's effective TTL override ([31e2555](https://github.com/MilliPress/MilliCache/commit/31e2555437c91f94271313df3a5a6be37dd8984e))
+* **rules:** build the rule registry when the drop-in has not ([b6ef71b](https://github.com/MilliPress/MilliCache/commit/b6ef71b032d5f37f748ddc6ae7a75d209ea2a341))
+
+
+### Bug Fixes
+
+* **cache:** report targets that belong to another site ([6a7947a](https://github.com/MilliPress/MilliCache/commit/6a7947ae23b67a4a6636befed36827171851427e))
+* **commands:** stop crowding every admin search, and drop the settings entry ([87b52d1](https://github.com/MilliPress/MilliCache/commit/87b52d1c19b0c499ea2200306a3f4a9631021bf2))
+* **rules:** skip an action whose placeholder resolved to nothing ([a5e4894](https://github.com/MilliPress/MilliCache/commit/a5e4894ad0a10ede4b91cce7f67463cea2c9ebc9))
+
 ## [1.8.0-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.8.0-beta...v1.8.0-beta.1) (2026-08-10)
 
 <!-- mc:auto sha=98337a07d375 -->
