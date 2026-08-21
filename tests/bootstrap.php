@@ -19,6 +19,10 @@ if ( ! defined( 'WP_CONTENT_DIR' ) ) {
 	define( 'WP_CONTENT_DIR', '/tmp/wp-content' );
 }
 
+if ( ! defined( 'WP_CACHE' ) ) {
+	define( 'WP_CACHE', true );
+}
+
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 	define( 'DAY_IN_SECONDS', 86400 );
 }
