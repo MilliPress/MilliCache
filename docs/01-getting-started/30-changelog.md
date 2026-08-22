@@ -6,6 +6,56 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.0](https://github.com/MilliPress/MilliCache/compare/v1.7.7...v1.8.0) (2026-08-22)
+
+<!-- mc:auto sha=9ba0bffb378a -->
+1.8.0 brings a redesigned cache management experience centered on a command palette, along with several correctness fixes to the caching engine and rule system.
+
+The admin bar's one-click flush button is replaced by a command palette that lets you clear or expire specific targets — pages, post types, taxonomies, or the full cache — with descriptive labels. A snackbar confirms the action and reports how many entries were actually removed. Add-ons can register their own palette commands and control their position in the list. The palette is wider to accommodate longer target names and no longer intrudes on every admin search field.
+
+Cache responses now include the remaining lifetime of a served page. The engine has been corrected to never store redirect responses and to capture output from the outermost buffer, which prevents partial content from being cached when other plugins open buffers early. URL hashes now preserve non-default ports, so sites on non-standard ports get correct per-URL cache isolation. The invalidation queue runs even when the drop-in fails to load, so scheduled purges are not silently lost.
+
+On the rules side, `wp-cron.php` is now excluded by a dedicated locked rule that cannot be overridden by site rules. Previously it was only covered by the generic dot-file rule, which a higher-priority site rule could outrank, potentially causing a stale cron lock response to be replayed and stalling scheduled events. The REST API exclusion now also matches the `?rest_route=` query-string form used when pretty permalinks are off.
+
+WP-CLI's clear flags are now scoped to the current site context on multisite. Redundant entries have been removed from the admin search results. Portuguese (Brazil), Italian, Spanish, and French translations are complete.
+<!-- /mc:auto -->
+
+### Features
+
+* **abilities:** let assistants read cache status and clear the cache ([f80b057](https://github.com/MilliPress/MilliCache/commit/f80b057e2d88a2d6ab68a88d63495b2bad36a149))
+* **abilities:** report network-wide problems in a site's cache status ([4e2b9f1](https://github.com/MilliPress/MilliCache/commit/4e2b9f1be5fc0e3a6841d7463a555fd57002b544))
+* **abilities:** say whether the install is a multisite ([4573485](https://github.com/MilliPress/MilliCache/commit/457348597a48a8cd7e7feb2dcdf306d73d392078))
+* **adminbar:** replace one-click flush with command palette integration ([382b10b](https://github.com/MilliPress/MilliCache/commit/382b10beec75a421834632919875090c65d21443))
+* **adminbar:** snackbar clear feedback and a wider palette ([2c77206](https://github.com/MilliPress/MilliCache/commit/2c77206eb6b1635730c2047168b942b88bb03b03))
+* **cache:** state the lifetime a replayed page has left ([8f699fd](https://github.com/MilliPress/MilliCache/commit/8f699fdad02c3d797f7923cb26b09c99cd5596d2))
+* **clear:** report removed-entry counts instead of processed inputs ([23ec58f](https://github.com/MilliPress/MilliCache/commit/23ec58f9b5b2d09a23fae07137aafb171c912837))
+* **cli:** scope bare clear flags to the WP-CLI site context ([d30d31e](https://github.com/MilliPress/MilliCache/commit/d30d31e386408c3a072c513a29108eb7528b9a6e))
+* **commands:** let add-ons ride the palette's promote/demote cycle ([1db3d3f](https://github.com/MilliPress/MilliCache/commit/1db3d3f1a7475c2fe5221e82ae9fed2c5645c609))
+* **commands:** offer expire alongside clear with descriptive target labels ([880c9eb](https://github.com/MilliPress/MilliCache/commit/880c9ebc4bf0e57edff930cb4f31c55578c58d01))
+* **engine:** capture the page in the outermost output buffer ([6c4d393](https://github.com/MilliPress/MilliCache/commit/6c4d393ba419e569ab4b8e5aca0f989ecf95d240))
+* **engine:** capture the page in the outermost output buffer ([7606f04](https://github.com/MilliPress/MilliCache/commit/7606f04b2ea9749f4ffd41f4a52e203bc477b2b6))
+* **engine:** capture the page in the outermost output buffer ([6cee142](https://github.com/MilliPress/MilliCache/commit/6cee14202bdaf15594dfd7b9ed659533ef025d4b))
+* **engine:** expose the request's effective TTL override ([31e2555](https://github.com/MilliPress/MilliCache/commit/31e2555437c91f94271313df3a5a6be37dd8984e))
+* **rules:** build the rule registry when the drop-in has not ([b6ef71b](https://github.com/MilliPress/MilliCache/commit/b6ef71b032d5f37f748ddc6ae7a75d209ea2a341))
+
+
+### Bug Fixes
+
+* **adminbar:** keep the admin bar button size stable on page load ([2c77206](https://github.com/MilliPress/MilliCache/commit/2c77206eb6b1635730c2047168b942b88bb03b03))
+* **cache:** report targets that belong to another site ([6a7947a](https://github.com/MilliPress/MilliCache/commit/6a7947ae23b67a4a6636befed36827171851427e))
+* **clear:** anchor path-only URL targets onto the home URL ([27bd7dc](https://github.com/MilliPress/MilliCache/commit/27bd7dc6c42f3d2210bd02ae148d31fb461a08e5))
+* **clear:** skip non-viewable taxonomies in post-related flags ([40cd884](https://github.com/MilliPress/MilliCache/commit/40cd88414019eda097f910bce72fb6acd40a01e8))
+* **commands:** drop the stray focus ring after palette clears ([880c9eb](https://github.com/MilliPress/MilliCache/commit/880c9ebc4bf0e57edff930cb4f31c55578c58d01))
+* **commands:** stop crowding every admin search, and drop the settings entry ([87b52d1](https://github.com/MilliPress/MilliCache/commit/87b52d1c19b0c499ea2200306a3f4a9631021bf2))
+* **engine:** execute the invalidation queue when the drop-in never loads ([746bd0e](https://github.com/MilliPress/MilliCache/commit/746bd0eb9cfafe57df36c39a45ac8074d0708819))
+* **engine:** keep non-default ports in URL-based cache hashes ([ed6f3d6](https://github.com/MilliPress/MilliCache/commit/ed6f3d670305dcf7750ed49bf8425e1149d80efa))
+* **engine:** never store redirect responses ([6c4d393](https://github.com/MilliPress/MilliCache/commit/6c4d393ba419e569ab4b8e5aca0f989ecf95d240))
+* **engine:** never store redirect responses ([7606f04](https://github.com/MilliPress/MilliCache/commit/7606f04b2ea9749f4ffd41f4a52e203bc477b2b6))
+* **engine:** never store redirect responses ([6cee142](https://github.com/MilliPress/MilliCache/commit/6cee14202bdaf15594dfd7b9ed659533ef025d4b))
+* **rules:** lock wp-cron.php out of the cache and cover the rest_route form ([908ce04](https://github.com/MilliPress/MilliCache/commit/908ce04ec9a3f0e4b64813253eebb69135b7c36c))
+* **rules:** skip an action whose placeholder resolved to nothing ([a5e4894](https://github.com/MilliPress/MilliCache/commit/a5e4894ad0a10ede4b91cce7f67463cea2c9ebc9))
+* **updates:** keep update checks off every admin page load ([1661d07](https://github.com/MilliPress/MilliCache/commit/1661d079641cccc28003d304659cbdbe769070df))
+
 ## [1.8.0-beta.2](https://github.com/MilliPress/MilliCache/compare/v1.8.0-beta.1...v1.8.0-beta.2) (2026-08-16)
 
 <!-- mc:auto sha=5f67c5ceb2e0 -->
