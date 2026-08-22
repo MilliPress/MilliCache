@@ -8,6 +8,17 @@ menu_order: 30
 
 ## [1.8.0](https://github.com/MilliPress/MilliCache/compare/v1.7.7...v1.8.0) (2026-08-22)
 
+<!-- mc:auto sha=9ba0bffb378a -->
+1.8.0 brings a redesigned cache management experience centered on a command palette, along with several correctness fixes to the caching engine and rule system.
+
+The admin bar's one-click flush button is replaced by a command palette that lets you clear or expire specific targets — pages, post types, taxonomies, or the full cache — with descriptive labels. A snackbar confirms the action and reports how many entries were actually removed. Add-ons can register their own palette commands and control their position in the list. The palette is wider to accommodate longer target names and no longer intrudes on every admin search field.
+
+Cache responses now include the remaining lifetime of a served page. The engine has been corrected to never store redirect responses and to capture output from the outermost buffer, which prevents partial content from being cached when other plugins open buffers early. URL hashes now preserve non-default ports, so sites on non-standard ports get correct per-URL cache isolation. The invalidation queue runs even when the drop-in fails to load, so scheduled purges are not silently lost.
+
+On the rules side, `wp-cron.php` is now excluded by a dedicated locked rule that cannot be overridden by site rules. Previously it was only covered by the generic dot-file rule, which a higher-priority site rule could outrank, potentially causing a stale cron lock response to be replayed and stalling scheduled events. The REST API exclusion now also matches the `?rest_route=` query-string form used when pretty permalinks are off.
+
+WP-CLI's clear flags are now scoped to the current site context on multisite. Redundant entries have been removed from the admin search results. Portuguese (Brazil), Italian, Spanish, and French translations are complete.
+<!-- /mc:auto -->
 
 ### Features
 
