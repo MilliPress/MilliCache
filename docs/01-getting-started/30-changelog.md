@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.0-beta.3](https://github.com/MilliPress/MilliCache/compare/v1.8.0-beta.2...v1.8.0-beta.3) (2026-08-22)
+
+
+### Bug Fixes
+
+* **rules:** lock wp-cron.php out of the cache and cover the rest_route form ([908ce04](https://github.com/MilliPress/MilliCache/commit/908ce04ec9a3f0e4b64813253eebb69135b7c36c))
+
 ## [1.8.0](https://github.com/MilliPress/MilliCache/compare/v1.7.7...v1.8.0) (2026-08-22)
 
 <!-- mc:auto sha=9ba0bffb378a -->
