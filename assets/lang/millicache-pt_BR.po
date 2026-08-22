@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MilliCache 1.7.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/MilliCache\n"
-"POT-Creation-Date: 2026-07-29T21:49:58+00:00\n"
+"POT-Creation-Date: 2026-08-14T12:39:31+00:00\n"
 "PO-Revision-Date: 2026-08-04 10:33+0000\n"
 "Last-Translator: Philipp Wellmer <philipp@millipress.com>\n"
 "Language-Team: Portuguese (Brazil) <https://translate.millipress.com/"
@@ -18,19 +18,20 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
 
 #. Plugin Name of the plugin
-#: millicache.php src/Admin/SiteHealth.php:103 src/Admin/SiteHealth.php:395
-#: src/Base/Network.php:161 src/Base/Network.php:162 src/Base/Site.php:158
-#: src/Base/Site.php:159 src/Base/Site.php:162
+#: millicache.php:10 src/Admin/Adminbar.php:161 src/Admin/SiteHealth.php:103
+#: src/Admin/SiteHealth.php:395 src/Base/Network.php:161
+#: src/Base/Network.php:162 src/Base/Site.php:158 src/Base/Site.php:159
+#: src/Base/Site.php:162
 msgid "MilliCache"
 msgstr "MilliCache"
 
 #. Plugin URI of the plugin
-#: millicache.php
+#: millicache.php:11
 msgid "https://www.millipress.com/millicache"
 msgstr ""
 
 #. Description of the plugin
-#: millicache.php
+#: millicache.php:12
 msgid ""
 "The most flexible Full Page Cache for scaling WordPress sites. Enterprise-"
 "grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any "
@@ -41,12 +42,12 @@ msgstr ""
 "KeyDB ou qualquer alternativa."
 
 #. Author of the plugin
-#: millicache.php
+#: millicache.php:20
 msgid "MilliPress Team"
 msgstr "MilliPress Team"
 
 #. Author URI of the plugin
-#: millicache.php
+#: millicache.php:21
 msgid "https://www.millipress.com/"
 msgstr ""
 
@@ -68,78 +69,31 @@ msgstr ""
 msgid "Cache Settings"
 msgstr "Configurações de cache"
 
-#: src/Admin/Adminbar.php:116
+#: src/Admin/Adminbar.php:159
 msgid "Cache"
 msgstr "Cache"
 
-#: src/Admin/Adminbar.php:117
-#: assets/js/settings/partials/ClearCacheButton.jsx:87 build/settings.js:1
-msgid "Clear Website Cache"
-msgstr "Limpar o cache do site"
-
 #. translators: %s: Target name
-#: src/Admin/Adminbar.php:143 src/Admin/Adminbar.php:182
+#: src/Admin/Adminbar.php:189 src/Admin/Adminbar.php:228
 #, php-format
 msgid "Clear %s Cache"
 msgstr "Limpar o cache de %s"
 
-#: src/Admin/Adminbar.php:154
+#: src/Admin/Adminbar.php:200
 msgid "Clear Current View Cache"
 msgstr "Limpar o cache da visualização atual"
 
-#: src/Admin/Adminbar.php:183
+#: src/Admin/Adminbar.php:229
 msgid "Network"
 msgstr "toda a rede"
 
-#: src/Admin/Adminbar.php:183
+#: src/Admin/Adminbar.php:229
 msgid "Website"
 msgstr "todo o site"
 
-#: src/Admin/CLI/Clear.php:92
+#: src/Admin/CLI/Clear.php:96
 msgid "The --related flag only applies to --id."
 msgstr "A opção --related só se aplica a --id."
-
-#: src/Admin/CLI/Clear.php:98
-msgid "Network cache cleared."
-msgstr "Cache da rede limpo."
-
-#: src/Admin/CLI/Clear.php:98
-msgid "Site cache cleared."
-msgstr "Cache do site limpo."
-
-#. translators: %s is the number of cleared network IDs.
-#: src/Admin/CLI/Clear.php:113
-#, php-format
-msgid "Cleared cache for %s networks."
-msgstr "Cache limpo para %s redes."
-
-#. translators: %s is the number of cleared site IDs.
-#: src/Admin/CLI/Clear.php:126
-#, php-format
-msgid "Cleared cache for %s sites."
-msgstr "Cache limpo para %s sites."
-
-#. translators: %s is the number of cleared post-IDs.
-#: src/Admin/CLI/Clear.php:137
-#, php-format
-msgid "Cleared cache for %s posts."
-msgstr "Cache limpo para %s posts."
-
-#: src/Admin/CLI/Clear.php:141
-msgid "Included related archives and taxonomies."
-msgstr "Arquivos e taxonomias relacionados foram incluídos."
-
-#. translators: %s is the number of cleared URIs.
-#: src/Admin/CLI/Clear.php:153
-#, php-format
-msgid "Cleared cache for %s URIs."
-msgstr "Cache limpo para %s URIs."
-
-#. translators: %s is the number of cleared flags.
-#: src/Admin/CLI/Clear.php:166
-#, php-format
-msgid "Cleared cache for %s flags."
-msgstr "Cache limpo para %s flags."
 
 #. translators: %s: the invalid drop-in name given on the command line.
 #: src/Admin/CLI/Drop.php:68
@@ -466,38 +420,27 @@ msgstr "Verificação do MilliCache"
 msgid "%1$s: %2$s"
 msgstr "%1$s: %2$s"
 
-#: src/Admin/UI/CacheActions.php:80 src/Admin/UI/CacheActions.php:178
+#: src/Admin/UI/CacheActions.php:85 src/Admin/UI/CacheActions.php:179
 msgid "Invalid cache action."
 msgstr "Ação de cache inválida."
 
-#: src/Admin/UI/CacheActions.php:88 src/Admin/UI/CacheActions.php:160
-#: src/Admin/UI/CacheActions.php:170
-msgid "The network cache has been cleared."
-msgstr "O cache da rede foi limpo."
-
-#: src/Admin/UI/CacheActions.php:91 src/Admin/UI/CacheActions.php:113
-msgid "The site cache has been cleared."
-msgstr "O cache do site foi limpo."
-
-#: src/Admin/UI/CacheActions.php:98
+#: src/Admin/UI/CacheActions.php:101
 msgid "No flags provided to clear cache."
 msgstr "Nenhuma flag foi informada para limpar o cache."
 
-#: src/Admin/UI/CacheActions.php:103
-msgid "The current page cache has been cleared."
-msgstr "O cache da página atual foi limpo."
-
-#: src/Admin/UI/CacheActions.php:109 src/Admin/UI/CacheActions.php:166
+#: src/Admin/UI/CacheActions.php:110 src/Admin/UI/CacheActions.php:169
 msgid "Invalid targets parameter. Must be a string or an array."
 msgstr "Parâmetro targets inválido: deve ser uma string ou um array."
 
-#: src/Admin/UI/CacheActions.php:114 src/Admin/UI/CacheActions.php:173
-msgid "Cache for the targets has been cleared."
-msgstr "O cache dos alvos foi limpo."
-
-#: src/Admin/UI/CacheActions.php:133 src/Admin/UI/CacheActions.php:201
+#: src/Admin/UI/CacheActions.php:134 src/Admin/UI/CacheActions.php:204
 msgid "Failed to perform cache action: "
 msgstr "Não foi possível executar a ação de cache: "
+
+#. translators: 1: the result message; 2: comma-separated list of URLs that belong to another site.
+#: src/Admin/UI/CacheActions.php:316
+#, php-format
+msgid "%1$s Skipped, not on this site: %2$s"
+msgstr ""
 
 #: src/Admin/UI/Sections/Cache.php:52
 msgid "TTL (Cache Expiry)"
@@ -1205,20 +1148,174 @@ msgid "Uncached requests"
 msgstr "Requisições fora do cache"
 
 #. translators: %1$s is the number of pages, %2$s is singular or plural "page", %3$s is the cache size.
-#: src/Admin/Utils.php:220 assets/js/adminbar.js:176 build/adminbar.js:3
+#: src/Admin/Utils.php:223 assets/js/adminbar.js:337 build/adminbar.js:3
 #, php-format
 msgid "%1$s %2$s (%3$s)"
 msgstr "%1$s %2$s (%3$s)"
 
-#: src/Admin/Utils.php:222 assets/js/adminbar.js:178 build/adminbar.js:3
+#: src/Admin/Utils.php:225 assets/js/adminbar.js:339 build/adminbar.js:3
 msgid "page"
 msgid_plural "pages"
 msgstr[0] "página"
 msgstr[1] "páginas"
 
-#: src/Admin/Utils.php:227 assets/js/adminbar.js:183 build/adminbar.js:3
+#: src/Admin/Utils.php:230 assets/js/adminbar.js:344 build/adminbar.js:3
 msgid "No cached pages"
 msgstr "Nenhuma página em cache"
+
+#: src/Admin/Utils.php:247
+msgid "No cache entries matched the given targets."
+msgstr ""
+
+#. translators: %d is the number of expired cache entries.
+#: src/Admin/Utils.php:253
+#, php-format
+msgid "Expired %d cache entry."
+msgid_plural "Expired %d cache entries."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d is the number of removed cache entries.
+#: src/Admin/Utils.php:260
+#, fuzzy, php-format
+#| msgid "Cleared cache for %s networks."
+msgid "Cleared %d cache entry."
+msgid_plural "Cleared %d cache entries."
+msgstr[0] "Cache limpo para %s redes."
+msgstr[1] "Cache limpo para %s redes."
+
+#: src/Base/Abilities.php:61
+#, fuzzy
+#| msgid "Clear Network Cache"
+msgid "Network Cache Status"
+msgstr "Limpar o cache da rede"
+
+#: src/Base/Abilities.php:62
+#, fuzzy
+#| msgid "MilliCache Status"
+msgid "Cache Status"
+msgstr "Status do MilliCache"
+
+#. translators: An AI reads this to decide when to call this operation. Keep `issues` and the status words verbatim; they are literal response values the AI checks for.
+#: src/Base/Abilities.php:65
+msgid ""
+"Report whether the network cache is working: overall health, storage "
+"connectivity, cache size and the list of problems found. Call this before "
+"diagnosing why pages are not being cached. The `issues` list only contains "
+"checks that need attention; an empty list means everything passed."
+msgstr ""
+
+#. translators: An AI reads this to decide when to call this operation. Keep `issues` and the status words verbatim; they are literal response values the AI checks for.
+#: src/Base/Abilities.php:67
+msgid ""
+"Report whether the cache is working: overall health, storage connectivity, "
+"cache size and the list of problems found. Call this before diagnosing why "
+"pages are not being cached. The `issues` list only contains checks that need "
+"attention; an empty list means everything passed."
+msgstr ""
+
+#: src/Base/Abilities.php:83
+msgid ""
+"Overall health: error when caching is broken, warning when something is "
+"recommended."
+msgstr ""
+
+#: src/Base/Abilities.php:87
+msgid ""
+"Connectivity to the in-memory store. When connected is false, nothing can be "
+"cached. `mode` is how that store is reached (single server, sentinel, or "
+"cluster) and says nothing about the WordPress installation."
+msgstr ""
+
+#: src/Base/Abilities.php:92
+msgid ""
+"Whether this is a multisite installation. On multisite the storage and "
+"several settings are network-wide, and there are separate network-scoped "
+"operations."
+msgstr ""
+
+#: src/Base/Abilities.php:96
+msgid ""
+"Cached entry count, total size as bytes and as a human-readable string, and "
+"the configured lifetime in seconds. Compute with size_bytes, not size."
+msgstr ""
+
+#: src/Base/Abilities.php:101
+msgid "Checks that need attention. Empty when everything passed."
+msgstr ""
+
+#: src/Base/Abilities.php:223
+#: assets/js/settings/partials/ClearCacheButton.jsx:86 build/settings.js:1
+msgid "Clear Network Cache"
+msgstr "Limpar o cache da rede"
+
+#: src/Base/Abilities.php:224 src/Base/Manager.php:195
+#: src/Rules/Actions/WP/ClearCache.php:43
+#: assets/js/settings/partials/ClearCacheButton.jsx:35
+#: assets/js/settings/partials/ClearCacheButton.jsx:46
+#: assets/js/settings/partials/ClearCacheButton.jsx:51 build/settings.js:1
+msgid "Clear Cache"
+msgstr "Limpar o cache"
+
+#. translators: An AI reads this to decide when to call this destructive operation. Keep `scope`, `targets`, `all` and `expire` verbatim; they are literal API field and value names.
+#: src/Base/Abilities.php:227
+msgid ""
+"Clear cached pages across every site in the network. Set `scope` to `all` to "
+"clear everything, or list cache flags in `targets` to clear only those. "
+"Targets combine as a union: everything matching any of them is cleared. Set "
+"`expire` to regenerate pages in the background instead of deleting them "
+"outright."
+msgstr ""
+
+#. translators: An AI reads this to decide when to call this destructive operation. Keep `scope`, `targets`, `all` and `expire` verbatim; they are literal API field and value names.
+#: src/Base/Abilities.php:229
+msgid ""
+"Clear cached pages for this site. Set `scope` to `all` to clear everything, "
+"or list URLs, post IDs or cache flags in `targets` to clear only those. "
+"Targets combine as a union: everything matching any of them is cleared. A "
+"post ID also clears the feeds, but never the homepage or archives, so list "
+"those separately when they need clearing too. Set `expire` to regenerate "
+"pages in the background instead of deleting them outright."
+msgstr ""
+
+#: src/Base/Abilities.php:241
+msgid ""
+"Use all only when the whole cache should go; it is not the fallback for an "
+"empty target list."
+msgstr ""
+
+#: src/Base/Abilities.php:248
+msgid "Cache flags to clear, for example post:12 or home."
+msgstr ""
+
+#: src/Base/Abilities.php:249
+msgid ""
+"What to clear: a URL on this site (scheme and host must match the site "
+"exactly), a path such as /blog/, a post ID, or a cache flag such as home."
+msgstr ""
+
+#: src/Base/Abilities.php:254
+msgid ""
+"Mark entries stale and regenerate them in the background instead of deleting "
+"them."
+msgstr ""
+
+#: src/Base/Abilities.php:264
+msgid "Number of cache entries removed or expired."
+msgstr ""
+
+#: src/Base/Abilities.php:269
+msgid ""
+"Targets that were not applied because they belong to another site. Present "
+"only when something was skipped; check it before reading cleared: 0 as an "
+"empty cache."
+msgstr ""
+
+#: src/Base/Abilities.php:309
+msgid ""
+"No targets given. Pass at least one target, or set scope to all to clear the "
+"entire cache."
+msgstr ""
 
 #: src/Base/Manager.php:166
 msgid "Documentation"
@@ -1231,13 +1328,6 @@ msgstr "Configurações de rede"
 #: src/Base/Manager.php:178
 msgid "Support"
 msgstr "Suporte"
-
-#: src/Base/Manager.php:195 src/Rules/Actions/WP/ClearCache.php:43
-#: assets/js/settings/partials/ClearCacheButton.jsx:35
-#: assets/js/settings/partials/ClearCacheButton.jsx:46
-#: assets/js/settings/partials/ClearCacheButton.jsx:51 build/settings.js:1
-msgid "Clear Cache"
-msgstr "Limpar o cache"
 
 #: src/Base/Manager.php:210
 msgid "Status"
@@ -1418,6 +1508,108 @@ msgstr "Remove da resposta uma flag anexada anteriormente."
 msgid "The flag identifier to remove from the response."
 msgstr "O identificador da flag a remover da resposta."
 
+#: assets/js/adminbar.js:135 build/adminbar.js:3
+msgid "Enter flag patterns to clear, e.g. \"5:*\" or \"*:posts\"…"
+msgstr ""
+
+#: assets/js/adminbar.js:139 build/adminbar.js:3
+msgid "Enter the flags, post IDs or URLs you want to clear…"
+msgstr ""
+
+#: assets/js/adminbar.js:187 build/adminbar.js:3
+msgid "Click again to confirm"
+msgstr ""
+
+#. translators: %s: post IDs typed into the command palette.
+#: assets/js/commands.js:117 build/commands.js:2
+#, fuzzy
+#| msgid "Cleared cache for %s posts."
+msgid "MilliCache: Expire cache for post %s"
+msgid_plural "MilliCache: Expire cache for posts %s"
+msgstr[0] "Cache limpo para %s posts."
+msgstr[1] "Cache limpo para %s posts."
+
+#. translators: %s: URLs typed into the command palette.
+#: assets/js/commands.js:128 build/commands.js:3
+msgid "MilliCache: Expire cache for URL %s"
+msgid_plural "MilliCache: Expire cache for URLs %s"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: cache flags typed into the command palette.
+#: assets/js/commands.js:139 build/commands.js:4
+#, fuzzy
+#| msgid "Cleared cache for %s flags."
+msgid "MilliCache: Expire cache for flag %s"
+msgid_plural "MilliCache: Expire cache for flags %s"
+msgstr[0] "Cache limpo para %s flags."
+msgstr[1] "Cache limpo para %s flags."
+
+#. translators: %s: cache flags, post IDs or URLs typed into the command palette.
+#: assets/js/commands.js:150 assets/js/commands.js:270 build/commands.js:5
+#: build/commands.js:11
+msgid "MilliCache: Expire cache for %s"
+msgstr ""
+
+#. translators: %s: post IDs typed into the command palette.
+#: assets/js/commands.js:160 build/commands.js:6
+#, fuzzy
+#| msgid "Cleared cache for %s posts."
+msgid "MilliCache: Clear cache for post %s"
+msgid_plural "MilliCache: Clear cache for posts %s"
+msgstr[0] "Cache limpo para %s posts."
+msgstr[1] "Cache limpo para %s posts."
+
+#. translators: %s: URLs typed into the command palette.
+#: assets/js/commands.js:171 build/commands.js:7
+#, fuzzy
+#| msgid "Cleared cache for %s URIs."
+msgid "MilliCache: Clear cache for URL %s"
+msgid_plural "MilliCache: Clear cache for URLs %s"
+msgstr[0] "Cache limpo para %s URIs."
+msgstr[1] "Cache limpo para %s URIs."
+
+#. translators: %s: cache flags typed into the command palette.
+#: assets/js/commands.js:182 build/commands.js:8
+#, fuzzy
+#| msgid "Cleared cache for %s flags."
+msgid "MilliCache: Clear cache for flag %s"
+msgid_plural "MilliCache: Clear cache for flags %s"
+msgstr[0] "Cache limpo para %s flags."
+msgstr[1] "Cache limpo para %s flags."
+
+#. translators: %s: cache flags, post IDs or URLs typed into the command palette.
+#: assets/js/commands.js:193 assets/js/commands.js:265 build/commands.js:9
+#: build/commands.js:10
+#, fuzzy
+#| msgid "Cleared cache for %s URIs."
+msgid "MilliCache: Clear cache for %s"
+msgstr "Cache limpo para %s URIs."
+
+#: assets/js/commands.js:204 build/commands.js:9
+#, fuzzy
+#| msgid "MilliCache Network"
+msgid "MilliCache: Clear network cache"
+msgstr "Rede MilliCache"
+
+#: assets/js/commands.js:205 build/commands.js:9
+#, fuzzy
+#| msgid "Clear Website Cache"
+msgid "MilliCache: Clear website cache"
+msgstr "Limpar o cache do site"
+
+#: assets/js/commands.js:221 build/commands.js:9
+#, fuzzy
+#| msgid "MilliCache Network"
+msgid "MilliCache: Expire network cache"
+msgstr "Rede MilliCache"
+
+#: assets/js/commands.js:222 build/commands.js:9
+#, fuzzy
+#| msgid "MilliCache is healthy"
+msgid "MilliCache: Expire website cache"
+msgstr "O MilliCache está funcionando perfeitamente"
+
 #: assets/js/settings/partials/ClearCacheButton.jsx:60 build/settings.js:1
 msgid ""
 "Enter one or more flag patterns to clear across the network. Use a site-"
@@ -1444,9 +1636,9 @@ msgstr ""
 msgid "Targets to clear (Optional)"
 msgstr "Alvos a limpar (opcional)"
 
-#: assets/js/settings/partials/ClearCacheButton.jsx:86 build/settings.js:1
-msgid "Clear Network Cache"
-msgstr "Limpar o cache da rede"
+#: assets/js/settings/partials/ClearCacheButton.jsx:87 build/settings.js:1
+msgid "Clear Website Cache"
+msgstr "Limpar o cache do site"
 
 #: assets/js/settings/partials/ClearCacheButton.jsx:88 build/settings.js:1
 msgid "Clear Cache of Targets"
@@ -1555,6 +1747,43 @@ msgstr "Abrir todas as verificações de status e as informações de depuraçã
 #: assets/js/settings/tabs/Status.jsx:567 build/settings.js:1
 msgid "Open the full check list and debug snapshot"
 msgstr "Abrir a lista completa de verificações e o snapshot de depuração"
+
+#: assets/js/shared/adminbar-feedback.js:46 build/adminbar.js:1
+#: build/commands.js:1
+#, fuzzy
+#| msgid "Clear Cache"
+msgid "Cleared!"
+msgstr "Limpar o cache"
+
+#: assets/js/shared/adminbar-feedback.js:47 build/adminbar.js:1
+#: build/commands.js:1
+msgid "Error"
+msgstr ""
+
+#~ msgid "Network cache cleared."
+#~ msgstr "Cache da rede limpo."
+
+#~ msgid "Site cache cleared."
+#~ msgstr "Cache do site limpo."
+
+#, php-format
+#~ msgid "Cleared cache for %s sites."
+#~ msgstr "Cache limpo para %s sites."
+
+#~ msgid "Included related archives and taxonomies."
+#~ msgstr "Arquivos e taxonomias relacionados foram incluídos."
+
+#~ msgid "The network cache has been cleared."
+#~ msgstr "O cache da rede foi limpo."
+
+#~ msgid "The site cache has been cleared."
+#~ msgstr "O cache do site foi limpo."
+
+#~ msgid "The current page cache has been cleared."
+#~ msgstr "O cache da página atual foi limpo."
+
+#~ msgid "Cache for the targets has been cleared."
+#~ msgstr "O cache dos alvos foi limpo."
 
 #~ msgid ""
 #~ "The file advanced-cache.php has been copied to the /wp-content directory. "
