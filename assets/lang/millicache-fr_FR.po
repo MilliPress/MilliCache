@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MilliCache 1.7.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/MilliCache\n"
-"POT-Creation-Date: 2026-08-14T12:39:31+00:00\n"
+"POT-Creation-Date: 2026-08-22T09:47:36+00:00\n"
 "PO-Revision-Date: 2026-08-04 10:33+0000\n"
 "Last-Translator: Philipp Wellmer <philipp@millipress.com>\n"
 "Language-Team: French (France) <https://translate.millipress.com/projects/"
@@ -18,7 +18,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
 
 #. Plugin Name of the plugin
-#: millicache.php:10 src/Admin/Adminbar.php:161 src/Admin/SiteHealth.php:103
+#: millicache.php src/Admin/Adminbar.php:161 src/Admin/SiteHealth.php:103
 #: src/Admin/SiteHealth.php:395 src/Base/Network.php:161
 #: src/Base/Network.php:162 src/Base/Site.php:158 src/Base/Site.php:159
 #: src/Base/Site.php:162
@@ -26,12 +26,12 @@ msgid "MilliCache"
 msgstr "MilliCache"
 
 #. Plugin URI of the plugin
-#: millicache.php:11
+#: millicache.php
 msgid "https://www.millipress.com/millicache"
 msgstr ""
 
 #. Description of the plugin
-#: millicache.php:12
+#: millicache.php
 msgid ""
 "The most flexible Full Page Cache for scaling WordPress sites. Enterprise-"
 "grade in-memory store with Redis, ValKey, Dragonfly, KeyDB, or any "
@@ -42,12 +42,12 @@ msgstr ""
 "ValKey, Dragonfly, KeyDB ou toute autre alternative."
 
 #. Author of the plugin
-#: millicache.php:20
+#: millicache.php
 msgid "MilliPress Team"
 msgstr "MilliPress Team"
 
 #. Author URI of the plugin
-#: millicache.php:21
+#: millicache.php
 msgid "https://www.millipress.com/"
 msgstr ""
 
@@ -1196,20 +1196,20 @@ msgid_plural "Cleared %d cache entries."
 msgstr[0] "Cache de %s réseaux vidé."
 msgstr[1] "Cache de %s réseaux vidé."
 
-#: src/Base/Abilities.php:61
+#: src/Base/Abilities.php:65
 #, fuzzy
 #| msgid "Clear Network Cache"
 msgid "Network Cache Status"
 msgstr "Vider le cache du réseau"
 
-#: src/Base/Abilities.php:62
+#: src/Base/Abilities.php:66
 #, fuzzy
 #| msgid "MilliCache Status"
 msgid "Cache Status"
 msgstr "État de MilliCache"
 
 #. translators: An AI reads this to decide when to call this operation. Keep `issues` and the status words verbatim; they are literal response values the AI checks for.
-#: src/Base/Abilities.php:65
+#: src/Base/Abilities.php:69
 msgid ""
 "Report whether the network cache is working: overall health, storage "
 "connectivity, cache size and the list of problems found. Call this before "
@@ -1218,7 +1218,7 @@ msgid ""
 msgstr ""
 
 #. translators: An AI reads this to decide when to call this operation. Keep `issues` and the status words verbatim; they are literal response values the AI checks for.
-#: src/Base/Abilities.php:67
+#: src/Base/Abilities.php:71
 msgid ""
 "Report whether the cache is working: overall health, storage connectivity, "
 "cache size and the list of problems found. Call this before diagnosing why "
@@ -1226,42 +1226,46 @@ msgid ""
 "attention; an empty list means everything passed."
 msgstr ""
 
-#: src/Base/Abilities.php:83
+#: src/Base/Abilities.php:91
 msgid ""
 "Overall health: error when caching is broken, warning when something is "
 "recommended."
 msgstr ""
 
-#: src/Base/Abilities.php:87
+#: src/Base/Abilities.php:95
 msgid ""
 "Connectivity to the in-memory store. When connected is false, nothing can be "
 "cached. `mode` is how that store is reached (single server, sentinel, or "
 "cluster) and says nothing about the WordPress installation."
 msgstr ""
 
-#: src/Base/Abilities.php:92
+#: src/Base/Abilities.php:100
 msgid ""
 "Whether this is a multisite installation. On multisite the storage and "
 "several settings are network-wide, and there are separate network-scoped "
 "operations."
 msgstr ""
 
-#: src/Base/Abilities.php:96
+#: src/Base/Abilities.php:104
 msgid ""
 "Cached entry count, total size as bytes and as a human-readable string, and "
 "the configured lifetime in seconds. Compute with size_bytes, not size."
 msgstr ""
 
-#: src/Base/Abilities.php:101
-msgid "Checks that need attention. Empty when everything passed."
+#. translators: An AI reads this. Keep `scope`, `site` and `network` verbatim; they are literal response values.
+#: src/Base/Abilities.php:110
+msgid ""
+"Checks that need attention. Empty when everything passed. Each issue carries "
+"a `scope`: `site` for something this site controls, `network` for a network-"
+"wide setting only a network administrator can change."
 msgstr ""
 
-#: src/Base/Abilities.php:223
+#: src/Base/Abilities.php:282
 #: assets/js/settings/partials/ClearCacheButton.jsx:86 build/settings.js:1
 msgid "Clear Network Cache"
 msgstr "Vider le cache du réseau"
 
-#: src/Base/Abilities.php:224 src/Base/Manager.php:195
+#: src/Base/Abilities.php:283 src/Base/Manager.php:195
 #: src/Rules/Actions/WP/ClearCache.php:43
 #: assets/js/settings/partials/ClearCacheButton.jsx:35
 #: assets/js/settings/partials/ClearCacheButton.jsx:46
@@ -1270,7 +1274,7 @@ msgid "Clear Cache"
 msgstr "Vider le cache"
 
 #. translators: An AI reads this to decide when to call this destructive operation. Keep `scope`, `targets`, `all` and `expire` verbatim; they are literal API field and value names.
-#: src/Base/Abilities.php:227
+#: src/Base/Abilities.php:286
 msgid ""
 "Clear cached pages across every site in the network. Set `scope` to `all` to "
 "clear everything, or list cache flags in `targets` to clear only those. "
@@ -1280,7 +1284,7 @@ msgid ""
 msgstr ""
 
 #. translators: An AI reads this to decide when to call this destructive operation. Keep `scope`, `targets`, `all` and `expire` verbatim; they are literal API field and value names.
-#: src/Base/Abilities.php:229
+#: src/Base/Abilities.php:288
 msgid ""
 "Clear cached pages for this site. Set `scope` to `all` to clear everything, "
 "or list URLs, post IDs or cache flags in `targets` to clear only those. "
@@ -1290,40 +1294,40 @@ msgid ""
 "pages in the background instead of deleting them outright."
 msgstr ""
 
-#: src/Base/Abilities.php:241
+#: src/Base/Abilities.php:300
 msgid ""
 "Use all only when the whole cache should go; it is not the fallback for an "
 "empty target list."
 msgstr ""
 
-#: src/Base/Abilities.php:248
+#: src/Base/Abilities.php:307
 msgid "Cache flags to clear, for example post:12 or home."
 msgstr ""
 
-#: src/Base/Abilities.php:249
+#: src/Base/Abilities.php:308
 msgid ""
 "What to clear: a URL on this site (scheme and host must match the site "
 "exactly), a path such as /blog/, a post ID, or a cache flag such as home."
 msgstr ""
 
-#: src/Base/Abilities.php:254
+#: src/Base/Abilities.php:313
 msgid ""
 "Mark entries stale and regenerate them in the background instead of deleting "
 "them."
 msgstr ""
 
-#: src/Base/Abilities.php:264
+#: src/Base/Abilities.php:323
 msgid "Number of cache entries removed or expired."
 msgstr ""
 
-#: src/Base/Abilities.php:269
+#: src/Base/Abilities.php:328
 msgid ""
 "Targets that were not applied because they belong to another site. Present "
 "only when something was skipped; check it before reading cleared: 0 as an "
 "empty cache."
 msgstr ""
 
-#: src/Base/Abilities.php:309
+#: src/Base/Abilities.php:368
 msgid ""
 "No targets given. Pass at least one target, or set scope to all to clear the "
 "entire cache."
