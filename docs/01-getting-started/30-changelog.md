@@ -9,9 +9,11 @@ menu_order: 30
 ## [1.8.0](https://github.com/MilliPress/MilliCache/compare/v1.7.7...v1.8.0) (2026-08-22)
 
 <!-- mc:auto sha=9ba0bffb378a -->
-1.8.0 brings a redesigned cache management experience centered on a command palette, along with several correctness fixes to the caching engine and rule system.
+1.8.0 brings a redesigned cache management experience centered on a command palette, new abilities for AI assistants, and several correctness fixes to the caching engine and rule system.
 
 The admin bar's one-click flush button is replaced by a command palette that lets you clear or expire specific targets — pages, post types, taxonomies, or the full cache — with descriptive labels. A snackbar confirms the action and reports how many entries were actually removed. Add-ons can register their own palette commands and control their position in the list. The palette is wider to accommodate longer target names and no longer intrudes on every admin search field.
+
+**AI assistants can now check cache status and clear the cache.** Two new abilities — available over REST and from MCP clients — answer the questions site owners most often ask through an assistant: "why is my page not cached" and "clear the cache for this post or URL". The status ability returns a curated health summary (connectivity, entry count, and the checks that need attention) without leaking the full plugin and theme inventory that the settings UI needs. [MilliCache Pro](https://www.millipress.com/millicache-pro/) extends this to every aspect of the plugin: caching, cache entries, rules, preloading, the edge cache, and the object cache can all be managed through abilities as well.
 
 Cache responses now include the remaining lifetime of a served page. The engine has been corrected to never store redirect responses and to capture output from the outermost buffer, which prevents partial content from being cached when other plugins open buffers early. URL hashes now preserve non-default ports, so sites on non-standard ports get correct per-URL cache isolation. The invalidation queue runs even when the drop-in fails to load, so scheduled purges are not silently lost.
 
