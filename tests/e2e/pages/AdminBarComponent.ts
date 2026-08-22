@@ -1,7 +1,11 @@
-import type { Page, Locator } from '@playwright/test';
+import type { Page, Locator, Response } from '@playwright/test';
 
 /**
  * Component Object for the WordPress Admin Bar with MilliCache menu.
+ *
+ * The root button opens the core command palette in wp-admin (WP 7+) and
+ * toggles the submenu elsewhere; direct clear actions live in the hover
+ * submenu, and the network-wide clear needs a confirming second click.
  */
 export class AdminBarComponent {
     readonly page: Page;
@@ -9,19 +13,30 @@ export class AdminBarComponent {
     private static readonly SELECTORS = {
         adminBar: '#wpadminbar',
         millicacheMenu: '#wp-admin-bar-millicache',
-        clearAllLink: '#wp-admin-bar-millicache-clear-all a',
-        clearSiteLink: '#wp-admin-bar-millicache-clear-site a',
+        rootButton: '#wp-admin-bar-millicache > button.ab-item',
+        clearButton: '#wp-admin-bar-millicache-clear button.ab-item',
+        clearCurrentButton:
+            '#wp-admin-bar-millicache_clear_current button.ab-item',
+        commandPalette: '.commands-command-menu',
+        commandPaletteInput: '.commands-command-menu input',
+        commandPaletteItem: '.commands-command-menu [cmdk-item]',
         cacheStatus: '#wp-admin-bar-millicache .ab-label',
     };
 
+    private static readonly CONFIRM_LABEL = 'Click again to confirm';
+
     readonly adminBar: Locator;
     readonly millicacheMenu: Locator;
+    readonly commandPalette: Locator;
 
     constructor(page: Page) {
         this.page = page;
         this.adminBar = page.locator(AdminBarComponent.SELECTORS.adminBar);
         this.millicacheMenu = page.locator(
             AdminBarComponent.SELECTORS.millicacheMenu
+        );
+        this.commandPalette = page.locator(
+            AdminBarComponent.SELECTORS.commandPalette
         );
     }
 
@@ -42,69 +57,115 @@ export class AdminBarComponent {
     /**
      * Hover over the MilliCache menu to reveal submenu items.
      */
-    async hoverMillicacheMenu(): Promise<void> {
-        // Wait for menu to be visible first
+    async openMenu(): Promise<void> {
         await this.millicacheMenu.waitFor({ state: 'visible', timeout: 5000 });
-
-        // Hover to reveal submenu
         await this.millicacheMenu.hover();
 
-        // Wait a bit for CSS transition
-        await this.page.waitForTimeout(300);
-
-        // Wait for submenu to appear
-        const clearAllLink = this.page.locator(
-            AdminBarComponent.SELECTORS.clearAllLink
-        );
-
-        // If not visible, try clicking instead of hovering
-        if (!(await clearAllLink.isVisible())) {
-            await this.millicacheMenu.click();
-            await this.page.waitForTimeout(300);
-        }
-
-        await clearAllLink.waitFor({ state: 'visible', timeout: 5000 });
+        await this.page
+            .locator(AdminBarComponent.SELECTORS.clearButton)
+            .waitFor({ state: 'visible', timeout: 5000 });
     }
 
     /**
-     * Clear all cache across the network.
-     * Waits for the operation to complete.
+     * Click the root admin bar button.
+     * In wp-admin (WP 7+) this opens the command palette; on the front end
+     * it toggles the submenu.
      */
-    async clearAllCache(): Promise<void> {
-        await this.hoverMillicacheMenu();
-
-        const clearAllLink = this.page.locator(
-            AdminBarComponent.SELECTORS.clearAllLink
-        );
-
-        // Get the href and navigate directly (more reliable than click + wait)
-        const href = await clearAllLink.getAttribute('href');
-        if (href) {
-            await this.page.goto(href);
-            await this.page.waitForLoadState('networkidle');
-        } else {
-            // Fallback to click
-            await clearAllLink.click();
-            await this.page.waitForLoadState('networkidle');
-        }
+    async clickRoot(): Promise<void> {
+        await this.page
+            .locator(AdminBarComponent.SELECTORS.rootButton)
+            .waitFor({ state: 'visible', timeout: 5000 });
+        await this.page.click(AdminBarComponent.SELECTORS.rootButton);
     }
 
     /**
-     * Clear cache for the current site only.
-     * Waits for the operation to complete.
+     * Open the command palette via the root button (wp-admin, WP 7+).
+     */
+    async openPalette(): Promise<void> {
+        await this.clickRoot();
+        await this.commandPalette.waitFor({ state: 'visible', timeout: 5000 });
+    }
+
+    /**
+     * Close the command palette via the Escape key.
+     */
+    async closePalette(): Promise<void> {
+        await this.page.keyboard.press('Escape');
+        await this.commandPalette.waitFor({ state: 'hidden', timeout: 5000 });
+    }
+
+    /**
+     * Check whether the submenu is open (click-toggled on the front end).
+     */
+    async isSubmenuOpen(): Promise<boolean> {
+        const classes = await this.millicacheMenu.getAttribute('class');
+        return (classes || '').split(/\s+/).includes('hover');
+    }
+
+    /**
+     * Wait for the next clear request against the cache endpoint.
+     */
+    private waitForClearResponse(): Promise<Response> {
+        return this.page.waitForResponse(
+            (response) =>
+                /\/millicache\/v1\/(network\/)?cache/.test(response.url()) &&
+                response.request().method() === 'POST',
+            { timeout: 10000 }
+        );
+    }
+
+    /**
+     * Clear the site cache via the submenu shortcut (single click).
      */
     async clearSiteCache(): Promise<void> {
-        await this.hoverMillicacheMenu();
+        await this.openMenu();
 
-        const clearSiteLink = this.page.locator(
-            AdminBarComponent.SELECTORS.clearSiteLink
+        const responsePromise = this.waitForClearResponse();
+        await this.page.click(AdminBarComponent.SELECTORS.clearButton);
+        await responsePromise;
+    }
+
+    /**
+     * Clear the network cache via the submenu shortcut.
+     * Requires the confirming second click.
+     */
+    async clearNetworkCache(): Promise<void> {
+        await this.openMenu();
+
+        const clearButton = this.page.locator(
+            AdminBarComponent.SELECTORS.clearButton
         );
 
-        // Click and wait for page to reload/respond
-        await Promise.all([
-            this.page.waitForLoadState('networkidle'),
-            clearSiteLink.click(),
-        ]);
+        await clearButton.click();
+        await clearButton
+            .filter({ hasText: AdminBarComponent.CONFIRM_LABEL })
+            .waitFor({ timeout: 5000 });
+
+        const responsePromise = this.waitForClearResponse();
+        await clearButton.click();
+        await responsePromise;
+    }
+
+    /**
+     * Clear the given targets (comma-separated flags/post IDs/URLs)
+     * through the command palette's dynamic command.
+     */
+    async clearTargetsViaPalette(targets: string): Promise<void> {
+        await this.openPalette();
+
+        await this.page.fill(
+            AdminBarComponent.SELECTORS.commandPaletteInput,
+            targets
+        );
+
+        const command = this.page
+            .locator(AdminBarComponent.SELECTORS.commandPaletteItem)
+            .filter({ hasText: 'Clear cache for' });
+        await command.waitFor({ state: 'visible', timeout: 5000 });
+
+        const responsePromise = this.waitForClearResponse();
+        await command.click();
+        await responsePromise;
     }
 
     /**

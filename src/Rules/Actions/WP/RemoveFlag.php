@@ -95,7 +95,11 @@ class RemoveFlag extends BaseAction {
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$flag = $this->get_arg( 0 )->string();
+		$flag = $this->usable_arg( 0 );
+
+		if ( null === $flag ) {
+			return;
+		}
 
 		// Call Engine's flag manager to remove the flag.
 		millicache()->flags()->remove( $flag );

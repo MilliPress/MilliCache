@@ -58,6 +58,26 @@ final class Updater {
 	private const CACHE_DURATION = 43200;
 
 	/**
+	 * How long a failed fetch is remembered (15 minutes).
+	 *
+	 * Without this every subsequent update check would retry a dead endpoint
+	 * and pay the full timeout again.
+	 *
+	 * @since 1.8.0
+	 * @var   int
+	 */
+	private const FAILURE_CACHE_DURATION = 900;
+
+	/**
+	 * Request timeout in seconds. Deliberately short: the check runs inside an
+	 * admin request, and a missed check just delays the update notice.
+	 *
+	 * @since 1.8.0
+	 * @var   int
+	 */
+	private const REQUEST_TIMEOUT = 3;
+
+	/**
 	 * This copy's own plugin basename, used to judge ownership of MILLICACHE_BASENAME.
 	 *
 	 * @since 1.7.2
@@ -82,7 +102,7 @@ final class Updater {
 			return;
 		}
 
-		$loader->add_filter( 'site_transient_update_plugins', $this, 'check_for_update' );
+		$loader->add_filter( 'pre_set_site_transient_update_plugins', $this, 'check_for_update' );
 		$loader->add_filter( 'plugins_api', $this, 'plugin_information', 10, 3 );
 		$loader->add_action( 'delete_site_transient_update_plugins', $this, 'clear_update_cache' );
 	}
@@ -278,8 +298,14 @@ final class Updater {
 
 		$cached = get_site_transient( self::TRANSIENT_KEY );
 
-		if ( false !== $cached && is_object( $cached ) ) {
+		if ( is_object( $cached ) ) {
 			return $cached;
+		}
+
+		// An array marks a recent failure — back off instead of retrying a
+		// slow or unreachable endpoint on every check.
+		if ( is_array( $cached ) ) {
+			return null;
 		}
 
 		$url = self::ENDPOINT_URL;
@@ -292,32 +318,39 @@ final class Updater {
 		$response = wp_remote_get(
 			$url,
 			array(
-				'timeout' => 10,
+				'timeout' => self::REQUEST_TIMEOUT,
 				'headers' => array(
 					'Accept' => 'application/json',
 				),
 			)
 		);
 
-		if ( is_wp_error( $response ) ) {
-			return null;
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			return $this->remember_failure();
 		}
 
-		$code = wp_remote_retrieve_response_code( $response );
-
-		if ( 200 !== $code ) {
-			return null;
-		}
-
-		$body = wp_remote_retrieve_body( $response );
-		$data = json_decode( $body );
+		$data = json_decode( wp_remote_retrieve_body( $response ) );
 
 		if ( ! is_object( $data ) || ! isset( $data->version ) ) {
-			return null;
+			return $this->remember_failure();
 		}
 
 		set_site_transient( self::TRANSIENT_KEY, $data, self::CACHE_DURATION );
 
 		return $data;
+	}
+
+	/**
+	 * Cache a failed fetch for the backoff window and report the miss.
+	 *
+	 * @since  1.8.0
+	 * @access private
+	 *
+	 * @return null Always null, so callers can `return $this->remember_failure();`.
+	 */
+	private function remember_failure() {
+		set_site_transient( self::TRANSIENT_KEY, array(), self::FAILURE_CACHE_DURATION );
+
+		return null;
 	}
 }

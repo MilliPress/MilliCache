@@ -301,9 +301,6 @@ final class Engine {
 	public function start() {
 		$this->register_rules();
 
-		// Register the shutdown function to expire/delete cache flags.
-		register_shutdown_function( fn() => $this->invalidation()->get_queue()->execute() );
-
 		// Flush buffered metrics post-response.
 		register_shutdown_function( fn() => null !== $this->metrics ? $this->metrics->flush() : null );
 
@@ -337,20 +334,8 @@ final class Engine {
 		// Get and return cached content (options applied in ResponseManager).
 		$context = $this->response()->retrieve_and_serve_cache( $context );
 
-		// Start the output buffer.
-		add_action(
-			'template_redirect',
-			function () use ( $context ) {
-				if ( $this->check_cache_decision() ) {
-					// Apply any options set by rules.
-					$context = $this->options()->apply_to_state( $context );
-
-					// Start the output buffer.
-					$this->response()->start_output_buffer( $context );
-				}
-			},
-			PHP_INT_MAX - 10
-		);
+		// Start the OUTERMOST output buffer and do some magic.
+		$this->response()->start_output_buffer( $context );
 	}
 
 	/**
@@ -373,6 +358,8 @@ final class Engine {
 		Rules\WordPress::register();
 		Rules\Custom::register();
 		Rules\RequestFlags::register();
+
+		Rules\Manager::mark_registered();
 
 		// Load the WP package once WordPress is up; this flushes the pending
 		// queue in insertion order, finalizing every WP-typed rule above.
@@ -603,13 +590,19 @@ final class Engine {
 			$cache_settings = $this->get_settings( 'cache' );
 			$ttl = is_numeric( $cache_settings['ttl'] ?? null ) ? (int) $cache_settings['ttl'] : 3600;
 
-			$this->invalidation_manager = new Cache\Invalidation\Manager(
+			$manager = new Cache\Invalidation\Manager(
 				$this->storage(),
 				$this->request(),
 				$this->multisite(),
 				$ttl
 			);
+
+			// Registered here for WP-CLI support.
+			register_shutdown_function( static fn() => $manager->get_queue()->execute() );
+
+			$this->invalidation_manager = $manager;
 		}
+
 		return $this->invalidation_manager;
 	}
 

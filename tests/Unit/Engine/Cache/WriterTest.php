@@ -25,10 +25,15 @@ describe('Writer', function () {
 			expect($result['reason'])->toBe('');
 		});
 
-		it('allows caching for 3xx status codes', function () {
-			$result = $this->writer->should_cache(301);
+		it('disallows caching for 3xx status codes', function () {
+			// A Location target set during rendering is request-specific and
+			// must never be replayed to other visitors.
+			foreach (array(301, 302, 307, 308) as $status) {
+				$result = $this->writer->should_cache($status);
 
-			expect($result['cacheable'])->toBeTrue();
+				expect($result['cacheable'])->toBeFalse();
+				expect($result['reason'])->toBe('Redirect response');
+			}
 		});
 
 		it('allows caching for 4xx status codes', function () {

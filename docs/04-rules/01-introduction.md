@@ -51,16 +51,23 @@ flowchart LR
 Rules use a readable, chainable syntax powered by [MilliRules](https://www.millipress.com/docs/millirules/):
 
 ```php
-use MilliRules\Rules;
-
-Rules::create( 'mysite:example-rule', 'php' )  // Create rule with ID and phase
-    ->order( 10 )                              // Set priority
-    ->when()                                   // Start conditions
-        ->request_url( '/news/*' )             // Match URL pattern
-    ->then()                                   // Start actions
-        ->set_ttl( 1800 )                      // Set 30-minute TTL
-    ->register();                              // Register the rule
+millicache()->rules()->create( 'mysite:example-rule' )  // Create rule with an ID
+    ->order( 10 )                                      // Set priority
+    ->when()                                           // Start conditions
+        ->request_url( '/news/*' )                     // Match URL pattern
+    ->then()                                           // Start actions
+        ->set_ttl( 1800 )                              // Set 30-minute TTL
+    ->register();                                      // Register the rule
 ```
+
+The phase is picked for you: MilliCache reads the conditions and actions you used,
+and a rule that could only have run before WordPress is moved to the WordPress phase,
+since that earlier phase is over by the time your code runs.
+
+One thing is on you: **register after MilliCache has loaded.** In a plugin or a theme
+that is already the case. Only a file that runs earlier, such as a must-use plugin,
+needs the registration wrapped in `add_action( 'plugins_loaded', … )`; see
+[where to put the code](03-examples.md#where-to-put-the-code).
 
 Prefer building rules without code? [MilliCache Pro](https://www.millipress.com/millicache-pro/) includes a [visual Rules Builder](https://www.millipress.com/docs/millicache-pro/02-modules/03-rules-builder/): create, edit, and reorder caching rules directly in the settings screen, in addition to the PHP API.
 
@@ -87,6 +94,13 @@ Runs **before WordPress loads**:
 - Instant decisions with minimal overhead
 - No database queries
 - Can only check: URL, cookies, headers, constants
+
+This phase runs inside `advanced-cache.php`, before any plugin or theme exists, so
+**it cannot be reached from code**. Bootstrap rules come from the settings, which the
+drop-in reads from the database. Writing them takes
+[MilliCache Pro](https://www.millipress.com/millicache-pro/): either its
+[Rules Builder](https://www.millipress.com/docs/millicache-pro/02-modules/03-rules-builder/)
+or `wp millicache rules import`.
 
 ### WordPress Phase (`wp`)
 

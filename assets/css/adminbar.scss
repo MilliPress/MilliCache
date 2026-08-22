@@ -6,7 +6,11 @@
 		background: none;
 		border: none;
 		text-align: left;
+		display: block;
+		height: 32px;
 		padding: 0 8px 0 7px;
+		font: inherit;
+		color: inherit;
 	}
 
 	.ab-sub-wrapper {
@@ -39,6 +43,19 @@
 
 	.ab-label {
 		margin: 0 5px;
+
+		&.is-success {
+			color: #4ab866;
+		}
+
+		&.is-error {
+			color: #f86368;
+		}
+	}
+
+	// stylelint-disable-next-line no-descending-specificity
+	button.ab-item.is-confirming {
+		color: #f86368;
 	}
 
 	.millicache-cache-size {
@@ -76,6 +93,49 @@
 	}
 }
 
+@media screen and (max-width: 782px) {
+
+	#wp-admin-bar-millicache button.ab-item {
+		height: 46px;
+		line-height: 3.28571428;
+	}
+}
+
+.commands-command-menu.millicache-palette {
+	max-width: 640px;
+}
+
+.millicache-snackbar-region {
+	position: fixed;
+	z-index: 100010;
+	bottom: 24px;
+	left: 184px;
+	right: 24px;
+	pointer-events: none;
+
+	.components-snackbar-list {
+		position: static;
+	}
+}
+
+body.folded .millicache-snackbar-region {
+	left: 60px;
+}
+
+@media (max-width: 960px) {
+
+	body.auto-fold .millicache-snackbar-region {
+		left: 60px;
+	}
+}
+
+@media (max-width: 782px) {
+
+	.millicache-snackbar-region {
+		left: 24px;
+	}
+}
+
 @keyframes "millicache-pulse" {
 
 	0%,
@@ -87,3 +147,4 @@
 		opacity: 0.5;
 	}
 }
+

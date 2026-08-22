@@ -6,6 +6,7 @@ module.exports = {
     entry: {
         admin: path.resolve(__dirname, 'assets/js/admin.js'),
         adminbar: path.resolve(__dirname, 'assets/js/adminbar.js'),
+        commands: path.resolve(__dirname, 'assets/js/commands.js'),
         settings: path.resolve(__dirname, 'assets/js/settings.js'),
     }
 };

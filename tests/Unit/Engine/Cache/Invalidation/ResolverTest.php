@@ -61,6 +61,7 @@ if ( ! function_exists( 'get_networks' ) ) {
 	}
 }
 
+
 uses()->beforeEach( function () {
 	global $test_is_multisite, $test_sites, $test_networks, $test_current_site_id, $test_current_network_id;
 	$test_is_multisite = false;
@@ -176,6 +177,38 @@ describe( 'Invalidation Resolver', function () {
 			// Both should be url: prefixed.
 			expect( $flags[0] )->toStartWith( 'url:' );
 			expect( $flags[1] )->toStartWith( 'url:' );
+		} );
+
+		it( 'anchors a bare path onto the home URL (wp millicache clear --uri="/blog/")', function () {
+			$resolver = new Resolver( $this->request_handler, $this->multisite );
+
+			// Before 1.7.8 a path hashed with an empty host and never matched.
+			$from_path = $resolver->resolve_url( '/blog/' );
+			$from_url  = $resolver->resolve_url( home_url( '/blog/' ) );
+
+			expect( $from_path )->toBe( $from_url );
+		} );
+
+		it( 'resolves trailing and non-trailing path forms to the same flag set', function () {
+			$resolver = new Resolver( $this->request_handler, $this->multisite );
+
+			$with    = $resolver->resolve_url( '/blog/' );
+			$without = $resolver->resolve_url( '/blog' );
+
+			sort( $with );
+			sort( $without );
+
+			expect( $with )->toBe( $without );
+		} );
+
+		it( 'leaves fully qualified URLs untouched', function () {
+			$resolver = new Resolver( $this->request_handler, $this->multisite );
+
+			// A host-carrying URL must not be re-anchored onto home_url().
+			$other_site = $resolver->resolve_url( 'https://other.example.org/blog/' );
+			$own_site   = $resolver->resolve_url( home_url( '/blog/' ) );
+
+			expect( $other_site )->not->toBe( $own_site );
 		} );
 	} );
 

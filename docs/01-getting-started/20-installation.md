@@ -85,7 +85,7 @@ Navigate to **Settings → MilliCache → Stats Tab** to see:
 - Cache hit ratio
 - Recent cache activity
 
-You can also check the admin bar: **MilliCache** should show cache statistics.
+You can also check the admin bar: the **Cache** menu should show cache statistics.
 
 ### Via Browser (Easiest)
 
@@ -175,7 +175,7 @@ Out of the box, MilliCache:
 ### Clear All Cache
 
 **Via Admin Bar:**
-**MilliCache → Clear Site Cache**
+**Cache → Clear Website Cache**
 
 **Via Admin UI:**
 **Settings → MilliCache → Stats Tab → Clear Cache Button**
@@ -188,7 +188,7 @@ wp millicache clear
 ### Clear Specific Post
 
 **Via Admin Bar:**
-When viewing a post, click **MilliCache → Clear Post Cache**
+When viewing a post, click **Cache → Clear Post Cache**
 
 **Via WP-CLI** (optional):
 ```bash

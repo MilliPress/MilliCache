@@ -116,6 +116,27 @@ describe('Handler', function () {
 
 			expect($hash1)->toBe($hash2);
 		});
+
+		it('matches the request hash for URLs with a non-default port', function () {
+			$_SERVER['HTTP_HOST'] = 'localhost:8888';
+			$_SERVER['HTTPS'] = '';
+			$_SERVER['REQUEST_URI'] = '/hello-world/';
+
+			$request_hash = $this->handler->get_url_hash();
+			$url_hash = $this->handler->get_url_hash('http://localhost:8888/hello-world/');
+
+			expect($url_hash)->toBe($request_hash);
+		});
+
+		it('ignores default ports like the Host header does', function () {
+			$hash1 = $this->handler->get_url_hash('https://example.com:443/page');
+			$hash2 = $this->handler->get_url_hash('https://example.com/page');
+			$hash3 = $this->handler->get_url_hash('http://example.com:80/page');
+			$hash4 = $this->handler->get_url_hash('http://example.com/page');
+
+			expect($hash1)->toBe($hash2);
+			expect($hash3)->toBe($hash4);
+		});
 	});
 
 	describe('get_url', function () {

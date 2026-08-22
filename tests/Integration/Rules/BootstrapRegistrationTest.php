@@ -10,8 +10,9 @@
 
 use MilliCache\Engine;
 use MilliCache\Rules\Bootstrap as BootstrapRules;
+use MilliRules\MilliRules;
 
-it( 'registers all nine PHP-phase rules with expected order and locked state', function () {
+it( 'registers all PHP-phase rules with expected order and locked state', function () {
 	new Engine( null, null, create_test_config() );
 
 	BootstrapRules::register();
@@ -19,6 +20,7 @@ it( 'registers all nine PHP-phase rules with expected order and locked state', f
 	$expected = array(
 		'millicache:const:wp-cache'         => array( 'order' => 0, 'locked' => true ),
 		'millicache:request:xmlrpc'         => array( 'order' => 0, 'locked' => true ),
+		'millicache:request:wp-cron'        => array( 'order' => 0, 'locked' => true ),
 		'millicache:request:file'           => array( 'order' => 1, 'locked' => false ),
 		'millicache:request:check-method'   => array( 'order' => 0, 'locked' => true ),
 		'millicache:request:cli'            => array( 'order' => 0, 'locked' => true ),
@@ -99,6 +101,30 @@ it( 'locks the REST bootstrap rule (regression guard for 57fbf87a6)', function (
 	expect( ! empty( $rule['_locked'] ) )->toBeTrue();
 	expect( $rule['_metadata']['order'] ?? null )->toBe( 0 );
 } );
+
+it( 'bypasses REST requests in both the wp-json and rest_route forms', function ( string $uri, string $reason ) {
+	new Engine( null, null, create_test_config() );
+
+	$_SERVER['REQUEST_METHOD'] = 'GET';
+	$_SERVER['REQUEST_URI']    = $uri;
+	$_SERVER['HTTP_HOST']      = 'example.test';
+
+	BootstrapRules::register();
+	MilliRules::execute_rules( array( 'PHP' ) );
+
+	$decision = millicache()->options()->get_cache_decision();
+
+	expect( $decision )->not->toBeNull( "{$uri} produced no cache decision" );
+	expect( $decision['decision'] )->toBeFalse( "{$uri} should bypass the cache" );
+	expect( $decision['reason'] )->toBe( $reason );
+} )->with( array(
+	array( '/wp-json/wp/v2/posts', 'MilliCache: REST API request' ),
+	// The rest_route fallback is what sites without pretty permalinks use.
+	array( '/?rest_route=/wp/v2/posts', 'MilliCache: REST API request' ),
+	// Still bypassed, but the order-1 file rule outranks the order-0 REST rule
+	// on any .php URL, so it is the one that reports the reason.
+	array( '/index.php?rest_route=/wp/v2/posts&per_page=5', 'MilliCache: File request' ),
+) );
 
 it( 'declares MilliCache as the package origin for bootstrap rules', function () {
 	new Engine( null, null, create_test_config() );

@@ -183,7 +183,7 @@ describe( 'Invalidation Manager', function () {
 		} );
 
 		it( 'clears entire site when targets empty', function () {
-			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once()->andReturn( 1 );
 
 			$handler = new Manager(
 				$this->storage,
@@ -194,9 +194,7 @@ describe( 'Invalidation Manager', function () {
 			$handler->targets( array() );
 
 			// Execute the queue.
-			$result = $handler->get_queue()->execute();
-
-			expect( $result )->toBeTrue();
+			expect( $handler->get_queue()->execute() )->toBe( 1 );
 		} );
 
 		it( 'identifies and clears URL targets', function () {
@@ -210,6 +208,21 @@ describe( 'Invalidation Manager', function () {
 
 			// Verify URL was processed.
 			expect( count( $handler->get_queue()->get_delete_queue() ) )->toBeGreaterThan( 0 );
+		} );
+
+		it( 'routes bare paths to the URL clearer, not the flag clearer', function () {
+			$handler = new Manager(
+				$this->storage,
+				$this->request_handler,
+				$this->multisite
+			);
+
+			$handler->targets( '/blog/' );
+
+			$queue = $handler->get_queue()->get_delete_queue();
+			expect( count( $queue ) )->toBe( 2 );
+			expect( $queue[0] )->toStartWith( 'url:' );
+			expect( $queue[1] )->toStartWith( 'url:' );
 		} );
 
 		it( 'identifies and clears post ID targets', function () {
@@ -470,7 +483,7 @@ describe( 'Invalidation Manager', function () {
 			$test_networks     = array( 1 );
 			$test_did_actions  = array();
 
-			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once()->andReturn( 1 );
 
 			$handler = new Manager(
 				$this->storage,
@@ -498,7 +511,7 @@ describe( 'Invalidation Manager', function () {
 			$test_networks     = array( 1 );
 			$test_did_actions  = array();
 
-			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once()->andReturn( 1 );
 
 			$handler = new Manager(
 				$this->storage,
@@ -524,7 +537,7 @@ describe( 'Invalidation Manager', function () {
 			$test_networks     = array( 1 );
 			$test_did_actions  = array();
 
-			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once()->andReturn( 1 );
 
 			$handler = new Manager(
 				$this->storage,
@@ -556,7 +569,7 @@ describe( 'Invalidation Manager', function () {
 			$test_networks     = array( 1 );
 			$test_did_actions  = array();
 
-			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once()->andReturn( 1 );
 
 			$handler = new Manager(
 				$this->storage,
@@ -765,7 +778,7 @@ describe( 'Invalidation Manager', function () {
 
 	describe( 'queue execute', function () {
 		it( 'delegates to queue execute method', function () {
-			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once();
+			$this->storage->shouldReceive( 'clear_cache_by_sets' )->once()->andReturn( 1 );
 
 			$handler = new Manager(
 				$this->storage,
@@ -775,9 +788,8 @@ describe( 'Invalidation Manager', function () {
 
 			// Add something to execute.
 			$handler->flags( 'test' );
-			$result = $handler->get_queue()->execute();
 
-			expect( $result )->toBeTrue();
+			expect( $handler->get_queue()->execute() )->toBe( 1 );
 		} );
 	} );
 } );

@@ -90,6 +90,15 @@ final class Writer {
 			);
 		}
 
+		// Don't cache redirects: a Location target set during rendering is
+		// request-specific and must never be replayed to other visitors.
+		if ( $status_code >= 300 && $status_code < 400 ) {
+			return array(
+				'cacheable' => false,
+				'reason'    => 'Redirect response',
+			);
+		}
+
 		return array(
 			'cacheable' => true,
 			'reason'    => '',

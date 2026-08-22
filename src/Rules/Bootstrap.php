@@ -56,6 +56,7 @@ final class Bootstrap {
 
 		self::register_wp_cache_rule();
 		self::register_xmlrpc_request_rule();
+		self::register_wp_cron_request_rule();
 		self::register_file_request_rule();
 		self::register_request_method_rule();
 		self::register_cli_request_rule();
@@ -100,6 +101,24 @@ final class Bootstrap {
 				->constant( 'XMLRPC_REQUEST', true )
 			->then()
 				->do_cache( false, 'MilliCache: XML-RPC request' )->lock()
+			->register();
+	}
+
+	/**
+	 * Register WP-Cron request check rule.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return void
+	 */
+	private static function register_wp_cron_request_rule(): void {
+		Rules::create( 'millicache:request:wp-cron', 'php' )
+			->lock()
+			->order( 0 )
+			->when()
+				->request_url( '*wp-cron.php*' )
+			->then()
+				->do_cache( false, 'MilliCache: WP-Cron request' )->lock()
 			->register();
 	}
 
@@ -180,10 +199,11 @@ final class Bootstrap {
 	/**
 	 * Register REST API request check rule.
 	 *
-	 * Detects REST API requests by checking for 'wp-json' in the URL.
+	 * Detects REST API requests by checking for 'wp-json' and '?rest_route=' in the URL.
 	 * This runs early (before WordPress loads) to avoid unnecessary processing.
 	 *
 	 * @since 1.0.0
+	 * @since 1.8.0 Also matches the '?rest_route=' fallback.
 	 *
 	 * @return void
 	 */
@@ -191,8 +211,9 @@ final class Bootstrap {
 		Rules::create( 'millicache:request:rest', 'php' )
 			->lock()
 			->order( 0 )
-			->when()
+			->when_any()
 				->request_url( '*wp-json*' )
+				->request_url( '*rest_route=*' )
 			->and()
 			->when_any()
 				->request_method( 'GET' )

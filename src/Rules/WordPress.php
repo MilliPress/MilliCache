@@ -175,10 +175,12 @@ final class WordPress {
 	}
 
 	/**
-	 * Register rule to skip cache for cron requests.
+	 * Register rule to skip cache when DOING_CRON is set during a rendered request.
 	 *
-	 * Locked — cron requests are internal WP executions and should never
-	 * be cached.
+	 * This runs at template_redirect, which wp-cron.php never reaches. That
+	 * endpoint is handled in the PHP phase by `millicache:request:wp-cron`. What
+	 * this catches is a plugin defining DOING_CRON while a normal page renders
+	 * (e.g., async task runners).
 	 *
 	 * @since 1.0.0
 	 * @access private

@@ -200,6 +200,23 @@ final class Site extends Manager {
 
 			'abilities' => array(
 				'expose' => array( 'settings' ),
+				'extend' => Abilities::cache(
+					function (): array {
+						return $this->status_builder->build( false );
+					},
+					function ( \WP_REST_Request $request ) {
+						return $this->cache_actions->handle_site( $request );
+					},
+					false,
+					Multisite::is_enabled()
+						? function (): array {
+							return $this->status_builder->build( true );
+						}
+						: null
+				),
+
+				'rest'   => true,
+				'mcp'    => array( 'cache-status', 'cache-clear', 'settings-export' ),
 			),
 
 			'status'          => array(

@@ -90,7 +90,7 @@ wp millicache clear --url=site1.example.com
 wp millicache clear --site=2
 ```
 
-Via admin bar on each site: **MilliCache → Clear Site Cache**
+Via admin bar on each site: **Cache → Clear Website Cache**
 
 ### Clear Multiple Sites
 
@@ -112,7 +112,9 @@ wp millicache clear --network=1
 wp millicache clear --network=1,2
 ```
 
-Via Network Admin bar: **MilliCache → Clear Network Cache**
+Via Network Admin bar: **Cache → Clear Network Cache** (asks for a confirming second click)
+
+Via command palette in the network admin: type a raw flag pattern such as `*:home` or `5:*` and run **MilliCache: Clear cache for** to clear it across all sites.
 
 ### Clear All Sites
 

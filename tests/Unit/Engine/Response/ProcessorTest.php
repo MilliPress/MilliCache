@@ -184,13 +184,17 @@ describe( 'ResponseManager', function () {
 			expect( $returnType->getName() )->toBe( 'void' );
 		} );
 
-		it( 'process_output_buffer takes string parameter', function () {
+		it( 'process_output_buffer takes output string and phase bitmask', function () {
 			$method = new ReflectionMethod( Processor::class, 'process_output_buffer' );
 			$params = $method->getParameters();
 
-			expect( count( $params ) )->toBe( 1 );
+			expect( count( $params ) )->toBe( 2 );
 			expect( $params[0]->getName() )->toBe( 'output' );
 			expect( $params[0]->getType()->getName() )->toBe( 'string' );
+			expect( $params[1]->getName() )->toBe( 'phase' );
+			expect( $params[1]->getType()->getName() )->toBe( 'int' );
+			expect( $params[1]->isDefaultValueAvailable() )->toBeTrue();
+			expect( $params[1]->getDefaultValue() )->toBe( 0 );
 		} );
 
 		it( 'process_output_buffer returns nullable string', function () {
@@ -258,11 +262,11 @@ describe( 'ResponseManager', function () {
 	} );
 
 	describe( 'vary bypass decision', function () {
-		// should_bypass_for_vary() is self-contained (no manager dependencies),
+		// should_bypass_storage() is self-contained (no manager dependencies),
 		// so an instance without the constructor suffices.
 		$invoke = function ( array $headers ) {
 			$processor = ( new ReflectionClass( Processor::class ) )->newInstanceWithoutConstructor();
-			$method    = new ReflectionMethod( Processor::class, 'should_bypass_for_vary' );
+			$method    = new ReflectionMethod( Processor::class, 'should_bypass_storage' );
 			$method->setAccessible( true );
 
 			return $method->invoke( $processor, $headers );
@@ -309,6 +313,11 @@ describe( 'ResponseManager', function () {
 		it( 'bypasses unsupported tokens and names the offender', function () use ( $invoke ) {
 			expect( $invoke( array( 'Vary: X-Device' ) ) )->toBe( 'Vary: x-device is not supported' );
 			expect( $invoke( array( 'Vary: Accept-Encoding, Accept-Language' ) ) )->toBe( 'Vary: accept-language is not supported' );
+		} );
+
+		it( 'bypasses encoded bodies, merging multiple Content-Encoding headers', function () use ( $invoke ) {
+			expect( $invoke( array( 'Content-Encoding: gzip' ) ) )->toBe( 'Content-Encoding: gzip is not supported' );
+			expect( $invoke( array( 'Content-Encoding: gzip', 'content-encoding: identity' ) ) )->toBe( 'Content-Encoding: gzip, identity is not supported' );
 		} );
 
 		it( 'merges multiple Vary headers per RFC 9110', function () use ( $invoke ) {

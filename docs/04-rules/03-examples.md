@@ -10,22 +10,62 @@ Practical MilliCache rule examples for common scenarios. All examples use the [M
 
 ## Setup
 
-Add rules early in your plugin or theme:
+Every example below starts from `$rules`, which you get from MilliCache:
 
 ```php
-use MilliRules\Rules;
-
-// You do not need to wrap them into an add_action() call - rules register themselves
-// Instead use ->on() to hook into WordPress actions if needed
+$rules = millicache()->rules();
 ```
+
+### Where to put the code
+
+Anywhere in a plugin or a theme. MilliCache is loaded by then, so the rule registers
+right away and no wrapper is needed.
+
+The exception is a file that runs *before* MilliCache, a must-use plugin being the
+usual case. On a live request that is still fine, because the page cache loads at the
+very top of WordPress. Under WP-CLI it is not: the CLI skips the page cache, so
+`millicache()` does not exist yet and the file ends in a fatal error. Register on a
+hook there, which also keeps the rules visible to anything reading them outside a
+cached request: the abilities API, and `wp millicache rules list` in
+[MilliCache Pro](https://www.millipress.com/millicache-pro/).
+
+```php
+add_action( 'plugins_loaded', function () {
+    millicache()->rules()->create( 'mysite:example' )
+        // …
+        ->register();
+} );
+```
+
+### Which phase a rule runs in
+
+You do not have to say. MilliCache reads the conditions and actions you used and
+picks the phase that can run them, and a rule that could only have run in the
+bootstrap phase is moved to the WordPress phase, because by the time your code runs
+that phase is already over. There it still sets the lifetime, adds flags, and decides
+whether the generated page is stored.
+
+Use `->on()` only to move a rule to a specific WordPress action.
+
+> **The bootstrap phase cannot be reached from code.** It runs inside
+> `advanced-cache.php`, before any plugin, theme or must-use plugin exists, and it
+> runs once. Bootstrap rules have to live in the settings, which the drop-in reads
+> from the database. Writing them takes
+> [MilliCache Pro](https://www.millipress.com/millicache-pro/): either its
+> [Rules Builder](https://www.millipress.com/docs/millicache-pro/02-modules/03-rules-builder/)
+> or `wp millicache rules import`.
+>
+> The difference is speed, not capability: a bootstrap rule can turn a request away
+> before WordPress loads, while a WordPress-phase rule decides once the page has been
+> built.
 
 ## Example 1: Different TTL by Content Type
 
 Cache news for 15 minutes, documentation for 1 week:
 
 ```php
-// Short TTL for news (bootstrap phase - runs before WordPress)
-Rules::create( 'mysite:news-ttl', 'php' )
+// Short TTL for news
+$rules->create( 'mysite:news-ttl' )
     ->order( 10 )
     ->when()
         ->request_url( '/news/*' )
@@ -34,7 +74,7 @@ Rules::create( 'mysite:news-ttl', 'php' )
     ->register();
 
 // Long TTL for documentation
-Rules::create( 'mysite:docs-ttl', 'php' )
+$rules->create( 'mysite:docs-ttl' )
     ->order( 10 )
     ->when()
         ->request_url( '/docs/*' )
@@ -43,29 +83,23 @@ Rules::create( 'mysite:docs-ttl', 'php' )
     ->register();
 ```
 
-## Example 2: WooCommerce Custom Page Bypass
+## Example 2: WooCommerce Cart/Checkout Bypass
 
-WooCommerce's own cart, checkout, and account pages need no rule: WooCommerce
-marks them with `DONOTCACHEPAGE` and a built-in MilliCache rule respects that.
-Use a rule for custom dynamic pages WooCommerce does not know about:
+Never cache cart, checkout, or account pages:
 
 ```php
-// Bootstrap phase for early bypass
-Rules::create( 'mysite:woo-no-cache', 'php' )
+// Runs early in the WordPress phase, before the page is stored
+$rules->create( 'mysite:woo-no-cache' )
     ->order( 1 )
     ->when_any()
-        ->request_url( '*/order-tracking/*' )
-        ->request_url( '*/wishlist/*' )
+        ->request_url( '*/cart/*' )
+        ->request_url( '*/checkout/*' )
+        ->request_url( '*/my-account/*' )
+        ->cookie( 'woocommerce_*' )
     ->then()
-        ->do_cache( false, 'Dynamic shop page' )
+        ->do_cache( false, 'WooCommerce dynamic page' )
     ->register();
 ```
-
-Avoid bypassing on `cookie( 'woocommerce_*' )`: cookies like
-`woocommerce_recently_viewed` match for ordinary browsing visitors, which would
-disable caching for most of your traffic. Ignore WooCommerce cookies instead; see
-the [FAQ](../09-troubleshooting/02-faq.md#does-millicache-work-with-woocommerce)
-for the recommended configuration.
 
 ## Example 3: Membership Site Caching
 
@@ -73,7 +107,7 @@ Cache for guests, bypass for active members:
 
 ```php
 // WordPress phase - needs user context
-Rules::create( 'mysite:members-no-cache', 'wp' )
+$rules->create( 'mysite:members-no-cache' )
     ->on( 'template_redirect', 25 )
     ->order( 10 )
     ->when()
@@ -94,7 +128,7 @@ Different cache entries for A/B test variants:
 
 ```php
 // Add a test variant as a flag
-Rules::create( 'mysite:ab-test-flag', 'wp' )
+$rules->create( 'mysite:ab-test-flag' )
     ->on( 'template_redirect', 25 )
     ->order( 10 )
     ->when()
@@ -109,7 +143,7 @@ Rules::create( 'mysite:ab-test-flag', 'wp' )
 Never cache previews or drafts:
 
 ```php
-Rules::create( 'mysite:no-preview', 'php' )
+$rules->create( 'mysite:no-preview' )
     ->order( 1 )
     ->when_any()
         ->request_param( 'preview', 'true' )
@@ -126,7 +160,7 @@ Use `has_block()` to target pages containing specific Gutenberg blocks:
 
 ```php
 // Flag pages with a pricing table block
-Rules::create( 'mysite:pricing-flag', 'wp' )
+$rules->create( 'mysite:pricing-flag' )
     ->on( 'template_redirect', 25 )
     ->order( 10 )
     ->when()
@@ -137,7 +171,7 @@ Rules::create( 'mysite:pricing-flag', 'wp' )
     ->register();
 
 // Short TTL for pages with live data blocks
-Rules::create( 'mysite:live-data-ttl', 'wp' )
+$rules->create( 'mysite:live-data-ttl' )
     ->on( 'template_redirect', 25 )
     ->order( 10 )
     ->when()
@@ -155,7 +189,7 @@ Use `has_term()` for taxonomy-based caching decisions:
 
 ```php
 // Flag seasonal products
-Rules::create( 'mysite:seasonal-flag', 'wp' )
+$rules->create( 'mysite:seasonal-flag' )
     ->on( 'template_redirect', 25 )
     ->order( 10 )
     ->when()
@@ -166,7 +200,7 @@ Rules::create( 'mysite:seasonal-flag', 'wp' )
     ->register();
 
 // Short TTL for featured content
-Rules::create( 'mysite:featured-ttl', 'wp' )
+$rules->create( 'mysite:featured-ttl' )
     ->on( 'template_redirect', 25 )
     ->order( 10 )
     ->when()
@@ -183,7 +217,7 @@ Rules::create( 'mysite:featured-ttl', 'wp' )
 Short TTL for "breaking news" posts:
 
 ```php
-Rules::create( 'mysite:breaking-news-ttl', 'wp' )
+$rules->create( 'mysite:breaking-news-ttl' )
     ->on( 'template_redirect', 25 )
     ->order( 10 )
     ->when()
@@ -202,12 +236,12 @@ Rules::create( 'mysite:breaking-news-ttl', 'wp' )
 Tag cache entries by country for geo-targeted content:
 
 ```php
-Rules::create( 'mysite:geo-flag', 'php' )
+$rules->create( 'mysite:geo-flag' )
     ->order( 10 )
     ->when()
         ->request_header( 'CF-IPCountry' )  // Cloudflare header
     ->then()
-        ->custom_action( function() {
+        ->custom( 'add-geo-flag', function() {
             $country = $_SERVER['HTTP_CF_IPCOUNTRY'] ?? 'XX';
             millicache_add_flag( 'geo:' . strtolower( $country ) );
         } )
@@ -219,7 +253,7 @@ Rules::create( 'mysite:geo-flag', 'php' )
 Short TTL for API responses:
 
 ```php
-Rules::create( 'mysite:api-ttl', 'php' )
+$rules->create( 'mysite:api-ttl' )
     ->order( 10 )
     ->when()
         ->request_url( '/api/*' )
@@ -235,7 +269,7 @@ Rules::create( 'mysite:api-ttl', 'php' )
 Separate cache entries for mobile and desktop:
 
 ```php
-Rules::create( 'mysite:mobile-flag', 'php' )
+$rules->create( 'mysite:mobile-flag' )
     ->order( 10 )
     ->when()
         ->custom( 'is-mobile', function() {
@@ -243,12 +277,12 @@ Rules::create( 'mysite:mobile-flag', 'php' )
             return preg_match( '/Mobile|Android|iPhone/i', $ua );
         } )
     ->then()
-        ->custom_action( function() {
+        ->custom( 'add-mobile-flag', function() {
             millicache_add_flag( 'device:mobile' );
         } )
     ->register();
 
-Rules::create( 'mysite:desktop-flag', 'php' )
+$rules->create( 'mysite:desktop-flag' )
     ->order( 10 )
     ->when()
         ->custom( 'is-desktop', function() {
@@ -256,7 +290,7 @@ Rules::create( 'mysite:desktop-flag', 'php' )
             return ! preg_match( '/Mobile|Android|iPhone/i', $ua );
         } )
     ->then()
-        ->custom_action( function() {
+        ->custom( 'add-desktop-flag', function() {
             millicache_add_flag( 'device:desktop' );
         } )
     ->register();
@@ -267,7 +301,7 @@ Rules::create( 'mysite:desktop-flag', 'php' )
 Clear product cache when inventory system updates:
 
 ```php
-Rules::create( 'mysite:inventory-clear', 'wp' )
+$rules->create( 'mysite:inventory-clear' )
     ->on( 'my_inventory_updated', 10 )  // Your custom hook
     ->when()
         ->custom( 'always', fn() => true )
@@ -282,7 +316,7 @@ Combine conditions with AND, OR, and NOT logic:
 
 ```php
 // AND (default) - all conditions must match
-Rules::create( 'mysite:all-match', 'php' )
+$rules->create( 'mysite:all-match' )
     ->when()
         ->request_method( 'GET' )
         ->request_url( '/shop/*' )
@@ -293,7 +327,7 @@ Rules::create( 'mysite:all-match', 'php' )
     ->register();
 
 // OR - any condition can match
-Rules::create( 'mysite:any-match', 'php' )
+$rules->create( 'mysite:any-match' )
     ->when_any()
         ->request_url( '*/cart/*' )
         ->request_url( '*/checkout/*' )
@@ -304,7 +338,7 @@ Rules::create( 'mysite:any-match', 'php' )
     ->register();
 
 // NOT - none of the conditions should match
-Rules::create( 'mysite:none-match', 'php' )
+$rules->create( 'mysite:none-match' )
     ->when_none()
         ->request_method( 'GET' )
         ->request_method( 'HEAD' )
@@ -320,10 +354,10 @@ Rules::create( 'mysite:none-match', 'php' )
 
 ```php
 // Good - namespace:purpose
-Rules::create( 'mysite:woo-cart-bypass', 'php' )
+$rules->create( 'mysite:woo-cart-bypass' )
 
 // Avoid - generic
-Rules::create( 'rule1', 'php' )
+$rules->create( 'rule1' )
 ```
 
 ### Choose the Right Phase

@@ -63,12 +63,15 @@ final class Utils {
 
 		$asset = include $asset_file;
 
-		wp_enqueue_style(
-			"millicache-{$asset_name}",
-			plugins_url( 'build/' . $asset_name . '.css', $basename ),
-			$css_deps,
-			$asset['version']
-		);
+		// Script-only bundles produce no stylesheet.
+		if ( file_exists( plugin_dir_path( WP_PLUGIN_DIR . '/' . $basename ) . '/build/' . $asset_name . '.css' ) ) {
+			wp_enqueue_style(
+				"millicache-{$asset_name}",
+				plugins_url( 'build/' . $asset_name . '.css', $basename ),
+				$css_deps,
+				$asset['version']
+			);
+		}
 
 		$js_dependencies = array_merge( $asset['dependencies'], $js_deps );
 
@@ -225,5 +228,37 @@ final class Utils {
 		}
 
 		return __( 'No cached pages', 'millicache' );
+	}
+
+	/**
+	 * User-facing summary for a finished cache clear.
+	 *
+	 * Shared by the CLI and the settings-page REST actions so both report
+	 * the entries actually removed instead of the inputs processed.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param int  $cleared Number of entries deleted or expired.
+	 * @param bool $expire  Whether the entries were expired instead of deleted.
+	 * @return string Translated summary message.
+	 */
+	public static function cleared_entries_message( int $cleared, bool $expire = false ): string {
+		if ( 0 === $cleared ) {
+			return __( 'No cache entries matched the given targets.', 'millicache' );
+		}
+
+		if ( $expire ) {
+			return sprintf(
+				// translators: %d is the number of expired cache entries.
+				_n( 'Expired %d cache entry.', 'Expired %d cache entries.', $cleared, 'millicache' ),
+				$cleared
+			);
+		}
+
+		return sprintf(
+			// translators: %d is the number of removed cache entries.
+			_n( 'Cleared %d cache entry.', 'Cleared %d cache entries.', $cleared, 'millicache' ),
+			$cleared
+		);
 	}
 }

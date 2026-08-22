@@ -170,6 +170,13 @@ final class Processor {
 			$parsed = parse_url( $url );
 			$host   = strtolower( $parsed['host'] ?? '' );
 			$path   = ( $parsed['path'] ?? '' ) . ( isset( $parsed['query'] ) ? '?' . $parsed['query'] : '' );
+
+			// HTTP_HOST carries non-default ports; mirror it so both hash paths agree.
+			$scheme = strtolower( $parsed['scheme'] ?? '' );
+			$port   = $parsed['port'] ?? null;
+			if ( $port && ! ( 'http' === $scheme && 80 === $port ) && ! ( 'https' === $scheme && 443 === $port ) ) {
+				$host .= ':' . $port;
+			}
 		}
 
 		return $this->get_parser()->get_url_hash( $host, $path );

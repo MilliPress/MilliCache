@@ -476,7 +476,9 @@ add_action( 'membership_level_changed', function( $user_id, $new_level ) {
     ] );
 }, 10, 2 );
 
-// Short TTL for dynamic membership pages
+// Short TTL for dynamic membership pages. TTL, grace and cache-decision
+// calls are honored at any point up to the final buffer flush — even from
+// template code or shortcodes running after template_redirect.
 add_action( 'template_redirect', function() {
     if ( is_page( 'member-dashboard' ) ) {
         millicache_set_ttl( 300 );  // 5 minutes

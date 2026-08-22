@@ -9,6 +9,7 @@
  */
 
 use MilliCache\Admin\Adminbar;
+use MilliCache\Core\Loader;
 
 // Mock WordPress Admin Bar class.
 if ( ! class_exists( 'WP_Admin_Bar' ) ) {
@@ -37,6 +38,11 @@ if ( ! function_exists( 'is_admin_bar_showing' ) ) {
 if ( ! function_exists( 'current_user_can' ) ) {
 	function current_user_can( $capability ) {
 		global $test_current_user_can;
+
+		if ( is_array( $test_current_user_can ) ) {
+			return $test_current_user_can[ $capability ] ?? true;
+		}
+
 		return $test_current_user_can ?? true;
 	}
 }
@@ -214,6 +220,52 @@ describe( 'Adminbar', function () {
 			} else {
 				expect( $return_type )->toBeNull();
 			}
+		} );
+	} );
+
+	describe( 'add_adminbar_menu behavior', function () {
+		// Globals chosen to skip both Engine-dependent branches.
+		$build_menus = function () {
+			global $test_current_user_can, $test_is_admin;
+			$test_current_user_can = array( 'manage_options' => false );
+			$test_is_admin = true;
+
+			$wp_admin_bar = new WP_Admin_Bar();
+			( new Adminbar( new Loader() ) )->add_adminbar_menu( $wp_admin_bar );
+
+			$menus = array();
+			foreach ( $wp_admin_bar->menus as $menu ) {
+				$menus[ $menu['id'] ] = $menu;
+			}
+
+			return $menus;
+		};
+
+		it( 'root node has no clear action href', function () use ( $build_menus ) {
+			$menus = $build_menus();
+
+			expect( $menus )->toHaveKey( 'millicache' );
+			expect( $menus['millicache'] )->not->toHaveKey( 'href' );
+		} );
+
+		it( 'root node stays keyboard focusable and describes the plugin', function () use ( $build_menus ) {
+			$menus = $build_menus();
+
+			expect( $menus['millicache']['meta']['tabindex'] )->toBe( 0 );
+			expect( $menus['millicache']['meta']['title'] )->toBe( 'MilliCache' );
+		} );
+
+		it( 'keeps the explicit clear node with its action href', function () use ( $build_menus ) {
+			$menus = $build_menus();
+
+			expect( $menus )->toHaveKey( 'millicache-clear' );
+			expect( $menus['millicache-clear']['href'] )->toContain( '_millicache=clear' );
+		} );
+
+		it( 'adds no clear-targets submenu node (targets live in the JS dialog)', function () use ( $build_menus ) {
+			$menus = $build_menus();
+
+			expect( $menus )->not->toHaveKey( 'millicache-clear-targets' );
 		} );
 	} );
 

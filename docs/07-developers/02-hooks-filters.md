@@ -242,6 +242,37 @@ add_action( 'millicache_rest_settings_action_performed', function( $action, $par
 
 ---
 
+### Admin Events
+
+#### millicache_commands_enqueued
+
+Fires after the command palette bundle has been enqueued (wp-admin on WordPress 7.0+, users with the clear-cache capability). Hook it to enqueue your own palette commands; palette availability, admin context and capability are already vetted.
+
+```php
+add_action( 'millicache_commands_enqueued', function() {
+    wp_enqueue_script(
+        'my-plugin-commands',
+        plugins_url( 'build/commands.js', __FILE__ ),
+        array( 'millicache-commands' ),
+        '1.0.0',
+        array( 'in_footer' => true )
+    );
+} );
+```
+
+On the JavaScript side, MilliCache registers its commands without a context so a regular <kbd>Cmd</kbd>+<kbd>K</kbd> open stays uncluttered, and promotes them to the pre-loaded `root` context while the palette is opened through the admin bar button. Extension commands can join that cycle by listening to the `millicache.adminbar.paletteOpen` JS hook:
+
+```js
+import { addAction } from '@wordpress/hooks';
+
+// Fired just before the admin bar button opens the palette.
+addAction( 'millicache.adminbar.paletteOpen', 'my-plugin/commands', () => {
+    registerMyCommands( 'root' ); // re-register with context: 'root'
+} );
+```
+
+---
+
 ## Filter Hooks
 
 ### Settings Filters

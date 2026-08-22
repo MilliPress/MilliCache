@@ -149,6 +149,13 @@ if ( ! function_exists( 'get_the_terms' ) ) {
 	}
 }
 
+if ( ! function_exists( 'is_taxonomy_viewable' ) ) {
+	function is_taxonomy_viewable( $taxonomy ) {
+		global $test_nonviewable_taxonomies;
+		return ! in_array( $taxonomy, $test_nonviewable_taxonomies ?? array(), true );
+	}
+}
+
 if ( ! function_exists( 'is_wp_error' ) ) {
 	function is_wp_error( $thing ) {
 		return $thing instanceof WP_Error;
@@ -167,7 +174,9 @@ uses()->beforeEach( function () {
 	global $test_is_archive, $test_is_post_type_archive, $test_query_vars, $test_is_category;
 	global $test_is_tag, $test_is_tax, $test_queried_object, $test_is_author, $test_is_date;
 	global $test_is_feed, $test_filters, $test_posts, $test_taxonomies, $test_terms;
+	global $test_nonviewable_taxonomies;
 
+	$test_nonviewable_taxonomies = array();
 	$test_is_singular = false;
 	$test_queried_object_id = 0;
 	$test_is_front_page = false;
@@ -270,6 +279,31 @@ describe( 'MilliCache', function () {
 			expect( $flags )->toContain( 'archive:category:10' );
 			expect( $flags )->toContain( 'archive:category:11' );
 			expect( $flags )->toContain( 'archive:post_tag:20' );
+		} );
+
+		it( 'skips non-viewable taxonomies (Polylang language, post_translations)', function () {
+			$post = new WP_Post( array(
+				'ID'           => 321,
+				'post_type'    => 'post',
+				'post_author'  => 2,
+				'post_date'    => '2026-07-09 08:00:00',
+				'post_status'  => 'publish',
+			) );
+
+			global $test_taxonomies, $test_terms, $test_nonviewable_taxonomies;
+			$test_taxonomies['post'] = array( 'category', 'language', 'post_translations' );
+			$test_nonviewable_taxonomies = array( 'language', 'post_translations' );
+			$test_terms[321] = array(
+				'category'          => array( (object) array( 'term_id' => 1 ) ),
+				'language'          => array( (object) array( 'term_id' => 4 ) ),
+				'post_translations' => array( (object) array( 'term_id' => 47 ) ),
+			);
+
+			$flags = MilliCache::get_post_related_flags( $post );
+
+			expect( $flags )->toContain( 'archive:category:1' );
+			expect( $flags )->not->toContain( 'archive:language:4' );
+			expect( $flags )->not->toContain( 'archive:post_translations:47' );
 		} );
 
 		it( 'handles custom post type', function () {
