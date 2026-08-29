@@ -102,7 +102,7 @@ final class Processor {
 	 */
 	public function get_cleaner(): Cleaner {
 		if ( ! $this->cleaner ) {
-			$this->cleaner = new Cleaner( $this->config, $this->get_parser() );
+			$this->cleaner = new Cleaner( $this->config );
 		}
 		return $this->cleaner;
 	}
@@ -139,18 +139,28 @@ final class Processor {
 	}
 
 	/**
-	 * Clean request and generate hash.
-	 *
-	 * Convenience method that cleans the request superglobals and
-	 * generates a unique hash in one call.
+	 * Drop the conditional headers and generate the request hash.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @return string The generated request hash.
 	 */
 	public function process(): string {
-		$this->get_cleaner()->clean_request();
+		$this->get_cleaner()->clean_conditional_headers();
 		return $this->get_hasher()->generate();
+	}
+
+	/**
+	 * Remove the ignored query keys from the request superglobals.
+	 *
+	 * Call once right before rendering, after all redirects had their chance.
+	 *
+	 * @since 1.8.1
+	 *
+	 * @return void
+	 */
+	public function normalize(): void {
+		$this->get_cleaner()->normalize_superglobals();
 	}
 
 	/**

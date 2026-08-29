@@ -325,7 +325,7 @@ final class Engine {
 	 * @return   void
 	 */
 	private function run() {
-		// Clean request and generate hash.
+		// Generate the request hash.
 		$hash = $this->request()->process();
 
 		// Create State object.

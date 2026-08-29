@@ -147,9 +147,11 @@ final class Processor {
 			}
 		);
 
+		// Before rendering normalize the request, then decide storability.
 		add_action(
 			'template_redirect',
 			function () {
+				$this->request_manager->normalize();
 				$this->mark_storable( Engine::instance()->check_cache_decision() );
 			},
 			PHP_INT_MAX - 10

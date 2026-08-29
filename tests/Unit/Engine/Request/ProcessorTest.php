@@ -58,15 +58,34 @@ describe('Handler', function () {
 	});
 
 	describe('process', function () {
-		it('cleans request and generates hash', function () {
+		it('generates a hash without touching the request superglobals', function () {
+			$_SERVER['HTTP_IF_NONE_MATCH'] = 'etag';
+
 			$hash = $this->handler->process();
 
 			// Hash should be MD5 format.
 			expect($hash)->toMatch('/^[a-f0-9]{32}$/');
 
-			// Request should be cleaned.
-			expect($_GET)->not->toHaveKey('utm_source');
-			expect($_SERVER['REQUEST_URI'])->toBe('/test/page?id=123');
+			// Conditional headers go, the request itself stays as sent.
+			expect($_SERVER)->not->toHaveKey('HTTP_IF_NONE_MATCH');
+			expect($_GET)->toHaveKey('utm_source');
+			expect($_SERVER['REQUEST_URI'])->toBe('/test/page?id=123&utm_source=google');
+			expect($_SERVER['QUERY_STRING'])->toBe('id=123&utm_source=google');
+		});
+
+		it('hashes the ignored keys away regardless of superglobal normalization', function () {
+			$hash_raw = $this->handler->process();
+
+			$this->handler->normalize();
+			$hash_normalized = ( new Processor($this->config) )->process();
+
+			$_SERVER['REQUEST_URI'] = '/test/page?id=123';
+			$_SERVER['QUERY_STRING'] = 'id=123';
+			$_GET = array('id' => '123');
+			$hash_clean = ( new Processor($this->config) )->process();
+
+			expect($hash_raw)->toBe($hash_normalized);
+			expect($hash_raw)->toBe($hash_clean);
 		});
 
 		it('returns consistent hash for same request', function () {
@@ -148,7 +167,7 @@ describe('Handler', function () {
 			$this->handler->process();
 			$url = $this->handler->get_url();
 
-			// utm_source is cleaned, so the URL should not include it.
+			// utm_source is ignored, so the normalized URL must not include it.
 			expect($url)->toBe('https://example.com/test/page?id=123');
 		});
 	});
@@ -176,7 +195,7 @@ describe('Handler', function () {
 	});
 
 	describe('integration', function () {
-		it('properly cleans and hashes complex request', function () {
+		it('properly hashes a complex request and normalizes it on demand', function () {
 			$_SERVER['REQUEST_URI'] = '/Products/Item?id=5&utm_source=email&color=blue&fbclid=abc';
 			$_SERVER['HTTP_HOST'] = 'Shop.Example.COM';
 			$_SERVER['QUERY_STRING'] = 'id=5&utm_source=email&color=blue&fbclid=abc';
@@ -195,11 +214,17 @@ describe('Handler', function () {
 
 			$hash = $handler->process();
 
-			// Verify cleaning.
+			// Hashing leaves the request intact.
+			expect($_GET)->toHaveKey('utm_source');
+			expect($_GET)->toHaveKey('fbclid');
+
+			// The deferred normalization removes exactly the ignored keys.
+			$handler->normalize();
 			expect($_GET)->toHaveKey('id');
 			expect($_GET)->toHaveKey('color');
 			expect($_GET)->not->toHaveKey('utm_source');
 			expect($_GET)->not->toHaveKey('fbclid');
+			expect($_SERVER['REQUEST_URI'])->toBe('/Products/Item?id=5&color=blue');
 
 			// Verify hash is generated.
 			expect($hash)->toMatch('/^[a-f0-9]{32}$/');

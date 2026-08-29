@@ -363,7 +363,7 @@ define( 'MC_CACHE_IGNORE_REQUEST_KEYS', [ '_*', 'utm_*' ] );
 | Default   | `['_*', 'utm_*']` |
 | Type      | `array`           |
 
-Query parameters stripped from cache key. Supports wildcards.
+Query parameters stripped from the cache key. Supports wildcards.
 
 ```php
 define( 'MC_CACHE_IGNORE_REQUEST_KEYS', [
@@ -373,6 +373,12 @@ define( 'MC_CACHE_IGNORE_REQUEST_KEYS', [
     'gclid',
 ] );
 ```
+
+Requests that differ only in these parameters share one cache entry. The keys
+are also removed from `$_SERVER['REQUEST_URI']`, `$_SERVER['QUERY_STRING']`,
+`$_GET` and `$_REQUEST` at the end of `template_redirect` (priority
+`PHP_INT_MAX - 10`), so redirects keep them while rendered HTML never contains
+them. Code that reads them during rendering should use JavaScript instead.
 
 ## Update Constants
 

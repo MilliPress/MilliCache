@@ -23,8 +23,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Cleans and normalizes request data.
  *
- * Removes ignored query parameters from superglobals and server variables
- * to ensure consistent cache key generation.
+ * Conditional headers are dropped before WordPress loads. Ignored query keys
+ * are removed from the superglobals right before rendering, so redirects see
+ * the request as sent and the cached HTML never contains them.
  *
  * @since      1.0.0
  * @package    MilliCache
@@ -41,64 +42,99 @@ final class Cleaner {
 	private Config $config;
 
 	/**
-	 * Request parser.
-	 *
-	 * @var Parser
-	 */
-	private Parser $parser;
-
-	/**
 	 * Constructor.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param Config $config Cache configuration.
-	 * @param Parser $parser Request parser.
 	 */
-	public function __construct( Config $config, Parser $parser ) {
+	public function __construct( Config $config ) {
 		$this->config = $config;
-		$this->parser = $parser;
 	}
 
 	/**
-	 * Clean up the request superglobals and server variables.
+	 * Drop the conditional request headers.
 	 *
-	 * Removes ETags, Last-Modified headers, and filters ignored query parameters.
-	 * Modifies $_SERVER, $_GET, and $_REQUEST in place.
-	 *
-	 * @since 1.0.0
+	 * @since 1.8.1
 	 *
 	 * @return void
 	 */
-	public function clean_request(): void {
-		// Unset the ETag and Last-Modified headers.
+	public function clean_conditional_headers(): void {
 		unset( $_SERVER['HTTP_IF_NONE_MATCH'], $_SERVER['HTTP_IF_MODIFIED_SINCE'] );
+	}
 
-		// Remove ignored request keys from the query string.
-		if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
-			$_SERVER['QUERY_STRING'] = $this->parser->remove_query_args(
-				(string) filter_var( ServerVars::get( 'QUERY_STRING' ), FILTER_SANITIZE_URL ),
-				$this->config->ignore_request_keys
-			);
+	/**
+	 * Remove the ignored query keys from $_SERVER, $_GET and $_REQUEST.
+	 *
+	 * @since 1.8.1
+	 *
+	 * @return void
+	 */
+	public function normalize_superglobals(): void {
+		$query = $this->get_server_var( 'QUERY_STRING' );
+		if ( '' !== $query ) {
+			$_SERVER['QUERY_STRING'] = $this->strip_ignored_keys( $query );
 		}
 
-		// Remove ignored request keys from the request uri.
-		$request_uri = ServerVars::get( 'REQUEST_URI' );
-		if ( $request_uri && strpos( $request_uri, '?' ) !== false ) {
-			list($path, $query) = explode( '?', $request_uri, 2 );
-			$query = $this->parser->remove_query_args( $query, $this->config->ignore_request_keys );
-			$_SERVER['REQUEST_URI'] = $path . ( ! empty( $query ) ? '?' . $query : '' );
+		$request_uri = $this->get_server_var( 'REQUEST_URI' );
+		if ( false !== strpos( $request_uri, '?' ) ) {
+			list( $path, $query ) = explode( '?', $request_uri, 2 );
+			$query                  = $this->strip_ignored_keys( $query );
+			$_SERVER['REQUEST_URI'] = '' === $query ? $path : $path . '?' . $query;
 		}
 
-		// Remove ignored request keys from the superglobals.
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Cache-key normalization only unsets ignored query parameters; nothing is read into state, and it runs pre-WordPress where nonce APIs are unavailable.
-		foreach ( $_GET as $key => $value ) {
-			foreach ( $this->config->ignore_request_keys as $pattern ) {
-				if ( PatternMatcher::match( $key, $pattern ) ) {
-					unset( $_GET[ $key ], $_REQUEST[ $key ] );
-					break;
-				}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only unsets ignored keys.
+		foreach ( array_keys( $_GET ) as $key ) {
+			if ( $this->is_ignored( (string) $key ) ) {
+				unset( $_GET[ $key ], $_REQUEST[ $key ] );
 			}
 		}
+	}
+
+	/**
+	 * Read a server variable without the entity encoding of {@see ServerVars::get()}.
+	 *
+	 * @since 1.8.1
+	 *
+	 * @param string $key The server variable key.
+	 * @return string The value as sent, or an empty string if not set.
+	 */
+	private function get_server_var( string $key ): string {
+		return html_entity_decode( ServerVars::get( $key ), ENT_QUOTES, 'UTF-8' );
+	}
+
+	/**
+	 * Remove the ignored pairs from a query string, keeping order and encoding.
+	 *
+	 * @since 1.8.1
+	 *
+	 * @param string $query The query string.
+	 * @return string The query string without the ignored pairs.
+	 */
+	private function strip_ignored_keys( string $query ): string {
+		$pairs = array_filter(
+			explode( '&', $query ),
+			fn( string $pair ): bool => ! $this->is_ignored( explode( '=', $pair, 2 )[0] )
+		);
+
+		return implode( '&', $pairs );
+	}
+
+	/**
+	 * Whether a query key matches one of the ignored patterns.
+	 *
+	 * @since 1.8.1
+	 *
+	 * @param string $key The query key.
+	 * @return bool True if the key is ignored.
+	 */
+	private function is_ignored( string $key ): bool {
+		foreach ( $this->config->ignore_request_keys as $pattern ) {
+			if ( PatternMatcher::match( $key, $pattern ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
