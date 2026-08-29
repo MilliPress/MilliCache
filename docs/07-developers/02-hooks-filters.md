@@ -428,7 +428,7 @@ Example: bucket A/B test arms from a cookie:
 
 ```
 Condition: cookie ab_arm matches /^[ab]$/
-Action:    set_bucket name="ab" token="{cookie:ab_arm}"
+Action:    set_bucket name="ab" token="{cookie.ab_arm}"
 ```
 
 The rule fires per request; the action calls `$resolver->add_bucket('ab', $cookie_value)`. Cache entries for arm A and arm B stay distinct, but if the rendered HTML happens to be byte-identical they automatically share storage via the content-addressable output keyspace.
