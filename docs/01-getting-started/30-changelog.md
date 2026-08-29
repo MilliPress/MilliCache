@@ -8,6 +8,9 @@ menu_order: 30
 
 ## [1.8.1](https://github.com/MilliPress/MilliCache/compare/v1.8.0...v1.8.1) (2026-08-29)
 
+<!-- mc:auto sha=91ea9244c58a -->
+Tracking parameters such as `gclid` and `utm_*` are now preserved throughout the WordPress bootstrap. Previously, `MC_CACHE_IGNORE_REQUEST_KEYS` stripped these from `$_SERVER`, `$_GET`, and `$_REQUEST` before WordPress loaded, so any redirect built by WordPress core, Polylang, or WooCommerce lost them — a request for `/?gclid=x` could be answered with `Location: /de/` instead of `Location: /de/?gclid=x`. The fix moves the cleanup to the point just before a page is stored in cache, which is all that was ever needed to keep the keys out of the shared cache entry.
+<!-- /mc:auto -->
 
 ### Bug Fixes
 
