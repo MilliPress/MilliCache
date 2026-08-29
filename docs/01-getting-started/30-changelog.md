@@ -6,6 +6,14 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.1](https://github.com/MilliPress/MilliCache/compare/v1.8.0...v1.8.1) (2026-08-29)
+
+Query parameters listed in `MC_CACHE_IGNORE_REQUEST_KEYS`, such as `gclid` or `utm_*`, now stay part of the request until the page is rendered. Redirects issued by WordPress, WooCommerce, or multilingual plugins like Polylang keep them in the target URL, while cached pages still never contain them.
+
+### Bug Fixes
+
+* **engine:** keep ignored query keys in the request until rendering ([f6f7d33](https://github.com/MilliPress/MilliCache/commit/f6f7d3350f1f66216462292f9390a160ff42f3b8))
+
 ## [1.8.0](https://github.com/MilliPress/MilliCache/compare/v1.7.7...v1.8.0) (2026-08-22)
 
 <!-- mc:auto sha=9ba0bffb378a -->
