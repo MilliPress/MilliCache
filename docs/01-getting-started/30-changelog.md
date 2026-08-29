@@ -8,6 +8,11 @@ menu_order: 30
 
 ## [1.8.1-beta](https://github.com/MilliPress/MilliCache/compare/v1.8.0...v1.8.1-beta) (2026-08-29)
 
+<!-- mc:auto sha=91ea9244c58a -->
+Parameters listed in `MC_CACHE_IGNORE_REQUEST_KEYS` (such as `gclid` and `utm_*`) were stripped from the request too early — before WordPress loaded — causing redirects built by `redirect_canonical`, Polylang, WooCommerce, and similar to drop those parameters entirely. A request to `/?gclid=x` could be redirected to `/de/` instead of `/de/?gclid=x`.
+
+The cleanup now happens at the end of `template_redirect`, just before the cache entry is written, so ignored keys remain available to WordPress throughout the request lifecycle.
+<!-- /mc:auto -->
 
 ### Bug Fixes
 
