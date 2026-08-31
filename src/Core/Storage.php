@@ -1227,8 +1227,8 @@ class Storage {
 				if ( $result ) {
 					list($data, $flags, $locked) = $result;
 					if ( $data && ! $locked ) {
-						$updated          = isset( $data['updated'] ) && is_numeric( $data['updated'] ) ? (int) $data['updated'] : time();
-						$data['updated']  = $updated - $ttl;
+						$effective_ttl   = isset( $data['custom_ttl'] ) && is_numeric( $data['custom_ttl'] ) ? (int) $data['custom_ttl'] : $ttl;
+						$data['updated'] = time() - $effective_ttl - 1;
 						$this->set_cache( $key, $data, $flags );
 						++$cleared;
 

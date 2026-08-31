@@ -15,6 +15,9 @@
  */
 
 use MilliCache\Core\Storage;
+use MilliCache\Engine\Cache\Config;
+use MilliCache\Engine\Cache\Entry;
+use MilliCache\Engine\Cache\Validator;
 
 describe( 'Invalidation expire/delete by flag (integration)', function () {
 
@@ -49,22 +52,25 @@ describe( 'Invalidation expire/delete by flag (integration)', function () {
 		// Seed an entry exactly as set_cache() would: a cache hash carrying one
 		// flag field, plus that key as a member of the flag's set. Empty body so
 		// get_cache() treats it as present without a separate output lookup.
-		$this->seed = function ( string $hash, string $flag ) {
+		$this->seed = function ( string $hash, string $flag, ?int $custom_ttl = null ) {
 			$key        = 'mc_itest:c:' . $hash;
 			$flag_field = 'mc_itest:f:' . $flag;
+
+			$meta = array(
+				'status'  => 200,
+				'updated' => time(),
+				'headers' => array(),
+				'url'     => 'https://example.com/x',
+			);
+			if ( null !== $custom_ttl ) {
+				$meta['custom_ttl'] = $custom_ttl;
+			}
 
 			$this->redis->hmset(
 				$key,
 				array(
 					'output'     => '',
-					'meta'       => json_encode(
-						array(
-							'status'  => 200,
-							'updated' => time(),
-							'headers' => array(),
-							'url'     => 'https://example.com/x',
-						)
-					),
+					'meta'       => json_encode( $meta ),
 					'updated'    => time(),
 					'size_raw'   => 0,
 					$flag_field => 1,
@@ -131,6 +137,82 @@ describe( 'Invalidation expire/delete by flag (integration)', function () {
 		expect( $deleted[0]['args'][3] )->toBe( 'https://example.com/x' );
 		expect( $deleted[0]['args'][2] )->toContain( 'post:1' );
 		expect( $deleted[0]['args'][2] )->not->toContain( 'mc_itest:f:post:1' );
+	} );
+
+	it( 'expires an entry by its own custom_ttl, not the global TTL', function () {
+		// Regression: a set_ttl rule TTL far above the global TTL must not let
+		// the entry survive an expire pass fresh (previously only the global
+		// TTL was subtracted from `updated`).
+		( $this->seed )( 'hashcustom', 'post:1', 999999 );
+
+		$this->storage->clear_cache_by_sets( array( 'mll:expired-flags' => array( 'post:1' ) ), 100 );
+
+		$meta = json_decode( (string) $this->redis->hget( 'mc_itest:c:hashcustom', 'meta' ), true );
+
+		// The custom TTL survives the re-store...
+		expect( $meta['custom_ttl'] )->toBe( 999999 );
+		// ...and the entry is stale by its own TTL: `updated + custom_ttl <= now`.
+		expect( $meta['updated'] )->toBeLessThanOrEqual( time() - 999999 );
+		expect( $meta['updated'] )->toBeGreaterThanOrEqual( time() - 999999 - 5 );
+	} );
+
+	it( 'pins expired entries to exactly stale, idempotently across repeat passes', function () {
+		( $this->seed )( 'hashpin', 'post:1' );
+
+		$this->storage->clear_cache_by_sets( array( 'mll:expired-flags' => array( 'post:1' ) ), 100 );
+		// A second pass must not age it further into the grace window.
+		$this->storage->clear_cache_by_sets( array( 'mll:expired-flags' => array( 'post:1' ) ), 100 );
+
+		$meta = json_decode( (string) $this->redis->hget( 'mc_itest:c:hashpin', 'meta' ), true );
+
+		// Stale as of now by the default TTL, not cumulatively older.
+		expect( $meta['updated'] )->toBeLessThanOrEqual( time() - 100 );
+		expect( $meta['updated'] )->toBeGreaterThanOrEqual( time() - 100 - 5 );
+		// The surfaced top-level field mirrors the meta timestamp.
+		expect( (int) $this->redis->hget( 'mc_itest:c:hashpin', 'updated' ) )->toBe( (int) $meta['updated'] );
+	} );
+
+	it( 'routes an expired custom_ttl entry into the stale/SWR serve path', function () {
+		( $this->seed )( 'hashserve', 'post:1', 999999 );
+
+		$this->storage->clear_cache_by_sets( array( 'mll:expired-flags' => array( 'post:1' ) ), 100 );
+
+		// Judge the re-stored entry exactly as Reader::should_serve() does.
+		// get_cache() takes the bare hash; it prefixes the storage key itself.
+		list( $data ) = $this->storage->get_cache( 'hashserve' );
+		$entry     = Entry::from_array( $data );
+		$validator = new Validator( Config::from_settings( array( 'ttl' => 100, 'grace' => 3600 ) ) );
+
+		// Stale: the serve path takes the lock-and-regenerate branch...
+		expect( $validator->is_stale( $entry ) )->toBeTrue();
+		// ...but not too old: the entry is not deleted, its stale copy stays
+		// servable while regeneration runs (SWR).
+		expect( $validator->is_too_old( $entry ) )->toBeFalse();
+		// The full grace window remains for that regeneration.
+		expect( $validator->time_to_deletion( $entry ) )->toBeGreaterThan( 3590 );
+	} );
+
+	it( 'does not push an already-stale entry past its grace window into deletion', function () {
+		( $this->seed )( 'hashgrace', 'post:1' );
+
+		// Age the entry into its grace window: stale for 50s (ttl 100, grace 100).
+		$key  = 'mc_itest:c:hashgrace';
+		$meta = json_decode( (string) $this->redis->hget( $key, 'meta' ), true );
+
+		$meta['updated'] = time() - 150;
+		$this->redis->hset( $key, 'meta', json_encode( $meta ) );
+
+		$this->storage->clear_cache_by_sets( array( 'mll:expired-flags' => array( 'post:1' ) ), 100 );
+
+		list( $data ) = $this->storage->get_cache( 'hashgrace' );
+		$entry     = Entry::from_array( $data );
+		$validator = new Validator( Config::from_settings( array( 'ttl' => 100, 'grace' => 100 ) ) );
+
+		// The old subtraction (updated - ttl = now - 250) landed past TTL+grace,
+		// turning the soft expire into a hard delete on the next read. Pinned to
+		// now - ttl, the entry stays inside grace and serves stale instead.
+		expect( $validator->is_stale( $entry ) )->toBeTrue();
+		expect( $validator->is_too_old( $entry ) )->toBeFalse();
 	} );
 
 	it( 'emits millicache_entry_expired with the URL when an entry is aged by flag', function () {
