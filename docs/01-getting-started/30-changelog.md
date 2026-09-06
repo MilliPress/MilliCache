@@ -8,6 +8,15 @@ menu_order: 30
 
 ## [1.8.2-beta](https://github.com/MilliPress/MilliCache/compare/v1.8.1...v1.8.2-beta) (2026-09-06)
 
+<!-- mc:auto sha=600e7ec1b2a5 -->
+This beta release fixes two caching bugs and updates documentation for WooCommerce cookie handling.
+
+Pages served from the local cache now remain eligible for edge caching for their entire local lifetime. Previously, once a cached page was older than the edge cache module's TTL (typically one hour), subsequent replays sent `s-maxage=0`, preventing the CDN from storing the page again until the local copy expired. The edge TTL now resets on each expiry cycle, so pages stay cacheable at the edge for as long as they live locally.
+
+Cache entries using a custom TTL via `set_ttl` rules are now expired correctly against that custom TTL rather than the global default. Entries with a longer-than-default TTL were surviving expiry passes fully fresh when they should have been stale, and entries with a shorter TTL were not expiring on schedule.
+
+The WooCommerce documentation has been updated to clarify that cart cookie verification should happen before adding cookies to `MC_CACHE_IGNORE_COOKIES`, and the recently-viewed products warning is now scoped specifically to the classic widget.
+<!-- /mc:auto -->
 
 ### Bug Fixes
 
