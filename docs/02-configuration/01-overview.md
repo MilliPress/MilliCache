@@ -156,21 +156,28 @@ WooCommerce already marks its dynamic pages (cart, checkout, my account) with th
 configure is cookie handling: WooCommerce sets several cookies for ordinary browsing
 visitors, and any cookie MilliCache does not ignore becomes part of the cache key.
 
+Only ignore a cookie that cannot change the HTML your server builds. The tracking,
+store-notice and recently-viewed cookies never do in a standard shop. The cart and
+session cookies usually do not either, but a theme can render cart contents
+server-side: open a product page in two private windows with different carts and
+compare the sources before ignoring them.
+
 ```php
 define( 'MC_CACHE_IGNORE_COOKIES', [
     '_*',                        // Keep the default (analytics cookies)
     'sbjs_*',                    // Order Attribution tracking (every visitor)
-    'woocommerce_*',             // Recently viewed, cart hash, items in cart
-    'wp_woocommerce_session_*',  // Customer session
-    'store_notice*',             // Dismissed store notices
+    'store_notice*',             // Dismissed store notices (hidden markup, revealed by JS)
+    'woocommerce_*',             // Recently viewed, and cart state after the comparison above
+    'wp_woocommerce_session_*',  // Customer session, same condition
 ] );
 ```
 
-Do **not** add `woocommerce_*` or `sbjs_*` to `MC_CACHE_NOCACHE_COOKIES`. Cookies like
-`woocommerce_recently_viewed` are set the moment a visitor views a product, so a
-bypass on them silently turns most browsing traffic into cache misses. See the
-[FAQ](../09-troubleshooting/02-faq.md#does-millicache-work-with-woocommerce) for the
-full explanation.
+Do **not** put `woocommerce_*` or `sbjs_*` into `MC_CACHE_NOCACHE_COOKIES`.
+`sbjs_*` is set for every visitor, and with the classic Recently Viewed Products
+widget active `woocommerce_recently_viewed` is set on the first product view, so a
+bypass on either silently turns most browsing traffic into cache misses. See the
+[FAQ](../09-troubleshooting/02-faq.md#does-millicache-work-with-woocommerce) for
+details.
 
 ## Viewing Current Configuration
 

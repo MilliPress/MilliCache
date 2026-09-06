@@ -85,21 +85,26 @@ $rules->create( 'mysite:docs-ttl' )
 
 ## Example 2: WooCommerce Cart/Checkout Bypass
 
-Never cache cart, checkout, or account pages:
+WooCommerce sets `DONOTCACHEPAGE` on cart, checkout and account pages and
+MilliCache respects it, so a standard shop needs no rule for them. Use this rule
+only when your theme renders cart contents into pages server-side, so visitors
+with a cart must bypass the cache:
 
 ```php
 // Runs early in the WordPress phase, before the page is stored
-$rules->create( 'mysite:woo-no-cache' )
+$rules->create( 'mysite:woo-cart-no-cache' )
     ->order( 1 )
-    ->when_any()
-        ->request_url( '*/cart/*' )
-        ->request_url( '*/checkout/*' )
-        ->request_url( '*/my-account/*' )
-        ->cookie( 'woocommerce_*' )
+    ->when()
+        ->cookie( 'woocommerce_items_in_cart' )
     ->then()
-        ->do_cache( false, 'WooCommerce dynamic page' )
+        ->do_cache( false, 'Cart contents are rendered server-side' )
     ->register();
 ```
+
+Match the cookie by name, not `woocommerce_*`. With the classic Recently Viewed
+Products widget active, a bypass on the wildcard also fires for
+`woocommerce_recently_viewed`, set on the first product view, and would turn most
+browsing traffic into cache misses.
 
 ## Example 3: Membership Site Caching
 
