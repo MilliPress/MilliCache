@@ -6,6 +6,14 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.2-beta](https://github.com/MilliPress/MilliCache/compare/v1.8.1...v1.8.2-beta) (2026-09-06)
+
+
+### Bug Fixes
+
+* **cache:** keep pages cacheable at the edge for the whole local cache lifetime ([b938b92](https://github.com/MilliPress/MilliCache/commit/b938b92c1fdc408da8517eb130cc8a9b4bf16f90))
+* **storage:** expire cache entries by their own custom TTL ([58f2951](https://github.com/MilliPress/MilliCache/commit/58f29516648bc5da0767c35002216bc99e0e1f08))
+
 ## [1.8.1](https://github.com/MilliPress/MilliCache/compare/v1.8.0...v1.8.1) (2026-08-29)
 
 Query parameters listed in `MC_CACHE_IGNORE_REQUEST_KEYS`, such as `gclid` or `utm_*`, now stay part of the request until the page is rendered. Redirects issued by WordPress, WooCommerce, or multilingual plugins like Polylang keep them in the target URL, while cached pages still never contain them.
