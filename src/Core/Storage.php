@@ -220,7 +220,15 @@ class Storage {
 	 * Get cache entries (keyed by hash, flags always included). `$include_output`
 	 * also transfers the dereferenced output body.
 	 *
+	 * Bodies live in a content-addressable keyspace shared by every entry with
+	 * identical output, so `size` is the length of the body an entry points to,
+	 * not what the entry adds on its own. Each entry also carries its
+	 * `output_hash` (the body it references, empty when it has no body) and
+	 * `meta_size` (the byte length of its stored metadata), so callers can tell
+	 * which entries share a body and what a shared entry weighs by itself.
+	 *
 	 * @since 1.4.0
+	 * @since 1.8.3 Entries carry `output_hash` and `meta_size`.
 	 * @access public
 	 *
 	 * @param string $flag           Optional flag filter. Supports wildcards.
@@ -266,9 +274,11 @@ class Storage {
 						continue;
 					}
 
-					$entry         = $this->parse_meta( $values[0] );
-					$output_hash   = isset( $values[1] ) && is_string( $values[1] ) ? $values[1] : '';
-					$entry['size'] = 0;
+					$entry                = $this->parse_meta( $values[0] );
+					$output_hash          = isset( $values[1] ) && is_string( $values[1] ) ? $values[1] : '';
+					$entry['size']        = 0;
+					$entry['output_hash'] = $output_hash;
+					$entry['meta_size']   = strlen( $values[0] );
 
 					$entry['flags'] = array_map(
 						array( $this, 'toggle_flag_key' ),
