@@ -8,6 +8,9 @@ menu_order: 30
 
 ## [1.8.2-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta...v1.8.2-beta.1) (2026-09-08)
 
+<!-- mc:auto sha=e108037bee08 -->
+Each cache entry returned by `get_entries()` now includes two new fields: `output_hash`, identifying the stored body it points to, and `meta_size`, the byte length of its own metadata record. Because cache variants with identical output share a single stored body, these fields let the Entry Browser display which entries share a body and give a more accurate picture of what each variant actually costs in storage.
+<!-- /mc:auto -->
 
 ### Features
 
