@@ -6,6 +6,16 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.2-beta.2](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta.1...v1.8.2-beta.2) (2026-09-08)
+
+<!-- mc:auto sha=c539538cc4dc -->
+Settings locked via `wp-config.php` constants (such as `MC_STORAGE_HOST` or `MC_CACHE_TTL`) display as locked again on WordPress 7.1. MilliCache Pro's multisite licensing also works correctly again, as the settings framework can now distinguish constant-defined keys from database-stored ones.
+<!-- /mc:auto -->
+
+### Dependencies
+
+* **millibase:** update MilliBase to 2.11.0 ([c35f7af](https://github.com/MilliPress/MilliCache/commit/c35f7af3b8ba3ec845148ff39defb5ebb28acc31))
+
 ## [1.8.2-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta...v1.8.2-beta.1) (2026-09-08)
 
 <!-- mc:auto sha=e108037bee08 -->
