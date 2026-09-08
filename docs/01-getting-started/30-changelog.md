@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.2-beta.2](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta.1...v1.8.2-beta.2) (2026-09-08)
+
+
+### Dependencies
+
+* **millibase:** update MilliBase to 2.11.0 ([c35f7af](https://github.com/MilliPress/MilliCache/commit/c35f7af3b8ba3ec845148ff39defb5ebb28acc31))
+
 ## [1.8.2-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta...v1.8.2-beta.1) (2026-09-08)
 
 <!-- mc:auto sha=e108037bee08 -->
