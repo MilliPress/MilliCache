@@ -6,6 +6,18 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.2-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta...v1.8.2-beta.1) (2026-09-08)
+
+
+### Features
+
+* **storage:** expose the shared body hash and meta size per cache entry ([d3731fb](https://github.com/MilliPress/MilliCache/commit/d3731fb9bb787c9b6ad1ad5f055d7c46d349b5ce))
+
+
+### Miscellaneous
+
+* **release:** pin the next beta to 1.8.2-beta.1 ([8754d26](https://github.com/MilliPress/MilliCache/commit/8754d26afffb0bf24eb70e41988d56d202d6261f))
+
 ## [1.8.2-beta](https://github.com/MilliPress/MilliCache/compare/v1.8.1...v1.8.2-beta) (2026-09-06)
 
 <!-- mc:auto sha=600e7ec1b2a5 -->
