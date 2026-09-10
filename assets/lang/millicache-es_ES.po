@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: MilliCache 1.7.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/MilliCache\n"
 "POT-Creation-Date: 2026-08-29T13:46:10+00:00\n"
-"PO-Revision-Date: 2026-08-04 10:33+0000\n"
+"PO-Revision-Date: 2026-09-10 11:48+0000\n"
 "Last-Translator: Philipp Wellmer <philipp@millipress.com>\n"
 "Language-Team: Spanish (Spain) <https://translate.millipress.com/projects/"
 "millicache/millicache/es_ES/>\n"
@@ -440,7 +440,7 @@ msgstr "No se ha podido ejecutar la acción de caché: "
 #: src/Admin/UI/CacheActions.php:316
 #, php-format
 msgid "%1$s Skipped, not on this site: %2$s"
-msgstr ""
+msgstr "%1$s Omitidas por no pertenecer a este sitio: %2$s"
 
 #: src/Admin/UI/Sections/Cache.php:52
 msgid "TTL (Cache Expiry)"
@@ -1172,36 +1172,31 @@ msgstr "No hay páginas en caché"
 
 #: src/Admin/Utils.php:247
 msgid "No cache entries matched the given targets."
-msgstr ""
+msgstr "Ninguna entrada de caché coincide con los destinos indicados."
 
 #. translators: %d is the number of expired cache entries.
 #: src/Admin/Utils.php:253
 #, php-format
 msgid "Expired %d cache entry."
 msgid_plural "Expired %d cache entries."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d entrada de caché marcada como caducada."
+msgstr[1] "%d entradas de caché marcadas como caducadas."
 
 #. translators: %d is the number of removed cache entries.
 #: src/Admin/Utils.php:260
-#, fuzzy, php-format
-#| msgid "Cleared cache for %s networks."
+#, php-format
 msgid "Cleared %d cache entry."
 msgid_plural "Cleared %d cache entries."
-msgstr[0] "Se ha vaciado la caché de %s redes."
-msgstr[1] "Se ha vaciado la caché de %s redes."
+msgstr[0] "Se ha vaciado %d entrada de caché."
+msgstr[1] "Se han vaciado %d entradas de caché."
 
 #: src/Base/Abilities.php:65
-#, fuzzy
-#| msgid "Clear Network Cache"
 msgid "Network Cache Status"
-msgstr "Vaciar la caché de la red"
+msgstr "Estado de la caché de la red"
 
 #: src/Base/Abilities.php:66
-#, fuzzy
-#| msgid "MilliCache Status"
 msgid "Cache Status"
-msgstr "Estado de MilliCache"
+msgstr "Estado de la caché"
 
 #. translators: An AI reads this to decide when to call this operation. Keep `issues` and the status words verbatim; they are literal response values the AI checks for.
 #: src/Base/Abilities.php:69
@@ -1211,6 +1206,11 @@ msgid ""
 "diagnosing why pages are not being cached. The `issues` list only contains "
 "checks that need attention; an empty list means everything passed."
 msgstr ""
+"Informa de si la caché de la red funciona: estado general, conectividad del "
+"almacenamiento, tamaño de la caché y la lista de problemas encontrados. Debe "
+"llamarse antes de diagnosticar por qué no se están almacenando páginas en "
+"caché. La lista `issues` solo contiene las comprobaciones que requieren "
+"atención; una lista vacía significa que todo se ha superado."
 
 #. translators: An AI reads this to decide when to call this operation. Keep `issues` and the status words verbatim; they are literal response values the AI checks for.
 #: src/Base/Abilities.php:71
@@ -1220,12 +1220,19 @@ msgid ""
 "pages are not being cached. The `issues` list only contains checks that need "
 "attention; an empty list means everything passed."
 msgstr ""
+"Informa de si la caché funciona: estado general, conectividad del "
+"almacenamiento, tamaño de la caché y la lista de problemas encontrados. Debe "
+"llamarse antes de diagnosticar por qué no se están almacenando páginas en "
+"caché. La lista `issues` solo contiene las comprobaciones que requieren "
+"atención; una lista vacía significa que todo se ha superado."
 
 #: src/Base/Abilities.php:91
 msgid ""
 "Overall health: error when caching is broken, warning when something is "
 "recommended."
 msgstr ""
+"Estado general: error cuando la caché no funciona, warning cuando hay algo "
+"recomendable."
 
 #: src/Base/Abilities.php:95
 msgid ""
@@ -1233,6 +1240,10 @@ msgid ""
 "cached. `mode` is how that store is reached (single server, sentinel, or "
 "cluster) and says nothing about the WordPress installation."
 msgstr ""
+"Conectividad con el almacenamiento en memoria. Cuando connected es false, no "
+"se puede almacenar nada en caché. `mode` indica cómo se accede a ese "
+"almacenamiento (servidor único, sentinel o clúster) y no dice nada sobre la "
+"instalación de WordPress."
 
 #: src/Base/Abilities.php:100
 msgid ""
@@ -1240,12 +1251,18 @@ msgid ""
 "several settings are network-wide, and there are separate network-scoped "
 "operations."
 msgstr ""
+"Si se trata de una instalación multisitio. En un multisitio, el "
+"almacenamiento y varios ajustes son comunes a toda la red, y existen "
+"operaciones independientes con alcance de red."
 
 #: src/Base/Abilities.php:104
 msgid ""
 "Cached entry count, total size as bytes and as a human-readable string, and "
 "the configured lifetime in seconds. Compute with size_bytes, not size."
 msgstr ""
+"Número de entradas en caché, tamaño total en bytes y como cadena legible, y "
+"el tiempo de vida configurado en segundos. Para los cálculos hay que usar "
+"size_bytes, no size."
 
 #. translators: An AI reads this. Keep `scope`, `site` and `network` verbatim; they are literal response values.
 #: src/Base/Abilities.php:110
@@ -1254,6 +1271,10 @@ msgid ""
 "a `scope`: `site` for something this site controls, `network` for a network-"
 "wide setting only a network administrator can change."
 msgstr ""
+"Comprobaciones que requieren atención. Vacío cuando todo se ha superado. "
+"Cada problema lleva un `scope`: `site` para algo que controla este sitio, "
+"`network` para un ajuste de toda la red que solo puede cambiar un "
+"administrador de la red."
 
 #: src/Base/Abilities.php:282
 #: assets/js/settings/partials/ClearCacheButton.jsx:86 build/settings.js:1
@@ -1277,6 +1298,11 @@ msgid ""
 "`expire` to regenerate pages in the background instead of deleting them "
 "outright."
 msgstr ""
+"Vacía las páginas en caché de todos los sitios de la red. Establecer `scope` "
+"en `all` para vaciarlo todo, o indicar flags de caché en `targets` para "
+"vaciar solo esos. Los destinos se combinan como una unión: se vacía todo lo "
+"que coincida con cualquiera de ellos. Establecer `expire` para regenerar las "
+"páginas en segundo plano en lugar de borrarlas directamente."
 
 #. translators: An AI reads this to decide when to call this destructive operation. Keep `scope`, `targets`, `all` and `expire` verbatim; they are literal API field and value names.
 #: src/Base/Abilities.php:288
@@ -1288,32 +1314,47 @@ msgid ""
 "those separately when they need clearing too. Set `expire` to regenerate "
 "pages in the background instead of deleting them outright."
 msgstr ""
+"Vacía las páginas en caché de este sitio. Establecer `scope` en `all` para "
+"vaciarlo todo, o indicar URL, ID de entrada o flags de caché en `targets` "
+"para vaciar solo esos. Los destinos se combinan como una unión: se vacía "
+"todo lo que coincida con cualquiera de ellos. Un ID de entrada vacía también "
+"los feeds, pero nunca la página de inicio ni los archivos, así que hay que "
+"indicarlos por separado cuando también necesiten vaciarse. Establecer "
+"`expire` para regenerar las páginas en segundo plano en lugar de borrarlas "
+"directamente."
 
 #: src/Base/Abilities.php:300
 msgid ""
 "Use all only when the whole cache should go; it is not the fallback for an "
 "empty target list."
 msgstr ""
+"Usar all solo cuando deba desaparecer toda la caché; no es el valor de "
+"reserva para una lista de destinos vacía."
 
 #: src/Base/Abilities.php:307
 msgid "Cache flags to clear, for example post:12 or home."
-msgstr ""
+msgstr "Flags de caché a vaciar, por ejemplo post:12 o home."
 
 #: src/Base/Abilities.php:308
 msgid ""
 "What to clear: a URL on this site (scheme and host must match the site "
 "exactly), a path such as /blog/, a post ID, or a cache flag such as home."
 msgstr ""
+"Qué vaciar: una URL de este sitio (el esquema y el host deben coincidir "
+"exactamente con los del sitio), una ruta como /blog/, un ID de entrada o un "
+"flag de caché como home."
 
 #: src/Base/Abilities.php:313
 msgid ""
 "Mark entries stale and regenerate them in the background instead of deleting "
 "them."
 msgstr ""
+"Marca las entradas como obsoletas (stale) y las regenera en segundo plano en "
+"lugar de borrarlas."
 
 #: src/Base/Abilities.php:323
 msgid "Number of cache entries removed or expired."
-msgstr ""
+msgstr "Número de entradas de caché eliminadas o caducadas."
 
 #: src/Base/Abilities.php:328
 msgid ""
@@ -1321,12 +1362,17 @@ msgid ""
 "only when something was skipped; check it before reading cleared: 0 as an "
 "empty cache."
 msgstr ""
+"Destinos que no se han aplicado porque pertenecen a otro sitio. Solo está "
+"presente cuando se ha omitido algo; conviene comprobarlo antes de "
+"interpretar cleared: 0 como una caché vacía."
 
 #: src/Base/Abilities.php:368
 msgid ""
 "No targets given. Pass at least one target, or set scope to all to clear the "
 "entire cache."
 msgstr ""
+"No se ha indicado ningún destino. Hay que pasar al menos un destino o "
+"establecer scope en all para vaciar toda la caché."
 
 #: src/Base/Manager.php:166
 msgid "Documentation"
@@ -1522,105 +1568,85 @@ msgstr "El identificador del flag que se eliminará de la respuesta."
 
 #: assets/js/adminbar.js:135 build/adminbar.js:3
 msgid "Enter flag patterns to clear, e.g. \"5:*\" or \"*:posts\"…"
-msgstr ""
+msgstr "Introduce los patrones de flags a vaciar, p. ej. «5:*» o «*:posts»…"
 
 #: assets/js/adminbar.js:139 build/adminbar.js:3
 msgid "Enter the flags, post IDs or URLs you want to clear…"
-msgstr ""
+msgstr "Introduce los flags, ID de entrada o URL que quieras vaciar…"
 
 #: assets/js/adminbar.js:187 build/adminbar.js:3
 msgid "Click again to confirm"
-msgstr ""
+msgstr "Haz clic de nuevo para confirmar"
 
 #. translators: %s: post IDs typed into the command palette.
 #: assets/js/commands.js:117 build/commands.js:2
-#, fuzzy
-#| msgid "Cleared cache for %s posts."
 msgid "MilliCache: Expire cache for post %s"
 msgid_plural "MilliCache: Expire cache for posts %s"
-msgstr[0] "Se ha vaciado la caché de %s entradas."
-msgstr[1] "Se ha vaciado la caché de %s entradas."
+msgstr[0] "MilliCache: Caducar la caché de la entrada %s"
+msgstr[1] "MilliCache: Caducar la caché de las entradas %s"
 
 #. translators: %s: URLs typed into the command palette.
 #: assets/js/commands.js:128 build/commands.js:3
 msgid "MilliCache: Expire cache for URL %s"
 msgid_plural "MilliCache: Expire cache for URLs %s"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "MilliCache: Caducar la caché de la URL %s"
+msgstr[1] "MilliCache: Caducar la caché de las URL %s"
 
 #. translators: %s: cache flags typed into the command palette.
 #: assets/js/commands.js:139 build/commands.js:4
-#, fuzzy
-#| msgid "Cleared cache for %s flags."
 msgid "MilliCache: Expire cache for flag %s"
 msgid_plural "MilliCache: Expire cache for flags %s"
-msgstr[0] "Se ha vaciado la caché de %s flags."
-msgstr[1] "Se ha vaciado la caché de %s flags."
+msgstr[0] "MilliCache: Caducar la caché del flag %s"
+msgstr[1] "MilliCache: Caducar la caché de los flags %s"
 
 #. translators: %s: cache flags, post IDs or URLs typed into the command palette.
 #: assets/js/commands.js:150 assets/js/commands.js:270 build/commands.js:5
 #: build/commands.js:11
 msgid "MilliCache: Expire cache for %s"
-msgstr ""
+msgstr "MilliCache: Caducar la caché de %s"
 
 #. translators: %s: post IDs typed into the command palette.
 #: assets/js/commands.js:160 build/commands.js:6
-#, fuzzy
-#| msgid "Cleared cache for %s posts."
 msgid "MilliCache: Clear cache for post %s"
 msgid_plural "MilliCache: Clear cache for posts %s"
-msgstr[0] "Se ha vaciado la caché de %s entradas."
-msgstr[1] "Se ha vaciado la caché de %s entradas."
+msgstr[0] "MilliCache: Vaciar la caché de la entrada %s"
+msgstr[1] "MilliCache: Vaciar la caché de las entradas %s"
 
 #. translators: %s: URLs typed into the command palette.
 #: assets/js/commands.js:171 build/commands.js:7
-#, fuzzy
-#| msgid "Cleared cache for %s URIs."
 msgid "MilliCache: Clear cache for URL %s"
 msgid_plural "MilliCache: Clear cache for URLs %s"
-msgstr[0] "Se ha vaciado la caché de %s URI."
-msgstr[1] "Se ha vaciado la caché de %s URI."
+msgstr[0] "MilliCache: Vaciar la caché de la URL %s"
+msgstr[1] "MilliCache: Vaciar la caché de las URL %s"
 
 #. translators: %s: cache flags typed into the command palette.
 #: assets/js/commands.js:182 build/commands.js:8
-#, fuzzy
-#| msgid "Cleared cache for %s flags."
 msgid "MilliCache: Clear cache for flag %s"
 msgid_plural "MilliCache: Clear cache for flags %s"
-msgstr[0] "Se ha vaciado la caché de %s flags."
-msgstr[1] "Se ha vaciado la caché de %s flags."
+msgstr[0] "MilliCache: Vaciar la caché del flag %s"
+msgstr[1] "MilliCache: Vaciar la caché de los flags %s"
 
 #. translators: %s: cache flags, post IDs or URLs typed into the command palette.
 #: assets/js/commands.js:193 assets/js/commands.js:265 build/commands.js:9
 #: build/commands.js:10
-#, fuzzy
-#| msgid "Cleared cache for %s URIs."
 msgid "MilliCache: Clear cache for %s"
-msgstr "Se ha vaciado la caché de %s URI."
+msgstr "MilliCache: Vaciar la caché de %s"
 
 #: assets/js/commands.js:204 build/commands.js:9
-#, fuzzy
-#| msgid "MilliCache Network"
 msgid "MilliCache: Clear network cache"
-msgstr "MilliCache de la red"
+msgstr "MilliCache: Vaciar la caché de la red"
 
 #: assets/js/commands.js:205 build/commands.js:9
-#, fuzzy
-#| msgid "Clear Website Cache"
 msgid "MilliCache: Clear website cache"
-msgstr "Vaciar la caché del sitio"
+msgstr "MilliCache: Vaciar la caché del sitio"
 
 #: assets/js/commands.js:221 build/commands.js:9
-#, fuzzy
-#| msgid "MilliCache Network"
 msgid "MilliCache: Expire network cache"
-msgstr "MilliCache de la red"
+msgstr "MilliCache: Caducar la caché de la red"
 
 #: assets/js/commands.js:222 build/commands.js:9
-#, fuzzy
-#| msgid "MilliCache is healthy"
 msgid "MilliCache: Expire website cache"
-msgstr "MilliCache funciona correctamente"
+msgstr "MilliCache: Caducar la caché del sitio"
 
 #: assets/js/settings/partials/ClearCacheButton.jsx:60 build/settings.js:1
 msgid ""
@@ -1764,15 +1790,13 @@ msgstr ""
 
 #: assets/js/shared/adminbar-feedback.js:46 build/adminbar.js:1
 #: build/commands.js:1
-#, fuzzy
-#| msgid "Clear Cache"
 msgid "Cleared!"
-msgstr "Vaciar la caché"
+msgstr "¡Vaciada!"
 
 #: assets/js/shared/adminbar-feedback.js:47 build/adminbar.js:1
 #: build/commands.js:1
 msgid "Error"
-msgstr ""
+msgstr "Error"
 
 #~ msgid "Network cache cleared."
 #~ msgstr "Caché de la red vaciada."
