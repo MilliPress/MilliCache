@@ -179,16 +179,23 @@ final class Recorder {
 	}
 
 	/**
-	 * Roll completed days' hourly buckets up into daily, then prune. Idempotent:
-	 * daily fields are overwritten from the still-present hourly source.
+	 * Roll completed days' hourly buckets up into daily, then prune.
 	 *
 	 * @since 1.7.0
+	 * @since 1.8.2 Never overwrites a day's total from partially pruned hourly buckets.
 	 *
 	 * @param int|null $now Reference time; defaults to now.
 	 */
 	public function rollup( ?int $now = null ): void {
 		$now   = $now ?? time();
 		$today = self::bucket_key( $now, self::RES_DAILY );
+
+		// Hourly buckets of this day (and older) may already be partially pruned.
+		$edge_day = substr(
+			self::bucket_key( $now - ( $this->retention[ self::RES_HOURLY ] * DAY_IN_SECONDS ), self::RES_HOURLY ),
+			0,
+			8
+		);
 
 		$daily = array();
 		foreach ( $this->store->read( self::RES_HOURLY ) as $field => $value ) {
@@ -199,12 +206,27 @@ final class Recorder {
 				continue; // Skip the current, still-incomplete day.
 			}
 
-			$key           = self::field( $day, $metric );
-			$daily[ $key ] = ( $daily[ $key ] ?? 0 ) + (int) $value;
+			$daily[ $day ][ $metric ] = ( $daily[ $day ][ $metric ] ?? 0 ) + (int) $value;
 		}
 
-		if ( ! empty( $daily ) ) {
-			$this->store->set_fields( self::RES_DAILY, $daily );
+		$rolled_days = array();
+		foreach ( array_keys( $this->store->read( self::RES_DAILY ) ) as $field ) {
+			list( $day ) = self::parse_field( (string) $field );
+			$rolled_days[ $day ] = true;
+		}
+
+		$fields = array();
+		foreach ( $daily as $day => $metrics ) {
+			if ( $day <= $edge_day && isset( $rolled_days[ $day ] ) ) {
+				continue;
+			}
+			foreach ( $metrics as $metric => $value ) {
+				$fields[ self::field( (string) $day, $metric ) ] = $value;
+			}
+		}
+
+		if ( ! empty( $fields ) ) {
+			$this->store->set_fields( self::RES_DAILY, $fields );
 		}
 
 		$this->prune( $now );
