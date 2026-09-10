@@ -439,6 +439,10 @@ redis-cli info memory | grep fragmentation
 2. **Use jemalloc** (better memory allocator)
 3. **Schedule periodic restarts** (for high-write workloads)
 
+A restart empties the cache, which regenerates on its own. The daily metrics
+history is restored from the WordPress database; but the per-hour detail since
+the last nightly run is lost.
+
 ---
 
 ## Multisite Issues

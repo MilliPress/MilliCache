@@ -1150,6 +1150,22 @@ class Storage {
 	}
 
 	/**
+	 * Count the metrics counter fields stored for a resolution (HLEN).
+	 *
+	 * @since 1.8.2
+	 *
+	 * @param string $prefix     Site/network prefix.
+	 * @param string $resolution Bucket resolution (`h` or `d`).
+	 * @return int Field count; 0 when the hash is absent or storage is unavailable.
+	 */
+	public function metrics_count( string $prefix, string $resolution ): int {
+		return (int) $this->execute(
+			fn() => $this->client->hlen( $this->metrics_key( $prefix, $resolution ) ),
+			0
+		);
+	}
+
+	/**
 	 * Delete the named metrics counter fields (HDEL).
 	 *
 	 * @since 1.7.0
