@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: MilliCache 1.7.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/MilliCache\n"
 "POT-Creation-Date: 2026-08-29T13:46:10+00:00\n"
-"PO-Revision-Date: 2026-09-10 11:48+0000\n"
+"PO-Revision-Date: 2026-09-10 19:48+0000\n"
 "Last-Translator: Philipp Wellmer <philipp@millipress.com>\n"
 "Language-Team: German (Germany, Formal) <https://translate.millipress.com/"
 "projects/millicache/millicache/de_DE_formal/>\n"
@@ -609,7 +609,7 @@ msgid ""
 "The port your storage server listens on. Default is 6379 for most "
 "installations."
 msgstr ""
-"Der Port, auf dem Ihr Speicherserver lauscht. Bei den meisten Installationen "
+"Der Port, auf dem Ihr Storage-Server lauscht. Bei den meisten Installationen "
 "ist 6379 der Standard."
 
 #: src/Admin/UI/Sections/Storage.php:69
@@ -647,7 +647,7 @@ msgid ""
 "The database to use within your storage server (typically 0-15, with 0 being "
 "the default)."
 msgstr ""
-"Die Datenbank innerhalb Ihres Speicherservers (üblicherweise 0–15, Standard "
+"Die Datenbank innerhalb Ihres Storage-Servers (üblicherweise 0–15, Standard "
 "ist 0)."
 
 #: src/Admin/UI/Sections/Storage.php:98
@@ -666,7 +666,7 @@ msgstr ""
 
 #: src/Admin/UI/Sections/Storage.php:118
 msgid "Storage Server"
-msgstr "Speicherserver"
+msgstr "Storage-Server"
 
 #: src/Admin/UI/Sections/Storage.php:125 src/Admin/UI/StatusBuilder.php:501
 msgid "Connected"
@@ -767,14 +767,14 @@ msgstr ""
 
 #: src/Admin/UI/StatusBuilder.php:498
 msgid "MilliCache successfully connected to its configured storage server."
-msgstr "MilliCache ist mit dem konfigurierten Speicherserver verbunden."
+msgstr "MilliCache ist mit dem konfigurierten Storage-Server verbunden."
 
 #: src/Admin/UI/StatusBuilder.php:499
 msgid ""
 "MilliCache cannot reach the configured storage server. Cache reads and "
 "writes are failing. Check the host, port, and credentials."
 msgstr ""
-"MilliCache erreicht den konfigurierten Speicherserver nicht. Lese- und "
+"MilliCache erreicht den konfigurierten Storage-Server nicht. Lese- und "
 "Schreibzugriffe auf den Cache schlagen fehl. Prüfen Sie Host, Port und "
 "Zugangsdaten."
 
@@ -811,7 +811,7 @@ msgid ""
 "A maxmemory limit is configured. The storage server can evict entries when "
 "full."
 msgstr ""
-"Ein maxmemory-Limit ist konfiguriert. Der Speicherserver kann bei vollem "
+"Ein maxmemory-Limit ist konfiguriert. Der Storage-Server kann bei vollem "
 "Speicher Einträge verdrängen."
 
 #: src/Admin/UI/StatusBuilder.php:561
@@ -821,7 +821,7 @@ msgid ""
 "<code>redis-cli CONFIG SET maxmemory 512mb</code>, or run the same command "
 "inside <code>wp millicache cli</code>."
 msgstr ""
-"Auf dem Speicherserver ist kein maxmemory-Limit gesetzt. Ohne Limit kann der "
+"Auf dem Storage-Server ist kein maxmemory-Limit gesetzt. Ohne Limit kann der "
 "Cache so lange wachsen, bis er andere Workloads auf dem Host verdrängt. "
 "Setzen Sie ein Limit im laufenden Betrieb mit <code>redis-cli CONFIG SET "
 "maxmemory 512mb</code> oder führen Sie denselben Befehl in <code>wp "
@@ -833,15 +833,15 @@ msgstr "Nicht gesetzt"
 
 #: src/Admin/UI/StatusBuilder.php:573
 msgid "Storage eviction policy"
-msgstr "Verdrängungsrichtlinie (Eviction)"
+msgstr "Eviction-Policy"
 
 #: src/Admin/UI/StatusBuilder.php:576
 msgid ""
 "The storage server is configured with allkeys-lru, the recommended policy "
 "for a cache workload."
 msgstr ""
-"Der Speicherserver ist mit allkeys-lru konfiguriert, der empfohlenen "
-"Richtlinie für einen Cache."
+"Der Storage-Server ist mit allkeys-lru konfiguriert, der empfohlenen "
+"Eviction-Policy für einen Cache."
 
 #: src/Admin/UI/StatusBuilder.php:577
 msgid ""
@@ -852,7 +852,7 @@ msgid ""
 msgstr ""
 "Für einen Cache wird allkeys-lru empfohlen, damit der Server bei vollem "
 "Speicher automatisch die am längsten ungenutzten Einträge verdrängt. Setzen "
-"Sie die Richtlinie im laufenden Betrieb mit <code>redis-cli CONFIG SET "
+"Sie die Eviction-Policy im laufenden Betrieb mit <code>redis-cli CONFIG SET "
 "maxmemory-policy allkeys-lru</code> oder führen Sie denselben Befehl in "
 "<code>wp millicache cli</code> aus."
 
