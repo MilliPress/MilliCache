@@ -6,6 +6,23 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.2](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta.2...v1.8.2) (2026-09-11)
+
+
+### Features
+
+* **metrics:** keep the daily history when the storage server restarts ([a56173e](https://github.com/MilliPress/MilliCache/commit/a56173ec8fcb1c3339c62db21521aa46f642dd6e))
+
+
+### Bug Fixes
+
+* **metrics:** keep daily totals intact at the hourly retention edge ([d166ae3](https://github.com/MilliPress/MilliCache/commit/d166ae3ac2ce27f832ec2d616449960ceab93647))
+
+
+### Miscellaneous
+
+* **release:** release 1.8.2 as the stable version of the 1.8.2 betas ([3c32c51](https://github.com/MilliPress/MilliCache/commit/3c32c51ed2747b3926a673e9d13d5fc2e5d8e587))
+
 ## [1.8.2](https://github.com/MilliPress/MilliCache/compare/v1.8.1...v1.8.2) (2026-09-11)
 
 This release keeps your dashboard history intact across storage server restarts and fixes a bug that slowly shrank daily totals.
