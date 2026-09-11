@@ -6,6 +6,32 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.2](https://github.com/MilliPress/MilliCache/compare/v1.8.1...v1.8.2) (2026-09-11)
+
+
+### Features
+
+* **metrics:** keep the daily history when the storage server restarts ([a56173e](https://github.com/MilliPress/MilliCache/commit/a56173ec8fcb1c3339c62db21521aa46f642dd6e))
+* **storage:** expose the shared body hash and meta size per cache entry ([d3731fb](https://github.com/MilliPress/MilliCache/commit/d3731fb9bb787c9b6ad1ad5f055d7c46d349b5ce))
+
+
+### Bug Fixes
+
+* **cache:** keep pages cacheable at the edge for the whole local cache lifetime ([b938b92](https://github.com/MilliPress/MilliCache/commit/b938b92c1fdc408da8517eb130cc8a9b4bf16f90))
+* **metrics:** keep daily totals intact at the hourly retention edge ([d166ae3](https://github.com/MilliPress/MilliCache/commit/d166ae3ac2ce27f832ec2d616449960ceab93647))
+* **storage:** expire cache entries by their own custom TTL ([58f2951](https://github.com/MilliPress/MilliCache/commit/58f29516648bc5da0767c35002216bc99e0e1f08))
+
+
+### Dependencies
+
+* **millibase:** update MilliBase to 2.11.0 ([c35f7af](https://github.com/MilliPress/MilliCache/commit/c35f7af3b8ba3ec845148ff39defb5ebb28acc31))
+
+
+### Miscellaneous
+
+* **release:** pin the next beta to 1.8.2-beta.1 ([8754d26](https://github.com/MilliPress/MilliCache/commit/8754d26afffb0bf24eb70e41988d56d202d6261f))
+* **release:** release 1.8.2 as the stable version of the 1.8.2 betas ([3c32c51](https://github.com/MilliPress/MilliCache/commit/3c32c51ed2747b3926a673e9d13d5fc2e5d8e587))
+
 ## [1.8.2-beta.2](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta.1...v1.8.2-beta.2) (2026-09-08)
 
 <!-- mc:auto sha=c539538cc4dc -->
