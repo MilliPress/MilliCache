@@ -8,13 +8,11 @@ menu_order: 30
 
 ## [1.8.2](https://github.com/MilliPress/MilliCache/compare/v1.8.1...v1.8.2) (2026-09-11)
 
-<!-- mc:auto sha=182a1c4ce018 -->
-Two metrics fixes land in this release, along with a new feature that keeps your dashboard history intact across storage server restarts.
+This release keeps your dashboard history intact across storage server restarts and fixes a bug that slowly shrank daily totals.
 
-The nightly rollup now mirrors each site's daily counters into the WordPress database. When the storage server restarts or evicts cold keys — common in the recommended setup, which runs without persistence — the history is automatically restored, so the long-range views on the Status dashboard no longer go blank while the cache regenerates. Clearing metrics still clears the mirror, so a deliberate wipe stays wiped. Only the per-hour detail recorded since the last nightly run is lost on a restart; the documentation covers this trade-off and how to retain that too.
+The nightly rollup now mirrors each site's daily counters into the WordPress database. When the storage server restarts or evicts cold keys, which is common in the recommended setup without persistence, the history is automatically restored, so the long-range views on the Status dashboard no longer go blank while the cache regenerates. Clearing metrics still clears the mirror, so a deliberate wipe stays wiped. Only the per-hour detail recorded since the last nightly run is lost on a restart; the documentation covers this trade-off and how to retain that too.
 
 A separate bug in the same rollup caused daily totals to shrink over time: the nightly job was rewriting every past day's total from its hourly buckets, including the day at the retention edge whose earliest hours the previous prune had already removed. Days fully covered by hourly data are still rewritten as before; the day at the edge and any older days now keep their existing total instead.
-<!-- /mc:auto -->
 
 ### Features
 
@@ -33,11 +31,6 @@ A separate bug in the same rollup caused daily totals to shrink over time: the n
 
 * **millibase:** update MilliBase to 2.11.0 ([c35f7af](https://github.com/MilliPress/MilliCache/commit/c35f7af3b8ba3ec845148ff39defb5ebb28acc31))
 
-
-### Miscellaneous
-
-* **release:** pin the next beta to 1.8.2-beta.1 ([8754d26](https://github.com/MilliPress/MilliCache/commit/8754d26afffb0bf24eb70e41988d56d202d6261f))
-* **release:** release 1.8.2 as the stable version of the 1.8.2 betas ([3c32c51](https://github.com/MilliPress/MilliCache/commit/3c32c51ed2747b3926a673e9d13d5fc2e5d8e587))
 
 ## [1.8.2-beta.2](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta.1...v1.8.2-beta.2) (2026-09-08)
 
