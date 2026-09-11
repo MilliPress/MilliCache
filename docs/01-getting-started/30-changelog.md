@@ -6,6 +6,48 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.2-beta.2](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta.1...v1.8.2-beta.2) (2026-09-08)
+
+<!-- mc:auto sha=c539538cc4dc -->
+Settings locked via `wp-config.php` constants (such as `MC_STORAGE_HOST` or `MC_CACHE_TTL`) display as locked again on WordPress 7.1. MilliCache Pro's multisite licensing also works correctly again, as the settings framework can now distinguish constant-defined keys from database-stored ones.
+<!-- /mc:auto -->
+
+### Dependencies
+
+* **millibase:** update MilliBase to 2.11.0 ([c35f7af](https://github.com/MilliPress/MilliCache/commit/c35f7af3b8ba3ec845148ff39defb5ebb28acc31))
+
+## [1.8.2-beta.1](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta...v1.8.2-beta.1) (2026-09-08)
+
+<!-- mc:auto sha=e108037bee08 -->
+Each cache entry returned by `get_entries()` now includes two new fields: `output_hash`, identifying the stored body it points to, and `meta_size`, the byte length of its own metadata record. Because cache variants with identical output share a single stored body, these fields let the Entry Browser display which entries share a body and give a more accurate picture of what each variant actually costs in storage.
+<!-- /mc:auto -->
+
+### Features
+
+* **storage:** expose the shared body hash and meta size per cache entry ([d3731fb](https://github.com/MilliPress/MilliCache/commit/d3731fb9bb787c9b6ad1ad5f055d7c46d349b5ce))
+
+
+### Miscellaneous
+
+* **release:** pin the next beta to 1.8.2-beta.1 ([8754d26](https://github.com/MilliPress/MilliCache/commit/8754d26afffb0bf24eb70e41988d56d202d6261f))
+
+## [1.8.2-beta](https://github.com/MilliPress/MilliCache/compare/v1.8.1...v1.8.2-beta) (2026-09-06)
+
+<!-- mc:auto sha=600e7ec1b2a5 -->
+This beta release fixes two caching bugs and updates documentation for WooCommerce cookie handling.
+
+Pages served from the local cache now remain eligible for edge caching for their entire local lifetime. Previously, once a cached page was older than the edge cache module's TTL (typically one hour), subsequent replays sent `s-maxage=0`, preventing the CDN from storing the page again until the local copy expired. The edge TTL now resets on each expiry cycle, so pages stay cacheable at the edge for as long as they live locally.
+
+Cache entries using a custom TTL via `set_ttl` rules are now expired correctly against that custom TTL rather than the global default. Entries with a longer-than-default TTL were surviving expiry passes fully fresh when they should have been stale, and entries with a shorter TTL were not expiring on schedule.
+
+The WooCommerce documentation has been updated to clarify that cart cookie verification should happen before adding cookies to `MC_CACHE_IGNORE_COOKIES`, and the recently-viewed products warning is now scoped specifically to the classic widget.
+<!-- /mc:auto -->
+
+### Bug Fixes
+
+* **cache:** keep pages cacheable at the edge for the whole local cache lifetime ([b938b92](https://github.com/MilliPress/MilliCache/commit/b938b92c1fdc408da8517eb130cc8a9b4bf16f90))
+* **storage:** expire cache entries by their own custom TTL ([58f2951](https://github.com/MilliPress/MilliCache/commit/58f29516648bc5da0767c35002216bc99e0e1f08))
+
 ## [1.8.1](https://github.com/MilliPress/MilliCache/compare/v1.8.0...v1.8.1) (2026-08-29)
 
 Query parameters listed in `MC_CACHE_IGNORE_REQUEST_KEYS`, such as `gclid` or `utm_*`, now stay part of the request until the page is rendered. Redirects issued by WordPress, WooCommerce, or multilingual plugins like Polylang keep them in the target URL, while cached pages still never contain them.

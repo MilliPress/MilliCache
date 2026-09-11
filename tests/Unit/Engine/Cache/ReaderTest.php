@@ -263,29 +263,34 @@ describe('Reader', function () {
 		});
 	});
 
-	describe('remaining_smaxage', function () {
-		it('reduces the s-maxage token by the entry age', function () {
-			expect(Reader::remaining_smaxage('Cache-Control: s-maxage=3600', 600))
-				->toBe('Cache-Control: s-maxage=3000');
+	describe('bound_smaxage', function () {
+		it('leaves the token alone while the local copy outlives it', function () {
+			expect(Reader::bound_smaxage('Cache-Control: s-maxage=3600', 82800))
+				->toBe('Cache-Control: s-maxage=3600');
 		});
 
-		it('clamps at zero when the age exceeds the lifetime', function () {
-			expect(Reader::remaining_smaxage('Cache-Control: s-maxage=20', 45))
+		it('caps the token at the remaining local lifetime', function () {
+			expect(Reader::bound_smaxage('Cache-Control: s-maxage=3600', 600))
+				->toBe('Cache-Control: s-maxage=600');
+		});
+
+		it('clamps at zero once the local copy is past its lifetime', function () {
+			expect(Reader::bound_smaxage('Cache-Control: s-maxage=20', -25))
 				->toBe('Cache-Control: s-maxage=0');
 		});
 
 		it('leaves other directives on the line untouched', function () {
-			expect(Reader::remaining_smaxage('Cache-Control: public, max-age=600, s-maxage=3600', 60))
-				->toBe('Cache-Control: public, max-age=600, s-maxage=3540');
+			expect(Reader::bound_smaxage('Cache-Control: public, max-age=600, s-maxage=3600', 60))
+				->toBe('Cache-Control: public, max-age=600, s-maxage=60');
 		});
 
 		it('matches the token case-insensitively', function () {
-			expect(Reader::remaining_smaxage('Cache-Control: S-MaxAge=100', 40))
-				->toBe('Cache-Control: S-MaxAge=60');
+			expect(Reader::bound_smaxage('Cache-Control: S-MaxAge=100', 40))
+				->toBe('Cache-Control: S-MaxAge=40');
 		});
 
 		it('passes a line without an s-maxage token through unchanged', function () {
-			expect(Reader::remaining_smaxage('Cache-Control: no-cache, must-revalidate', 60))
+			expect(Reader::bound_smaxage('Cache-Control: no-cache, must-revalidate', 60))
 				->toBe('Cache-Control: no-cache, must-revalidate');
 		});
 	});

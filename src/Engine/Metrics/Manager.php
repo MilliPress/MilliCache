@@ -20,9 +20,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * The metrics subsystem: request-scoped writes ({@see self::record()}), reads
- * ({@see self::read()}), and the nightly rollup ({@see self::rollup()}).
+ * ({@see self::read()}), and the nightly rollup ({@see self::rollup()}), which
+ * also mirrors the daily counters to the database and restores them after a
+ * storage-server restart ({@see self::restore()}).
  *
  * @since      1.7.0
+ * @since      1.8.2 Daily counters are mirrored to the database and restored.
  * @package    MilliCache
  * @author     Philipp Wellmer <hello@millipress.com>
  */
@@ -64,6 +67,13 @@ final class Manager {
 	private ?Collector $collector = null;
 
 	/**
+	 * Database mirror of the daily counters.
+	 *
+	 * @var Mirror
+	 */
+	private Mirror $mirror;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 1.7.0
@@ -72,12 +82,14 @@ final class Manager {
 	 * @param string             $prefix    Current blog's metrics prefix.
 	 * @param bool               $detailed  Record the detailed Pro field set on writes.
 	 * @param array<string, int> $retention Days to keep per resolution (`RES_*` => days).
+	 * @param Mirror|null        $mirror    Database mirror of the daily counters (for testing).
 	 */
-	public function __construct( Storage $storage, string $prefix, bool $detailed, array $retention = array() ) {
+	public function __construct( Storage $storage, string $prefix, bool $detailed, array $retention = array(), ?Mirror $mirror = null ) {
 		$this->storage   = $storage;
 		$this->prefix    = $prefix;
 		$this->detailed  = $detailed;
 		$this->retention = $retention;
+		$this->mirror    = $mirror ?? new Mirror();
 	}
 
 	/**
@@ -134,16 +146,80 @@ final class Manager {
 	}
 
 	/**
-	 * Roll up and prune every blog's hourly buckets to daily (nightly).
+	 * Bring mirrored daily counters back into storage.
+	 *
+	 * @since 1.8.2
+	 *
+	 * @param string|null $prefix Site/network prefix; defaults to the current blog.
+	 * @param bool        $merge  Fill in missing fields even when storage is not empty.
+	 * @return void
+	 */
+	public function restore( ?string $prefix = null, bool $merge = false ): void {
+		$prefix = $prefix ?? $this->prefix;
+
+		if ( ! $merge && $this->storage->metrics_count( $prefix, Recorder::RES_DAILY ) > 0 ) {
+			return;
+		}
+
+		$mirrored = $this->mirror->read( $prefix );
+		if ( empty( $mirrored ) ) {
+			return;
+		}
+
+		$existing = $merge ? $this->storage->metrics_read( $prefix, Recorder::RES_DAILY ) : array();
+		$missing  = array_diff_key( $mirrored, $existing );
+
+		if ( ! empty( $missing ) ) {
+			$this->storage->metrics_set( $prefix, Recorder::RES_DAILY, $missing );
+		}
+	}
+
+	/**
+	 * Roll up and prune every blog's hourly buckets to daily (nightly), then
+	 * mirror the daily counters to the database. Blogs known only to the
+	 * mirror are restored first, so a storage-server restart between two
+	 * nightly runs costs no daily history.
 	 *
 	 * @since 1.7.0
+	 * @since 1.8.2 Restores from and writes to the database mirror.
 	 *
 	 * @return void
 	 */
 	public function rollup(): void {
-		foreach ( $this->storage->metrics_prefixes() as $prefix ) {
+		$prefixes = array_unique( array_merge( $this->storage->metrics_prefixes(), $this->mirror->prefixes() ) );
+
+		foreach ( $prefixes as $prefix ) {
+			$this->restore( $prefix, true );
+
 			$recorder = new Recorder( new StorageStore( $this->storage, $prefix ), false, $this->retention );
 			$recorder->rollup();
+
+			// An unreachable server reads as empty; keep the last good mirror then.
+			$daily = $this->storage->metrics_read( $prefix, Recorder::RES_DAILY );
+			if ( ! empty( $daily ) ) {
+				$this->mirror->write( $prefix, $daily );
+			}
 		}
+	}
+
+	/**
+	 * Delete every recorded counter for a blog, in storage, and in the mirror.
+	 *
+	 * @since 1.8.2
+	 *
+	 * @param string|null $prefix Site/network prefix; defaults to the current blog.
+	 * @return void
+	 */
+	public function clear( ?string $prefix = null ): void {
+		$prefix = $prefix ?? $this->prefix;
+
+		foreach ( array( Recorder::RES_HOURLY, Recorder::RES_DAILY ) as $resolution ) {
+			$fields = array_keys( $this->storage->metrics_read( $prefix, $resolution ) );
+			if ( ! empty( $fields ) ) {
+				$this->storage->metrics_delete( $prefix, $resolution, $fields );
+			}
+		}
+
+		$this->mirror->delete( $prefix );
 	}
 }

@@ -209,6 +209,61 @@ describe( 'Recorder', function () {
 		} );
 	} );
 
+	describe( 'rollup at the hourly retention edge', function () {
+		beforeEach( function () {
+			// 2-day hourly window; one hit per hour, nightly job at 03:00 UTC.
+			$this->recorder = new Recorder( $this->store, false, array( Recorder::RES_HOURLY => 2 ) );
+			$this->start    = gmmktime( 0, 0, 0, 5, 1, 2026 );
+		} );
+
+		it( 'keeps every past day at its full total across consecutive nightly runs', function () {
+			for ( $day = 0; $day < 6; $day++ ) {
+				for ( $hour = 0; $hour < 24; $hour++ ) {
+					$ts = $this->start + ( $day * DAY_IN_SECONDS ) + ( $hour * HOUR_IN_SECONDS );
+					if ( 3 === $hour ) {
+						$this->recorder->rollup( $ts );
+					}
+					$this->recorder->record_hit( 0, 0 );
+					$this->recorder->flush( $ts );
+				}
+			}
+
+			$daily = $this->store->read( Recorder::RES_DAILY );
+			foreach ( array( '20260501', '20260502', '20260503', '20260504', '20260505' ) as $day ) {
+				expect( $daily[ "$day:hit" ] )->toBe( 24 );
+			}
+		} );
+
+		it( 'does not replace an existing total with a partially pruned day', function () {
+			$run = $this->start + ( 3 * DAY_IN_SECONDS ) + ( 3 * HOUR_IN_SECONDS ); // 05-04 03:00
+			$this->store->set_fields( Recorder::RES_DAILY, array( '20260502:hit' => 24 ) );
+			// 05-02 already lost hours 00-02 to the previous night's prune.
+			$this->store->increment( Recorder::RES_HOURLY, array(
+				'2026050203:hit' => 1,
+				'2026050223:hit' => 1,
+			) );
+
+			$this->recorder->rollup( $run );
+
+			expect( $this->store->read( Recorder::RES_DAILY )['20260502:hit'] )->toBe( 24 );
+		} );
+
+		it( 'still rolls up complete days older than the window after a cron outage', function () {
+			$run = $this->start + ( 10 * DAY_IN_SECONDS ) + ( 3 * HOUR_IN_SECONDS ); // 05-11 03:00
+			$this->store->increment( Recorder::RES_HOURLY, array(
+				'2026050100:hit' => 2,
+				'2026050112:hit' => 3,
+				'2026050500:hit' => 4,
+			) );
+
+			$this->recorder->rollup( $run );
+
+			$daily = $this->store->read( Recorder::RES_DAILY );
+			expect( $daily['20260501:hit'] )->toBe( 5 );
+			expect( $daily['20260505:hit'] )->toBe( 4 );
+		} );
+	} );
+
 	describe( 'prune', function () {
 		it( 'removes hourly buckets older than the retention window, keeps recent', function () {
 			$old    = gmdate( 'YmdH', $this->ts - 20 * DAY_IN_SECONDS ); // > 7 days

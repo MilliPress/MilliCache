@@ -152,35 +152,45 @@ for ordinary browsing visitors, and any cookie MilliCache does not ignore become
 part of the cache key, which fragments the cache into per-visitor variants:
 
 - `sbjs_*`: Order Attribution tracking (Sourcebuster), set for every visitor
-- `woocommerce_recently_viewed`: set as soon as a visitor views a product
-- `woocommerce_cart_hash`, `woocommerce_items_in_cart`, `wp_woocommerce_session_*`: set once something is in the cart
 - `store_notice*`: set when a visitor dismisses a store notice
+- `woocommerce_cart_hash`, `woocommerce_items_in_cart`, `wp_woocommerce_session_*`: set once something is in the cart
+- `woocommerce_recently_viewed`: set on product views, but only while the classic Recently Viewed Products widget is active
 
-Ignore all of them:
+The tracking, store-notice and recently-viewed cookies never change the HTML
+WooCommerce builds, so ignore them. The store notice is rendered hidden and
+revealed by JavaScript, and only the classic widget covered below reads the
+recently-viewed cookie on the server. The cart and session
+cookies are usually safe too: most themes refresh the mini cart client-side, via
+cart fragments in classic themes or the Store API in the Mini-Cart block. But a
+theme or extension can render cart contents on the server, so check first: open a
+product page in two private windows with different carts and compare the page
+sources. If they match, ignore the cart cookies as well:
 
 ```php
 define( 'MC_CACHE_IGNORE_COOKIES', [
     '_*',                        // Keep the default (analytics cookies)
     'sbjs_*',
+    'store_notice*',
     'woocommerce_*',
     'wp_woocommerce_session_*',
-    'store_notice*',
 ] );
 ```
 
+If you use the classic Recently Viewed Products widget, list the cart cookies by
+name (`woocommerce_cart_hash`, `woocommerce_items_in_cart`) instead of
+`woocommerce_*`: the widget builds its list from `woocommerce_recently_viewed` on
+the server, so ignoring that cookie would serve one visitor's list to everyone.
+
 Do **not** put `woocommerce_*` or `sbjs_*` into `MC_CACHE_NOCACHE_COOKIES`.
-`woocommerce_recently_viewed` matches that pattern and is set the moment anyone
-views a product, so a blanket bypass silently turns most of your browsing traffic
-into cache misses. Bypassing is also unnecessary: themes add products to the cart
-via AJAX and refresh the mini cart client-side (cart fragments in classic themes,
-the Store API in the Mini-Cart block), so shop and product pages stay correct even
-for visitors with items in their cart.
+`sbjs_*` is set for every visitor, and with the classic widget active
+`woocommerce_recently_viewed` is set on the first product view, so a blanket bypass
+silently turns most of your browsing traffic into cache misses.
 
 Two exceptions:
 
-- If your theme renders cart contents into the page server-side without any AJAX
-  refresh (rare in modern themes), bypass for visitors with a cart instead of
-  ignoring: add `woocommerce_items_in_cart` to `MC_CACHE_NOCACHE_COOKIES`.
+- If the page sources differ because your theme renders cart contents
+  server-side, bypass for visitors with a cart instead of ignoring: add
+  `woocommerce_items_in_cart` to `MC_CACHE_NOCACHE_COOKIES`.
 - If you use custom dynamic pages WooCommerce does not know about (a custom order
   tracking page, for example), exclude them by path:
 

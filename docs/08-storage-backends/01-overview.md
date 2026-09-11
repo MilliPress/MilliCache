@@ -204,6 +204,17 @@ requirepass your-strong-password
 
 The `allkeys-lru` eviction policy automatically removes least-recently-used entries when memory is full.
 
+### Persistence
+
+The cache needs no persistence: after a restart, pages are simply cached again
+on their next request. The hit-ratio and metrics history are different, because
+they cannot be recomputed. MilliCache therefore copies the daily counters into the
+WordPress database every night and restores them automatically when the storage
+server comes back empty, whether after a restart or an eviction. Only the
+per-hour detail recorded since the last nightly run is lost. If you would rather
+keep that too, enable RDB snapshots (for example `save 3600 1`) instead of
+`save ""`.
+
 ### Applying Settings at Runtime
 
 You don't have to edit the Redis configuration file to change these. The memory

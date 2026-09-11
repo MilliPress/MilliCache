@@ -220,7 +220,15 @@ class Storage {
 	 * Get cache entries (keyed by hash, flags always included). `$include_output`
 	 * also transfers the dereferenced output body.
 	 *
+	 * Bodies live in a content-addressable keyspace shared by every entry with
+	 * identical output, so `size` is the length of the body an entry points to,
+	 * not what the entry adds on its own. Each entry also carries its
+	 * `output_hash` (the body it references, empty when it has no body) and
+	 * `meta_size` (the byte length of its stored metadata), so callers can tell
+	 * which entries share a body and what a shared entry weighs by itself.
+	 *
 	 * @since 1.4.0
+	 * @since 1.8.3 Entries carry `output_hash` and `meta_size`.
 	 * @access public
 	 *
 	 * @param string $flag           Optional flag filter. Supports wildcards.
@@ -266,9 +274,11 @@ class Storage {
 						continue;
 					}
 
-					$entry         = $this->parse_meta( $values[0] );
-					$output_hash   = isset( $values[1] ) && is_string( $values[1] ) ? $values[1] : '';
-					$entry['size'] = 0;
+					$entry                = $this->parse_meta( $values[0] );
+					$output_hash          = isset( $values[1] ) && is_string( $values[1] ) ? $values[1] : '';
+					$entry['size']        = 0;
+					$entry['output_hash'] = $output_hash;
+					$entry['meta_size']   = strlen( $values[0] );
 
 					$entry['flags'] = array_map(
 						array( $this, 'toggle_flag_key' ),
@@ -1140,6 +1150,22 @@ class Storage {
 	}
 
 	/**
+	 * Count the metrics counter fields stored for a resolution (HLEN).
+	 *
+	 * @since 1.8.2
+	 *
+	 * @param string $prefix     Site/network prefix.
+	 * @param string $resolution Bucket resolution (`h` or `d`).
+	 * @return int Field count; 0 when the hash is absent or storage is unavailable.
+	 */
+	public function metrics_count( string $prefix, string $resolution ): int {
+		return (int) $this->execute(
+			fn() => $this->client->hlen( $this->metrics_key( $prefix, $resolution ) ),
+			0
+		);
+	}
+
+	/**
 	 * Delete the named metrics counter fields (HDEL).
 	 *
 	 * @since 1.7.0
@@ -1227,8 +1253,8 @@ class Storage {
 				if ( $result ) {
 					list($data, $flags, $locked) = $result;
 					if ( $data && ! $locked ) {
-						$updated          = isset( $data['updated'] ) && is_numeric( $data['updated'] ) ? (int) $data['updated'] : time();
-						$data['updated']  = $updated - $ttl;
+						$effective_ttl   = isset( $data['custom_ttl'] ) && is_numeric( $data['custom_ttl'] ) ? (int) $data['custom_ttl'] : $ttl;
+						$data['updated'] = time() - $effective_ttl - 1;
 						$this->set_cache( $key, $data, $flags );
 						++$cleared;
 

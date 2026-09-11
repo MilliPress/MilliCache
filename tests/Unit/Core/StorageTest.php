@@ -418,6 +418,118 @@ describe( 'Storage', function () {
 		} );
 	} );
 
+	describe( 'get_entries', function () {
+		it( 'exposes the shared body hash and the per-entry meta size', function () {
+			$settings = array(
+				'host'       => '127.0.0.1',
+				'port'       => 6379,
+				'prefix'     => 'test',
+				'persistent' => false,
+			);
+
+			$storage = new Storage( $settings );
+
+			// Two entries share one body, a third has its own, a fourth has no
+			// body at all. The stub answers each pipelined command from canned
+			// data so the whole read path runs without a server.
+			$stub = new class() extends \Predis\Client {
+				/** @var array<string, array<string, mixed>> */
+				public array $hashes = array(
+					'test:c:hashA' => array(
+						'meta'   => '{"url":"https://example.com/a","status":200}',
+						'output' => 'body1',
+					),
+					'test:c:hashB' => array(
+						'meta'   => '{"url":"https://example.com/a?utm=1","status":200,"variant":{"cookies":["x"]}}',
+						'output' => 'body1',
+					),
+					'test:c:hashC' => array(
+						'meta'   => '{"url":"https://example.com/c","status":200}',
+						'output' => 'body2',
+					),
+					'test:c:hashD' => array(
+						'meta' => '{"url":"https://example.com/d","status":301}',
+					),
+				);
+				/** @var array<string, int> */
+				public array $bodies = array(
+					'test:o:body1' => 1000,
+					'test:o:body2' => 2000,
+				);
+
+				public function pipeline( ...$arguments ) {
+					$callback = $arguments[0] ?? null;
+
+					$pipe = new class() {
+						/** @var array<int, array{0: string, 1: array<int, mixed>}> */
+						public array $queued = array();
+
+						public function __call( $command_id, $arguments ) {
+							$this->queued[] = array( strtolower( (string) $command_id ), $arguments );
+							return $this;
+						}
+					};
+
+					if ( is_callable( $callback ) ) {
+						$callback( $pipe );
+					}
+
+					return array_map(
+						function ( array $call ) {
+							list( $command, $args ) = $call;
+							$key                    = (string) ( $args[0] ?? '' );
+							switch ( $command ) {
+								case 'smembers':
+									return array_keys( $this->hashes );
+								case 'hmget':
+									$fields = (array) ( $args[1] ?? array() );
+									return array_map( fn( $f ) => $this->hashes[ $key ][ $f ] ?? null, $fields );
+								case 'hkeys':
+									return array_merge( array_keys( $this->hashes[ $key ] ?? array() ), array( 'test:f:post:1' ) );
+								case 'hstrlen':
+									return $this->bodies[ $key ] ?? 0;
+							}
+							return null;
+						},
+						$pipe->queued
+					);
+				}
+
+				public function __call( $command_id, $arguments ) {
+					return null;
+				}
+			};
+
+			$client_prop = new \ReflectionProperty( Storage::class, 'client' );
+			$client_prop->setAccessible( true );
+			$client_prop->setValue( $storage, $stub );
+
+			$entries = $storage->get_entries( 'post:1' );
+
+			expect( array_keys( $entries ) )->toBe( array( 'hashA', 'hashB', 'hashC', 'hashD' ) );
+
+			// Both referrers report the body they point to, and which body that is.
+			expect( $entries['hashA']['size'] )->toBe( 1000 );
+			expect( $entries['hashB']['size'] )->toBe( 1000 );
+			expect( $entries['hashA']['output_hash'] )->toBe( 'body1' );
+			expect( $entries['hashB']['output_hash'] )->toBe( 'body1' );
+			expect( $entries['hashC']['output_hash'] )->toBe( 'body2' );
+			expect( $entries['hashC']['size'] )->toBe( 2000 );
+
+			// The meta size is what an entry weighs on its own.
+			expect( $entries['hashA']['meta_size'] )->toBe( strlen( $stub->hashes['test:c:hashA']['meta'] ) );
+			expect( $entries['hashB']['meta_size'] )->toBe( strlen( $stub->hashes['test:c:hashB']['meta'] ) );
+			expect( $entries['hashB']['meta_size'] )->toBeGreaterThan( $entries['hashA']['meta_size'] );
+
+			// A body-less entry has nothing to share.
+			expect( $entries['hashD']['output_hash'] )->toBe( '' );
+			expect( $entries['hashD']['size'] )->toBe( 0 );
+			expect( $entries['hashD']['meta_size'] )->toBeGreaterThan( 0 );
+
+			expect( array_values( $entries['hashA']['flags'] ) )->toBe( array( 'post:1' ) );
+		} );
+	} );
+
 	describe( 'get_flags_by_pattern', function () {
 		it( 'returns a literal flag as-is without a storage round-trip', function () {
 			$settings = array(

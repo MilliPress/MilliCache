@@ -232,13 +232,14 @@ final class Reader {
 			http_response_code( $entry->status );
 		}
 
-		$age = $entry->updated > 0 ? max( 0, time() - $entry->updated ) : 0;
+		$age       = $entry->updated > 0 ? max( 0, time() - $entry->updated ) : 0;
+		$remaining = max( 0, ( $entry->custom_ttl ?? $this->config->ttl ) - $age );
 
 		// Output cached headers.
 		if ( ! empty( $entry->headers ) ) {
 			foreach ( $entry->headers as $header ) {
-				if ( $age > 0 && 0 === stripos( $header, 'cache-control:' ) ) {
-					$header = self::remaining_smaxage( $header, $age );
+				if ( $entry->updated > 0 && 0 === stripos( $header, 'cache-control:' ) ) {
+					$header = self::bound_smaxage( $header, $remaining );
 				}
 				header( $header );
 			}
@@ -269,23 +270,24 @@ final class Reader {
 	}
 
 	/**
-	 * Reduce every `s-maxage` token in a `Cache-Control` line by the entry's
-	 * age, clamped at zero: a replayed response states the shared-cache
-	 * lifetime it has left, since the major CDNs ignore the `Age` header. The
-	 * stored token is the value; the configured TTL is not reconsulted, so
-	 * filtered or per-rule lifetimes stay authoritative.
+	 * Cap every `s-maxage` token in a `Cache-Control` line at the entry's
+	 * remaining local lifetime: a replayed response never grants a shared
+	 * cache more time than the local copy has left, since the major CDNs
+	 * ignore the `Age` header. The stored token stays the upper bound, so
+	 * filtered or per-rule edge lifetimes remain authoritative and a copy
+	 * whose edge lifetime elapsed is stored again for a full one.
 	 *
-	 * @since 1.8.0
+	 * @since 1.8.2
 	 *
-	 * @param string $header A `Cache-Control: …` header line.
-	 * @param int    $age    The entry's current age in seconds.
-	 * @return string The header line with reduced `s-maxage` values.
+	 * @param string $header    A `Cache-Control: …` header line.
+	 * @param int    $remaining The entry's remaining local lifetime in seconds.
+	 * @return string The header line with capped `s-maxage` values.
 	 */
-	public static function remaining_smaxage( string $header, int $age ): string {
+	public static function bound_smaxage( string $header, int $remaining ): string {
 		return (string) preg_replace_callback(
 			'/(s-maxage=)(\d+)/i',
-			static function ( array $matches ) use ( $age ): string {
-				return $matches[1] . (string) max( 0, (int) $matches[2] - $age );
+			static function ( array $matches ) use ( $remaining ): string {
+				return $matches[1] . (string) min( (int) $matches[2], max( 0, $remaining ) );
 			},
 			$header
 		);
