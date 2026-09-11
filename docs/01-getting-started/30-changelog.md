@@ -6,6 +6,32 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.2](https://github.com/MilliPress/MilliCache/compare/v1.8.1...v1.8.2) (2026-09-11)
+
+This release keeps your dashboard history intact across storage server restarts and fixes a bug that slowly shrank daily totals.
+
+The nightly rollup now mirrors each site's daily counters into the WordPress database. When the storage server restarts or evicts cold keys, which is common in the recommended setup without persistence, the history is automatically restored, so the long-range views on the Status dashboard no longer go blank while the cache regenerates. Clearing metrics still clears the mirror, so a deliberate wipe stays wiped. Only the per-hour detail recorded since the last nightly run is lost on a restart; the documentation covers this trade-off and how to retain that too.
+
+A separate bug in the same rollup caused daily totals to shrink over time: the nightly job was rewriting every past day's total from its hourly buckets, including the day at the retention edge whose earliest hours the previous prune had already removed. Days fully covered by hourly data are still rewritten as before; the day at the edge and any older days now keep their existing total instead.
+
+### Features
+
+* **metrics:** keep the daily history when the storage server restarts ([a56173e](https://github.com/MilliPress/MilliCache/commit/a56173ec8fcb1c3339c62db21521aa46f642dd6e))
+* **storage:** expose the shared body hash and meta size per cache entry ([d3731fb](https://github.com/MilliPress/MilliCache/commit/d3731fb9bb787c9b6ad1ad5f055d7c46d349b5ce))
+
+
+### Bug Fixes
+
+* **cache:** keep pages cacheable at the edge for the whole local cache lifetime ([b938b92](https://github.com/MilliPress/MilliCache/commit/b938b92c1fdc408da8517eb130cc8a9b4bf16f90))
+* **metrics:** keep daily totals intact at the hourly retention edge ([d166ae3](https://github.com/MilliPress/MilliCache/commit/d166ae3ac2ce27f832ec2d616449960ceab93647))
+* **storage:** expire cache entries by their own custom TTL ([58f2951](https://github.com/MilliPress/MilliCache/commit/58f29516648bc5da0767c35002216bc99e0e1f08))
+
+
+### Dependencies
+
+* **millibase:** update MilliBase to 2.11.0 ([c35f7af](https://github.com/MilliPress/MilliCache/commit/c35f7af3b8ba3ec845148ff39defb5ebb28acc31))
+
+
 ## [1.8.2-beta.2](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta.1...v1.8.2-beta.2) (2026-09-08)
 
 <!-- mc:auto sha=c539538cc4dc -->
