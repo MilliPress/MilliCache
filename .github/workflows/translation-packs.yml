@@ -39,6 +39,37 @@ jobs:
           php-version: '8.3'
           tools: wp-cli
 
+      # WordPress resolves language packs by exact locale: a de_AT, fr_CA or
+      # es_MX site never falls back to de_DE, fr_FR or es_ES. For admin-UI
+      # strings the regional variants differ from the reviewed catalogs only
+      # mechanically (Switzerland writes ss for ß) or not at all, so derive them
+      # at build time instead of maintaining more Weblate languages. Derived
+      # files are build artifacts, never committed.
+      - name: Derive regional catalogs
+        run: |
+          derive() { # <source locale> <target locale> [swiss]
+            src="assets/lang/${DOMAIN}-$1.po"
+            dst="assets/lang/${DOMAIN}-$2.po"
+            if [ ! -f "$src" ]; then
+              echo "skip $2: no $1 catalog"
+              return
+            fi
+            sed -E "s/^\"Language: [A-Za-z_]+\\\\n\"/\"Language: $2\\\\n\"/" "$src" > "$dst"
+            if [ "${3:-}" = swiss ]; then
+              sed -i -e '/^msgid/!s/ß/ss/g' -e '/^msgid/!s/ẞ/SS/g' "$dst"
+            fi
+            echo "derived $2 from $1"
+          }
+          derive de_DE        de_AT
+          derive de_DE_formal de_CH          swiss
+          derive de_DE        de_CH_informal swiss
+          derive fr_FR        fr_BE
+          derive fr_FR        fr_CA
+          derive es_ES        es_MX
+          derive es_ES        es_AR
+          derive es_ES        es_CO
+          derive es_ES        es_CL
+
       - name: Compile catalogs (.mo, .l10n.php)
         run: |
           wp i18n make-mo assets/lang assets/lang
