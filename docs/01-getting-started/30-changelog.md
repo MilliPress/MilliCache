@@ -8,6 +8,13 @@ menu_order: 30
 
 ## [1.8.2](https://github.com/MilliPress/MilliCache/compare/v1.8.2...v1.8.2) (2026-09-11)
 
+<!-- mc:auto sha=9af22b26da54 -->
+Two metrics fixes land in 1.8.2.
+
+**Daily history survives storage restarts.** The recommended Redis/Valkey setup runs without persistence, so a restart or memory-pressure eviction wiped the metrics history and left the long-range views on the Status dashboard blank. The nightly rollup now mirrors each site's daily counters into the WordPress database and restores them automatically when the storage server comes back empty — merging without overwriting newer days. Clearing metrics also clears the mirror, so a deliberate wipe stays wiped. Only the per-hour detail recorded since the last nightly run is lost on a restart.
+
+**Daily totals are no longer understated at the retention edge.** The nightly rollup was rewriting every past day's total from its hourly buckets — including the day whose earliest hours the previous prune had already removed. That caused long-range views to show fewer requests than the hourly view for the same days. Days still fully covered by hourly data are rewritten as before; the day at the retention edge and any older days now keep their existing total and are only written when none exists yet.
+<!-- /mc:auto -->
 
 ### ⚠ BREAKING CHANGES
 
