@@ -8,6 +8,11 @@ menu_order: 30
 
 ## [1.8.2](https://github.com/MilliPress/MilliCache/compare/v1.8.2-beta.2...v1.8.2) (2026-09-11)
 
+<!-- mc:auto sha=6357ae36462d -->
+This release promotes the 1.8.2 betas to stable and focuses on making metrics more durable across storage interruptions.
+
+Previously, a storage server restart could wipe out the accumulated metrics history. MilliCache now preserves daily history across restarts, and separately ensures that daily totals remain intact when hourly data ages out at the retention boundary.
+<!-- /mc:auto -->
 
 ### Features
 
