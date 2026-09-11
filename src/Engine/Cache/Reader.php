@@ -277,7 +277,7 @@ final class Reader {
 	 * filtered or per-rule edge lifetimes remain authoritative and a copy
 	 * whose edge lifetime elapsed is stored again for a full one.
 	 *
-	 * @since 1.9.0
+	 * @since 1.8.2
 	 *
 	 * @param string $header    A `Cache-Control: …` header line.
 	 * @param int    $remaining The entry's remaining local lifetime in seconds.

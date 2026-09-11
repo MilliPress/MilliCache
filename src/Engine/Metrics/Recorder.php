@@ -182,7 +182,7 @@ final class Recorder {
 	 * Roll completed days' hourly buckets up into daily, then prune.
 	 *
 	 * @since 1.7.0
-	 * @since 1.9.0 Never overwrites a day's total from partially pruned hourly buckets.
+	 * @since 1.8.2 Never overwrites a day's total from partially pruned hourly buckets.
 	 *
 	 * @param int|null $now Reference time; defaults to now.
 	 */

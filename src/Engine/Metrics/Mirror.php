@@ -3,7 +3,7 @@
  * Database mirror of the daily metrics counters.
  *
  * @link       https://www.millipress.com
- * @since      1.9.0
+ * @since      1.8.2
  *
  * @package     MilliCache
  * @subpackage  Engine\Metrics
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Uses the network-scoped option helpers, which fall back to plain
  * non-autoloaded options on single site.
  *
- * @since      1.9.0
+ * @since      1.8.2
  * @package    MilliCache
  * @author     Philipp Wellmer <hello@millipress.com>
  */
@@ -49,7 +49,7 @@ final class Mirror {
 	/**
 	 * The mirrored daily counters for a prefix.
 	 *
-	 * @since 1.9.0
+	 * @since 1.8.2
 	 *
 	 * @param string $prefix Site/network prefix.
 	 * @return array<string, int> Field name => value; empty when nothing is mirrored.
@@ -73,7 +73,7 @@ final class Mirror {
 	/**
 	 * Replace the mirrored daily counters for a prefix.
 	 *
-	 * @since 1.9.0
+	 * @since 1.8.2
 	 *
 	 * @param string             $prefix Site/network prefix.
 	 * @param array<string, int> $fields Field name => value; empty removes the mirror.
@@ -97,7 +97,7 @@ final class Mirror {
 	/**
 	 * Remove the mirror for a prefix.
 	 *
-	 * @since 1.9.0
+	 * @since 1.8.2
 	 *
 	 * @param string $prefix Site/network prefix.
 	 * @return void
@@ -116,7 +116,7 @@ final class Mirror {
 	/**
 	 * Every prefix that has a mirror.
 	 *
-	 * @since 1.9.0
+	 * @since 1.8.2
 	 *
 	 * @return array<int, string>
 	 */

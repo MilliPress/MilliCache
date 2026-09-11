@@ -1152,7 +1152,7 @@ class Storage {
 	/**
 	 * Count the metrics counter fields stored for a resolution (HLEN).
 	 *
-	 * @since 1.9.0
+	 * @since 1.8.2
 	 *
 	 * @param string $prefix     Site/network prefix.
 	 * @param string $resolution Bucket resolution (`h` or `d`).

@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * storage-server restart ({@see self::restore()}).
  *
  * @since      1.7.0
- * @since      1.9.0 Daily counters are mirrored to the database and restored.
+ * @since      1.8.2 Daily counters are mirrored to the database and restored.
  * @package    MilliCache
  * @author     Philipp Wellmer <hello@millipress.com>
  */
@@ -148,7 +148,7 @@ final class Manager {
 	/**
 	 * Bring mirrored daily counters back into storage.
 	 *
-	 * @since 1.9.0
+	 * @since 1.8.2
 	 *
 	 * @param string|null $prefix Site/network prefix; defaults to the current blog.
 	 * @param bool        $merge  Fill in missing fields even when storage is not empty.
@@ -181,7 +181,7 @@ final class Manager {
 	 * nightly runs costs no daily history.
 	 *
 	 * @since 1.7.0
-	 * @since 1.9.0 Restores from and writes to the database mirror.
+	 * @since 1.8.2 Restores from and writes to the database mirror.
 	 *
 	 * @return void
 	 */
@@ -205,7 +205,7 @@ final class Manager {
 	/**
 	 * Delete every recorded counter for a blog, in storage, and in the mirror.
 	 *
-	 * @since 1.9.0
+	 * @since 1.8.2
 	 *
 	 * @param string|null $prefix Site/network prefix; defaults to the current blog.
 	 * @return void
