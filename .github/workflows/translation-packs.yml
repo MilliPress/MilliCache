@@ -63,6 +63,7 @@ jobs:
           derive de_DE        de_AT
           derive de_DE_formal de_CH          swiss
           derive de_DE        de_CH_informal swiss
+          derive nl_NL        nl_BE
           derive fr_FR        fr_BE
           derive fr_FR        fr_CA
           derive es_ES        es_MX
