@@ -705,14 +705,6 @@
 		height: 20px;
 		margin-top: 2px;
 
-		// @wordpress/icons Path primitives ship without a fill, so SVG's
-		// default `fill: black` wins unless we explicitly bridge it to the
-		// wrapper's currentColor.
-		/* stylelint-disable-next-line no-descending-specificity */
-		svg path {
-			fill: currentcolor;
-		}
-
 		&--good {
 			color: #4ab866;
 		}
