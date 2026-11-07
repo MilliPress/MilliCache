@@ -359,6 +359,28 @@ describe( 'Rule Actions', function () {
 			expect( $do_cache_args[1]->get_default() )->toBe( '' );
 		} );
 
+		it( 'declares an argument mapping that matches the set_meta() schema for every action', function () {
+			$actions = array(
+				'do_cache'         => DoCache::class,
+				'set_ttl'          => SetTtl::class,
+				'set_grace'        => SetGrace::class,
+				'set_bucket'       => SetBucket::class,
+				'add_flag'         => AddFlag::class,
+				'remove_flag'      => RemoveFlag::class,
+				'clear_cache'      => ClearCache::class,
+				'clear_site_cache' => ClearSiteCache::class,
+			);
+
+			foreach ( $actions as $type => $class ) {
+				$schema_keys = array_map(
+					fn( $argument ) => $argument->get_key(),
+					Rules::get_action_meta( $type )->get_arguments()
+				);
+
+				expect( $class::get_argument_mapping() )->toBe( $schema_keys, "{$type} argument mapping" );
+			}
+		} );
+
 		it( 'serializes the complete wire format via to_array()', function () {
 			$wire = Rules::get_action_meta( 'set_ttl' )->to_array();
 

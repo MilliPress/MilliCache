@@ -16,6 +16,7 @@ use MilliCache\Core\Storage;
 use MilliCache\Engine\Flags;
 use MilliCache\Engine\Request\Processor as RequestManager;
 use MilliCache\Engine\Utilities\Multisite;
+use MilliBase\Logger;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -64,22 +65,34 @@ final class Manager {
 	private array $skipped = array();
 
 	/**
+	 * Channel-prefixed logger for skipped operations.
+	 *
+	 * @since 1.8.3
+	 * @var Logger
+	 */
+	private Logger $logger;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 1.0.0
+	 * @since 1.8.3 Accepts an injected logger.
 	 *
 	 * @param Storage        $storage         Storage instance.
 	 * @param RequestManager $request_manager Request manager for URL hashing.
 	 * @param Multisite      $multisite       Multisite helper.
 	 * @param int            $default_ttl     Default TTL for expiration.
+	 * @param Logger|null    $logger          Shared logger; defaults to an own "MilliCache" channel.
 	 */
 	public function __construct(
 		Storage $storage,
 		RequestManager $request_manager,
 		Multisite $multisite,
-		int $default_ttl = 3600
+		int $default_ttl = 3600,
+		?Logger $logger = null
 	) {
 		$this->multisite = $multisite;
+		$this->logger    = $logger ?? new Logger( 'MilliCache' );
 		$this->resolver  = new Resolver( $request_manager, $multisite );
 		$this->queue     = new Queue( $storage, $multisite, $default_ttl );
 	}
@@ -335,7 +348,11 @@ final class Manager {
 	/**
 	 * Clear cache for the entire site (s).
 	 *
+	 * An empty site list is a no-op: nothing is queued and the
+	 * `millicache_cache_cleared_by_sites` event does not fire.
+	 *
 	 * @since 1.0.0
+	 * @since 1.8.3 Logs and skips an empty site list instead of firing the event.
 	 *
 	 * @param int|array<int>|null $site_ids   Site ID(s) to clear (null for current).
 	 * @param int|null            $network_id Network ID.
@@ -345,6 +362,12 @@ final class Manager {
 	public function sites( $site_ids = null, ?int $network_id = null, bool $expire = false ): self {
 		// Resolve sites to flags.
 		$flags = $this->resolver->resolve_site_ids( $site_ids, $network_id );
+
+		if ( array() === $flags ) {
+			$this->logger->warning( 'Clear by sites skipped: no site IDs given.' );
+
+			return $this;
+		}
 
 		// Add to the clearer queue.
 		$this->enqueue_flags( $flags, $expire, false );

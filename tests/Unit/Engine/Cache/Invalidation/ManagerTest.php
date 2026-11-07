@@ -627,6 +627,22 @@ describe( 'Invalidation Manager', function () {
 			expect( count( $handler->get_queue()->get_delete_queue() ) )->toBeGreaterThan( 0 );
 		} );
 
+		it( 'skips an empty site list without queueing or firing the event', function () {
+			global $test_did_actions;
+			$test_did_actions = array();
+
+			$handler = new Manager(
+				$this->storage,
+				$this->request_handler,
+				$this->multisite
+			);
+
+			suppressing_errors( fn() => $handler->sites( array() ) );
+
+			expect( $handler->get_queue()->get_delete_queue() )->toBe( array() );
+			expect( array_column( $test_did_actions, 'hook' ) )->not->toContain( 'millicache_cache_cleared_by_sites' );
+		} );
+
 		it( 'handles array of site IDs', function () {
 			global $test_is_multisite, $test_networks;
 			$test_is_multisite = true;
