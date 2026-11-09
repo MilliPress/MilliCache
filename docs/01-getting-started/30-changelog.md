@@ -6,6 +6,18 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.3](https://github.com/MilliPress/MilliCache/compare/v1.8.2...v1.8.3) (2026-11-09)
+
+<!-- mc:auto sha=3df578a27206 -->
+The `clear_site_cache` rule action was broken: it read its arguments positionally and resolved to an empty site list, so nothing was actually cleared even though the cache-cleared event still fired. This release fixes that — the action now always clears the current site as documented.
+
+Dependency updates round out the release: Predis bumps to 3.7.1, WordPress npm packages including `@wordpress/components` 41 and `@wordpress/scripts` 36 are current, and a lockfile-only audit fix resolves over a dozen transitive npm vulnerability alerts. Dutch, Polish, and Japanese translations ship at 100% coverage.
+<!-- /mc:auto -->
+
+### Bug Fixes
+
+* **rules:** make clear_site_cache clear the current site again ([#206](https://github.com/MilliPress/MilliCache/issues/206)) ([705a7aa](https://github.com/MilliPress/MilliCache/commit/705a7aa6aa8143a4c24c6d2c91770d8111ddf789))
+
 ## [1.8.2](https://github.com/MilliPress/MilliCache/compare/v1.8.1...v1.8.2) (2026-09-11)
 
 This release keeps your dashboard history intact across storage server restarts and fixes a bug that slowly shrank daily totals.
