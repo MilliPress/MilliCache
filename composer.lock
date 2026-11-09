@@ -79,16 +79,16 @@
         },
         {
             "name": "millipress/millirules",
-            "version": "v1.3.0",
+            "version": "v1.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/MilliPress/MilliRules.git",
-                "reference": "596570a60d8602a4e976787877f7623bd7f03c2d"
+                "reference": "5a6df64c291ccf118504de2b6de9887b5af924a1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/MilliPress/MilliRules/zipball/596570a60d8602a4e976787877f7623bd7f03c2d",
-                "reference": "596570a60d8602a4e976787877f7623bd7f03c2d",
+                "url": "https://api.github.com/repos/MilliPress/MilliRules/zipball/5a6df64c291ccf118504de2b6de9887b5af924a1",
+                "reference": "5a6df64c291ccf118504de2b6de9887b5af924a1",
                 "shasum": ""
             },
             "require": {
@@ -141,9 +141,10 @@
             "description": "A declarative rule engine for PHP that turns complex conditional logic into readable when-then rules. Features a fluent builder API, lazy-loaded context for performance, smart operator inference, and works seamlessly in pure PHP or WordPress.",
             "support": {
                 "issues": "https://github.com/MilliPress/MilliRules/issues",
-                "source": "https://github.com/MilliPress/MilliRules/tree/v1.3.0"
+                "source": "https://github.com/MilliPress/MilliRules/tree/v1.3.1"
             },
-            "time": "2026-08-14T12:21:53+00:00"
+            "time": "2026-11-09T11:04:43+00:00",
+            "published-time": "2026-11-09T11:04:56+00:00"
         },
         {
             "name": "predis/predis",
@@ -6693,5 +6694,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
