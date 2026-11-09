@@ -19,7 +19,7 @@ namespace MilliRules\Builders;
  * @method ActionBuilder set_ttl(int $ttl) Set cache TTL in seconds
  * @method ActionBuilder set_grace(int $grace) Set the cache grace period in seconds
  * @method ActionBuilder clear_cache(string|array<int|string> $targets, bool $expire = false) Clear cache by flag(s), post-ID(s) or URL(s)
- * @method ActionBuilder clear_site_cache(int|array<int>|string|null $site_ids = null, bool $expire = false) Clear whole site(s); null for the current site
+ * @method ActionBuilder clear_site_cache(bool $expire = false) Clear the whole cache of the current site
  * @method ActionBuilder custom(string $id, callable $callback) Execute custom action callback
  *
  * Finalization:

@@ -145,7 +145,7 @@ With rules, for example, you can:
 
 **Clear cache:**
 ```php
-->then()->clear_cache( 'post:123' )
+->then()->clear_cache( ['post:123', 'home'] )
 ->then()->clear_site_cache()
 ```
 

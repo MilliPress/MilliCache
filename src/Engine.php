@@ -594,8 +594,7 @@ final class Engine {
 				$this->storage(),
 				$this->request(),
 				$this->multisite(),
-				$ttl,
-				$this->logger()
+				$ttl
 			);
 
 			// Registered here for WP-CLI support.

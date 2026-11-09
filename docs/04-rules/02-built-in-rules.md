@@ -128,8 +128,8 @@ Available in `wp` rules (after WordPress loads):
 | `set_grace( $seconds )`      | Override grace period  | `->set_grace( 3600 )`          |
 | `add_flag( $flag )`          | Add cache flag         | `->add_flag( 'custom:flag' )`  |
 | `remove_flag( $flag )`       | Remove cache flag      | `->remove_flag( 'home' )`      |
-| `clear_cache( $targets )`    | Clear cache entries    | `->clear_cache( 'post:*' )`    |
-| `clear_site_cache( $site_ids, $expire )` | Clear whole site(s) | `->clear_site_cache()`  |
+| `clear_cache( $targets )`    | Clear cache entries    | `->clear_cache( ['post:*'] )`  |
+| `clear_site_cache()`         | Clear entire site      | `->clear_site_cache()`         |
 
 ## Available Conditions
 
