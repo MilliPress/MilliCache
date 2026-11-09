@@ -13,13 +13,7 @@ updates:
         exclude-patterns:
           - "predis/*"
           - "millipress/*"
-    # These get individual PRs for careful review
     ignore:
-      # Don't group these - we want separate PRs
-      - dependency-name: "predis/predis"
-        update-types: ["version-update:semver-patch"]
-      - dependency-name: "millipress/millirules"
-        update-types: ["version-update:semver-patch"]
       # Pest 5+ would require a future PHP bump — ignore when available
       - dependency-name: "pestphp/pest"
         versions: [">=5.0"]
