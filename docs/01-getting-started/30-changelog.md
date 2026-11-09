@@ -6,6 +6,13 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.3](https://github.com/MilliPress/MilliCache/compare/v1.8.2...v1.8.3) (2026-11-09)
+
+
+### Bug Fixes
+
+* **rules:** make clear_site_cache clear the current site again ([#206](https://github.com/MilliPress/MilliCache/issues/206)) ([705a7aa](https://github.com/MilliPress/MilliCache/commit/705a7aa6aa8143a4c24c6d2c91770d8111ddf789))
+
 ## [1.8.2](https://github.com/MilliPress/MilliCache/compare/v1.8.1...v1.8.2) (2026-09-11)
 
 This release keeps your dashboard history intact across storage server restarts and fixes a bug that slowly shrank daily totals.
