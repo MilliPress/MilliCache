@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MilliCache 1.7.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/MilliCache\n"
-"POT-Creation-Date: 2026-09-11T11:43:12+00:00\n"
+"POT-Creation-Date: 2026-11-09T11:50:38+00:00\n"
 "PO-Revision-Date: 2026-09-10 19:48+0000\n"
 "Last-Translator: Philipp Wellmer <philipp@millipress.com>\n"
 "Language-Team: German (Germany) <https://translate.millipress.com/projects/"
@@ -1274,15 +1274,15 @@ msgstr ""
 "Netzwerkadministrator ändern kann."
 
 #: src/Base/Abilities.php:282
-#: assets/js/settings/partials/ClearCacheButton.jsx:86 build/settings.js:1
+#: assets/js/settings/partials/ClearCacheButton.jsx:36 build/settings.js:1
 msgid "Clear Network Cache"
 msgstr "Netzwerk-Cache leeren"
 
 #: src/Base/Abilities.php:283 src/Base/Manager.php:195
 #: src/Rules/Actions/WP/ClearCache.php:43
-#: assets/js/settings/partials/ClearCacheButton.jsx:35
-#: assets/js/settings/partials/ClearCacheButton.jsx:46
-#: assets/js/settings/partials/ClearCacheButton.jsx:51 build/settings.js:1
+#: assets/js/settings/partials/ClearCacheButton.jsx:44
+#: assets/js/settings/partials/ClearCacheButton.jsx:55
+#: assets/js/settings/partials/ClearCacheButton.jsx:60 build/settings.js:1
 msgid "Clear Cache"
 msgstr "Cache leeren"
 
@@ -1646,7 +1646,15 @@ msgstr "MilliCache: Netzwerk-Cache ablaufen lassen"
 msgid "MilliCache: Expire website cache"
 msgstr "MilliCache: Website-Cache ablaufen lassen"
 
-#: assets/js/settings/partials/ClearCacheButton.jsx:60 build/settings.js:1
+#: assets/js/settings/partials/ClearCacheButton.jsx:33 build/settings.js:1
+msgid "Clear Cache of Targets"
+msgstr "Cache der Ziele leeren"
+
+#: assets/js/settings/partials/ClearCacheButton.jsx:37 build/settings.js:1
+msgid "Clear Website Cache"
+msgstr "Website-Cache leeren"
+
+#: assets/js/settings/partials/ClearCacheButton.jsx:69 build/settings.js:1
 msgid ""
 "Enter one or more flag patterns to clear across the network. Use a site-"
 "prefixed pattern like \"5:*\" to clear every entry on a specific site, "
@@ -1659,7 +1667,7 @@ msgstr ""
 "jeder Website zu leeren, oder „5:posts“ für ein einzelnes Flag auf einer "
 "einzelnen Website. Leer lassen, um den gesamten Netzwerk-Cache zu leeren."
 
-#: assets/js/settings/partials/ClearCacheButton.jsx:64 build/settings.js:1
+#: assets/js/settings/partials/ClearCacheButton.jsx:73 build/settings.js:1
 msgid ""
 "Enter one or more Cache Flags, Post-IDs or URLs for which you want to clear "
 "the cache. You can use wildcards (*) to clear multiple related flags."
@@ -1668,17 +1676,9 @@ msgstr ""
 "geleert werden soll. Mit Platzhaltern (*) leerst du mehrere zusammengehörige "
 "Flags auf einmal."
 
-#: assets/js/settings/partials/ClearCacheButton.jsx:73 build/settings.js:1
+#: assets/js/settings/partials/ClearCacheButton.jsx:82 build/settings.js:1
 msgid "Targets to clear (Optional)"
 msgstr "Zu leerende Ziele (optional)"
-
-#: assets/js/settings/partials/ClearCacheButton.jsx:87 build/settings.js:1
-msgid "Clear Website Cache"
-msgstr "Website-Cache leeren"
-
-#: assets/js/settings/partials/ClearCacheButton.jsx:88 build/settings.js:1
-msgid "Clear Cache of Targets"
-msgstr "Cache der Ziele leeren"
 
 #: assets/js/settings/partials/FooterStatus.jsx:89 build/settings.js:1
 msgid "Checking…"
@@ -1699,7 +1699,7 @@ msgstr[0] "%d Warnung"
 msgstr[1] "%d Warnungen"
 
 #: assets/js/settings/partials/FooterStatus.jsx:113
-#: assets/js/settings/tabs/Status.jsx:539 build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:574 build/settings.js:1
 #: build/settings.js:3
 msgid "Healthy"
 msgstr "Einwandfrei"
@@ -1708,7 +1708,19 @@ msgstr "Einwandfrei"
 msgid "No status checks are available yet. Try refreshing this page."
 msgstr "Es liegen noch keine Statusprüfungen vor. Lade die Seite neu."
 
-#: assets/js/settings/partials/FooterStatus.jsx:189 build/settings.js:1
+#: assets/js/settings/partials/FooterStatus.jsx:188 build/settings.js:1
+msgid "Copied!"
+msgstr "Kopiert!"
+
+#: assets/js/settings/partials/FooterStatus.jsx:191 build/settings.js:1
+msgid "Select & copy manually"
+msgstr "Manuell auswählen und kopieren"
+
+#: assets/js/settings/partials/FooterStatus.jsx:193 build/settings.js:1
+msgid "Copy to clipboard"
+msgstr "In die Zwischenablage kopieren"
+
+#: assets/js/settings/partials/FooterStatus.jsx:199 build/settings.js:1
 msgid ""
 "A sanitized debug snapshot. No hosts, credentials, or customer paths are "
 "included. “Open GitHub Issue” starts a bug report with the snapshot and your "
@@ -1718,68 +1730,56 @@ msgstr ""
 "Kundenpfade. „GitHub-Issue eröffnen“ startet einen Fehlerbericht, in dem der "
 "Snapshot und deine Umgebungsversionen bereits ausgefüllt sind."
 
-#: assets/js/settings/partials/FooterStatus.jsx:210 build/settings.js:1
-msgid "Copied!"
-msgstr "Kopiert!"
-
-#: assets/js/settings/partials/FooterStatus.jsx:212 build/settings.js:1
-msgid "Select & copy manually"
-msgstr "Manuell auswählen und kopieren"
-
-#: assets/js/settings/partials/FooterStatus.jsx:213 build/settings.js:1
-msgid "Copy to clipboard"
-msgstr "In die Zwischenablage kopieren"
-
-#: assets/js/settings/partials/FooterStatus.jsx:217 build/settings.js:1
+#: assets/js/settings/partials/FooterStatus.jsx:223 build/settings.js:1
 msgid "Open GitHub Issue"
 msgstr "GitHub-Issue eröffnen"
 
 #. translators: %s: status summary
-#: assets/js/settings/partials/FooterStatus.jsx:272 build/settings.js:4
+#: assets/js/settings/partials/FooterStatus.jsx:278 build/settings.js:4
 msgid "MilliCache status: %s. Open details."
 msgstr "MilliCache-Status: %s. Details öffnen."
 
-#: assets/js/settings/partials/FooterStatus.jsx:288 build/settings.js:4
+#: assets/js/settings/partials/FooterStatus.jsx:294 build/settings.js:4
 msgid "MilliCache Status"
 msgstr "MilliCache-Status"
 
-#: assets/js/settings/partials/FooterStatus.jsx:299 build/settings.js:4
+#: assets/js/settings/partials/FooterStatus.jsx:305 build/settings.js:4
 msgid "Status Checks"
 msgstr "Statusprüfungen"
 
-#: assets/js/settings/partials/FooterStatus.jsx:303 build/settings.js:4
+#: assets/js/settings/partials/FooterStatus.jsx:309 build/settings.js:4
 msgid "Debug Info"
 msgstr "Debug-Infos"
 
-#: assets/js/settings/tabs/Status.jsx:304 build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:315 build/settings.js:1
 msgid "Total and uncached requests over the last 7 days"
 msgstr "Gesamte und nicht gecachte Anfragen der letzten 7 Tage"
 
-#: assets/js/settings/tabs/Status.jsx:401 build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:436 build/settings.js:1
 msgid "Requests"
 msgstr "Anfragen"
 
-#: assets/js/settings/tabs/Status.jsx:409 build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:444 build/settings.js:1
 msgid "Uncached"
 msgstr "Nicht gecacht"
 
-#: assets/js/settings/tabs/Status.jsx:495 build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:530 build/settings.js:1
 msgid "Loading cache status…"
 msgstr "Cache-Status wird geladen…"
 
-#: assets/js/settings/tabs/Status.jsx:540 build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:575 build/settings.js:1
 msgid "Needs attention"
 msgstr "Überprüfung empfohlen"
 
-#: assets/js/settings/tabs/Status.jsx:541 build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:576 build/settings.js:1
 msgid "Issues detected"
 msgstr "Probleme erkannt"
 
-#: assets/js/settings/tabs/Status.jsx:554 build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:589 build/settings.js:1
 msgid "Open the full Status checks and debug info"
 msgstr "Alle Statusprüfungen und Debug-Infos öffnen"
 
-#: assets/js/settings/tabs/Status.jsx:567 build/settings.js:1
+#: assets/js/settings/tabs/Status.jsx:602 build/settings.js:1
 msgid "Open the full check list and debug snapshot"
 msgstr "Vollständige Prüfliste und Debug-Snapshot öffnen"
 
