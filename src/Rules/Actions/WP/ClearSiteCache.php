@@ -2,7 +2,7 @@
 /**
  * Clear Site Cache Action
  *
- * Clears cache for a specific site or current site.
+ * Clears the whole cache of the site the rule runs on.
  *
  * @link       https://www.millipress.com
  * @since      1.0.0
@@ -23,10 +23,10 @@ use MilliRules\Actions\BaseAction;
 use MilliRules\Context;
 
 /**
- * Class FlushBySiteAction
+ * Class ClearSiteCache
  *
- * Clears cache entries for a specific site (stop action).
- * Accepts optional site_id parameter, defaults to current site.
+ * Clears every cache entry of the current site (stop action). The optional
+ * `expire` argument marks the entries stale instead of deleting them.
  *
  * @since 1.0.0
  */
@@ -42,7 +42,7 @@ class ClearSiteCache extends BaseAction {
 	public static function set_meta( ActionMeta $meta ): void {
 		$meta
 			->label( __( 'Clear Site Cache', 'millicache' ) )
-			->description( __( 'Clear all cache entries for the current site.', 'millicache' ) )
+			->description( __( 'Clear the whole cache of the site this rule runs on.', 'millicache' ) )
 			->categories( 'caching' )
 			->args()
 				->boolean( 'expire' )
@@ -65,22 +65,17 @@ class ClearSiteCache extends BaseAction {
 	/**
 	 * Execute the action.
 	 *
+	 * Builder rules store `expire` at position 0, stored rules under its
+	 * schema key; MilliRules maps the position to the first named argument.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @param Context $context The execution context.
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		/**
-		 * Site IDs to clear cache for.
-		 *
-		 * @var array<int>      $site_ids
-		 */
-		$site_ids = $this->get_arg( 0 )->array();
-		$network_id = $this->get_arg( 1 )->int();
-		$expire = $this->get_arg( 2, false )->bool();
+		$expire = $this->get_arg( 0, false )->bool();
 
-		// Call Engine to clear cache for specified site(s) or current site.
-		millicache()->clear()->sites( $site_ids, $network_id, $expire );
+		millicache()->clear()->sites( null, null, $expire );
 	}
 }
