@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MilliCache 1.7.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/MilliCache\n"
-"POT-Creation-Date: 2026-11-09T11:50:38+00:00\n"
+"POT-Creation-Date: 2026-11-09T11:51:11+00:00\n"
 "PO-Revision-Date: 2026-09-10 11:48+0000\n"
 "Last-Translator: Philipp Wellmer <philipp@millipress.com>\n"
 "Language-Team: Spanish (Spain) <https://translate.millipress.com/projects/"
@@ -1551,8 +1551,8 @@ msgid "Clear Site Cache"
 msgstr "Vaciar la caché del sitio"
 
 #: src/Rules/Actions/WP/ClearSiteCache.php:45
-msgid "Clear all cache entries for the current site."
-msgstr "Elimina todas las entradas de caché del sitio actual."
+msgid "Clear the whole cache of the site this rule runs on."
+msgstr ""
 
 #: src/Rules/Actions/WP/RemoveFlag.php:68
 msgid "Remove Flag"
@@ -1797,6 +1797,9 @@ msgstr "¡Vaciada!"
 #: build/commands.js:1
 msgid "Error"
 msgstr "Error"
+
+#~ msgid "Clear all cache entries for the current site."
+#~ msgstr "Elimina todas las entradas de caché del sitio actual."
 
 #~ msgid "Network cache cleared."
 #~ msgstr "Caché de la red vaciada."

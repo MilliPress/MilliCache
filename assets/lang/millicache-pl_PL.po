@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MilliCache 1.8.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/MilliCache\n"
-"POT-Creation-Date: 2026-11-09T11:50:38+00:00\n"
+"POT-Creation-Date: 2026-11-09T11:51:11+00:00\n"
 "PO-Revision-Date: 2026-09-12 09:30+0000\n"
 "Last-Translator: Philipp Wellmer <philipp@millipress.com>\n"
 "Language-Team: Polish (Poland) <https://translate.millipress.com/projects/"
@@ -1555,8 +1555,8 @@ msgid "Clear Site Cache"
 msgstr "Wyczyść pamięć podręczną witryny"
 
 #: src/Rules/Actions/WP/ClearSiteCache.php:45
-msgid "Clear all cache entries for the current site."
-msgstr "Czyści wszystkie wpisy pamięci podręcznej bieżącej witryny."
+msgid "Clear the whole cache of the site this rule runs on."
+msgstr ""
 
 #: src/Rules/Actions/WP/RemoveFlag.php:68
 msgid "Remove Flag"
@@ -1807,3 +1807,6 @@ msgstr "Wyczyszczono!"
 #: build/commands.js:1
 msgid "Error"
 msgstr "Błąd"
+
+#~ msgid "Clear all cache entries for the current site."
+#~ msgstr "Czyści wszystkie wpisy pamięci podręcznej bieżącej witryny."
