@@ -18,6 +18,12 @@ rm -rf dist && mkdir dist
 
 git archive --format=tar "$REF" | tar -x -C dist
 
+# composer.lock is export-ignored, so the archive has none and Composer
+# would resolve from scratch, dev requirements included. Install the
+# locked set instead: reproducible, and dev-only packages such as
+# roave/security-advisories never enter the resolution.
+git show "$REF:composer.lock" > dist/composer.lock
+
 # Defensive cleanup: strip dev-only config that slipped past
 # export-ignore in older tags (e.g. release-please-config-next.json
 # was not covered by the singular pattern in v1.7.0-beta's
