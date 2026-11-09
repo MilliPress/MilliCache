@@ -12,9 +12,7 @@ const dispatchOpenModal = () => {
 };
 
 const sortByWeight = ( panels ) =>
-	[ ...panels ].sort(
-		( a, b ) => ( a.weight ?? 100 ) - ( b.weight ?? 100 )
-	);
+	[ ...panels ].sort( ( a, b ) => ( a.weight ?? 100 ) - ( b.weight ?? 100 ) );
 
 // Monotone cubic (Fritsch–Carlson) — soft curves that never dip below baseline.
 const smoothPath = ( pts ) => {
@@ -232,13 +230,18 @@ const TrendChart = ( { series } ) => {
 	const n = days.length;
 
 	// Stacked: uncached on the baseline, cached the band up to the total envelope.
-	const top = axisTop( Math.max( 1, ...days.map( ( d ) => d.hits + d.misses ) ) );
+	const top = axisTop(
+		Math.max( 1, ...days.map( ( d ) => d.hits + d.misses ) )
+	);
 	const xAt = ( i ) => pad.l + ( i / ( n - 1 ) ) * iw;
 	const yAt = ( v ) => pad.t + ih - ( v / top ) * ih;
 	const baseY = ( pad.t + ih ).toFixed( 1 );
 
 	const uncachedPts = days.map( ( d, i ) => [ xAt( i ), yAt( d.misses ) ] );
-	const totalPts = days.map( ( d, i ) => [ xAt( i ), yAt( d.hits + d.misses ) ] );
+	const totalPts = days.map( ( d, i ) => [
+		xAt( i ),
+		yAt( d.hits + d.misses ),
+	] );
 
 	const uncachedLine = smoothPath( uncachedPts );
 	const totalLine = smoothPath( totalPts );
@@ -249,10 +252,18 @@ const TrendChart = ( { series } ) => {
 	const reversedUncached = smoothPath( [ ...uncachedPts ].reverse() );
 	const cachedArea = `${ totalLine } L${ reversedUncached.slice( 1 ) } Z`;
 
+	const labelPlacement = ( i ) => {
+		if ( i === 0 ) {
+			return { x: AXIS_PAD, anchor: 'start' };
+		}
+		if ( i === n - 1 ) {
+			return { x: W - AXIS_PAD, anchor: 'end' };
+		}
+		return { x: xAt( i ), anchor: 'middle' };
+	};
 	const dayLabels = days.map( ( d, i ) => ( {
-		x: i === 0 ? AXIS_PAD : i === n - 1 ? W - AXIS_PAD : xAt( i ),
+		...labelPlacement( i ),
 		label: `${ d.date.slice( 6, 8 ) }.${ d.date.slice( 4, 6 ) }`,
-		anchor: i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle',
 	} ) );
 
 	const ticks = [ 0, top / 2, top ];
@@ -309,13 +320,37 @@ const TrendChart = ( { series } ) => {
 				onMouseLeave={ () => setActiveDay( null ) }
 			>
 				<defs>
-					<linearGradient id="mc-area-hits" x1="0" x2="0" y1="0" y2="1">
-						<stop offset="0" className="millicache-status-chart__grad-hits-top" />
-						<stop offset="1" className="millicache-status-chart__grad-fade" />
+					<linearGradient
+						id="mc-area-hits"
+						x1="0"
+						x2="0"
+						y1="0"
+						y2="1"
+					>
+						<stop
+							offset="0"
+							className="millicache-status-chart__grad-hits-top"
+						/>
+						<stop
+							offset="1"
+							className="millicache-status-chart__grad-fade"
+						/>
 					</linearGradient>
-					<linearGradient id="mc-area-misses" x1="0" x2="0" y1="0" y2="1">
-						<stop offset="0" className="millicache-status-chart__grad-misses-top" />
-						<stop offset="1" className="millicache-status-chart__grad-fade" />
+					<linearGradient
+						id="mc-area-misses"
+						x1="0"
+						x2="0"
+						y1="0"
+						y2="1"
+					>
+						<stop
+							offset="0"
+							className="millicache-status-chart__grad-misses-top"
+						/>
+						<stop
+							offset="1"
+							className="millicache-status-chart__grad-fade"
+						/>
 					</linearGradient>
 				</defs>
 				{ ticks.map( ( t ) => (
@@ -613,10 +648,9 @@ const StatusTab = ( { status } ) => {
 					) }
 
 					{ groups.pro.map( ( panel ) => (
-							<ProTeaser key={ panel.id } panel={ panel } />
-						) ) }
-					</>
-
+						<ProTeaser key={ panel.id } panel={ panel } />
+					) ) }
+				</>
 			) }
 		</div>
 	);

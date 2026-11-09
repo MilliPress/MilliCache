@@ -135,11 +135,11 @@ function setPalettePlaceholder() {
 		? __(
 				'Enter flag patterns to clear, e.g. "5:*" or "*:posts"…',
 				'millicache'
-		  )
+			)
 		: __(
 				'Enter the flags, post IDs or URLs you want to clear…',
 				'millicache'
-		  );
+			);
 
 	// The palette mounts asynchronously; watch the DOM until the input exists.
 	const assign = () => {

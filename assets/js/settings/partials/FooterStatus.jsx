@@ -81,8 +81,8 @@ const buildIssueUrl = ( status ) => {
 
 /**
  * Pick a short status-aware label that summarizes the failing checks count.
- * @param health
- * @param checks
+ * @param {string}   health Overall health state, or 'loading'.
+ * @param {Object[]} checks Individual checks with their `status`.
  */
 const summarize = ( health, checks ) => {
 	if ( health === 'loading' ) {
@@ -118,7 +118,7 @@ const withCode = ( text ) =>
 	text.includes( '<code' )
 		? createInterpolateElement( text, {
 				code: <code className="millicache-footer-status__check-code" />,
-		  } )
+			} )
 		: text;
 
 const ChecksList = ( { checks } ) => {
@@ -183,6 +183,16 @@ const ChecksList = ( { checks } ) => {
 	);
 };
 
+const copyLabel = ( copyState ) => {
+	if ( copyState === 'copied' ) {
+		return __( 'Copied!', 'millicache' );
+	}
+	if ( copyState === 'manual' ) {
+		return __( 'Select & copy manually', 'millicache' );
+	}
+	return __( 'Copy to clipboard', 'millicache' );
+};
+
 const DebugTab = ( { markdown, copyState, onCopy, onOpenIssue } ) => (
 	<>
 		<p>
@@ -206,11 +216,7 @@ const DebugTab = ( { markdown, copyState, onCopy, onOpenIssue } ) => (
 				onClick={ onCopy }
 				disabled={ ! markdown }
 			>
-				{ copyState === 'copied'
-					? __( 'Copied!', 'millicache' )
-					: copyState === 'manual'
-					? __( 'Select & copy manually', 'millicache' )
-					: __( 'Copy to clipboard', 'millicache' ) }
+				{ copyLabel( copyState ) }
 			</Button>
 
 			<Button variant="secondary" onClick={ onOpenIssue }>

@@ -28,6 +28,15 @@ const ClearCacheButton = ( { status, triggerAction, isSaving } ) => {
 		handleClose();
 	};
 
+	const clearLabel = () => {
+		if ( targets.length > 0 ) {
+			return __( 'Clear Cache of Targets', 'millicache' );
+		}
+		return isNetworkAdmin
+			? __( 'Clear Network Cache', 'millicache' )
+			: __( 'Clear Website Cache', 'millicache' );
+	};
+
 	return (
 		<>
 			<Button
@@ -60,11 +69,11 @@ const ClearCacheButton = ( { status, triggerAction, isSaving } ) => {
 									? __(
 											'Enter one or more flag patterns to clear across the network. Use a site-prefixed pattern like "5:*" to clear every entry on a specific site, "*:posts" to clear a flag on every site, or "5:posts" for a single flag on a single site. Leave empty to clear the entire network cache.',
 											'millicache'
-									  )
+										)
 									: __(
 											'Enter one or more Cache Flags, Post-IDs or URLs for which you want to clear the cache. You can use wildcards (*) to clear multiple related flags.',
 											'millicache'
-									  ) }
+										) }
 							</p>
 						</FlexItem>
 						<FlexItem>
@@ -81,14 +90,7 @@ const ClearCacheButton = ( { status, triggerAction, isSaving } ) => {
 						</FlexItem>
 						<FlexItem>
 							<Button isPrimary onClick={ handleClear }>
-								{ targets.length === 0
-									? isNetworkAdmin
-										? __( 'Clear Network Cache', 'millicache' )
-										: __( 'Clear Website Cache', 'millicache' )
-									: __(
-											'Clear Cache of Targets',
-											'millicache'
-									  ) }
+								{ clearLabel() }
 							</Button>
 						</FlexItem>
 					</Flex>
