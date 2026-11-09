@@ -144,6 +144,16 @@ jobs:
           REPO: ${{ github.repository }}
         run: gh release edit "$TAG_NAME" --repo "$REPO" --draft=false
 
+      # The changelog at the release sha carries this version's heading, from
+      # which the millipress.com anchor for the Discord embed is derived.
+      - name: Checkout changelog
+        if: ${{ inputs.notify_discord }}
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.sha }}
+          sparse-checkout: docs/01-getting-started/30-changelog.md
+          sparse-checkout-cone-mode: false
+
       - name: Notify Discord of the release
         if: ${{ inputs.notify_discord }}
         continue-on-error: true
@@ -154,9 +164,27 @@ jobs:
           VERSION: ${{ inputs.version }}
           PRERELEASE: ${{ inputs.prerelease }}
           REPO: ${{ github.repository }}
+          CHANGELOG_FILE: docs/01-getting-started/30-changelog.md
+          CHANGELOG_URL: https://www.millipress.com/docs/millicache/01-getting-started/30-changelog
         run: |
           REPO_NAME="${REPO#*/}"
-          RELEASE_URL="https://github.com/${REPO}/releases/tag/${TAG_NAME}"
+          DOWNLOAD_URL="https://www.millipress.com/millicache/download/${VERSION}"
+
+          # The embed links to the changelog on millipress.com, anchored to
+          # this version: the "## [1.8.2](compare-url) (2026-09-11)" heading
+          # renders as id="1-8-2-2026-09-11" (heading text without the link,
+          # lowercased, runs of non-alphanumerics collapsed to "-").
+          URL="$CHANGELOG_URL"
+          HEADING="$(grep -m1 -E "^## \[?${VERSION//./\\.}[]( ]" "$CHANGELOG_FILE" || true)"
+          if [ -n "$HEADING" ]; then
+            ANCHOR="$(printf '%s' "$HEADING" \
+              | sed -E 's/^## +//; s/\[([^]]+)\]\([^)]*\)/\1/g' \
+              | tr '[:upper:]' '[:lower:]' \
+              | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')"
+            URL="${CHANGELOG_URL}#${ANCHOR}"
+          else
+            echo "::warning::No changelog heading for ${VERSION}; linking to the changelog top."
+          fi
 
           # Pull the published notes so the embed carries the real changelog.
           # Read via env/jq only, never interpolated into the shell, so a
@@ -178,14 +206,15 @@ jobs:
             CHANNEL="next (prerelease)"
             COLOR=15844367   # amber
           else
-            TITLE="🚀 ${REPO_NAME} ${TAG_NAME} released"
+            TITLE="⚡ ${REPO_NAME} ${TAG_NAME} released"
             CHANNEL="stable"
             COLOR=5763719    # green
           fi
 
           PAYLOAD="$(jq -n \
             --arg title "$TITLE" \
-            --arg url "$RELEASE_URL" \
+            --arg url "$URL" \
+            --arg download "$DOWNLOAD_URL" \
             --arg notes "${NOTES:-A new release is available.}" \
             --arg version "$VERSION" \
             --arg channel "$CHANNEL" \
@@ -201,7 +230,8 @@ jobs:
                 timestamp: $ts,
                 fields: [
                   { name: "Version", value: $version, inline: true },
-                  { name: "Channel", value: $channel, inline: true }
+                  { name: "Channel", value: $channel, inline: true },
+                  { name: "Download", value: ("[millicache-" + $version + ".zip](" + $download + ")"), inline: true }
                 ],
                 footer: { text: "MilliPress Bot" }
               }]
