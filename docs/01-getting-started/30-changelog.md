@@ -8,6 +8,9 @@ menu_order: 30
 
 ## [1.8.4](https://github.com/MilliPress/MilliCache/compare/v1.8.3...v1.8.4) (2026-11-09)
 
+<!-- mc:auto sha=32088a84258a -->
+The 1.8.3 release bundle was broken: because `composer.lock` is excluded from the distributed archive, Composer resolved dependencies from scratch on install — pulling in dev packages and hitting a conflict with `roave/security-advisories`, which now rejects PHP below 8.3.36. The lock file is now exported from the release ref, making installs reproducible and keeping dev-only packages out.
+<!-- /mc:auto -->
 
 ### Bug Fixes
 
