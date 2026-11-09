@@ -20,7 +20,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use MilliRules\Actions\ActionMeta;
 use MilliRules\Actions\BaseAction;
-use MilliRules\ArgumentValue;
 use MilliRules\Context;
 
 /**
@@ -31,7 +30,7 @@ use MilliRules\Context;
  * entries stale instead of deleting them.
  *
  * @since 1.0.0
- * @since 1.8.3 Signature is ( $site_ids = null, $expire = false ); the network ID is deprecated.
+ * @since 1.8.3 Signature is ( $site_ids = null, $expire = false ).
  */
 class ClearSiteCache extends BaseAction {
 	/**
@@ -60,20 +59,6 @@ class ClearSiteCache extends BaseAction {
 	}
 
 	/**
-	 * Declare the builder argument order.
-	 *
-	 * Mirrors the keys declared in {@see self::set_meta()} so positional builder
-	 * arguments and stored named arguments resolve to the same values.
-	 *
-	 * @since 1.8.3
-	 *
-	 * @return array<int, string> Argument names in positional order.
-	 */
-	public static function get_argument_mapping(): array {
-		return array( 'site_ids', 'expire' );
-	}
-
-	/**
 	 * Get the action type.
 	 *
 	 * @since 1.0.0
@@ -87,27 +72,19 @@ class ClearSiteCache extends BaseAction {
 	/**
 	 * Execute the action.
 	 *
+	 * Stored rules carry the schema keys, builder rules positions. Reading the
+	 * stored form by name keeps a rule that omits `site_ids` from having its
+	 * `expire` value mistaken for a site ID.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @param Context $context The execution context.
 	 * @return void
 	 */
 	public function execute( Context $context ): void {
-		$raw_site_ids = $this->argument( 'site_ids', 0 )->raw();
-		$network_id   = null;
-		$expire       = $this->argument( 'expire', 1 );
-
-		// Builder calls written against the pre-1.8.3 stub passed a network ID
-		// second: clear_site_cache( $site_id, $network_id, $expire ).
-		if ( is_int( $expire->raw() ) ) {
-			millicache()->logger()->warning(
-				'clear_site_cache: the network ID argument is deprecated. Use clear_site_cache( $site_ids, $expire ).'
-			);
-			$network_id = $expire->int();
-			$expire     = $this->get_arg( 2, false );
-		}
-
-		$site_ids = $this->site_ids( $raw_site_ids );
+		$named    = array_key_exists( 'site_ids', $this->args ) || array_key_exists( 'expire', $this->args );
+		$site_ids = $this->site_ids( $this->get_arg( $named ? 'site_ids' : 0 )->raw() );
+		$expire   = $this->get_arg( $named ? 'expire' : 1, false )->bool();
 
 		if ( array() === $site_ids ) {
 			millicache()->logger()->warning( 'clear_site_cache skipped: no valid site IDs in the given value.' );
@@ -115,30 +92,7 @@ class ClearSiteCache extends BaseAction {
 			return;
 		}
 
-		millicache()->clear()->sites( $site_ids, $network_id, $expire->bool() );
-	}
-
-	/**
-	 * Read an argument by its schema name, falling back to its builder position.
-	 *
-	 * Stored rules carry named keys, builder rules positional ones. Reading the
-	 * name first keeps a stored rule that omits `site_ids` from having its
-	 * `expire` value mistaken for a site ID.
-	 *
-	 * @since 1.8.3
-	 *
-	 * @param string $name     The schema key.
-	 * @param int    $position The builder position.
-	 * @return ArgumentValue The argument value.
-	 */
-	private function argument( string $name, int $position ): ArgumentValue {
-		foreach ( array_keys( $this->args ) as $key ) {
-			if ( is_string( $key ) && 0 !== strpos( $key, '_' ) ) {
-				return $this->get_arg( $name );
-			}
-		}
-
-		return $this->get_arg( $position );
+		millicache()->clear()->sites( $site_ids, null, $expire );
 	}
 
 	/**

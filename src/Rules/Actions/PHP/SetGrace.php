@@ -67,20 +67,6 @@ class SetGrace extends BaseAction {
 	}
 
 	/**
-	 * Declare the builder argument order.
-	 *
-	 * Mirrors the keys declared in {@see self::set_meta()} so positional builder
-	 * arguments and stored named arguments resolve to the same values.
-	 *
-	 * @since 1.8.3
-	 *
-	 * @return array<int, string> Argument names in positional order.
-	 */
-	public static function get_argument_mapping(): array {
-		return array( 'grace' );
-	}
-
-	/**
 	 * Get the action type.
 	 *
 	 * @since 1.0.0

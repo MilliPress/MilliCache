@@ -4,8 +4,7 @@
  *
  * Drives the real Engine and inspects the invalidation queue plus the
  * millicache_cache_cleared_by_sites event for every way a rule can carry the
- * action's arguments: builder positional, stored named, and the deprecated
- * three-argument form with a network ID.
+ * action's arguments: builder positional and stored named.
  *
  * @package MilliCache
  */
@@ -68,12 +67,6 @@ describe( 'builder (positional) arguments', function () {
 
 	it( 'expires the current site with an explicit null', function () {
 		expect( run_clear_site_cache_action( array( 0 => null, 1 => true ) ) )->toBe( array( null, null, true ) );
-	} );
-
-	it( 'still honours the deprecated network ID in second position', function () {
-		$event = suppressing_errors( fn() => run_clear_site_cache_action( array( 0 => 5, 1 => 2, 2 => true ) ) );
-
-		expect( $event )->toBe( array( array( 5 ), 2, true ) );
 	} );
 
 	it( 'skips the clear when the value holds no valid site ID', function () {
