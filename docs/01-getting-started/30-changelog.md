@@ -8,6 +8,9 @@ menu_order: 30
 
 ## [1.8.4-beta](https://github.com/MilliPress/MilliCache/compare/v1.8.3...v1.8.4-beta) (2026-11-09)
 
+<!-- mc:auto sha=32088a84258a -->
+This beta hardens the release packaging so that installs are reproducible. Previously, `composer.lock` was excluded from the distributed archive, causing Composer to re-resolve dependencies from scratch on install — dev packages included. A recent `roave/security-advisories` update began rejecting PHP below 8.3.36, which broke installation of the 1.8.3 bundle entirely on affected runners. The lock file is now exported from the release ref, ensuring the exact dependency set is used and dev-only packages are kept out.
+<!-- /mc:auto -->
 
 ### Bug Fixes
 
