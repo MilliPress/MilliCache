@@ -6,6 +6,18 @@ menu_order: 30
 
 # Changelog
 
+## [1.8.4](https://github.com/MilliPress/MilliCache/compare/v1.8.3...v1.8.4) (2026-11-27)
+
+
+### Bug Fixes
+
+* **release:** install the dist from the locked dependency set ([#212](https://github.com/MilliPress/MilliCache/issues/212)) ([de11d93](https://github.com/MilliPress/MilliCache/commit/de11d93313bff21ecd84fdf2e46c3c9e684b81a6))
+
+
+### Dependencies
+
+* **millibase:** update MilliBase to 2.11.1 so every process loads the per-host settings ([fe2e6ee](https://github.com/MilliPress/MilliCache/commit/fe2e6ee6d455938311dcb341a85c7ae05d54e55e))
+
 ## [1.8.3](https://github.com/MilliPress/MilliCache/compare/v1.8.2...v1.8.3) (2026-11-09)
 
 <!-- mc:auto sha=3df578a27206 -->
