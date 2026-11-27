@@ -8,6 +8,13 @@ menu_order: 30
 
 ## [1.8.4](https://github.com/MilliPress/MilliCache/compare/v1.8.3...v1.8.4) (2026-11-27)
 
+<!-- mc:auto sha=739261c81a1c -->
+Two fixes ship in this release.
+
+MilliBase is updated to 2.11.1, which corrects how the per-host settings file is located when there is no HTTP request in progress. A scheduler, WP-CLI command, or cron job now resolves the host from `WP_HOME`, and the host is normalized consistently across all three entry points (admin, drop-in, CLI), so ports, letter case, trailing dots, and internationalized domain names all map to the same settings file. Sites on `localhost:8080` or IDN hosts were previously booting the drop-in with default settings, causing cache clears and edge purges to silently do nothing. If the settings file is missing at any point, it is now recreated automatically from the stored database row on `admin_init`.
+
+The release archive is also fixed: the 1.8.3 bundle did not include the locked dependency set, so Composer resolved packages from scratch on install and failed when a security advisory ruled out the PHP version on the build runner. The archive now exports the lock file, making the install reproducible and keeping development-only packages out of the bundle.
+<!-- /mc:auto -->
 
 ### Bug Fixes
 
